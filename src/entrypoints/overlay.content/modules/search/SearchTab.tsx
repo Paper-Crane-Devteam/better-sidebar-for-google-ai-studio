@@ -1,0 +1,103 @@
+import React, { useState } from 'react';
+import { SearchInput } from './components/SearchInput';
+import { SearchResults, SearchResultItem } from './components/SearchResults';
+import { SidePanelMenu } from '../../components/menu/SidePanelMenu';
+import { ImportHistoryDialog } from './components/ImportHistoryDialog';
+import { Upload, ListCollapse } from 'lucide-react';
+import { Button } from '@/shared/components/ui/button';
+import { SimpleTooltip } from '@/shared/components/ui/tooltip';
+import { useI18n } from '@/shared/hooks/useI18n';
+import { useAppStore } from '@/shared/lib/store';
+
+export const SearchTab = () => {
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const { results } = useAppStore(state => state.ui.search);
+  const { t } = useI18n();
+
+  // Group results
+  const grouped = React.useMemo(() => {
+    const groups: Record<string, { conversation: any, matches: SearchResultItem[] }> = {};
+    results.forEach((item: SearchResultItem) => {
+        if (!groups[item.conversation_id]) {
+            groups[item.conversation_id] = {
+                conversation: {
+                    id: item.conversation_id,
+                    title: item.conversation_title,
+                    folderName: item.folder_name
+                },
+                matches: []
+            };
+        }
+        groups[item.conversation_id].matches.push(item);
+    });
+    return groups;
+  }, [results]);
+
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  // Auto-expand all when results change
+  React.useEffect(() => {
+      setExpandedIds(new Set(Object.keys(grouped)));
+  }, [grouped]);
+
+  const toggleGroup = (id: string) => {
+    const newExpanded = new Set(expandedIds);
+    if (newExpanded.has(id)) {
+        newExpanded.delete(id);
+    } else {
+        newExpanded.add(id);
+    }
+    setExpandedIds(newExpanded);
+  };
+
+  const handleCollapseAll = () => {
+    setExpandedIds(new Set());
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-background">
+      <div className="p-3 border-b flex items-center justify-between h-12 shrink-0">
+        <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+          {t('search.title')}
+        </h1>
+        <div className="flex gap-0.5 items-center">
+          <SimpleTooltip content={t('menu.collapseAll')}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={handleCollapseAll}
+            >
+              <ListCollapse className="h-4 w-4" />
+            </Button>
+          </SimpleTooltip>
+
+          <SimpleTooltip content={t('menu.importHistory')}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setIsImportOpen(true)}
+            >
+              <Upload className="h-4 w-4" />
+            </Button>
+          </SimpleTooltip>
+
+          <SidePanelMenu />
+        </div>
+      </div>
+      <SearchInput />
+      <div className="flex-1 overflow-hidden">
+        <SearchResults
+          grouped={grouped}
+          expandedIds={expandedIds}
+          onToggleGroup={toggleGroup}
+        />
+      </div>
+      <ImportHistoryDialog
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+      />
+    </div>
+  );
+};

@@ -1,0 +1,102 @@
+import React, { useState } from 'react';
+import { Button } from '../../components/ui/button';
+import { X, Settings, Heart, Info, LayoutTemplate, Database } from 'lucide-react';
+import { GeneralSettings } from './modules/GeneralSettings';
+import { ExplorerSettings } from './modules/ExplorerSettings';
+import { DataSettings } from './modules/DataSettings';
+import { AboutSettings } from './modules/AboutSettings';
+import { SponsorSettings } from './modules/SponsorSettings';
+import { useI18n } from '@/shared/hooks/useI18n';
+
+interface SettingsModalProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}
+
+type Section = 'general' | 'explorer' | 'data' | 'sponsor' | 'about';
+
+const NavButton = ({ 
+    id, 
+    label, 
+    icon: Icon, 
+    activeSection, 
+    setActiveSection 
+}: { 
+    id: Section; 
+    label: string; 
+    icon: any;
+    activeSection: Section;
+    setActiveSection: (s: Section) => void;
+}) => (
+    <Button
+        variant={activeSection === id ? "secondary" : "ghost"}
+        className="w-full justify-start"
+        onClick={() => setActiveSection(id)}
+    >
+        <Icon className="mr-2 h-4 w-4" />
+        {label}
+    </Button>
+);
+
+export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
+    const { t } = useI18n();
+    const [activeSection, setActiveSection] = useState<Section>('general');
+
+    if (!open) return null;
+
+    const renderContent = () => {
+        switch (activeSection) {
+            case 'general':
+                return <GeneralSettings />;
+            case 'explorer':
+                return <ExplorerSettings />;
+            case 'data':
+                return <DataSettings />;
+            case 'sponsor':
+                return <SponsorSettings />;
+            case 'about':
+                return <AboutSettings />;
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0">
+            <div className="relative w-[800px] h-[600px] max-h-[90vh] bg-background border rounded-lg shadow-lg flex overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4">
+                {/* Close Button */}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-4 top-2 z-10"
+                    onClick={() => onOpenChange(false)}
+                >
+                    <X className="h-4 w-4" />
+                </Button>
+
+                {/* Sidebar */}
+                <div className="w-64 bg-muted/30 border-r p-4 flex flex-col gap-2 overflow-y-auto">
+                    <div className="px-2 py-2 mb-2">
+                        <h2 className="font-semibold text-lg tracking-tight">{t('common.preferences')}</h2>
+                    </div>
+                    
+                    <NavButton id="general" label={t('settings.general')} icon={Settings} activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <NavButton id="explorer" label={t('settings.library')} icon={LayoutTemplate} activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <NavButton id="data" label={t('settings.dataStorage')} icon={Database} activeSection={activeSection} setActiveSection={setActiveSection} />
+                    
+                    <div className="h-px bg-border my-2 mx-2" />
+                    
+                    <NavButton id="sponsor" label={t('settings.sponsor')} icon={Heart} activeSection={activeSection} setActiveSection={setActiveSection} />
+                    
+                    <div className="flex-1" />
+                    <NavButton id="about" label={t('settings.about')} icon={Info} activeSection={activeSection} setActiveSection={setActiveSection} />
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 p-8 overflow-y-auto">
+                    {renderContent()}
+                </div>
+            </div>
+        </div>
+    );
+};

@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root, :host {
+    /* Light Theme - Adapted from theme.main.css */
+    --background: 255 255 255;      /* #ffffff */
+    --foreground: 50 48 44;         /* #32302c */
+
+    --card: 255 255 255;            /* #ffffff */
+    --card-foreground: 50 48 44;    /* #32302c */
+
+    --popover: 255 255 255;         /* #ffffff */
+    --popover-foreground: 50 48 44; /* #32302c */
+
+    --primary: 255 255 255;         /* #ffffff */
+    --primary-foreground: 50 48 44; /* #32302c */
+
+    --secondary: 228 228 226;       /* #e4e4e2 */
+    --secondary-foreground: 50 48 44; /* #32302c */
+
+    --muted: 228 228 226;           /* #e4e4e2 */
+    --muted-foreground: 93 93 95;   /* #5d5d5f */
+
+    --accent: 228 228 226;          /* #e4e4e2 (same as secondary/surface-container-highest) */
+    --accent-foreground: 50 48 44;  /* #32302c */
+
+    --destructive: 186 26 26;       /* #ba1a1a */
+    --destructive-foreground: 255 255 255; /* #ffffff */
+
+    --border: 238 238 236;          /* rgb(238, 238, 236) */
+    --input: 225 225 225;           /* #e1e1e1 */
+    --ring: 36 131 226;             /* #2483e2 */
+
+    --radius: 0.5rem;
+
+    /* Density Variables - Default (Compact) */
+    --density-row-height: 28px;
+    --density-icon-size: 16px;
+    --density-font-size: 13px;
+    --density-padding-x: 0.5rem;
+    --density-padding-y: 0.25rem;
+    --density-gap: 0.25rem;
+  }
+
+  /* Relaxed Mode */
+  [data-density="relaxed"], :host([data-density="relaxed"]) {
+    --density-row-height: 36px;
+    --density-icon-size: 18px;
+    --density-font-size: 14px;
+    --density-padding-x: 0.75rem;
+    --density-padding-y: 0.5rem;
+    --density-gap: 0.5rem;
+  }
+
+  .dark, :host(.dark) {
+    /* Dark Theme - Adapted from theme.main.css */
+    --background: 25 25 25;         /* #191919 */
+    --foreground: 212 212 212;      /* #d4d4d4 */
+
+    --card: 31 31 31;               /* #1f1f1f */
+    --card-foreground: 212 212 212; /* #d4d4d4 */
+
+    --popover: 31 31 31;            /* #1f1f1f */
+    --popover-foreground: 212 212 212; /* #d4d4d4 */
+
+    --primary: 50 50 50;            /* #323232 */
+    --primary-foreground: 252 252 252; /* #fcfcfc */
+
+    --secondary: 42 42 42;          /* #2a2a2a */
+    --secondary-foreground: 212 212 212; /* #d4d4d4 */
+
+    --muted: 42 42 42;              /* #2a2a2a */
+    --muted-foreground: 140 140 140; /* #8c8c8c */
+
+    --accent: 42 42 42;             /* #2a2a2a (same as secondary/surface-container-highest) */
+    --accent-foreground: 212 212 212; /* #d4d4d4 */
+
+    --destructive: 255 180 171;     /* #ffb4ab */
+    --destructive-foreground: 105 0 5; /* #690005 */
+
+    --border: 42 42 42;             /* rgb(42, 42, 42) */
+    --input: 62 62 62;              /* #3e3e3e */
+    --ring: 135 169 255;            /* #87a9ff */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  .shadow-body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    width: 100%;
+    height: 100%;
+  }
+}

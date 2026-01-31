@@ -1,0 +1,88 @@
+import { defineConfig } from 'wxt';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
+import path from 'node:path';
+
+// See https://wxt.dev/api/config.html
+export default defineConfig({
+  srcDir: 'src',
+  modules: ['@wxt-dev/module-react'],
+  manifest: {
+    name: '__MSG_extensionName__',
+    description: '__MSG_extensionDescription__',
+    default_locale: 'en',
+    icons: {
+      '16': 'icons/icon16.png',
+      '48': 'icons/icon48.png',
+      '128': 'icons/icon128.png',
+    },
+    permissions: [
+      // 'sidePanel',
+      'unlimitedStorage',
+      'storage',
+      // 'tabs', // Removed to speed up review, we have host permissions
+      'scripting',
+      'offscreen',
+    ],
+    host_permissions: ['https://aistudio.google.com/*'],
+    // Temporarily disabled: sidepanel entry point (action button)
+    // action: {
+    //   default_title: 'Click to open side panel',
+    //   default_icon: {
+    //     "16": "icons/icon.png",
+    //     "48": "icons/icon.png",
+    //     "128": "icons/icon.png",
+    //   },
+    // },
+    content_security_policy: {
+      extension_pages:
+        "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",
+    },
+    web_accessible_resources: [
+      {
+        resources: ['main-world.js', 'sqlite3.js', 'sqlite3.wasm'],
+        matches: ['https://aistudio.google.com/*'],
+      },
+    ],
+  },
+  vite: (env) => ({
+    plugins: [
+      viteStaticCopy({
+        targets: [
+          // Copy all SQLite WASM assets to root (for Main World and general access)
+          // {
+          //   src: 'node_modules/@sqlite.org/sqlite-wasm/sqlite-wasm/jswasm/*',
+          //   dest: '.',
+          // },
+          // Copy all SQLite WASM assets to assets/ (for Worker default relative path resolution)
+          {
+            src: 'src/assets/wa-sqlite-fts5/*',
+            dest: 'assets',
+          },
+        ],
+      }),
+    ],
+    optimizeDeps: {
+      exclude: ['wa-sqlite'],
+    },
+    esbuild: {
+      // Only drop console and debugger in production mode
+      ...(env.mode === 'production' && {
+        drop: ['console', 'debugger'],
+      }),
+    },
+  }),
+  runner: {
+    chromiumArgs: [
+      '--disable-blink-features=AutomationControlled',
+      '--no-default-browser-check',
+      '--no-first-run',
+    ],
+    firefoxArgs: [
+      '--keep-profile-changes',
+    ],
+    // Persist profile in a custom folder to keep login state
+    chromiumProfile: path.resolve(process.cwd(), '.dev-profile'),
+    firefoxProfile: path.resolve(process.cwd(), '.dev-profile-firefox'),
+    keepProfileChanges: true,
+  },
+});

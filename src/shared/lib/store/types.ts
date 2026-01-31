@@ -1,0 +1,215 @@
+import {
+  Favorite,
+  Tag,
+  ConversationTag,
+  Prompt,
+  PromptFolder,
+} from '../../types/db';
+
+export interface Folder {
+  id: string;
+  name: string;
+  order_index: number;
+  parent_id?: string | null;
+}
+
+export interface Conversation {
+  id: string;
+  title: string;
+  folder_id: string | null;
+  updated_at: number;
+  created_at?: number;
+  prompt_metadata?: any;
+  external_url?: string;
+  external_id?: string;
+  type?: 'conversation' | 'text-to-image';
+}
+
+export interface UIState {
+  overlay: {
+    isOpen: boolean;
+    activeTab:
+      | 'files'
+      | 'favorites'
+      | 'tags'
+      | 'feedback'
+      | 'settings'
+      | 'search'
+      | 'prompts';
+    isSettingsOpen: boolean;
+    isScanning: boolean;
+    showSqlInterface: boolean;
+    tempHiddenToken: string | null;
+  };
+  search: {
+    query: string;
+    activeQuery: string;
+    results: any[];
+    isSearching: boolean;
+    options: {
+      caseSensitive: boolean;
+      wholeWord: boolean;
+      include: string;
+      exclude: string;
+      roleFilter: 'all' | 'user' | 'model';
+      showOptions: boolean;
+    };
+    activeOptions: {
+      caseSensitive: boolean;
+      wholeWord: boolean;
+      include: string;
+      exclude: string;
+      roleFilter: 'all' | 'user' | 'model';
+    };
+  };
+  prompts: {
+    search: { isOpen: boolean; query: string };
+    typeFilter: 'all' | 'normal' | 'system';
+    onlyFavorites: boolean;
+    sortOrder: 'alpha' | 'date';
+    batch: { isBatchMode: boolean; selectedIds: string[] };
+  };
+  explorer: {
+    search: { isOpen: boolean; query: string };
+    tags: { isOpen: boolean; selected: string[] };
+    typeFilter: 'all' | 'conversation' | 'text-to-image';
+    onlyFavorites: boolean;
+    sortOrder: 'alpha' | 'date';
+    viewMode: 'tree' | 'timeline';
+    batch: { isBatchMode: boolean; selectedIds: string[] };
+  };
+  favorites: {
+    search: { isOpen: boolean; query: string };
+    tags: { isOpen: boolean; selected: string[] };
+    typeFilter: 'all' | 'conversation' | 'text-to-image';
+  };
+}
+
+export interface AppState {
+  folders: Folder[];
+  conversations: Conversation[];
+  promptFolders: PromptFolder[];
+  prompts: Prompt[];
+  favorites: Favorite[];
+  tags: Tag[];
+  conversationTags: ConversationTag[];
+  isLoading: boolean;
+  ui: UIState;
+
+  setFolders: (folders: Folder[]) => void;
+  setConversations: (conversations: Conversation[]) => void;
+  setPromptFolders: (folders: PromptFolder[]) => void;
+  setPrompts: (prompts: Prompt[]) => void;
+  fetchData: (silent?: boolean) => Promise<void>;
+  moveItems: (itemIds: string[], newParentId: string | null) => Promise<void>;
+  moveItem: (
+    itemId: string,
+    newParentId: string | null,
+    type: 'folder' | 'file',
+  ) => Promise<void>;
+  renameItem: (
+    itemId: string,
+    newName: string,
+    type: 'folder' | 'file',
+  ) => Promise<void>;
+  createFolder: (
+    name: string,
+    parentId: string | null,
+  ) => Promise<string | null>;
+  deleteItem: (itemId: string, type: 'folder' | 'file') => Promise<void>;
+  deleteItems: (itemIds: string[]) => Promise<void>;
+  toggleFavorite: (
+    targetId: string,
+    targetType: 'conversation' | 'message' | 'prompt',
+    isFavorite: boolean,
+  ) => Promise<void>;
+
+  createTag: (name: string, color?: string) => Promise<void>;
+  updateTag: (
+    id: string,
+    updates: Partial<Pick<Tag, 'name' | 'color'>>,
+  ) => Promise<void>;
+  deleteTag: (id: string) => Promise<void>;
+  addTagToConversation: (
+    conversationId: string,
+    tagId: string,
+  ) => Promise<void>;
+  removeTagFromConversation: (
+    conversationId: string,
+    tagId: string,
+  ) => Promise<void>;
+
+  setOverlayOpen: (isOpen: boolean) => void;
+  setSettingsOpen: (isOpen: boolean) => void;
+  setTempHiddenToken: (token: string | null) => void;
+  setActiveTab: (
+    tab: 'files' | 'favorites' | 'tags' | 'feedback' | 'settings' | 'search' | 'prompts',
+  ) => void;
+  setIsScanning: (isScanning: boolean) => void;
+  setShowSqlInterface: (show: boolean) => void;
+  setExplorerSearch: (isOpen: boolean, query?: string) => void;
+  setExplorerTags: (isOpen: boolean, selected?: string[]) => void;
+  setExplorerTypeFilter: (
+    filter: 'all' | 'conversation' | 'text-to-image',
+  ) => void;
+  setExplorerOnlyFavorites: (onlyFavorites: boolean) => void;
+  setExplorerSortOrder: (order: 'alpha' | 'date') => void;
+  setExplorerViewMode: (mode: 'tree' | 'timeline') => void;
+  setExplorerBatchMode: (isBatchMode: boolean) => void;
+  setExplorerBatchSelection: (selectedIds: string[]) => void;
+  toggleExplorerBatchSelection: (id: string) => void;
+
+  setFavoritesSearch: (isOpen: boolean, query?: string) => void;
+  setFavoritesTags: (isOpen: boolean, selected?: string[]) => void;
+  setFavoritesTypeFilter: (
+    filter: 'all' | 'conversation' | 'text-to-image',
+  ) => void;
+
+  setSearchQuery: (query: string) => void;
+  setSearchOptions: (
+    options: Partial<AppState['ui']['search']['options']>,
+  ) => void;
+  performGlobalSearch: () => Promise<void>;
+
+  createPromptFolder: (
+    name: string,
+    parentId: string | null,
+  ) => Promise<string | null>;
+  createPrompt: (
+    title: string,
+    content: string,
+    type: 'normal' | 'system',
+    icon: string,
+    folderId: string | null,
+  ) => Promise<void>;
+  updatePrompt: (id: string, updates: Partial<Prompt>) => Promise<void>;
+  deletePromptItem: (itemId: string, type: 'folder' | 'file') => Promise<void>;
+  deletePromptItems: (itemIds: string[]) => Promise<void>;
+  movePromptItems: (
+    itemIds: string[],
+    newParentId: string | null,
+  ) => Promise<void>;
+  movePromptItem: (
+    itemId: string,
+    newParentId: string | null,
+    type: 'folder' | 'file',
+  ) => Promise<void>;
+  renamePromptItem: (
+    itemId: string,
+    newName: string,
+    type: 'folder' | 'file',
+  ) => Promise<void>;
+
+  setPromptsSearch: (isOpen: boolean, query?: string) => void;
+  setPromptsTypeFilter: (filter: 'all' | 'normal' | 'system') => void;
+  setPromptsOnlyFavorites: (onlyFavorites: boolean) => void;
+  setPromptsSortOrder: (order: 'alpha' | 'date') => void;
+  setPromptsBatchMode: (isBatchMode: boolean) => void;
+  setPromptsBatchSelection: (selectedIds: string[]) => void;
+  togglePromptsBatchSelection: (id: string) => void;
+}
+
+export type SetState = (
+  partial: Partial<AppState> | ((state: AppState) => Partial<AppState>),
+) => void;
+export type GetState = () => AppState;

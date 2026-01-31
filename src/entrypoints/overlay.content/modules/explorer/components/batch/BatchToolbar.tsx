@@ -1,0 +1,137 @@
+import React from 'react';
+import { Button } from '@/shared/components/ui/button';
+import { Trash2, FolderInput, Tag as TagIcon, X } from 'lucide-react';
+import { useAppStore } from '@/shared/lib/store';
+import { modal } from '@/shared/lib/modal';
+import { MoveItemsDialog } from './MoveItemsDialog';
+import { AddTagsDialog } from './AddTagsDialog';
+import { useI18n } from '@/shared/hooks/useI18n';
+import { SimpleTooltip } from '@/shared/components/ui/tooltip';
+
+export const BatchToolbar = () => {
+  const { t } = useI18n();
+  const { ui, setExplorerBatchMode, setExplorerBatchSelection, deleteItems } = useAppStore();
+  const { selectedIds } = ui.explorer.batch;
+
+  const handleDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    const confirmed = await modal.confirm({
+      title: t('batch.deleteConfirmTitle', { count: selectedIds.length }),
+      content: t('batch.deleteConfirmMessage'),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+    });
+
+    if (confirmed) {
+        await deleteItems(selectedIds);
+        setExplorerBatchSelection([]);
+    }
+  };
+
+  const handleMove = async () => {
+    if (selectedIds.length === 0) return;
+
+    let targetFolderId: string | null = null;
+
+    const confirmed = await modal.confirm({
+      title: t('batch.moveTitle'),
+      content: (
+        <MoveItemsDialog 
+            selectedIds={selectedIds} 
+            onSelect={(id) => targetFolderId = id} 
+        />
+      ),
+      confirmText: t('common.move'),
+      cancelText: t('common.cancel'),
+    });
+
+    if (confirmed) {
+        const state = useAppStore.getState();
+        // Flatten logic: Move only files (conversations) found in selection.
+        // Ignore folders in the selection list for the move operation itself.
+        
+        // Find all selected conversations
+        const filesToMove = selectedIds.filter(id => state.conversations.some(c => c.id === id));
+        
+        await useAppStore.getState().moveItems(filesToMove, targetFolderId);
+        setExplorerBatchSelection([]);
+    }
+  };
+
+  // Tagging is only for conversations usually.
+  const handleTag = async () => {
+      if (selectedIds.length === 0) return;
+
+      let selectedTagIds: string[] = [];
+
+      const confirmed = await modal.confirm({
+        title: t('batch.addTags'),
+        content: (
+          <AddTagsDialog 
+              onSelectionChange={(ids) => selectedTagIds = ids} 
+          />
+        ),
+        confirmText: t('common.save'),
+        cancelText: t('common.cancel'),
+      });
+
+      if (confirmed && selectedTagIds.length > 0) {
+          const state = useAppStore.getState();
+          // Filter out folders, only tag conversations
+          const filesToTag = selectedIds.filter(id => state.conversations.some(c => c.id === id));
+          
+          const promises: Promise<void>[] = [];
+          
+          for (const fileId of filesToTag) {
+              for (const tagId of selectedTagIds) {
+                   // Check if already tagged to avoid redundant requests
+                   const alreadyHasTag = state.conversationTags.some(ct => ct.conversation_id === fileId && ct.tag_id === tagId);
+                   if (!alreadyHasTag) {
+                       promises.push(state.addTagToConversation(fileId, tagId));
+                   }
+              }
+          }
+          
+          if (promises.length > 0) {
+              await Promise.all(promises);
+          }
+          setExplorerBatchSelection([]);
+      }
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      <SimpleTooltip content={t('batch.deleteSelected')}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleDelete}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </SimpleTooltip>
+
+      <SimpleTooltip content={t('batch.moveSelected')}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleMove}>
+          <FolderInput className="h-4 w-4" />
+        </Button>
+      </SimpleTooltip>
+
+      <SimpleTooltip content={t('batch.addTag')}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleTag}>
+          <TagIcon className="h-4 w-4" />
+        </Button>
+      </SimpleTooltip>
+
+      <div className="w-[1px] h-4 bg-border mx-1" />
+
+      <SimpleTooltip content={t('batch.exitBatchMode')}>
+        <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setExplorerBatchMode(false)}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </SimpleTooltip>
+    </div>
+  );
+};
+

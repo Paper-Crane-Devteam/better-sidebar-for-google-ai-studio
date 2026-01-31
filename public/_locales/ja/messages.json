@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Google AI Studio 用の拡張サイドバー",
+    "description": "拡張機能の名前"
+  },
+  "extensionDescription": {
+    "message": "より良いサイドバー、フォルダ、タグ、お気に入り、ライブラリスキャン機能で Google AI Studio の体験を向上させます。",
+    "description": "拡張機能の説明"
+  }
+}
+

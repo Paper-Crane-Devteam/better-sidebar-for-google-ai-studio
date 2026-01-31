@@ -1,0 +1,239 @@
+import { runQuery, runCommand, runBatch } from '../index';
+import type { Message } from '../../types/db';
+
+export const messageRepo = {
+  create: async (message: Omit<Message, 'id' | 'timestamp' | 'order_index'>): Promise<void> => {
+    await runCommand(
+      `INSERT INTO messages (id, conversation_id, role, content, message_type, timestamp, order_index) 
+       VALUES (hex(randomblob(16)), ?, ?, ?, ?, unixepoch(), 
+       (SELECT COALESCE(MAX(order_index), -1) + 1 FROM messages WHERE conversation_id = ?))`,
+      [
+        message.conversation_id,
+        message.role,
+        message.content,
+        message.message_type || 'text',
+        message.conversation_id,
+      ]
+    );
+  },
+
+  bulkInsert: async (
+    conversationId: string,
+    messages: Omit<Message, 'id' | 'timestamp' | 'conversation_id' | 'order_index'>[]
+  ): Promise<void> => {
+    if (messages.length === 0) return;
+
+    // Get current max order_index to ensure continuity
+    const result = await runQuery(
+      'SELECT COALESCE(MAX(order_index), -1) as max_order FROM messages WHERE conversation_id = ?',
+      [conversationId]
+    );
+    let currentOrder = (result[0]?.max_order ?? -1) + 1;
+
+    const operations = messages.map((msg) => ({
+      sql: 'INSERT INTO messages (id, conversation_id, role, content, message_type, timestamp, order_index) VALUES (hex(randomblob(16)), ?, ?, ?, ?, unixepoch(), ?)',
+      bind: [
+        conversationId,
+        msg.role,
+        msg.content,
+        msg.message_type || 'text',
+        currentOrder++,
+      ],
+    }));
+
+    await runBatch(operations);
+  },
+
+  getByConversationId: async (conversationId: string): Promise<Message[]> => {
+    return (await runQuery(
+      'SELECT * FROM messages WHERE conversation_id = ? ORDER BY order_index ASC',
+      [conversationId]
+    )) as Message[];
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await runCommand('DELETE FROM messages WHERE id = ?', [id]);
+  },
+
+  deleteByConversationId: async (conversationId: string): Promise<void> => {
+    await runCommand('DELETE FROM messages WHERE conversation_id = ?', [
+      conversationId,
+    ]);
+  },
+
+  replace: async (
+    conversationId: string,
+    messages: Omit<Message, 'id' | 'timestamp' | 'conversation_id' | 'order_index'>[]
+  ): Promise<void> => {
+    const operations: { sql: string; bind: any[] }[] = [];
+
+    // Delete existing
+    operations.push({
+        sql: 'DELETE FROM messages WHERE conversation_id = ?',
+        bind: [conversationId]
+    });
+
+    if (messages.length > 0) {
+        let currentOrder = 0;
+        messages.forEach((msg) => {
+            operations.push({
+                sql: 'INSERT INTO messages (id, conversation_id, role, content, message_type, timestamp, order_index) VALUES (hex(randomblob(16)), ?, ?, ?, ?, unixepoch(), ?)',
+                bind: [
+                    conversationId,
+                    msg.role,
+                    msg.content,
+                    msg.message_type || 'text',
+                    currentOrder++
+                ]
+            });
+        });
+    }
+
+    await runBatch(operations);
+  },
+
+  search: async (
+    query: string,
+    options: {
+      caseSensitive?: boolean;
+      wholeWord?: boolean;
+      includeFolderNames?: string[];
+      excludeFolderNames?: string[];
+      roleFilter?: 'all' | 'user' | 'model';
+    } = {}
+  ): Promise<any[]> => {
+    const params: any[] = [];
+    const cteParts: string[] = [];
+
+    // Build CTEs for recursive folder resolution
+    if (options.includeFolderNames && options.includeFolderNames.length > 0) {
+      const clauses = options.includeFolderNames
+        .map(() => 'lower(name) LIKE ?')
+        .join(' OR ');
+      cteParts.push(`
+            included_folders AS (
+                SELECT id FROM folders WHERE ${clauses}
+                UNION ALL
+                SELECT f.id FROM folders f
+                JOIN included_folders tf ON f.parent_id = tf.id
+            )
+        `);
+      params.push(
+        ...options.includeFolderNames.map((n) => `%${n.toLowerCase()}%`)
+      );
+    }
+
+    if (options.excludeFolderNames && options.excludeFolderNames.length > 0) {
+      const clauses = options.excludeFolderNames
+        .map(() => 'lower(name) LIKE ?')
+        .join(' OR ');
+      cteParts.push(`
+            excluded_folders AS (
+                SELECT id FROM folders WHERE ${clauses}
+                UNION ALL
+                SELECT f.id FROM folders f
+                JOIN excluded_folders tf ON f.parent_id = tf.id
+            )
+        `);
+      params.push(
+        ...options.excludeFolderNames.map((n) => `%${n.toLowerCase()}%`)
+      );
+    }
+
+    let sql = '';
+    if (cteParts.length > 0) {
+      sql += `WITH RECURSIVE ${cteParts.join(', ')} `;
+    }
+
+    // Check query length. Trigram tokenizer requires at least 3 characters.
+    // If query is shorter, fall back to standard LIKE.
+    const useFts = query.length >= 3;
+
+    if (useFts) {
+      // Use FTS5 table
+      // Prepare match query
+      let matchQuery = query;
+      // We always treat it as a phrase match in FTS to reduce noise before filtering
+      matchQuery = `"${query.replace(/"/g, '""')}"`;
+
+      console.log('[DB] FTS Search:', matchQuery);
+
+      sql += `
+        SELECT m.*, c.title as conversation_title, c.folder_id, f.name as folder_name, c.external_url
+        FROM messages_fts fts
+        JOIN messages m ON fts.id = m.id
+        JOIN conversations c ON m.conversation_id = c.id
+        LEFT JOIN folders f ON c.folder_id = f.id
+        WHERE messages_fts MATCH ?
+        AND m.message_type != 'thought'
+      `;
+      params.push(matchQuery);
+    } else {
+      console.log('[DB] Short query, fallback to LIKE:', query);
+      
+      sql += `
+        SELECT m.*, c.title as conversation_title, c.folder_id, f.name as folder_name, c.external_url
+        FROM messages m
+        JOIN conversations c ON m.conversation_id = c.id
+        LEFT JOIN folders f ON c.folder_id = f.id
+        WHERE m.content LIKE ?
+        AND m.message_type != 'thought'
+      `;
+      params.push(`%${query}%`);
+    }
+
+    // CTE-based filtering
+    if (options.includeFolderNames && options.includeFolderNames.length > 0) {
+      sql += ` AND c.folder_id IN (SELECT id FROM included_folders)`;
+    }
+
+    if (options.excludeFolderNames && options.excludeFolderNames.length > 0) {
+      sql += ` AND (c.folder_id IS NULL OR c.folder_id NOT IN (SELECT id FROM excluded_folders))`;
+    }
+
+    if (options.roleFilter && options.roleFilter !== 'all') {
+      sql += ` AND m.role = ?`;
+      params.push(options.roleFilter);
+    }
+
+    // If wholeWord is requested, we might need to fetch more results to filter them
+    const limit = options.wholeWord ? 1000 : 500;
+    sql += ` ORDER BY m.timestamp DESC LIMIT ${limit}`;
+
+    try {
+      let results = await runQuery(sql, params);
+
+      // Perform Whole Word filtering in memory if requested
+      if (options.wholeWord && query.trim().length > 0) {
+         const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+         const flags = options.caseSensitive ? '' : 'i';
+         const regex = new RegExp(`\\b${escapedQuery}\\b`, flags);
+         
+         results = results.filter((row: any) => {
+            return row.content && regex.test(row.content);
+         });
+      }
+
+      return results;
+    } catch (e) {
+      console.error(
+        'FTS Search failed, falling back to legacy search (or table missing)',
+        e
+      );
+      throw e;
+    }
+  },
+
+  getScrollIndex: async (messageId: string, conversationId: string): Promise<number> => {
+    const result = await runQuery(
+      `SELECT COUNT(*) as scroll_index
+       FROM messages m
+       WHERE m.conversation_id = ?
+         AND m.role = 'model'
+         AND m.message_type != 'thought'
+         AND m.order_index < (SELECT order_index FROM messages WHERE id = ?)`,
+      [conversationId, messageId]
+    );
+    return result[0]?.scroll_index ?? 0;
+  },
+};

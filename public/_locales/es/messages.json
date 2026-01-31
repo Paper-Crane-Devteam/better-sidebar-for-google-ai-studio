@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Barra Lateral Mejorada para Google AI Studio",
+    "description": "El nombre de la extensión"
+  },
+  "extensionDescription": {
+    "message": "Mejore su experiencia con Google AI Studio con una mejor barra lateral, carpetas, etiquetas, favoritos y escaneo de biblioteca.",
+    "description": "La descripción de la extensión"
+  }
+}
+

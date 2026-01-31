@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Google AI Studio 增強側邊欄",
+    "description": "插件名稱"
+  },
+  "extensionDescription": {
+    "message": "透過更好的側邊欄、資料夾、標籤、收藏和庫掃描等功能增強您的 Google AI Studio 體驗。",
+    "description": "插件描述"
+  }
+}
+

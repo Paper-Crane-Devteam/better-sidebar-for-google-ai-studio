@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "Улучшенная боковая панель для Google AI Studio",
+    "description": "Название расширения"
+  },
+  "extensionDescription": {
+    "message": "Улучшите свой опыт работы с Google AI Studio с помощью улучшенной боковой панели, папок, тегов, избранного и сканирования библиотеки.",
+    "description": "Описание расширения"
+  }
+}

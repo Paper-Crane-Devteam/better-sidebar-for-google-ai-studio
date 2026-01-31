@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Better Sidebar for Google AI Studio",
+    "description": "The name of the extension"
+  },
+  "extensionDescription": {
+    "message": "Enhance your Google AI Studio experience with a better sidebar, folders, tags, favorites, and library scanning.",
+    "description": "The description of the extension"
+  }
+}
+
