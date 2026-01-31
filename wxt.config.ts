@@ -41,6 +41,11 @@ export default defineConfig({
       gecko: {
         id: 'better-sidebar@zhangyu91101313.gmail.com',
         strict_min_version: '109.0',
+        // @ts-ignore: Firefox 140+ data collection permissions
+        data_collection_permissions: {
+          required: ['none'],
+          optional: [],
+        },
       },
     },
     web_accessible_resources: [

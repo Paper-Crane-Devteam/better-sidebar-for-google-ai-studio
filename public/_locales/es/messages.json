@@ -4,7 +4,7 @@
     "description": "El nombre de la extensión"
   },
   "extensionDescription": {
-    "message": "Mejore su experiencia con Google AI Studio con una mejor barra lateral, carpetas, etiquetas, favoritos y escaneo de biblioteca.",
+    "message": "Mejor barra lateral con carpetas, etiquetas, favoritos, biblioteca de prompts, búsqueda profunda, exportación de conversaciones y escaneo de biblioteca.",
     "description": "La descripción de la extensión"
   }
 }

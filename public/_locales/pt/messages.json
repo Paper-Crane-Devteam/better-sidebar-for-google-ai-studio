@@ -4,7 +4,7 @@
     "description": "O nome da extensão"
   },
   "extensionDescription": {
-    "message": "Melhore sua experiência com o Google AI Studio com uma barra lateral melhor, pastas, tags, favoritos e varredura de biblioteca.",
+    "message": "Barra lateral com pastas, tags, favoritos, biblioteca de prompts, busca profunda, exportação de conversas e varredura de biblioteca.",
     "description": "A descrição da extensão"
   }
 }

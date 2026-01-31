@@ -4,7 +4,7 @@
     "description": "拡張機能の名前"
   },
   "extensionDescription": {
-    "message": "より良いサイドバー、フォルダ、タグ、お気に入り、ライブラリスキャン機能で Google AI Studio の体験を向上させます。",
+    "message": "フォルダ、タグ、お気に入り、プロンプトライブラリ、全文検索、会話エクスポート、ライブラリスキャンで Google AI Studio を強化。",
     "description": "拡張機能の説明"
   }
 }

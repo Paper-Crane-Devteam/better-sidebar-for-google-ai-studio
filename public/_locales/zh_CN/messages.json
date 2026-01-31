@@ -4,7 +4,7 @@
     "description": "插件名称"
   },
   "extensionDescription": {
-    "message": "通过更好的侧边栏、文件夹、标签、收藏和库扫描等功能增强您的 Google AI Studio 体验。",
+    "message": "更好的侧边栏：文件夹、标签、收藏、提示词库、深度搜索、对话导出与库扫描。",
     "description": "插件描述"
   }
 }
