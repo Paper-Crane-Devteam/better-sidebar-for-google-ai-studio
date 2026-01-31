@@ -14,7 +14,7 @@ dist-ssr
 *.local
 .dev-profile
 .dev-profile-firefox
-misc
+misc/
 
 # WXT
 .wxt
@@ -22,7 +22,7 @@ misc
 
 # Editor directories and files
 .vscode/*
-.cursor/*
+.cursor/
 !.vscode/extensions.json
 .idea
 .DS_Store
