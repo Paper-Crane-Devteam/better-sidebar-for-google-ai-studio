@@ -5,6 +5,7 @@ BETTER SIDEBAR FOR GOOGLE AI STUDIO 专为开发者和提示词工程师打造�
 
 🔥 最新更新 (v1.1.0)
 • 📝 Prompt 提示词库：保存并管理你的常用提示词，支持变量模版、文件夹和标签分类。
+• 📥 对话导出：支持导出为 Markdown、纯文本和 JSON 格式。
 • 🔍 深度搜索：不仅搜标题，更能全文检索所有历史对话内容。
 • 🌐 多浏览器支持：现已支持 Firefox 和 Edge。
 • ⚡ 体验优化：侧边栏新增 Dashboard 快捷入口，UI 细节打磨。
@@ -16,6 +17,9 @@ BETTER SIDEBAR FOR GOOGLE AI STUDIO 专为开发者和提示词工程师打造�
 
 📝 提示词库 (Prompt Library)
 构建你的私人 Prompt 库。支持使用变量（如 {{topic}}）创建动态模板，一键插入到对话中。
+
+📥 对话导出
+将你的对话导出为 Markdown、纯文本或 JSON 格式，方便分享或存档。
 
 🔍 深度搜索
 告别无尽的滚动。支持对所有历史消息进行全文检索，瞬间找到你需要的任何内容。

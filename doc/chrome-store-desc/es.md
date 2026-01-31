@@ -7,6 +7,7 @@ Transformamos la interfaz predeterminada de AI Studio en una base de conocimient
 
 🔥 NOVEDADES (v1.1.0)
 • 📝 Biblioteca de Prompts: Guarda y gestiona tus mejores prompts con variables, carpetas y etiquetas.
+• 📥 Exportar conversaciones: Exporta como Markdown, texto plano o JSON.
 • 🔍 Búsqueda Profunda: Búsqueda de texto completo en todo tu historial de chat, no solo en títulos.
 • 🌐 Multi-Navegador: Ahora disponible en Firefox y Edge.
 • ⚡ Mejoras de Calidad de Vida: Enlaces rápidos al Dashboard y mejor interfaz de usuario.
@@ -18,6 +19,9 @@ Crea carpetas anidadas para agrupar tus chats por proyecto, cliente o tema. Simp
 
 📝 Biblioteca de Prompts (NUEVO)
 Construye tu biblioteca personal de prompts reutilizables. Usa variables (ej. {{tema}}) para crear plantillas dinámicas e insertarlas al instante.
+
+📥 Exportar Conversaciones (NUEVO)
+Exporta tus conversaciones como Markdown, texto plano o JSON para documentación o respaldo.
 
 🔍 Búsqueda Profunda (MEJORADO)
 No dependas de tu memoria. Realiza búsquedas de texto completo en todos tus mensajes para encontrar exactamente lo que buscas.

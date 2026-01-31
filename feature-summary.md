@@ -357,7 +357,7 @@
 9. Type filtering: Filter by conversation or text-to-image (Explorer); by normal/system (Prompts)
 10. Overlay shortcuts: Build, Dashboard, Documentation, Original UI (settings-controlled)
 11. SQL access: Direct database query interface
-12. Data export/import: SQL dump backup/restore; import history from Takeout ZIP
+12. Data export/import: SQL dump backup/restore; import history from Takeout ZIP; export conversation as Markdown/Text/JSON
 13. Theme sync: Matches AI Studio theme (light/dark)
 14. Responsive: Mobile-friendly overlay
 15. Offscreen database: SQLite WASM in isolated context

@@ -5,10 +5,20 @@ Découvrez Better Sidebar for Google AI Studio — le booster de flux de travail
 
 Nous transformons l'interface par défaut d'AI Studio en une base de connaissances puissante et organisée. Arrêtez de faire défiler sans fin et commencez à organiser vos idées efficacement.
 
+🔥 NOUVEAUTÉS (v1.1.0)
+• 📝 Bibliothèque de Prompts : Sauvegardez et gérez vos meilleurs prompts avec variables, dossiers et tags.
+• 📥 Export des conversations : Exportez en Markdown, texte brut ou JSON.
+• 🔍 Recherche Approfondie : Recherche en texte intégral dans tout l'historique des chats.
+• 🌐 Multi-navigateur : Disponible sur Firefox et Edge.
+• ⚡ Améliorations : Liens rapides vers le tableau de bord et interface améliorée.
+
 🚀 FONCTIONNALITÉS PRINCIPALES
 
 📂 Dossiers Glisser-Déposer
 Créez des dossiers imbriqués pour regrouper vos conversations par projet, client ou sujet. Glissez-déposez simplement les conversations pour garder votre espace de travail propre.
+
+📥 Export des conversations (NOUVEAU)
+Exportez vos conversations en Markdown, texte brut ou JSON pour documentation ou sauvegarde.
 
 🏷️ Système de Tags Intelligent
 Attribuez des tags personnalisés à vos conversations. Qu'il s'agisse de "Programmation", "Rédaction Créative" ou "Débogage", filtrez vos conversations instantanément.

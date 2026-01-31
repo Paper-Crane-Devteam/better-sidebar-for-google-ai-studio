@@ -13,6 +13,7 @@ export const CHANGELOG: ChangeLogItem[] = [
     date: '2026-01-31',
     features: [
       '🚀 **Prompt Library**: A powerful new module to manage your prompts with folders, tags, and variables.',
+      '📥 **Conversation Export**: Export your conversations as Markdown, Plain Text, or JSON.',
       '🔍 **Deep Search**: Full-text search across all your conversations and messages. Find anything instantly.',
       '🌐 **Multi-Browser Support**: Now available for Firefox and Microsoft Edge.',
       "🔗 **Quick Shortcuts**: Added direct access to AI Studio's Build, Dashboard, and Documentation pages in the sidebar.",

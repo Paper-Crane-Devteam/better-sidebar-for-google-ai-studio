@@ -8,7 +8,7 @@ import { cn } from '@/shared/lib/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 
-const SEARCH_DEBOUNCE_MS = 300;
+const SEARCH_DEBOUNCE_MS = 500;
 
 export const SearchInput = () => {
   const { t } = useI18n();

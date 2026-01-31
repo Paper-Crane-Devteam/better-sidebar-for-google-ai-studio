@@ -57,7 +57,14 @@ export const GlobalModal = () => {
                 )}
                 <Button
                   variant={type === 'error' ? 'destructive' : 'default'}
-                  onClick={type === 'confirm' ? onConfirm : onConfirm || close}
+                  onClick={
+                    type === 'confirm'
+                      ? onConfirm
+                      : () => {
+                          onConfirm?.();
+                          close();
+                        }
+                  }
                 >
                   {confirmText || t('common.ok')}
                 </Button>

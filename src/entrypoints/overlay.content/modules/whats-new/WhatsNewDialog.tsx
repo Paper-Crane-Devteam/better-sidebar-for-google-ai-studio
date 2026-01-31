@@ -76,10 +76,10 @@ export const WhatsNewDialog = () => {
 
                 {/* Open Source Section */}
                 <div className="bg-muted/30 p-4 rounded-lg border border-border/50">
-                  <h4 className="text-sm font-medium text-primary flex items-center gap-2 mb-2">
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
                     <Github className="w-4 h-4" /> Open Source
                   </h4>
-                  <p className="text-sm text-muted-foreground mb-3">
+                  <p className="text-sm text-foreground/90 mb-3">
                     This project is now open source! If you find it useful,
                     please consider giving us a star on GitHub. It helps a lot!
                   </p>

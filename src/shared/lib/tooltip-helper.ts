@@ -20,7 +20,7 @@ export class TooltipHelper {
 
     // Create host element
     this.container = document.createElement('div');
-    this.container.id = 'prompt-manager-for-google-ai-studio-tooltip-container';
+    this.container.id = 'better-sidebar-for-google-ai-studio-tooltip-container';
     this.container.style.position = 'absolute';
     this.container.style.top = '0';
     this.container.style.left = '0';
@@ -40,13 +40,13 @@ export class TooltipHelper {
     // Create wrapper for content (where we will portal to)
     this.wrapper = document.createElement('div');
     // Ensure wrapper doesn't block clicks but children do
-    this.wrapper.style.pointerEvents = 'auto'; 
+    this.wrapper.style.pointerEvents = 'auto';
     // Actually, TooltipContent is positioned absolutely, so wrapper size doesn't matter much
     // but we need to ensure the wrapper can hold the portal content.
-    
+
     // We add the theme class to this wrapper
     this.wrapper.classList.add('font-sans'); // Add base font class if needed
-    
+
     this.shadow.appendChild(this.wrapper);
   }
 
@@ -56,7 +56,7 @@ export class TooltipHelper {
 
   setTheme(isDark: boolean) {
     if (!this.wrapper) return;
-    
+
     if (isDark) {
       this.wrapper.classList.add('dark');
     } else {
@@ -64,4 +64,3 @@ export class TooltipHelper {
     }
   }
 }
-

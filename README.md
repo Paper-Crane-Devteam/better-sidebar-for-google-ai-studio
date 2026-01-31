@@ -24,6 +24,11 @@ A fully-featured prompt management system built right into your sidebar. The Pro
 *   **Organized Structure**: Keep your vast collection of prompts sorted with nested folders and colored tags. No more losing your best system prompts.
 *   **Quick Access**: Insert your optimized prompts into any chat with just a click, streamlining your workflow.
 
+### 📥 Conversation Export (New Feature)
+Export your conversations in multiple formats to share or archive them.
+*   **Multiple Formats**: Support for Markdown, Plain Text, and JSON.
+*   **Flexible**: Choose the format that fits your needs for documentation or backup.
+
 ### 🔍 Deep Search (New Module)
 The search engine AI Studio deserves.
 *   **Full-Text Indexing**: We don't just search titles. We index every single message in your history.
@@ -48,6 +53,7 @@ Here is what Better Sidebar can do for you:
 | :--- | :--- |
 | 📂 **Folders** | Drag and drop your chats into nested folders. Keep your "Coding" separate from your "Creative Writing". |
 | 📝 **Prompt Library** | **(New!)** Save, manage, and reuse your best prompts and templates locally with variable support. |
+| 📥 **Conversation Export** | **(New!)** Export conversations as Markdown, Plain Text, or JSON. |
 | 🔍 **Deep Search** | **(New!)** Full-text search across all your conversations. Filter by role, folder, or exact match. |
 | 🏷️ **Tags** | Add custom tags to conversations for flexible filtering. |
 | 📊 **Timeline View** | See your work organized by "Today", "Yesterday", and "Last Week". |

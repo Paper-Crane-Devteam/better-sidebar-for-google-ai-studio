@@ -37,6 +37,12 @@ export default defineConfig({
       extension_pages:
         "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",
     },
+    browser_specific_settings: {
+      gecko: {
+        id: 'better-sidebar@zhangyu91101313.gmail.com',
+        strict_min_version: '109.0',
+      },
+    },
     web_accessible_resources: [
       {
         resources: ['main-world.js', 'sqlite3.js', 'sqlite3.wasm'],
@@ -77,9 +83,7 @@ export default defineConfig({
       '--no-default-browser-check',
       '--no-first-run',
     ],
-    firefoxArgs: [
-      '--keep-profile-changes',
-    ],
+    firefoxArgs: ['--keep-profile-changes'],
     // Persist profile in a custom folder to keep login state
     chromiumProfile: path.resolve(process.cwd(), '.dev-profile'),
     firefoxProfile: path.resolve(process.cwd(), '.dev-profile-firefox'),

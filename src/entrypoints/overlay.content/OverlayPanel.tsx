@@ -3,7 +3,19 @@ import { useAppStore } from '@/shared/lib/store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Button } from './components/ui/button';
 import { Separator } from './components/ui/separator';
-import { Files, Star, Tag, MessageSquare, Settings, Hammer, LayoutDashboard, BookOpen, LogOut, Search, Sparkles } from 'lucide-react';
+import {
+  Files,
+  Star,
+  Tag,
+  MessageSquare,
+  Settings,
+  Hammer,
+  LayoutDashboard,
+  BookOpen,
+  LogOut,
+  Search,
+  Sparkles,
+} from 'lucide-react';
 import { SqlExecutor } from './components/menu/SqlExecutor';
 import { ExplorerTab } from './modules/explorer/ExplorerTab';
 import { PromptsTab } from './modules/prompts/PromptsTab';
@@ -27,12 +39,12 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   useAppInit();
   const { t } = useI18n();
   const { path } = useUrl();
-  
+
   const [, setContainer] = useState<HTMLDivElement | null>(null);
-  const layoutDensity = useSettingsStore(state => state.layoutDensity);
-  const shortcuts = useSettingsStore(state => state.shortcuts);
-  const { 
-    fetchData, 
+  const layoutDensity = useSettingsStore((state) => state.layoutDensity);
+  const shortcuts = useSettingsStore((state) => state.shortcuts);
+  const {
+    fetchData,
     ui,
     setOverlayOpen: setIsUIVisible,
     setActiveTab,
@@ -41,16 +53,26 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     setExplorerViewMode,
     setExplorerSortOrder,
     setTempHiddenToken,
-    setSettingsOpen: setIsSettingsOpen
+    setSettingsOpen: setIsSettingsOpen,
   } = useAppStore();
 
-  const { isOpen: isUIVisible, activeTab, isScanning, showSqlInterface, tempHiddenToken, isSettingsOpen } = ui.overlay;
-  
+  const {
+    isOpen: isUIVisible,
+    activeTab,
+    isScanning,
+    showSqlInterface,
+    tempHiddenToken,
+    isSettingsOpen,
+  } = ui.overlay;
+
   // Handle auto-switching UI based on URL
   useEffect(() => {
     // If returning to main chat area (new chat or root) and we have a hidden token,
     // restore the custom sidebar and clear the token.
-    if ((path === '/' || path.includes('/prompts/new_chat')) && tempHiddenToken) {
+    if (
+      (path === '/' || path.includes('/prompts/new_chat')) &&
+      tempHiddenToken
+    ) {
       setIsUIVisible(true);
       setTempHiddenToken(null);
     }
@@ -58,29 +80,33 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
 
   // 1. Handle UI Toggle Side Effects
   useEffect(() => {
-      const navbarHider = document.getElementById('prompt-manager-for-google-ai-studio-navbar-hider') as HTMLStyleElement;
-      const navbar = document.querySelector('ms-navbar') as HTMLElement;
-      const wrapper = document.getElementById('prompt-manager-for-google-ai-studio-sidebar-wrapper');
+    const navbarHider = document.getElementById(
+      'better-sidebar-for-google-ai-studio-navbar-hider',
+    ) as HTMLStyleElement;
+    const navbar = document.querySelector('ms-navbar') as HTMLElement;
+    const wrapper = document.getElementById(
+      'better-sidebar-for-google-ai-studio-sidebar-wrapper',
+    );
 
-      if (isUIVisible) {
-          // Show Enhanced UI, Hide Original
-          if (navbarHider) navbarHider.disabled = false;
-          if (navbar) {
-             navbar.style.display = 'none';
-             navbar.style.position = 'absolute';
-             navbar.style.left = '-9999px';
-          }
-          if (wrapper) wrapper.style.display = 'block';
-      } else {
-          // Hide Enhanced UI, Show Original
-          if (navbarHider) navbarHider.disabled = true;
-          if (navbar) {
-             navbar.style.display = ''; // Reset to default
-             navbar.style.position = '';
-             navbar.style.left = '';
-          }
-          if (wrapper) wrapper.style.display = 'none';
+    if (isUIVisible) {
+      // Show Enhanced UI, Hide Original
+      if (navbarHider) navbarHider.disabled = false;
+      if (navbar) {
+        navbar.style.display = 'none';
+        navbar.style.position = 'absolute';
+        navbar.style.left = '-9999px';
       }
+      if (wrapper) wrapper.style.display = 'block';
+    } else {
+      // Hide Enhanced UI, Show Original
+      if (navbarHider) navbarHider.disabled = true;
+      if (navbar) {
+        navbar.style.display = ''; // Reset to default
+        navbar.style.position = '';
+        navbar.style.left = '';
+      }
+      if (wrapper) wrapper.style.display = 'none';
+    }
   }, [isUIVisible]);
 
   useEffect(() => {
@@ -88,27 +114,35 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     fetchData();
 
     // Restore state from local storage
-    browser.storage.local.get(['sidepanel_sort_order', 'sidepanel_active_tab', 'sidepanel_view_mode'], (result) => {
-      if (result.sidepanel_active_tab && result.sidepanel_active_tab !== 'settings') {
-        setActiveTab(result.sidepanel_active_tab as any);
-      } else if (result.sidepanel_active_tab === 'settings') {
-        setActiveTab('files'); // Fallback if it was settings
-      }
+    browser.storage.local.get(
+      ['sidepanel_sort_order', 'sidepanel_active_tab', 'sidepanel_view_mode'],
+      (result) => {
+        if (
+          result.sidepanel_active_tab &&
+          result.sidepanel_active_tab !== 'settings'
+        ) {
+          setActiveTab(result.sidepanel_active_tab as any);
+        } else if (result.sidepanel_active_tab === 'settings') {
+          setActiveTab('files'); // Fallback if it was settings
+        }
 
-      const defaultExplorerSettings = useSettingsStore.getState().explorer;
+        const defaultExplorerSettings = useSettingsStore.getState().explorer;
 
-      if (result.sidepanel_view_mode) {
-        setExplorerViewMode(result.sidepanel_view_mode as 'tree' | 'timeline');
-      } else {
-        setExplorerViewMode(defaultExplorerSettings.viewMode);
-      }
+        if (result.sidepanel_view_mode) {
+          setExplorerViewMode(
+            result.sidepanel_view_mode as 'tree' | 'timeline',
+          );
+        } else {
+          setExplorerViewMode(defaultExplorerSettings.viewMode);
+        }
 
-      if (result.sidepanel_sort_order) {
-        setExplorerSortOrder(result.sidepanel_sort_order as 'alpha' | 'date');
-      } else {
-        setExplorerSortOrder(defaultExplorerSettings.sortOrder);
-      }
-    });
+        if (result.sidepanel_sort_order) {
+          setExplorerSortOrder(result.sidepanel_sort_order as 'alpha' | 'date');
+        } else {
+          setExplorerSortOrder(defaultExplorerSettings.sortOrder);
+        }
+      },
+    );
 
     // Listen for updates from background script
     const listener = (message: any) => {
@@ -116,7 +150,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
         console.log('Received DATA_UPDATED signal, refreshing...');
         fetchData(true);
         setIsScanning(false);
-        
+
         // Handle specific update types with payload
         if (message.updateType === 'SCAN_COMPLETE' && message.payload) {
           const count = message.payload.count || 0;
@@ -131,26 +165,35 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     };
     browser.runtime.onMessage.addListener(listener);
     return () => {
-        browser.runtime.onMessage.removeListener(listener);
+      browser.runtime.onMessage.removeListener(listener);
     };
   }, []);
 
   // Handle tab activation/visibility change to sync data
   useEffect(() => {
     const handleVisibilityChange = () => {
-        if (document.visibilityState === 'visible') {
-            console.log('Tab became visible, refreshing data...');
-            fetchData(true);
-        }
+      if (document.visibilityState === 'visible') {
+        console.log('Tab became visible, refreshing data...');
+        fetchData(true);
+      }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [fetchData]);
 
-  const handleTabChange = (tab: 'files' | 'favorites' | 'tags' | 'feedback' | 'settings' | 'search' | 'prompts') => {
+  const handleTabChange = (
+    tab:
+      | 'files'
+      | 'favorites'
+      | 'tags'
+      | 'feedback'
+      | 'settings'
+      | 'search'
+      | 'prompts',
+  ) => {
     if (tab === 'settings') {
       setIsSettingsOpen(true);
       return;
@@ -160,7 +203,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   };
 
   if (!isUIVisible) {
-      return <OverlayToggle onToggle={() => setIsUIVisible(true)} />;
+    return <OverlayToggle onToggle={() => setIsUIVisible(true)} />;
   }
 
   if (showSqlInterface) {

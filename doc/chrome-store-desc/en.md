@@ -7,6 +7,7 @@ We transform the default AI Studio interface into a powerful, organized knowledg
 
 🔥 WHAT'S NEW (v1.1.0)
 • 📝 Prompt Library: Save and manage your best prompts with variables, folders, and tags.
+• 📥 Conversation Export: Export conversations as Markdown, Plain Text, or JSON.
 • 🔍 Deep Search: Full-text search across all your chat history, not just titles.
 • 🌐 Multi-Browser: Now available on Firefox and Edge.
 • ⚡ QoL Improvements: Quick links to Build/Dashboard and better UI.
@@ -18,6 +19,9 @@ Create nested folders to group your chats by project, client, or topic. Simply d
 
 📝 Prompt Library (NEW)
 Build your personal library of reusable prompts. Use variables (e.g., {{topic}}) to create dynamic templates and insert them into chats instantly.
+
+📥 Conversation Export (NEW)
+Export your conversations as Markdown, Plain Text, or JSON for documentation or backup.
 
 🔍 Deep Search (UPGRADED)
 Don't rely on your memory. Perform full-text searches across every message in your history to find exactly what you're looking for.
