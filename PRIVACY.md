@@ -28,7 +28,7 @@ The Extension requires specific permissions to function:
 
 ## 3. Data Backup and Export
 
-Since your data is stored locally, you are responsible for backing it up. The Extension provides an **Export** feature that generates a SQL file of your organizational data. We strongly recommend regular backups, especially before clearing your browser data.
+Since your data is stored locally, you are responsible for backing it up. The Extension provides an **Export** feature that generates a DB file of your organizational data. We strongly recommend regular backups, especially before clearing your browser data.
 
 ## 4. Third-Party Services
 

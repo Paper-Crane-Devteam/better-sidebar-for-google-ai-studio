@@ -233,7 +233,7 @@
 - Sections: General, Explorer, Data & Storage, Privacy Policy, Disclaimer, Sponsor, About
 - GeneralSettings: Theme (light/dark/system), layout density (compact/relaxed), new chat behavior (current-tab/new-tab), auto scan library, overlay position
 - ExplorerSettings: View mode (tree/timeline), sort order (alpha/date), ignored folders
-- DataSettings: Scan library, reset database, export data (SQL dump), import data (SQL file)
+- DataSettings: Scan library, reset database, export data (SQL dump), import data (DB file)
 - PrivacySettings: Privacy policy content
 - DisclaimerSettings: Disclaimer content
 - SponsorSettings: Sponsor information
@@ -301,7 +301,7 @@
 
 ## Data Management Hook (overlay.content/modules/settings/hooks/useDataManagement.ts)
 - exportData: Exports database as SQL, downloads as file
-- importData: Reads SQL file, imports to database
+- importData: Reads DB file, imports to database
 - resetData: Confirms and resets database
 - scanLibrary: Triggers library scan
 

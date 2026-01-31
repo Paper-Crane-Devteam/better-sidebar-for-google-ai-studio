@@ -118,7 +118,7 @@ This project is now open source! If you're a developer and want to help make it 
 
 *   **Don't Panic:** Your data is stored locally.
 *   **Check Database:** In the `Settings`, try exporting your data to see if it's still there.
-*   **Restore:** If you have a previous backup (SQL file), use the Import function to restore your state.
+*   **Restore:** If you have a previous backup (DB file), use the Import function to restore your state.
 </details>
 
 ### Reporting Bugs
