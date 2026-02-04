@@ -354,7 +354,12 @@
     "indexingImport": "Import History: Use the import feature to load your conversation history.",
     "indexingScan": "Scan Library: Ensure the Explorer has scanned and imported your library to index all titles.",
     "whyNoOlder": "Why can't I find older conversations?",
-    "understood": "Understood"
+    "understood": "Understood",
+    "context": "Context",
+    "modelResponse": "Model's Response",
+    "userPrompt": "User's Prompt",
+    "noContextFound": "No related message found",
+    "loadingContext": "Loading context..."
   },
   "importHistory": {
     "selectZipHint": "Select the ZIP file downloaded from Google Drive containing your chat history.",

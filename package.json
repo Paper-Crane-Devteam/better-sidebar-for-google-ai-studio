@@ -1,7 +1,7 @@
 {
   "name": "better-sidebar-for-google-ai-studio",
   "type": "module",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "private": true,
   "scripts": {
     "dev": "wxt",
@@ -46,7 +46,6 @@
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
-    "wa-sqlite": "^1.1.0",
     "webextension-polyfill": "^0.12.0",
     "zustand": "^4.5.1"
   },

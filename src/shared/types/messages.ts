@@ -183,6 +183,10 @@ export type ExtensionMessage =
       type: 'GET_MESSAGE_SCROLL_INDEX';
       payload: { messageId: string; conversationId: string };
     }
+  | {
+      type: 'GET_ADJACENT_MESSAGE';
+      payload: { messageId: string; conversationId: string; currentRole: 'user' | 'model' };
+    }
   | { type: 'GET_PROMPT_FOLDERS' }
   | {
       type: 'CREATE_PROMPT_FOLDER';

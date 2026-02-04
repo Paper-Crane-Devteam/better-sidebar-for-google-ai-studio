@@ -162,7 +162,24 @@ const sendWorkerMessage = async (type: string, payload?: any): Promise<any> => {
   
   return new Promise((resolve, reject) => {
     const id = crypto.randomUUID();
-    pendingRequests.set(id, { resolve, reject });
+    
+    const timeoutId = setTimeout(() => {
+      if (pendingRequests.has(id)) {
+        pendingRequests.delete(id);
+        reject(new Error(`DB Request ${type} timed out after 30s`));
+      }
+    }, 30000);
+
+    pendingRequests.set(id, { 
+      resolve: (val) => {
+        clearTimeout(timeoutId);
+        resolve(val);
+      }, 
+      reject: (err) => {
+        clearTimeout(timeoutId);
+        reject(err);
+      } 
+    });
     
     if (localWorker) {
       localWorker.postMessage({ id, type, payload });

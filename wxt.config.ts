@@ -50,7 +50,7 @@ export default defineConfig({
     },
     web_accessible_resources: [
       {
-        resources: ['main-world.js', 'sqlite3.js', 'sqlite3.wasm'],
+        resources: ['main-world.js', 'wa-sqlite-async.mjs', 'wa-sqlite-async.wasm'],
         matches: ['https://aistudio.google.com/*'],
       },
     ],
@@ -78,11 +78,12 @@ export default defineConfig({
     esbuild: {
       // Only drop console and debugger in production mode
       ...(env.mode === 'production' && {
-        drop: ['console', 'debugger'],
+        pure: ['console.log', 'console.debug', 'console.info'],
+        drop: ['debugger'],
       }),
     },
   }),
-  runner: {
+  webExt: {
     chromiumArgs: [
       '--disable-blink-features=AutomationControlled',
       '--no-default-browser-check',

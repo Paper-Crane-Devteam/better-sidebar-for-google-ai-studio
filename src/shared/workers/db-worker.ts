@@ -6,7 +6,7 @@ import { SCHEMA } from '@/shared/db/schema';
 let db: any = null;
 let initPromise: Promise<boolean> | null = null;
 
-const DB_NAME = 'prompt-manager-for-google-ai-studio';
+const DB_NAME = 'prompt-manager-for-google-ai-studio.db';
 const WASM_URL = '/assets/wa-sqlite-async.wasm';
 
 // Request queue to ensure serial execution of DB operations
@@ -19,19 +19,34 @@ const initDB = async () => {
   initPromise = (async () => {
     try {
       console.log('Worker: Initializing database...');
-      
-      const useOpfs = await isOpfsSupported();
-      console.log(`Worker: Storage mode: ${useOpfs ? 'OPFS' : 'IndexedDB'}`);
 
-      if (useOpfs) {
-        db = await initSQLite(
-          useOpfsStorage(DB_NAME, { url: WASM_URL })
-        );
-      } else {
-        db = await initSQLite(
-          useIdbStorage(DB_NAME, { url: WASM_URL })
-        );
-      }
+      // Add 30s timeout for DB initialization
+      const initPromise = new Promise(async (resolve, reject) => {
+        const timeoutId = setTimeout(() => reject(new Error('DB Initialization timed out after 30s')), 30000);
+        
+        try {
+          const useOpfs = await isOpfsSupported();
+          console.log(`Worker: Storage mode: ${useOpfs ? 'OPFS' : 'IndexedDB'}`);
+
+          let database;
+          if (useOpfs) {
+            database = await initSQLite(
+              useOpfsStorage(DB_NAME, { url: WASM_URL })
+            );
+          } else {
+            database = await initSQLite(
+              useIdbStorage(DB_NAME, { url: WASM_URL })
+            );
+          }
+          clearTimeout(timeoutId);
+          resolve(database);
+        } catch (e) {
+          clearTimeout(timeoutId);
+          reject(e);
+        }
+      });
+
+      db = await initPromise;
 
       // Initialize Schema
       await db.run('PRAGMA foreign_keys = ON;');
@@ -56,31 +71,46 @@ const runMigrations = async (db: any) => {
   console.log('Worker: Checking for migrations...');
   
   try {
+    // Helper to check if a column exists in a table
+    const hasColumn = async (table: string, column: string): Promise<boolean> => {
+      const columns = await db.run(`PRAGMA table_info(${table})`);
+      return columns.some((col: any) => col.name === column);
+    };
+
     // Migration: Add order_index to messages if missing
-    const messagesColumns = await db.run("PRAGMA table_info(messages)");
-    const hasOrderIndex = messagesColumns.some((col: any) => col.name === 'order_index');
-    
-    if (!hasOrderIndex) {
+    if (!(await hasColumn('messages', 'order_index'))) {
       console.log('Worker: Migrating messages table - adding order_index');
       await db.run("ALTER TABLE messages ADD COLUMN order_index INTEGER DEFAULT 0");
     }
 
+    // Migration: Add message_type to messages if missing
+    if (!(await hasColumn('messages', 'message_type'))) {
+      console.log('Worker: Migrating messages table - adding message_type');
+      await db.run("ALTER TABLE messages ADD COLUMN message_type TEXT DEFAULT 'text'");
+    }
+
     // Migration: Add order_index to conversations if missing
-    const conversationColumns = await db.run("PRAGMA table_info(conversations)");
-    const convHasOrderIndex = conversationColumns.some((col: any) => col.name === 'order_index');
-    
-    if (!convHasOrderIndex) {
-        console.log('Worker: Migrating conversations table - adding order_index');
-        await db.run("ALTER TABLE conversations ADD COLUMN order_index INTEGER DEFAULT 0");
+    if (!(await hasColumn('conversations', 'order_index'))) {
+      console.log('Worker: Migrating conversations table - adding order_index');
+      await db.run("ALTER TABLE conversations ADD COLUMN order_index INTEGER DEFAULT 0");
+    }
+
+    // Migration: Add prompt_metadata to conversations if missing
+    if (!(await hasColumn('conversations', 'prompt_metadata'))) {
+      console.log('Worker: Migrating conversations table - adding prompt_metadata');
+      await db.run("ALTER TABLE conversations ADD COLUMN prompt_metadata TEXT");
+    }
+
+    // Migration: Add type to conversations if missing
+    if (!(await hasColumn('conversations', 'type'))) {
+      console.log('Worker: Migrating conversations table - adding type');
+      await db.run("ALTER TABLE conversations ADD COLUMN type TEXT DEFAULT 'conversation'");
     }
 
     // Migration: Add order_index to folders if missing
-    const folderColumns = await db.run("PRAGMA table_info(folders)");
-    const folderHasOrderIndex = folderColumns.some((col: any) => col.name === 'order_index');
-
-    if (!folderHasOrderIndex) {
-        console.log('Worker: Migrating folders table - adding order_index');
-        await db.run("ALTER TABLE folders ADD COLUMN order_index INTEGER DEFAULT 0");
+    if (!(await hasColumn('folders', 'order_index'))) {
+      console.log('Worker: Migrating folders table - adding order_index');
+      await db.run("ALTER TABLE folders ADD COLUMN order_index INTEGER DEFAULT 0");
     }
 
   } catch (err) {

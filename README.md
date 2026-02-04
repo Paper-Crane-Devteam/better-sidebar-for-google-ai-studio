@@ -2,9 +2,9 @@
 
 ![Better Sidebar Banner](./assets/images/marquee.jpg)
 
-[![Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-Available-blue?style=for-the-badge&logo=google-chrome)](https://chrome.google.com/webstore/detail/your-extension-id)
-[![Firefox Add-ons](https://img.shields.io/badge/Firefox_Add--ons-Available-orange?style=for-the-badge&logo=firefox)](https://addons.mozilla.org/en-US/firefox/addon/your-extension-id)
-[![Edge Add-ons](https://img.shields.io/badge/Edge_Add--ons-Available-blue?style=for-the-badge&logo=microsoft-edge)](https://microsoftedge.microsoft.com/addons/detail/your-extension-id)
+[![Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-Available-blue?style=for-the-badge&logo=google-chrome)](https://chromewebstore.google.com/detail/better-sidebar-for-google/cjeoaidogoaekodkbhijgljhenknkenj)
+[![Firefox Add-ons](https://img.shields.io/badge/Firefox_Add--ons-Available-orange?style=for-the-badge&logo=firefox)](https://addons.mozilla.org/en-US/firefox/addon/better-sidebar-for-ai-studio)
+[![Edge Add-ons](https://img.shields.io/badge/Edge_Add--ons-Coming_Soon-gray?style=for-the-badge&logo=microsoft-edge)](https://microsoftedge.microsoft.com/addons/)
 [![Privacy Policy](https://img.shields.io/badge/Privacy-Policy-green?style=for-the-badge)](./PRIVACY.md)
 [![License](https://img.shields.io/badge/License-Open_Source-orange?style=for-the-badge)](./LICENSE)
 
@@ -38,7 +38,7 @@ The search engine AI Studio deserves.
 ### 🌐 Expanded Browser Support
 We are bringing Better Sidebar to more users!
 *   **Firefox**: Fully supported.
-*   **Microsoft Edge**: Fully supported.
+*   **Microsoft Edge**: Coming soon (not yet available).
 
 ### ✨ Quality of Life Improvements
 *   **Sidebar Shortcuts**: Added 3 dedicated buttons for AI Studio's native **Build**, **Dashboard**, and **Documentation** pages, making it easier to navigate the platform without disabling the extension.
@@ -84,11 +84,11 @@ We're just getting started. Here is what's on our mind:
 
 ## 📥 Installation
 
-**[Get it from the Chrome Web Store](https://chrome.google.com/webstore/detail/your-extension-id)**
+**[Get it from the Chrome Web Store](https://chromewebstore.google.com/detail/better-sidebar-for-google/cjeoaidogoaekodkbhijgljhenknkenj)**
 
 Also available on:
-*   [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/your-extension-id)
-*   [Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/your-extension-id)
+*   [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/better-sidebar-for-ai-studio)
+*   **Microsoft Edge**: Not yet supported (coming soon).
 
 ## 🤝 Contributing
 

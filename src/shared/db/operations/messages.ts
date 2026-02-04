@@ -236,4 +236,43 @@ export const messageRepo = {
     );
     return result[0]?.scroll_index ?? 0;
   },
+
+  /**
+   * Get the adjacent message based on role:
+   * - If current message is 'user', find the next 'model' message
+   * - If current message is 'model', find the previous 'user' message
+   */
+  getAdjacentMessage: async (
+    messageId: string,
+    conversationId: string,
+    currentRole: 'user' | 'model'
+  ): Promise<Message | null> => {
+    if (currentRole === 'user') {
+      // Find the next model message (order_index > current)
+      const result = await runQuery(
+        `SELECT m.* FROM messages m
+         WHERE m.conversation_id = ?
+           AND m.role = 'model'
+           AND m.message_type != 'thought'
+           AND m.order_index > (SELECT order_index FROM messages WHERE id = ?)
+         ORDER BY m.order_index ASC
+         LIMIT 1`,
+        [conversationId, messageId]
+      );
+      return result[0] || null;
+    } else {
+      // Find the previous user message (order_index < current)
+      const result = await runQuery(
+        `SELECT m.* FROM messages m
+         WHERE m.conversation_id = ?
+           AND m.role = 'user'
+           AND m.message_type != 'thought'
+           AND m.order_index < (SELECT order_index FROM messages WHERE id = ?)
+         ORDER BY m.order_index DESC
+         LIMIT 1`,
+        [conversationId, messageId]
+      );
+      return result[0] || null;
+    }
+  },
 };

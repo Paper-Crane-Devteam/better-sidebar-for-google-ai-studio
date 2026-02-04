@@ -15,6 +15,5 @@
   "include": [
     "src/**/*",
     ".wxt/types/**/*",
-    "src/types/**/*.d.ts"
-, "public/sqlite3.js"  ]
+    "src/types/**/*.d.ts"]
 }

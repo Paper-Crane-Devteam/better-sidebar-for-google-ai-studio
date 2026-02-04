@@ -350,7 +350,12 @@
     "indexingImport": "履歴のインポート：インポート機能で会話履歴を読み込みます。",
     "indexingScan": "ライブラリのスキャン：エクスプローラーがライブラリをスキャンしてインポートし、すべてのタイトルをインデックスしていることを確認してください。",
     "whyNoOlder": "古い会話が見つからない理由",
-    "understood": "了解"
+    "understood": "了解",
+    "context": "コンテキスト",
+    "modelResponse": "モデルの応答",
+    "userPrompt": "ユーザーのプロンプト",
+    "noContextFound": "関連メッセージが見つかりません",
+    "loadingContext": "コンテキストを読み込み中..."
   },
   "importHistory": {
     "selectZipHint": "Google ドライブからダウンロードしたチャット履歴を含む ZIP ファイルを選択してください。",
