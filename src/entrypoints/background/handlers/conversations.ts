@@ -23,7 +23,8 @@ export async function handleConversations(
     }
     case 'SAVE_CONVERSATION': {
       const { messages, ...convoData } = message.payload;
-      await conversationRepo.save(convoData);
+      const platform = convoData.platform ?? 'aistudio';
+      await conversationRepo.save({ ...convoData, platform });
       if (messages?.length) {
         await messageRepo.deleteByConversationId(convoData.id);
         await messageRepo.bulkInsert(convoData.id, messages);
@@ -59,8 +60,10 @@ export async function handleConversations(
         created_at,
         prompt_metadata,
         external_id,
+        external_url: providedExternalUrl,
         folderId: providedFolderId,
         type,
+        platform = 'aistudio',
       } = message.payload;
       let folderId = providedFolderId;
       if (!folderId) {
@@ -72,16 +75,22 @@ export async function handleConversations(
           await folderRepo.create({ id: folderId, name: importedName });
         }
       }
+      const external_url =
+        providedExternalUrl ??
+        (platform === 'gemini'
+          ? `https://gemini.google.com/app/${id}`
+          : `https://aistudio.google.com/prompts/${id}`);
       await conversationRepo.save({
         id,
         title,
         folder_id: folderId,
         external_id,
-        external_url: `https://aistudio.google.com/prompts/${id}`,
+        external_url,
         updated_at: Math.floor(Date.now() / 1000),
         created_at,
         prompt_metadata: prompt_metadata ? JSON.stringify(prompt_metadata) : null,
         type: type || 'conversation',
+        platform,
       });
       await notifyDataUpdated();
       return { success: true };

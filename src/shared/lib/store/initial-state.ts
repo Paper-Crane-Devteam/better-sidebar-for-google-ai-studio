@@ -1,7 +1,10 @@
 import type { UIState } from './types';
 
+import { Platform } from '@/shared/types/platform';
+
 export const initialUIState: UIState = {
   overlay: {
+    currentPlatform: Platform.AI_STUDIO,
     isOpen: true,
     activeTab: 'files',
     isScanning: false,

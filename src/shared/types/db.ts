@@ -15,6 +15,7 @@ export interface Conversation {
   external_url: string | null;
   model_name: string | null;
   type: string;
+  platform: string; // 'aistudio' | 'gemini' | 'chatgpt' | 'claude'
   order_index: number;
   updated_at: number;
   created_at: number;

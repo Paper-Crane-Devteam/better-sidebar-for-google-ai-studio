@@ -25,6 +25,7 @@ export type ExtensionMessage =
         external_url?: string;
         model_name?: string;
         updated_at: number;
+        platform?: string;
         messages: {
           role: 'user' | 'model';
           content: string;
@@ -57,8 +58,10 @@ export type ExtensionMessage =
         prompt_metadata?: any;
         created_at: number;
         external_id: string;
+        external_url?: string;
         folderId?: string | null;
         type?: string;
+        platform?: string;
       };
     }
   | { type: 'SCAN_LIBRARY' }
@@ -74,6 +77,11 @@ export type ExtensionMessage =
           external_url: string;
           model_name?: string;
           updated_at: number;
+          platform?: string;
+          created_at?: number;
+          prompt_metadata?: any;
+          type?: string;
+          folder_id?: string | null;
         }[];
       };
     }

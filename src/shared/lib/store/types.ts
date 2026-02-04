@@ -5,6 +5,7 @@ import {
   Prompt,
   PromptFolder,
 } from '../../types/db';
+import type { Platform } from '../../types/platform';
 
 export interface Folder {
   id: string;
@@ -23,10 +24,12 @@ export interface Conversation {
   external_url?: string;
   external_id?: string;
   type?: 'conversation' | 'text-to-image';
+  platform?: string;
 }
 
 export interface UIState {
   overlay: {
+    currentPlatform: Platform;
     isOpen: boolean;
     activeTab:
       | 'files'
@@ -139,6 +142,7 @@ export interface AppState {
     tagId: string,
   ) => Promise<void>;
 
+  setCurrentPlatform: (platform: Platform) => void;
   setOverlayOpen: (isOpen: boolean) => void;
   setSettingsOpen: (isOpen: boolean) => void;
   setTempHiddenToken: (token: string | null) => void;

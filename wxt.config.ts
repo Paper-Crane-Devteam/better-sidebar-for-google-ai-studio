@@ -23,7 +23,10 @@ export default defineConfig({
       'scripting',
       'offscreen',
     ],
-    host_permissions: ['https://aistudio.google.com/*'],
+    host_permissions: [
+      'https://aistudio.google.com/*',
+      'https://gemini.google.com/*',
+    ],
     // Temporarily disabled: sidepanel entry point (action button)
     // action: {
     //   default_title: 'Click to open side panel',
@@ -51,7 +54,7 @@ export default defineConfig({
     web_accessible_resources: [
       {
         resources: ['main-world.js', 'wa-sqlite-async.mjs', 'wa-sqlite-async.wasm'],
-        matches: ['https://aistudio.google.com/*'],
+        matches: ['https://aistudio.google.com/*', 'https://gemini.google.com/*'],
       },
     ],
   },

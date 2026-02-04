@@ -5,16 +5,18 @@ export const conversationRepo = {
   save: async (
     c: Partial<Conversation> & Pick<Conversation, 'id'>
   ): Promise<void> => {
+    const platform = c.platform ?? 'aistudio';
     await runCommand(
       `
-      INSERT INTO conversations (id, title, folder_id, external_id, external_url, model_name, type, updated_at, created_at, prompt_metadata)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO conversations (id, title, folder_id, external_id, external_url, model_name, type, platform, updated_at, created_at, prompt_metadata)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
         folder_id = COALESCE(excluded.folder_id, conversations.folder_id),
         external_url = excluded.external_url,
         model_name = excluded.model_name,
         type = COALESCE(excluded.type, conversations.type),
+        platform = COALESCE(excluded.platform, conversations.platform),
         updated_at = excluded.updated_at,
         created_at = COALESCE(excluded.created_at, conversations.created_at),
         prompt_metadata = COALESCE(excluded.prompt_metadata, conversations.prompt_metadata)
@@ -27,6 +29,7 @@ export const conversationRepo = {
         c.external_url,
         c.model_name,
         c.type || 'conversation',
+        platform,
         c.updated_at || Math.floor(Date.now() / 1000),
         c.created_at || null,
         c.prompt_metadata ? JSON.stringify(c.prompt_metadata) : null,
@@ -73,6 +76,7 @@ export const conversationRepo = {
         | 'model_name'
         | 'updated_at'
         | 'prompt_metadata'
+        | 'platform'
       >
     >
   ): Promise<void> => {
@@ -123,33 +127,38 @@ export const conversationRepo = {
   ): Promise<void> => {
     if (conversations.length === 0) return;
 
-    const operations = conversations.map((c) => ({
-      sql: `
-      INSERT INTO conversations (id, title, folder_id, external_id, external_url, model_name, type, updated_at, created_at, prompt_metadata)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    const operations = conversations.map((c) => {
+      const platform = c.platform ?? 'aistudio';
+      return {
+        sql: `
+      INSERT INTO conversations (id, title, folder_id, external_id, external_url, model_name, type, platform, updated_at, created_at, prompt_metadata)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
         folder_id = COALESCE(excluded.folder_id, conversations.folder_id),
         external_url = excluded.external_url,
         model_name = excluded.model_name,
         type = COALESCE(excluded.type, conversations.type),
+        platform = COALESCE(excluded.platform, conversations.platform),
         updated_at = excluded.updated_at,
         created_at = COALESCE(excluded.created_at, conversations.created_at),
         prompt_metadata = COALESCE(excluded.prompt_metadata, conversations.prompt_metadata)
     `,
-      bind: [
-        c.id,
-        c.title,
-        c.folder_id,
-        c.external_id,
-        c.external_url,
-        c.model_name,
-        c.type || 'conversation',
-        c.updated_at || Math.floor(Date.now() / 1000),
-        c.created_at || null,
-        c.prompt_metadata ? JSON.stringify(c.prompt_metadata) : null,
-      ],
-    }));
+        bind: [
+          c.id,
+          c.title,
+          c.folder_id,
+          c.external_id,
+          c.external_url,
+          c.model_name,
+          c.type || 'conversation',
+          platform,
+          c.updated_at || Math.floor(Date.now() / 1000),
+          c.created_at || null,
+          c.prompt_metadata ? JSON.stringify(c.prompt_metadata) : null,
+        ],
+      };
+    });
 
     await runBatch(operations);
   },

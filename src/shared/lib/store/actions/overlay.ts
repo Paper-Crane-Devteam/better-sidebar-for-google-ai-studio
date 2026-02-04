@@ -2,6 +2,7 @@ import type { AppState, SetState } from '../types';
 
 export function createOverlayActions(set: SetState): Pick<
   AppState,
+  | 'setCurrentPlatform'
   | 'setOverlayOpen'
   | 'setSettingsOpen'
   | 'setTempHiddenToken'
@@ -10,6 +11,10 @@ export function createOverlayActions(set: SetState): Pick<
   | 'setShowSqlInterface'
 > {
   return {
+    setCurrentPlatform: (currentPlatform) =>
+      set((state) => ({
+        ui: { ...state.ui, overlay: { ...state.ui.overlay, currentPlatform } },
+      })),
     setOverlayOpen: (isOpen) =>
       set((state) => ({
         ui: { ...state.ui, overlay: { ...state.ui.overlay, isOpen } },

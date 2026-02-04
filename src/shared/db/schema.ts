@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS conversations (
   external_url TEXT,
   model_name TEXT,
   type TEXT DEFAULT 'conversation',
+  platform TEXT DEFAULT 'aistudio', -- 'aistudio' | 'gemini' | 'chatgpt' | 'claude'
   order_index INTEGER DEFAULT 0,
   updated_at INTEGER DEFAULT (unixepoch()),
   created_at INTEGER DEFAULT (unixepoch()),
@@ -72,6 +73,7 @@ CREATE TABLE IF NOT EXISTS favorites (
 
 CREATE INDEX IF NOT EXISTS idx_folders_parent ON folders(parent_id);
 CREATE INDEX IF NOT EXISTS idx_conversations_folder ON conversations(folder_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_platform ON conversations(platform);
 CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_favorites_target ON favorites(target_id, target_type);
 

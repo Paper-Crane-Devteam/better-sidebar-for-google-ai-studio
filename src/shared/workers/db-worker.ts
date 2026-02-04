@@ -107,6 +107,14 @@ const runMigrations = async (db: any) => {
       await db.run("ALTER TABLE conversations ADD COLUMN type TEXT DEFAULT 'conversation'");
     }
 
+    // Migration: Add platform to conversations if missing
+    if (!(await hasColumn('conversations', 'platform'))) {
+      console.log('Worker: Migrating conversations table - adding platform');
+      await db.run("ALTER TABLE conversations ADD COLUMN platform TEXT DEFAULT 'aistudio'");
+      // Create index for platform column
+      await db.run("CREATE INDEX IF NOT EXISTS idx_conversations_platform ON conversations(platform)");
+    }
+
     // Migration: Add order_index to folders if missing
     if (!(await hasColumn('folders', 'order_index'))) {
       console.log('Worker: Migrating folders table - adding order_index');
