@@ -78,11 +78,12 @@ export default defineConfig({
     esbuild: {
       // Only drop console and debugger in production mode
       ...(env.mode === 'production' && {
-        drop: ['console', 'debugger'],
+        pure: ['console.log', 'console.debug', 'console.info'],
+        drop: ['debugger'],
       }),
     },
   }),
-  runner: {
+  webExt: {
     chromiumArgs: [
       '--disable-blink-features=AutomationControlled',
       '--no-default-browser-check',

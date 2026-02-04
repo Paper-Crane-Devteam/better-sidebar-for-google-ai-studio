@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CURRENT_VERSION } from './changelog';
 
-const STORAGE_KEY = 'last_seen_versio5';
+const STORAGE_KEY = 'last_seen_version';
 
 export const useWhatsNew = () => {
   const [isOpen, setIsOpen] = useState(false);

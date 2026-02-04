@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '@/shared/lib/store';
 import { useModalStore } from '@/shared/lib/modal';
-import { ChevronRight, ChevronDown, FileText, Info, ExternalLink, Copy, FileCode } from 'lucide-react';
+import { ChevronRight, ChevronDown, FileText, Info, ExternalLink, Copy, FileCode, X, MessageSquare, User, Bot, Loader2 } from 'lucide-react';
 import { cn, stripMarkdown } from '@/shared/lib/utils';
 import dayjs from 'dayjs';
 import { navigate } from '@/shared/lib/navigation';
@@ -10,6 +10,7 @@ import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { Button } from '@/shared/components/ui/button';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { toast } from '@/shared/lib/toast';
+import type { Message } from '@/shared/types/db';
 
 export interface SearchResultItem {
   id: string;
@@ -23,6 +24,123 @@ export interface SearchResultItem {
   external_url?: string;
   scroll_index?: number;
 }
+
+// Component for the message preview modal content with context
+interface MessagePreviewContentProps {
+  match: SearchResultItem;
+  activeQuery: string;
+  activeOptions: { caseSensitive?: boolean; wholeWord?: boolean };
+}
+
+const MessagePreviewContent = ({ match, activeQuery, activeOptions }: MessagePreviewContentProps) => {
+  const { t } = useI18n();
+  const [adjacentMessage, setAdjacentMessage] = useState<Message | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  useEffect(() => {
+    const fetchAdjacentMessage = async () => {
+      try {
+        const response = await browser.runtime.sendMessage({
+          type: 'GET_ADJACENT_MESSAGE',
+          payload: {
+            messageId: match.id,
+            conversationId: match.conversation_id,
+            currentRole: match.role,
+          },
+        });
+        if (response && response.success) {
+          setAdjacentMessage(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch adjacent message', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAdjacentMessage();
+  }, [match.id, match.conversation_id, match.role]);
+
+  const contextLabel = match.role === 'user' ? t('search.modelResponse') : t('search.userPrompt');
+  const ContextIcon = match.role === 'user' ? Bot : User;
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Main message content */}
+      <div className="max-h-[50vh] overflow-y-auto p-2">
+        <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
+          {match.role === 'user' ? (
+            <User className="h-4 w-4" />
+          ) : (
+            <Bot className="h-4 w-4" />
+          )}
+          <span className="font-medium">
+            {match.role === 'user' ? t('export.roleUser') : t('export.roleModel')}
+          </span>
+          <span className="text-xs">• {dayjs(match.timestamp * 1000).format('lll')}</span>
+        </div>
+        <MarkdownRenderer 
+          highlight={activeQuery}
+          highlightOptions={activeOptions}
+        >
+          {match.content}
+        </MarkdownRenderer>
+      </div>
+
+      {/* Context section - Adjacent message */}
+      <div className="border-t pt-3">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center gap-2 w-full text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+          <MessageSquare className="h-4 w-4" />
+          <span>{t('search.context')}</span>
+          {!isLoading && adjacentMessage && (
+            <span className="text-xs bg-muted px-1.5 py-0.5 rounded">
+              {contextLabel}
+            </span>
+          )}
+        </button>
+
+        {isExpanded && (
+          <div className="mt-2 ml-6">
+            {isLoading ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>{t('search.loadingContext')}</span>
+              </div>
+            ) : adjacentMessage ? (
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground">
+                  <ContextIcon className="h-3.5 w-3.5" />
+                  <span className="font-medium">{contextLabel}</span>
+                  {adjacentMessage.timestamp && (
+                    <span>• {dayjs(adjacentMessage.timestamp * 1000).format('lll')}</span>
+                  )}
+                </div>
+                <div className="max-h-[40vh] overflow-y-auto text-sm">
+                  <MarkdownRenderer>
+                    {adjacentMessage.content || ''}
+                  </MarkdownRenderer>
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground py-2 italic">
+                {t('search.noContextFound')}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const ResultGroup = ({ 
   conversationId, 
@@ -207,14 +325,11 @@ const MatchItem = ({ match }: { match: SearchResultItem }) => {
       useModalStore.getState().open({
         title: t('search.messagePreview'),
         content: (
-            <div className="max-h-[60vh] overflow-y-auto p-2">
-                <MarkdownRenderer 
-                    highlight={activeQuery}
-                    highlightOptions={activeOptions}
-                >
-                    {match.content}
-                </MarkdownRenderer>
-            </div>
+            <MessagePreviewContent
+                match={match}
+                activeQuery={activeQuery}
+                activeOptions={activeOptions}
+            />
         ),
         headerActions: (
             <>
@@ -223,6 +338,9 @@ const MatchItem = ({ match }: { match: SearchResultItem }) => {
                 </Button>
                 <Button variant="ghost" size="sm" onClick={handleCopyAsMarkdown} title={t('search.copyAsMarkdown')}>
                     <FileCode className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => useModalStore.getState().close()} title={t('common.close')}>
+                    <X className="h-4 w-4" />
                 </Button>
             </>
         ),

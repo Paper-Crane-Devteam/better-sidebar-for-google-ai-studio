@@ -61,6 +61,19 @@ export async function handleMessages(
         return { success: false, error: (e as Error).message };
       }
     }
+    case 'GET_ADJACENT_MESSAGE': {
+      try {
+        const { messageId, conversationId, currentRole } = message.payload;
+        const adjacentMessage = await messageRepo.getAdjacentMessage(
+          messageId,
+          conversationId,
+          currentRole
+        );
+        return { success: true, data: adjacentMessage };
+      } catch (e: unknown) {
+        return { success: false, error: (e as Error).message };
+      }
+    }
     default:
       return null;
   }

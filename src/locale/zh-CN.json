@@ -354,7 +354,12 @@
     "indexingImport": "导入历史：使用导入功能加载对话历史。",
     "indexingScan": "扫描库：确保资源管理器已扫描并导入库以索引所有标题。",
     "whyNoOlder": "为什么找不到更早的对话？",
-    "understood": "知道了"
+    "understood": "知道了",
+    "context": "上下文",
+    "modelResponse": "模型回复",
+    "userPrompt": "用户提问",
+    "noContextFound": "未找到相关消息",
+    "loadingContext": "加载上下文中..."
   },
   "importHistory": {
     "selectZipHint": "选择从 Google 云端硬盘下载的、包含聊天记录的 ZIP 文件。",

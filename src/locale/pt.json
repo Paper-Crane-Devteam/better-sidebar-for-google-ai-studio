@@ -350,7 +350,12 @@
     "indexingImport": "Importar histórico: use o recurso de importação para carregar seu histórico de conversas.",
     "indexingScan": "Escanear biblioteca: certifique-se de que o Explorer escaneou e importou sua biblioteca para indexar todos os títulos.",
     "whyNoOlder": "Por que não encontro conversas antigas?",
-    "understood": "Entendi"
+    "understood": "Entendi",
+    "context": "Contexto",
+    "modelResponse": "Resposta do modelo",
+    "userPrompt": "Pergunta do usuário",
+    "noContextFound": "Nenhuma mensagem relacionada encontrada",
+    "loadingContext": "Carregando contexto..."
   },
   "importHistory": {
     "selectZipHint": "Selecione o arquivo ZIP baixado do Google Drive que contém seu histórico de chat.",
