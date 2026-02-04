@@ -50,7 +50,7 @@ export default defineConfig({
     },
     web_accessible_resources: [
       {
-        resources: ['main-world.js', 'sqlite3.js', 'sqlite3.wasm'],
+        resources: ['main-world.js', 'wa-sqlite-async.mjs', 'wa-sqlite-async.wasm'],
         matches: ['https://aistudio.google.com/*'],
       },
     ],
