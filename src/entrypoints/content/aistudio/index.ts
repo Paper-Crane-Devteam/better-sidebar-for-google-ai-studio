@@ -15,39 +15,39 @@ export function initAiStudio() {
   // Start API Scanner immediately to catch early requests
   apiScanner.start();
 
-  // Theme synchronization
-  const syncTheme = () => {
-    const isDark = document.body.classList.contains('dark-theme');
-    const theme = isDark ? 'dark' : 'light';
-    browser.storage.local.set({ theme });
-  };
+  // Theme synchronization（theme is stored elsewhere, when user change theme outside extension, will not update the setting) !TODO
+  // const syncTheme = () => {
+  //   const isDark = document.body.classList.contains('dark-theme');
+  //   const theme = isDark ? 'dark' : 'light';
+  //   browser.storage.local.set({ theme });
+  // };
 
-  // Initial sync
-  if (document.body) {
-    syncTheme();
-    // Observe body class changes
-    const themeObserver = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'class') {
-          syncTheme();
-        }
-      });
-    });
-    themeObserver.observe(document.body, { attributes: true });
-  } else {
-    // Fallback if body is not yet ready (though at document_end it should be)
-    document.addEventListener('DOMContentLoaded', () => {
-      syncTheme();
-      const themeObserver = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          if (mutation.attributeName === 'class') {
-            syncTheme();
-          }
-        });
-      });
-      themeObserver.observe(document.body, { attributes: true });
-    });
-  }
+  // // Initial sync
+  // if (document.body) {
+  //   syncTheme();
+  //   // Observe body class changes
+  //   const themeObserver = new MutationObserver((mutations) => {
+  //     mutations.forEach((mutation) => {
+  //       if (mutation.attributeName === 'class') {
+  //         syncTheme();
+  //       }
+  //     });
+  //   });
+  //   themeObserver.observe(document.body, { attributes: true });
+  // } else {
+  //   // Fallback if body is not yet ready (though at document_end it should be)
+  //   document.addEventListener('DOMContentLoaded', () => {
+  //     syncTheme();
+  //     const themeObserver = new MutationObserver((mutations) => {
+  //       mutations.forEach((mutation) => {
+  //         if (mutation.attributeName === 'class') {
+  //           syncTheme();
+  //         }
+  //       });
+  //     });
+  //     themeObserver.observe(document.body, { attributes: true });
+  //   });
+  // }
 
   // Inject Main World Script
   const script = document.createElement('script');

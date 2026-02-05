@@ -88,36 +88,10 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     // Initial fetch
     fetchData();
 
-    // Restore state from local storage
-    browser.storage.local.get(
-      ['sidepanel_sort_order', 'sidepanel_active_tab', 'sidepanel_view_mode'],
-      (result) => {
-        if (
-          result.sidepanel_active_tab &&
-          result.sidepanel_active_tab !== 'settings'
-        ) {
-          setActiveTab(result.sidepanel_active_tab as any);
-        } else if (result.sidepanel_active_tab === 'settings') {
-          setActiveTab('files'); // Fallback if it was settings
-        }
-
-        const defaultExplorerSettings = useSettingsStore.getState().explorer;
-
-        if (result.sidepanel_view_mode) {
-          setExplorerViewMode(
-            result.sidepanel_view_mode as 'tree' | 'timeline',
-          );
-        } else {
-          setExplorerViewMode(defaultExplorerSettings.viewMode);
-        }
-
-        if (result.sidepanel_sort_order) {
-          setExplorerSortOrder(result.sidepanel_sort_order as 'alpha' | 'date');
-        } else {
-          setExplorerSortOrder(defaultExplorerSettings.sortOrder);
-        }
-      },
-    );
+    // Initialize from settings store
+    const settings = useSettingsStore.getState();
+    setExplorerViewMode(settings.explorer.viewMode);
+    setExplorerSortOrder(settings.explorer.sortOrder);
 
     // Listen for updates from background script
     const listener = (message: any) => {
@@ -174,7 +148,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       return;
     }
     setActiveTab(tab);
-    browser.storage.local.set({ sidepanel_active_tab: tab });
   };
 
   const handleMainMenuClick = () => {

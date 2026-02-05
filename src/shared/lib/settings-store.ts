@@ -24,19 +24,24 @@ interface SettingsState {
     gems: boolean;
     originalUI: boolean;
   };
-  
+
   // Actions
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
   setLayoutDensity: (density: 'compact' | 'relaxed') => void;
   setNewChatBehavior: (behavior: 'current-tab' | 'new-tab') => void;
   setAutoScanLibrary: (enabled: boolean) => void;
   setOverlayPosition: (position: 'bottom-left' | 'bottom-right') => void;
-  setLanguage: (language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru') => void;
+  setLanguage: (
+    language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru',
+  ) => void;
   setExplorerViewMode: (mode: 'tree' | 'timeline') => void;
   setExplorerSortOrder: (order: 'alpha' | 'date') => void;
   setExplorerIgnoredFolders: (folders: string[]) => void;
   setExplorerEnableRightClickRename: (enabled: boolean) => void;
-  setShortcutVisible: (key: keyof SettingsState['shortcuts'], visible: boolean) => void;
+  setShortcutVisible: (
+    key: keyof SettingsState['shortcuts'],
+    visible: boolean,
+  ) => void;
 }
 
 const storage: StateStorage = {
@@ -171,6 +176,6 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: getStorageName(),
       storage: createJSONStorage(() => storage),
-    }
-  )
+    },
+  ),
 );
