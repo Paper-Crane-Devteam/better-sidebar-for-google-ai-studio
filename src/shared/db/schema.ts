@@ -73,7 +73,6 @@ CREATE TABLE IF NOT EXISTS favorites (
 
 CREATE INDEX IF NOT EXISTS idx_folders_parent ON folders(parent_id);
 CREATE INDEX IF NOT EXISTS idx_conversations_folder ON conversations(folder_id);
-CREATE INDEX IF NOT EXISTS idx_conversations_platform ON conversations(platform);
 CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_favorites_target ON favorites(target_id, target_type);
 

@@ -111,9 +111,10 @@ const runMigrations = async (db: any) => {
     if (!(await hasColumn('conversations', 'platform'))) {
       console.log('Worker: Migrating conversations table - adding platform');
       await db.run("ALTER TABLE conversations ADD COLUMN platform TEXT DEFAULT 'aistudio'");
-      // Create index for platform column
-      await db.run("CREATE INDEX IF NOT EXISTS idx_conversations_platform ON conversations(platform)");
     }
+
+    // Always ensure platform index exists (moved out of SCHEMA to avoid startup errors on old DBs)
+    await db.run("CREATE INDEX IF NOT EXISTS idx_conversations_platform ON conversations(platform)");
 
     // Migration: Add order_index to folders if missing
     if (!(await hasColumn('folders', 'order_index'))) {
