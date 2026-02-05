@@ -1,6 +1,6 @@
 import { Folder, Tag, Prompt, PromptFolder } from './db';
 
-export type ExtensionMessage =
+export type ExtensionMessage = (
   | { type: 'GET_FOLDERS' }
   | {
       type: 'CREATE_FOLDER';
@@ -240,7 +240,8 @@ export type ExtensionMessage =
   | {
       type: 'MOVE_PROMPTS';
       payload: { ids: string[]; folderId: string | null };
-    };
+    }
+) & { platform?: string };
 
 export interface ExtensionResponse {
   success: boolean;

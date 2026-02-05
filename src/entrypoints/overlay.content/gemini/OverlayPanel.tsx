@@ -16,6 +16,8 @@ import {
   Search,
   Sparkles,
   Menu,
+  Library,
+  Gem,
 } from 'lucide-react';
 import { SqlExecutor } from '../aistudio/components/menu/SqlExecutor';
 import { ExplorerTab } from '../aistudio/modules/explorer/ExplorerTab';
@@ -271,45 +273,33 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           <Tag className="h-5 w-5" />
         </Button>
 
-        {(shortcuts?.build ||
-          shortcuts?.dashboard ||
-          shortcuts?.documentation) && <Separator className="w-8 my-1" />}
-
-        {shortcuts?.build && (
-          <Button
-            variant="ghost"
-            size="icon"
-            title={t('shortcuts.build')}
-            onClick={() => handleNavigation('/apps')}
-            className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
-          >
-            <Hammer className="h-5 w-5" />
-          </Button>
+        {((shortcuts?.myStuff ?? true) || (shortcuts?.gems ?? true)) && (
+          <Separator className="w-8 my-1" />
         )}
 
-        {shortcuts?.dashboard && (
+        {(shortcuts?.myStuff ?? true) && (
           <Button
             variant="ghost"
             size="icon"
-            title={t('shortcuts.dashboard')}
-            onClick={() => handleNavigation('/api-keys')}
-            className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
-          >
-            <LayoutDashboard className="h-5 w-5" />
-          </Button>
-        )}
-
-        {shortcuts?.documentation && (
-          <Button
-            variant="ghost"
-            size="icon"
-            title={t('shortcuts.documentation')}
-            onClick={() =>
-              handleExternalLink('https://ai.google.dev/gemini-api/docs')
+            title={t('shortcuts.myStuff')}
+            onClick={() => navigate('https://gemini.google.com/mystuff')
             }
             className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
           >
-            <BookOpen className="h-5 w-5" />
+            <Library className="h-5 w-5" />
+          </Button>
+        )}
+
+        {(shortcuts?.gems ?? true) && (
+          <Button
+            variant="ghost"
+            size="icon"
+            title={t('shortcuts.gems')}
+            onClick={() => navigate('https://gemini.google.com/gems/view')
+            }
+            className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
+          >
+            <Gem className="h-5 w-5" />
           </Button>
         )}
 

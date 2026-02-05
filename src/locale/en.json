@@ -216,6 +216,8 @@
     "build": "Build",
     "dashboard": "Dashboard",
     "documentation": "Documentation",
+    "myStuff": "My Stuff",
+    "gems": "Gems",
     "originalUI": "Switch to Original UI"
   },
   "overlay": {

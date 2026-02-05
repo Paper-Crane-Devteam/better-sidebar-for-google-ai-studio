@@ -7,6 +7,7 @@ import { Switch } from '@/shared/components/ui/switch';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '@/shared/hooks/useI18n';
+import { detectPlatform, Platform } from '@/shared/types/platform';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -26,6 +27,7 @@ export const GeneralSettings = () => {
     } = useSettingsStore();
 
     const { theme, setTheme } = useTheme();
+    const platform = detectPlatform();
 
     return (
         <div className="space-y-6">
@@ -198,33 +200,59 @@ export const GeneralSettings = () => {
                             onCheckedChange={(c) => setShortcutVisible('favorites', c)} 
                         />
                     </div>
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                            <label className="text-sm font-medium">{t('shortcuts.build')}</label>
-                        </div>
-                        <Switch 
-                            checked={shortcuts?.build ?? true} 
-                            onCheckedChange={(c) => setShortcutVisible('build', c)} 
-                        />
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                            <label className="text-sm font-medium">{t('shortcuts.dashboard')}</label>
-                        </div>
-                        <Switch 
-                            checked={shortcuts?.dashboard ?? true} 
-                            onCheckedChange={(c) => setShortcutVisible('dashboard', c)} 
-                        />
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                            <label className="text-sm font-medium">{t('shortcuts.documentation')}</label>
-                        </div>
-                        <Switch 
-                            checked={shortcuts?.documentation ?? true} 
-                            onCheckedChange={(c) => setShortcutVisible('documentation', c)} 
-                        />
-                    </div>
+                    {platform === Platform.AI_STUDIO && (
+                        <>
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <label className="text-sm font-medium">{t('shortcuts.build')}</label>
+                                </div>
+                                <Switch 
+                                    checked={shortcuts?.build ?? true} 
+                                    onCheckedChange={(c) => setShortcutVisible('build', c)} 
+                                />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <label className="text-sm font-medium">{t('shortcuts.dashboard')}</label>
+                                </div>
+                                <Switch 
+                                    checked={shortcuts?.dashboard ?? true} 
+                                    onCheckedChange={(c) => setShortcutVisible('dashboard', c)} 
+                                />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <label className="text-sm font-medium">{t('shortcuts.documentation')}</label>
+                                </div>
+                                <Switch 
+                                    checked={shortcuts?.documentation ?? true} 
+                                    onCheckedChange={(c) => setShortcutVisible('documentation', c)} 
+                                />
+                            </div>
+                        </>
+                    )}
+                    {platform === Platform.GEMINI && (
+                        <>
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <label className="text-sm font-medium">{t('shortcuts.myStuff')}</label>
+                                </div>
+                                <Switch 
+                                    checked={shortcuts?.myStuff ?? true} 
+                                    onCheckedChange={(c) => setShortcutVisible('myStuff', c)} 
+                                />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <label className="text-sm font-medium">{t('shortcuts.gems')}</label>
+                                </div>
+                                <Switch 
+                                    checked={shortcuts?.gems ?? true} 
+                                    onCheckedChange={(c) => setShortcutVisible('gems', c)} 
+                                />
+                            </div>
+                        </>
+                    )}
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                             <label className="text-sm font-medium">{t('shortcuts.originalUI')}</label>

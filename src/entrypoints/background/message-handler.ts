@@ -4,6 +4,7 @@ import type {
 } from '@/shared/types/messages';
 import type { MessageSender } from './types';
 import { dbReady } from './db';
+import { detectPlatform, Platform } from '@/shared/types/platform';
 import {
   handleFolders,
   handleConversations,
@@ -34,6 +35,19 @@ export async function handleMessage(
 ): Promise<ExtensionResponse> {
   try {
     await dbReady;
+
+    // Detect platform from sender tab and inject into message payload if not present
+    if (sender.tab?.url) {
+      try {
+        const url = new URL(sender.tab.url);
+        const platform = detectPlatform(url.hostname);
+        if (platform !== Platform.UNKNOWN) {
+          message.platform = platform;
+        }
+      } catch (e) {
+        // Ignore URL parsing errors
+      }
+    }
 
     for (const handler of handlers) {
       const result = await handler(message, sender);

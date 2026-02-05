@@ -216,6 +216,8 @@
     "build": "构建",
     "dashboard": "仪表盘",
     "documentation": "文档",
+    "myStuff": "我的内容",
+    "gems": "Gems",
     "originalUI": "切换到原始界面"
   },
   "overlay": {

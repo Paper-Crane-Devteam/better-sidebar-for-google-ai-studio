@@ -17,7 +17,7 @@ export async function notifyDataUpdated(
 
   try {
     const tabs = await browser.tabs.query({
-      url: 'https://aistudio.google.com/*',
+      url: ['https://aistudio.google.com/*', 'https://gemini.google.com/*'],
     });
     for (const tab of tabs) {
       if (tab.id) {

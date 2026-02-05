@@ -6,10 +6,12 @@ export const folderRepo = {
     id: string;
     name: string;
     parentId?: string | null;
+    platform?: string;
   }): Promise<void> => {
+    const platform = folder.platform ?? 'aistudio';
     await runCommand(
-      'INSERT INTO folders (id, name, parent_id) VALUES (?, ?, ?)',
-      [folder.id, folder.name, folder.parentId || null]
+      'INSERT INTO folders (id, name, parent_id, platform) VALUES (?, ?, ?, ?)',
+      [folder.id, folder.name, folder.parentId || null, platform]
     );
   },
 
@@ -18,8 +20,17 @@ export const folderRepo = {
     return result[0] as Folder | undefined;
   },
 
-  getByParentId: async (parentId: string | null): Promise<Folder[]> => {
+  getByParentId: async (
+    parentId: string | null,
+    platform?: string
+  ): Promise<Folder[]> => {
     if (parentId === null) {
+      if (platform) {
+        return (await runQuery(
+          'SELECT * FROM folders WHERE parent_id IS NULL AND platform = ? ORDER BY order_index ASC, name ASC',
+          [platform]
+        )) as Folder[];
+      }
       return (await runQuery(
         'SELECT * FROM folders WHERE parent_id IS NULL ORDER BY order_index ASC, name ASC'
       )) as Folder[];
@@ -30,7 +41,13 @@ export const folderRepo = {
     )) as Folder[];
   },
 
-  getAll: async (): Promise<Folder[]> => {
+  getAll: async (platform?: string): Promise<Folder[]> => {
+    if (platform) {
+      return (await runQuery(
+        'SELECT * FROM folders WHERE platform = ? ORDER BY order_index ASC, name ASC',
+        [platform]
+      )) as Folder[];
+    }
     return (await runQuery(
       'SELECT * FROM folders ORDER BY order_index ASC, name ASC'
     )) as Folder[];

@@ -122,6 +122,12 @@ const runMigrations = async (db: any) => {
       await db.run("ALTER TABLE folders ADD COLUMN order_index INTEGER DEFAULT 0");
     }
 
+    // Migration: Add platform to folders if missing
+    if (!(await hasColumn('folders', 'platform'))) {
+      console.log('Worker: Migrating folders table - adding platform');
+      await db.run("ALTER TABLE folders ADD COLUMN platform TEXT DEFAULT 'aistudio'");
+    }
+
   } catch (err) {
     console.error('Worker: Migration failed:', err);
   }

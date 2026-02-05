@@ -59,7 +59,13 @@ export const conversationRepo = {
     }
   },
 
-  getAll: async (): Promise<Conversation[]> => {
+  getAll: async (platform?: string): Promise<Conversation[]> => {
+    if (platform) {
+      return (await runQuery(
+        'SELECT * FROM conversations WHERE platform = ? ORDER BY updated_at DESC',
+        [platform]
+      )) as Conversation[];
+    }
     return (await runQuery(
       'SELECT * FROM conversations ORDER BY updated_at DESC'
     )) as Conversation[];

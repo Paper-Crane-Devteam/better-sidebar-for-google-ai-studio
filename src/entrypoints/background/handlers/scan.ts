@@ -38,9 +38,18 @@ export async function handleScan(
       }
     }
     case 'SCAN_LIBRARY': {
-      const url = 'https://aistudio.google.com/library';
+      const platform = message.platform || 'aistudio';
+      const url =
+        platform === 'gemini'
+          ? 'https://gemini.google.com/search'
+          : 'https://aistudio.google.com/library';
+      const matchUrl =
+        platform === 'gemini'
+          ? 'https://gemini.google.com/*'
+          : 'https://aistudio.google.com/*';
+
       const [existingTab] = await browser.tabs.query({
-        url: 'https://aistudio.google.com/*',
+        url: matchUrl,
         currentWindow: true,
       });
 
@@ -78,24 +87,26 @@ export async function handleScan(
       const items = message.payload.items;
       if (!items?.length) return { success: true, data: { count: 0 } };
 
-      const allExisting = await conversationRepo.getAll();
+      const platform = message.platform || items[0]?.platform || 'aistudio';
+
+      const allExisting = await conversationRepo.getAll(platform);
       const existingMap = new Map(allExisting.map((c) => [c.external_id, c]));
 
       const importedFolderName = i18n.t('explorer.imported');
-      const folders = await folderRepo.getAll();
+      const folders = await folderRepo.getAll(platform);
       let importedFolderId = folders.find(
         (f) => f.name === importedFolderName || f.name === 'Imported'
       )?.id;
 
       if (!importedFolderId) {
         importedFolderId = crypto.randomUUID();
-        await folderRepo.create({ id: importedFolderId, name: importedFolderName });
+        await folderRepo.create({ id: importedFolderId, name: importedFolderName, platform });
       }
 
       const conversationsToSave = items.map((item) => {
         const existing = existingMap.get(item.external_id);
         const targetFolderId = existing?.folder_id ?? importedFolderId;
-        return { ...item, folder_id: targetFolderId };
+        return { ...item, folder_id: targetFolderId, platform };
       });
 
       if (conversationsToSave.length > 0) {

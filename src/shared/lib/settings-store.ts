@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
+import { detectPlatform, Platform } from '../types/platform';
 
 interface SettingsState {
   theme: 'light' | 'dark' | 'system';
@@ -19,6 +20,8 @@ interface SettingsState {
     build: boolean;
     dashboard: boolean;
     documentation: boolean;
+    myStuff: boolean;
+    gems: boolean;
     originalUI: boolean;
   };
   
@@ -86,6 +89,24 @@ const getDefaultLanguage = (): 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | '
   return 'en';
 };
 
+const platform = detectPlatform();
+
+// Determine storage key
+const getStorageName = () => {
+  if (platform === Platform.GEMINI) {
+    return 'better-sidebar-for-gemini-settings';
+  }
+  return 'prompt-manager-for-google-ai-studio-settings';
+};
+
+// Determine localStorage key for theme preference sync
+const getLocalStorageKey = () => {
+  if (platform === Platform.GEMINI) {
+    return 'geminiUserPreference';
+  }
+  return 'aiStudioUserPreference';
+};
+
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
@@ -106,6 +127,8 @@ export const useSettingsStore = create<SettingsState>()(
         build: true,
         dashboard: true,
         documentation: true,
+        myStuff: true,
+        gems: true,
         originalUI: true,
       },
 
@@ -113,7 +136,7 @@ export const useSettingsStore = create<SettingsState>()(
         set({ theme });
         try {
           if (typeof localStorage !== 'undefined') {
-            const key = 'aiStudioUserPreference';
+            const key = getLocalStorageKey();
             const stored = localStorage.getItem(key);
             if (stored) {
               const prefs = JSON.parse(stored);
@@ -146,7 +169,7 @@ export const useSettingsStore = create<SettingsState>()(
         })),
     }),
     {
-      name: 'prompt-manager-for-google-ai-studio-settings',
+      name: getStorageName(),
       storage: createJSONStorage(() => storage),
     }
   )

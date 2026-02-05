@@ -17,13 +17,13 @@ export async function handleConversations(
       const { folderId } = message.payload || {};
       const conversations =
         folderId === undefined
-          ? await conversationRepo.getAll()
+          ? await conversationRepo.getAll(message.platform)
           : await conversationRepo.getByFolderId(folderId);
       return { success: true, data: conversations };
     }
     case 'SAVE_CONVERSATION': {
       const { messages, ...convoData } = message.payload;
-      const platform = convoData.platform ?? 'aistudio';
+      const platform = convoData.platform ?? message.platform ?? 'aistudio';
       await conversationRepo.save({ ...convoData, platform });
       if (messages?.length) {
         await messageRepo.deleteByConversationId(convoData.id);
@@ -63,16 +63,18 @@ export async function handleConversations(
         external_url: providedExternalUrl,
         folderId: providedFolderId,
         type,
-        platform = 'aistudio',
+        platform: payloadPlatform,
       } = message.payload;
+
+      const platform = payloadPlatform ?? message.platform ?? 'aistudio';
       let folderId = providedFolderId;
       if (!folderId) {
-        const folders = await folderRepo.getAll();
+        const folders = await folderRepo.getAll(platform);
         const importedName = i18n.t('explorer.imported');
         folderId = folders.find((f) => f.name === importedName || f.name === 'Imported')?.id;
         if (!folderId) {
           folderId = crypto.randomUUID();
-          await folderRepo.create({ id: folderId, name: importedName });
+          await folderRepo.create({ id: folderId, name: importedName, platform });
         }
       }
       const external_url =

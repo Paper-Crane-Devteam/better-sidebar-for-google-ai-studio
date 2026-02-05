@@ -81,7 +81,6 @@ export function handleListChatResponse(response: any, url: string) {
         globalThis.dispatchEvent(
           new CustomEvent('GEMINI_LIST_CHAT_RESPONSE', {
             detail: {
-              chunks,
               items, // The parsed list of chats
               originalUrl: url
             }

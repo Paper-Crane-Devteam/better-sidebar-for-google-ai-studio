@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS folders (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   parent_id TEXT,
+  platform TEXT DEFAULT 'aistudio', -- 'aistudio' | 'gemini' | 'chatgpt' | 'claude'
   order_index INTEGER DEFAULT 0,
   created_at INTEGER DEFAULT (unixepoch()),
   updated_at INTEGER DEFAULT (unixepoch()),
