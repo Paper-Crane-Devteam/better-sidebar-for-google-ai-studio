@@ -125,19 +125,15 @@ export async function scanLibrary() {
     platform: Platform.GEMINI,
   }));
 
-  if (payloadItems.length > 0) {
-    console.log(`Sending ${payloadItems.length} scanned items to background...`);
-    try {
-      await browser.runtime.sendMessage({
-        type: 'SAVE_SCANNED_ITEMS',
-        payload: { items: payloadItems },
-      });
-      console.log('Gemini Scan: Sent items to background.');
-    } catch (err) {
-      console.error('Gemini Scan: Failed to send items:', err);
-    }
-  } else {
-      console.warn('Gemini Scan: No items found.');
+  console.log(`Sending ${payloadItems.length} scanned items to background...`);
+  try {
+    await browser.runtime.sendMessage({
+      type: 'SAVE_SCANNED_ITEMS',
+      payload: { items: payloadItems },
+    });
+    console.log('Gemini Scan: Sent items to background.');
+  } catch (err) {
+    console.error('Gemini Scan: Failed to send items:', err);
   }
 
   return payloadItems.length;

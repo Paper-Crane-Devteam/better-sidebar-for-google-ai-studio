@@ -50,20 +50,17 @@ export async function scanLibrary() {
     });
 
     // Send to background
-     if (mergedItems.length > 0) {
-        console.log(`Sending ${mergedItems.length} merged items to background...`);
-        try {
-            const response = await browser.runtime.sendMessage({
-                type: 'SAVE_SCANNED_ITEMS',
-                payload: { items: mergedItems }
-            });
-            console.log('Sent scanned items to background. Response:', response);
-        } catch (err) {
-            console.error('Failed to send scanned items:', err);
-        }
-     } else {
-         console.warn('No items found to send.');
-     }
+    console.log(`Sending ${mergedItems.length} merged items to background...`);
+    try {
+        const response = await browser.runtime.sendMessage({
+            type: 'SAVE_SCANNED_ITEMS',
+            payload: { items: mergedItems },
+            platform: Platform.AI_STUDIO
+        });
+        console.log('Sent scanned items to background. Response:', response);
+    } catch (err) {
+        console.error('Failed to send scanned items:', err);
+    }
 
      return mergedItems.length;
 }

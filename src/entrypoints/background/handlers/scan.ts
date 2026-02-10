@@ -84,33 +84,33 @@ export async function handleScan(
       return { success: true };
     }
     case 'SAVE_SCANNED_ITEMS': {
-      const items = message.payload.items;
-      if (!items?.length) return { success: true, data: { count: 0 } };
-
+      const items = message.payload.items || [];
       const platform = message.platform || items[0]?.platform || 'aistudio';
 
-      const allExisting = await conversationRepo.getAll(platform);
-      const existingMap = new Map(allExisting.map((c) => [c.external_id, c]));
+      if (items.length > 0) {
+        const allExisting = await conversationRepo.getAll(platform);
+        const existingMap = new Map(allExisting.map((c) => [c.external_id, c]));
 
-      const importedFolderName = i18n.t('explorer.imported');
-      const folders = await folderRepo.getAll(platform);
-      let importedFolderId = folders.find(
-        (f) => f.name === importedFolderName || f.name === 'Imported'
-      )?.id;
+        const importedFolderName = i18n.t('explorer.imported');
+        const folders = await folderRepo.getAll(platform);
+        let importedFolderId = folders.find(
+          (f) => f.name === importedFolderName || f.name === 'Imported'
+        )?.id;
 
-      if (!importedFolderId) {
-        importedFolderId = crypto.randomUUID();
-        await folderRepo.create({ id: importedFolderId, name: importedFolderName, platform });
-      }
+        if (!importedFolderId) {
+          importedFolderId = crypto.randomUUID();
+          await folderRepo.create({ id: importedFolderId, name: importedFolderName, platform });
+        }
 
-      const conversationsToSave = items.map((item) => {
-        const existing = existingMap.get(item.external_id);
-        const targetFolderId = existing?.folder_id ?? importedFolderId;
-        return { ...item, folder_id: targetFolderId, platform };
-      });
+        const conversationsToSave = items.map((item) => {
+          const existing = existingMap.get(item.external_id);
+          const targetFolderId = existing?.folder_id ?? importedFolderId;
+          return { ...item, folder_id: targetFolderId, platform };
+        });
 
-      if (conversationsToSave.length > 0) {
-        await conversationRepo.bulkSave(conversationsToSave);
+        if (conversationsToSave.length > 0) {
+          await conversationRepo.bulkSave(conversationsToSave);
+        }
       }
 
       await notifyDataUpdated('SCAN_COMPLETE', { count: items.length });
