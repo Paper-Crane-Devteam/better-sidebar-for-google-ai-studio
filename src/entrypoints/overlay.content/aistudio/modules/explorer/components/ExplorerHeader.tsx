@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAppStore } from '@/shared/lib/store';
+import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Button } from '@/shared/components/ui/button';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { MessageSquarePlus, FolderPlus, ListCollapse, ArrowDownAZ, Clock, ListChecks } from 'lucide-react';
@@ -31,13 +32,11 @@ export const ExplorerHeader = ({
   const handleSort = () => {
     const newOrder = sortOrder === 'alpha' ? 'date' : 'alpha';
     setExplorerSortOrder(newOrder);
-    browser.storage.local.set({ sidepanel_sort_order: newOrder });
   };
 
   const handleToggleViewMode = () => {
     const newMode = viewMode === 'tree' ? 'timeline' : 'tree';
     setExplorerViewMode(newMode);
-    browser.storage.local.set({ sidepanel_view_mode: newMode });
   };
 
   return (

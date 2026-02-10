@@ -37,7 +37,9 @@ export const SidePanel = ({ className }: { className?: string }) => {
     });
 
     // Listener for changes
-    const changeListener = (changes: { [key: string]: browser.storage.StorageChange }) => {
+    const changeListener = (changes: {
+      [key: string]: Browser.storage.StorageChange;
+    }) => {
       if (changes.theme) {
         applyTheme(changes.theme.newValue as string);
       }
