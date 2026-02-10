@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Folder as FolderIcon, FileText, ChevronRight, ChevronDown, FolderOpen, Star, Calendar, Image } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
-import { navigate } from '@/shared/lib/navigation';
+import { navigate, navigateToConversation } from '@/shared/lib/navigation';
 import { useAppStore } from '@/shared/lib/store';
 import { modal } from '@/shared/lib/modal';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -201,7 +201,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
         if (url) {
           e.preventDefault();
           node.select();
-          navigate(url);
+          navigateToConversation(node.data.id);
         } else {
           node.select();
           node.toggle();
@@ -215,7 +215,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
           }
 
           if (url) {
-            navigate(url);
+            navigateToConversation(node.data.id);
           } else {
             node.toggle();
           }

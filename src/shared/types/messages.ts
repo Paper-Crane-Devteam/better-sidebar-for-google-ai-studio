@@ -64,8 +64,10 @@ export type ExtensionMessage = (
         platform?: string;
       };
     }
-  | { type: 'SCAN_LIBRARY' }
+  | {       type: 'SCAN_LIBRARY' }
   | { type: 'START_LIBRARY_SCAN' }
+  | { type: 'START_SYNC_CONVERSATIONS' }
+  | { type: 'SYNC_CONVERSATIONS'; payload: { items: any[] } }
   | { type: 'GET_PAGE_LOCAL_STORAGE'; payload: { key: string } }
   | {
       type: 'SAVE_SCANNED_ITEMS';

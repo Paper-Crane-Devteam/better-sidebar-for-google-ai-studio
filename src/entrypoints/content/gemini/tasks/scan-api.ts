@@ -7,7 +7,7 @@ export class ApiScanner {
         this.listener = (event: Event) => {
             const customEvent = event as CustomEvent;
             if (customEvent.detail && customEvent.detail.items) {
-                console.log('Gemini ApiScanner: Received items batch', customEvent.detail.items.length);
+                console.log('Gemini ApiScanner: Received items batch', customEvent.detail.items);
                 this.items.push(...customEvent.detail.items);
             }
         };

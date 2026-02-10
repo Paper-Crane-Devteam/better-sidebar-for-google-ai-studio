@@ -105,6 +105,25 @@ export async function handleConversations(
       await conversationRepo.moveMultiple(message.payload.ids, message.payload.folderId);
       return { success: true };
     }
+    case 'SYNC_CONVERSATIONS': {
+      const { items } = message.payload;
+      const platform = message.platform ?? 'aistudio';
+      const allConversations = await conversationRepo.getAll(platform);
+      const existingIds = new Set(allConversations.map((c) => c.id));
+      
+      const newItems = items.filter((item) => !existingIds.has(item.id));
+      
+      if (newItems.length > 0) {
+        const conversationsToSave = newItems.map((item) => ({
+          ...item,
+          folder_id: null,
+          platform,
+        }));
+        await conversationRepo.bulkSave(conversationsToSave);
+        await notifyDataUpdated();
+      }
+      return { success: true, data: { added: newItems.length } };
+    }
     default:
       return null;
   }

@@ -37,14 +37,14 @@
 
     /* Density Variables - Default (Compact) */
     --density-row-height: 28px;
-    --density-icon-size: 16px;
+    --density-icon-size: 12px;
     --density-font-size: 13px;
     --density-padding-x: 0.5rem;
     --density-padding-y: 0.25rem;
     --density-gap: 0.25rem;
 
     /* Sidebar Defaults */
-    --sidebar-width: 3rem;
+    --sidebar-width: 3.5rem;
     --sidebar-button-size: 2.5rem;
     --sidebar-icon-size: 1.25rem;
     --sidebar-gap: 0.5rem;

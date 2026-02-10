@@ -18,6 +18,7 @@ import {
   Menu,
   Library,
   Gem,
+  SquarePen,
 } from 'lucide-react';
 import { SqlExecutor } from '../aistudio/components/menu/SqlExecutor';
 import { ExplorerTab } from '../aistudio/modules/explorer/ExplorerTab';
@@ -160,23 +161,37 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   };
 
   if (!isUIVisible) {
-    return <OverlayToggle onToggle={() => setIsUIVisible(true)} />;
+    return (
+      <div
+        className="sidebar-nav border-r flex flex-col items-center bg-muted/20 shrink-0"
+        data-density={layoutDensity}
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          title="Toggle Menu"
+          onClick={handleMainMenuClick}
+          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+        >
+          <Menu className="sidebar-icon" />
+        </Button>
+        <Separator className="w-8 my-1" />
+        <Button
+          variant="ghost"
+          size="icon"
+          title={t('tooltip.newChat')}
+          onClick={() => navigate('/app')}
+          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+        >
+          <SquarePen className="sidebar-icon" />
+        </Button>
+      </div>
+    );
   }
 
   if (showSqlInterface) {
     return <SqlExecutor onClose={() => setShowSqlInterface(false)} />;
   }
-
-  const handleNavigation = (url: string) => {
-    const token = Math.random().toString(36).substring(7);
-    setTempHiddenToken(token);
-    navigate(url);
-    setIsUIVisible(false);
-  };
-
-  const handleExternalLink = (url: string) => {
-    window.open(url, '_blank');
-  };
 
   return (
     <div

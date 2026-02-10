@@ -8,6 +8,8 @@ import { OverlayPanel } from './OverlayPanel';
 import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
 import { applyShadowStyles } from '@/shared/lib/utils';
+import { useSettingsStore } from '@/shared/lib/settings-store';
+import { useAppStore } from '@/shared/lib/store';
 
 const querySelectorDeep = (
   selector: string,
@@ -52,6 +54,47 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
   TooltipHelper.getInstance().initialize(mainStyles);
 
   try {
+    // 0. Override bard-sidenav CSS variables based on density settings
+    const bardSidenav = await waitForElement('bard-sidenav');
+    const updateSidebarWidths = (density: 'compact' | 'relaxed') => {
+      if (!bardSidenav) return;
+      const el = bardSidenav as HTMLElement;
+      if (density === 'compact') {
+        el.style.setProperty('--bard-sidenav-closed-width', '55px');
+        el.style.setProperty('--bard-sidenav-open-width', '345px');
+      } else {
+        // relaxed (default)
+        el.style.setProperty('--bard-sidenav-closed-width', '63px');
+        el.style.setProperty('--bard-sidenav-open-width', '360px');
+      }
+    };
+
+    // Initial application
+    const initialDensity = useSettingsStore.getState().layoutDensity;
+    updateSidebarWidths(initialDensity);
+
+    // Subscribe to changes
+    useSettingsStore.subscribe((state) => {
+      updateSidebarWidths(state.layoutDensity);
+    });
+
+    // 0.5. Monitor bard-sidenav width to detect open/close state
+    if (bardSidenav) {
+      const bardSidenavEl = bardSidenav as HTMLElement;
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const width = entry.contentRect.width;
+          const closedWidthStr = getComputedStyle(bardSidenavEl)
+            .getPropertyValue('--bard-sidenav-closed-width');
+          const closedWidth = parseInt(closedWidthStr, 10) || 63;
+          // If current width is greater than closed width + margin, sidebar is open
+          const isSidebarOpen = width > closedWidth + 10;
+          useAppStore.getState().setOverlayOpen(isSidebarOpen);
+        }
+      });
+      resizeObserver.observe(bardSidenavEl);
+    }
+
     // 1. Find the container
     // User specified: bard-sidenav .sidenav-with-history-container
     // We search for the class directly as it is likely unique and deep inside shadow roots.
@@ -87,13 +130,20 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
     });
 
     // Also hide .side-nav-menu-button if it exists (outside the container)
-    const menuButton = document.querySelector('.side-nav-menu-button');
-    if (menuButton) {
-        const el = menuButton as HTMLElement;
-        el.style.position = 'absolute';
-        el.style.top = '-9999px';
-        el.style.left = '-9999px';
-    }
+    waitForElement('.side-nav-menu-button').then((el) => {
+        (el as HTMLElement).style.position = 'absolute';
+        (el as HTMLElement).style.top = '-9999px';
+        (el as HTMLElement).style.left = '-9999px';
+    });
+    // Also hide search-nav-button (Angular custom element) if it exists
+    // Fire-and-forget: wait until the element is rendered, then hide it
+    waitForElement('search-nav-button').then((el) => {
+        (el as HTMLElement).style.display = 'none';
+    });
+    // Adjust top-bar-actions position (Angular custom element)
+    waitForElement('top-bar-actions').then((el) => {
+        (el as HTMLElement).style.left = '361px';
+    });
     
     // Create wrapper
     const wrapper = document.createElement('div');
