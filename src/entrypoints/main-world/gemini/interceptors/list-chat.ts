@@ -59,7 +59,7 @@ export function handleListChatResponse(response: any, url: string) {
                              
                              if (id) {
                                 items.push({
-                                    id,
+                                    id: id.replace(/^c_/, ''),
                                     title,
                                     created_at: createdAtSeconds,
                                 });
