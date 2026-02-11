@@ -196,7 +196,6 @@ export const PromptsTab = ({}: PromptsTabProps) => {
         onCollapseAll={handleCollapseAll}
         onNewChat={handleNewPrompt}
         filter={filter}
-        isPrompts={true}
       />
 
       <FilterBar filter={filter} allTags={[]} />

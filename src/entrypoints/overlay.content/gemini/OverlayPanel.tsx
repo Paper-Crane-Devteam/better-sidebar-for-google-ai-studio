@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useAppStore } from '@/shared/lib/store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
-import { Button } from '../aistudio/components/ui/button';
-import { Separator } from '../aistudio/components/ui/separator';
+import { Button } from '../shared/components/ui/button';
+import { Separator } from '../shared/components/ui/separator';
 import {
   Files,
   Star,
@@ -20,26 +20,28 @@ import {
   Gem,
   SquarePen,
 } from 'lucide-react';
-import { SqlExecutor } from '../aistudio/components/menu/SqlExecutor';
-import { ExplorerTab } from '../aistudio/modules/explorer/ExplorerTab';
-import { PromptsTab } from '../aistudio/modules/prompts/PromptsTab';
-import { SearchTab } from '../aistudio/modules/search/SearchTab';
-import { FavoritesTab } from '../aistudio/modules/favorites/FavoritesTab';
-import { TagsTab } from '../aistudio/modules/tags/TagsTab';
-import { FeedbackTab } from '../aistudio/modules/feedback/FeedbackTab';
-import { SettingsModal } from '../aistudio/modules/settings/SettingsModal';
-import { WhatsNewDialog } from '../aistudio/modules/whats-new/WhatsNewDialog';
+import { SqlExecutor } from '../shared/components/menu/SqlExecutor';
+import { ExplorerTab } from '../shared/modules/explorer/ExplorerTab';
+import { PromptsTab } from '../shared/modules/prompts/PromptsTab';
+import { SearchTab } from '../shared/modules/search/SearchTab';
+import { FavoritesTab } from '../shared/modules/favorites/FavoritesTab';
+import { TagsTab } from '../shared/modules/tags/TagsTab';
+import { FeedbackTab } from '../shared/modules/feedback/FeedbackTab';
+import { SettingsModal } from '../shared/modules/settings/SettingsModal';
+import { WhatsNewDialog } from '../shared/modules/whats-new/WhatsNewDialog';
 import '@/index.css';
 import { GlobalModal } from '@/shared/components/GlobalModal';
 import { GlobalToast } from '@/shared/components/GlobalToast';
-import { useAppInit } from '../aistudio/hooks/useAppInit';
-import { OverlayToggle } from '../aistudio/components/OverlayToggle';
-import { toast } from '@/shared/lib/toast';
+import { useAppInit } from '../shared/hooks/useAppInit';
+import { OverlayToggle } from '../shared/components/OverlayToggle';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { navigate } from '@/shared/lib/navigation';
 import { useUrl } from '@/shared/hooks/useUrl';
+import { useModuleConfig } from './useModuleConfig';
+import { toast } from '@/shared/lib/toast';
 
 export const OverlayPanel = ({ className }: { className?: string }) => {
+  const moduleConfig = useModuleConfig();
   useAppInit();
   const { t } = useI18n();
   const { path } = useUrl();
@@ -50,40 +52,42 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const {
     fetchData,
     ui,
-    setOverlayOpen: setIsUIVisible,
+    setOverlayOpen: setIsFeatureEnabled,
+    setSidebarExpanded,
     setActiveTab,
     setIsScanning,
     setShowSqlInterface,
     setExplorerViewMode,
     setExplorerSortOrder,
-    setTempHiddenToken,
     setSettingsOpen: setIsSettingsOpen,
   } = useAppStore();
 
   const {
-    isOpen: isUIVisible,
+    isOpen: isFeatureEnabled,
+    isSidebarExpanded,
     activeTab,
-    isScanning,
     showSqlInterface,
-    tempHiddenToken,
     isSettingsOpen,
   } = ui.overlay;
 
-  // Handle auto-switching UI based on URL
-  useEffect(() => {
-    if (
-      (path === '/' || path.includes('/prompts/new_chat')) &&
-      tempHiddenToken
-    ) {
-      setIsUIVisible(true);
-      setTempHiddenToken(null);
-    }
-  }, [path, isUIVisible, setIsUIVisible, tempHiddenToken, setTempHiddenToken]);
+  const [localIsVisible, setLocalIsVisible] = useState(isSidebarExpanded);
 
-  // 1. Handle UI Toggle Side Effects
+  const updateLocalVisibility = (visible: boolean) => {
+    if (visible) {
+      // Opening: add delay
+      setTimeout(() => {
+        setLocalIsVisible(true);
+      }, 100);
+    } else {
+      // Closing: hide immediately
+      setLocalIsVisible(false);
+    }
+  };
+
+  // Sync local state with global state
   useEffect(() => {
-    // Note: Gemini implementation of original sidebar hiding is handled in Layout.tsx
-  }, [isUIVisible]);
+    updateLocalVisibility(isSidebarExpanded);
+  }, [isSidebarExpanded]);
 
   useEffect(() => {
     // Initial fetch
@@ -152,42 +156,25 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   };
 
   const handleMainMenuClick = () => {
-    const menuBtn = document.querySelector('.mdc-icon-button[aria-label="Main menu"]') as HTMLElement;
+    const nextState = !isSidebarExpanded;
+
+    updateLocalVisibility(nextState);
+    setSidebarExpanded(nextState);
+
+    const menuBtn = document.querySelector(
+      '.mdc-icon-button[aria-label="Main menu"]',
+    ) as HTMLElement;
     if (menuBtn) {
-        menuBtn.click();
+      menuBtn.click();
     } else {
-        console.warn('Main menu button not found');
+      console.warn('Main menu button not found');
+      // If button not found, revert local state to avoid getting stuck
+      // We need to handle the timeout case too if we want to be perfectly safe,
+      // but typically if button is missing we have bigger problems.
+      // For now just syncing back to source of truth is enough.
+      setLocalIsVisible(isSidebarExpanded);
     }
   };
-
-  if (!isUIVisible) {
-    return (
-      <div
-        className="sidebar-nav border-r flex flex-col items-center bg-muted/20 shrink-0"
-        data-density={layoutDensity}
-      >
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Toggle Menu"
-          onClick={handleMainMenuClick}
-          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-        >
-          <Menu className="sidebar-icon" />
-        </Button>
-        <Separator className="w-8 my-1" />
-        <Button
-          variant="ghost"
-          size="icon"
-          title={t('tooltip.newChat')}
-          onClick={() => navigate('/app')}
-          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-        >
-          <SquarePen className="sidebar-icon" />
-        </Button>
-      </div>
-    );
-  }
 
   if (showSqlInterface) {
     return <SqlExecutor onClose={() => setShowSqlInterface(false)} />;
@@ -201,7 +188,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     >
       {/* Sidebar Tabs */}
       <div className="sidebar-nav border-r flex flex-col items-center bg-muted/20 shrink-0">
-        
         <Button
           variant="ghost"
           size="icon"
@@ -213,122 +199,146 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
         </Button>
         <Separator className="w-8 my-1" />
 
-        <Button
-          variant={activeTab === 'files' ? 'secondary' : 'ghost'}
-          size="icon"
-          title={t('tabs.files')}
-          onClick={() => handleTabChange('files')}
-          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-        >
-          <Files className="sidebar-icon" />
-        </Button>
-        <Button
-          variant={activeTab === 'search' ? 'secondary' : 'ghost'}
-          size="icon"
-          title={t('tabs.search')}
-          onClick={() => handleTabChange('search')}
-          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-        >
-          <Search className="sidebar-icon" />
-        </Button>
-        <Button
-          variant={activeTab === 'prompts' ? 'secondary' : 'ghost'}
-          size="icon"
-          title={t('tabs.prompts')}
-          onClick={() => handleTabChange('prompts')}
-          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-        >
-          <Sparkles className="sidebar-icon" />
-        </Button>
-        {shortcuts?.favorites && (
-          <Button
-            variant={activeTab === 'favorites' ? 'secondary' : 'ghost'}
-            size="icon"
-            title={t('tabs.favorites')}
-            onClick={() => handleTabChange('favorites')}
-            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-          >
-            <Star className="sidebar-icon" />
-          </Button>
-        )}
-        <Button
-          variant={activeTab === 'tags' ? 'secondary' : 'ghost'}
-          size="icon"
-          title={t('tabs.tags')}
-          onClick={() => handleTabChange('tags')}
-          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-        >
-          <Tag className="sidebar-icon" />
-        </Button>
-
-        {((shortcuts?.myStuff ?? true) || (shortcuts?.gems ?? true)) && (
-          <Separator className="w-8 my-1" />
-        )}
-
-        {(shortcuts?.myStuff ?? true) && (
+        {!isSidebarExpanded ? (
           <Button
             variant="ghost"
             size="icon"
-            title={t('shortcuts.myStuff')}
-            onClick={() => navigate('https://gemini.google.com/mystuff')
-            }
+            title={t('tooltip.newChat')}
+            onClick={() => moduleConfig.explorer.onNewChat()}
             className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
           >
-            <Library className="sidebar-icon" />
+            <SquarePen className="sidebar-icon" />
           </Button>
+        ) : (
+          <>
+            <Button
+              variant={activeTab === 'files' ? 'secondary' : 'ghost'}
+              size="icon"
+              title={t('tabs.files')}
+              onClick={() => handleTabChange('files')}
+              className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+            >
+              <Files className="sidebar-icon" />
+            </Button>
+            <Button
+              variant={activeTab === 'search' ? 'secondary' : 'ghost'}
+              size="icon"
+              title={t('tabs.search')}
+              onClick={() => handleTabChange('search')}
+              className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+            >
+              <Search className="sidebar-icon" />
+            </Button>
+            <Button
+              variant={activeTab === 'prompts' ? 'secondary' : 'ghost'}
+              size="icon"
+              title={t('tabs.prompts')}
+              onClick={() => handleTabChange('prompts')}
+              className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+            >
+              <Sparkles className="sidebar-icon" />
+            </Button>
+            {shortcuts?.favorites && (
+              <Button
+                variant={activeTab === 'favorites' ? 'secondary' : 'ghost'}
+                size="icon"
+                title={t('tabs.favorites')}
+                onClick={() => handleTabChange('favorites')}
+                className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+              >
+                <Star className="sidebar-icon" />
+              </Button>
+            )}
+            <Button
+              variant={activeTab === 'tags' ? 'secondary' : 'ghost'}
+              size="icon"
+              title={t('tabs.tags')}
+              onClick={() => handleTabChange('tags')}
+              className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+            >
+              <Tag className="sidebar-icon" />
+            </Button>
+
+            {((shortcuts?.myStuff ?? true) || (shortcuts?.gems ?? true)) && (
+              <Separator className="w-8 my-1" />
+            )}
+
+            {(shortcuts?.myStuff ?? true) && (
+              <Button
+                variant="ghost"
+                size="icon"
+                title={t('shortcuts.myStuff')}
+                onClick={() => navigate('https://gemini.google.com/mystuff')}
+                className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+              >
+                <Library className="sidebar-icon" />
+              </Button>
+            )}
+
+            {(shortcuts?.gems ?? true) && (
+              <Button
+                variant="ghost"
+                size="icon"
+                title={t('shortcuts.gems')}
+                onClick={() => navigate('https://gemini.google.com/gems/view')}
+                className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+              >
+                <Gem className="sidebar-icon" />
+              </Button>
+            )}
+
+            <div className="flex-1" />
+
+            {shortcuts?.originalUI && (
+              <Button
+                variant="ghost"
+                size="icon"
+                title={t('shortcuts.originalUI')}
+                onClick={() => setIsFeatureEnabled(false)}
+                className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+              >
+                <LogOut className="sidebar-icon" />
+              </Button>
+            )}
+
+            <Button
+              variant={activeTab === 'feedback' ? 'secondary' : 'ghost'}
+              size="icon"
+              title={t('tabs.feedback')}
+              onClick={() => handleTabChange('feedback')}
+              className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+            >
+              <MessageSquare className="sidebar-icon" />
+            </Button>
+            <Button
+              variant={isSettingsOpen ? 'secondary' : 'ghost'}
+              size="icon"
+              title={t('tabs.settings')}
+              onClick={() => handleTabChange('settings')}
+              className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+            >
+              <Settings className="sidebar-icon" />
+            </Button>
+          </>
         )}
-
-        {(shortcuts?.gems ?? true) && (
-          <Button
-            variant="ghost"
-            size="icon"
-            title={t('shortcuts.gems')}
-            onClick={() => navigate('https://gemini.google.com/gems/view')
-            }
-            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-          >
-            <Gem className="sidebar-icon" />
-          </Button>
-        )}
-
-        <div className="flex-1" />
-
-        {shortcuts?.originalUI && (
-          <Button
-            variant="ghost"
-            size="icon"
-            title={t('shortcuts.originalUI')}
-            onClick={() => setIsUIVisible(false)}
-            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-          >
-            <LogOut className="sidebar-icon" />
-          </Button>
-        )}
-
-        <Button
-          variant={activeTab === 'feedback' ? 'secondary' : 'ghost'}
-          size="icon"
-          title={t('tabs.feedback')}
-          onClick={() => handleTabChange('feedback')}
-          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-        >
-          <MessageSquare className="sidebar-icon" />
-        </Button>
-        <Button
-          variant={isSettingsOpen ? 'secondary' : 'ghost'}
-          size="icon"
-          title={t('tabs.settings')}
-          onClick={() => handleTabChange('settings')}
-          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-        >
-          <Settings className="sidebar-icon" />
-        </Button>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div
+        className={`flex flex-col min-w-0 transition-opacity duration-300 ease-in-out ${
+          localIsVisible
+            ? 'flex-1 opacity-100'
+            : 'w-0 opacity-0 overflow-hidden'
+        }`}
+      >
         {activeTab === 'files' ? (
-          <ExplorerTab />
+          <ExplorerTab
+            onNewChat={moduleConfig.explorer.onNewChat}
+            filterTypes={moduleConfig.explorer.filterTypes}
+            extraHeaderButtons={moduleConfig.explorer.extraHeaderButtons}
+            visibleFilters={moduleConfig.explorer.visibleFilters}
+            menuActions={moduleConfig.explorer.menuActions}
+          />
         ) : activeTab === 'search' ? (
           <SearchTab />
         ) : activeTab === 'prompts' ? (

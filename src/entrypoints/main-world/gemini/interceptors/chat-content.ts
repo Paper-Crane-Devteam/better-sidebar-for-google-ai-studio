@@ -51,8 +51,11 @@ export function handleChatContentResponse(response: any, url: string) {
                        // user: entry[2][0][0]
                        // model: entry[3][0][0][1][0]
                        // timestamp: entry[4] -> [seconds, nanos]
-                       
+                       const conversationId = entry?.[0]?.[0]?.replace(/^c_/, '');
+                       const userContentId = entry?.[0]?.[1];
+                       const modelContentId = entry?.[3]?.[3];
                        const userContent = entry?.[2]?.[0]?.[0];
+                       
                        const modelContent = entry?.[3]?.[0]?.[0]?.[1]?.[0];
                        const timestampArr = entry?.[4];
                        
@@ -61,12 +64,25 @@ export function handleChatContentResponse(response: any, url: string) {
                            timestamp = timestampArr[0];
                        }
                        
-                       if (userContent || modelContent) {
+                       if (userContent) {
                            chatHistory.push({
-                               user: userContent,
-                               model: modelContent,
-                               timestamp: timestamp
+                            role: 'user',
+                            id: userContentId,
+                            conversation_id: conversationId,
+                            content: userContent,
+                            message_type: 'text',
+                            created_at: timestamp,
                            });
+                       }
+                       if(modelContent) {
+                        chatHistory.push({
+                            role: 'model',
+                            id: modelContentId,
+                            conversation_id: conversationId,
+                            content: modelContent,
+                            message_type: 'text',
+                            created_at: timestamp,
+                        });
                        }
                    } catch (innerErr) {
                        // Ignore individual entry parse errors
@@ -84,10 +100,8 @@ export function handleChatContentResponse(response: any, url: string) {
         globalThis.dispatchEvent(
           new CustomEvent('GEMINI_CHAT_CONTENT_RESPONSE', {
             detail: {
-              chunks,
-              payloads, 
-              chatHistory, // The parsed history
-              originalUrl: url
+              conversationId: chatHistory[0].conversation_id,
+              messages: chatHistory,
             }
           })
         );

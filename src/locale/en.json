@@ -265,6 +265,7 @@
     "deleteNote": "Note: Deleted items can be restored by re-importing them from AI Studio.",
     "deleteFolderNote": "Note: Deleted folders cannot be restored, but conversations can be re-imported from AI Studio.",
     "openInNewTab": "Open in New Tab",
+    "moveTo": "Move to...",
     "export": "Export",
     "exportAsText": "Export as Text",
     "exportAsMarkdown": "Export as Markdown",

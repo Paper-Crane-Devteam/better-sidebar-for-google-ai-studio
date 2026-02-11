@@ -5,7 +5,7 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
-} from '@/entrypoints/overlay.content/aistudio/components/ui/context-menu';
+} from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
 import { FolderPlus, Edit2, Trash2, Star, StarOff, Copy, Files } from 'lucide-react';
 import { NodeProps } from './types';
 

@@ -31,6 +31,7 @@ export interface UIState {
   overlay: {
     currentPlatform: Platform;
     isOpen: boolean;
+    isSidebarExpanded: boolean;
     activeTab:
       | 'files'
       | 'favorites'
@@ -144,6 +145,7 @@ export interface AppState {
 
   setCurrentPlatform: (platform: Platform) => void;
   setOverlayOpen: (isOpen: boolean) => void;
+  setSidebarExpanded: (isExpanded: boolean) => void;
   setSettingsOpen: (isOpen: boolean) => void;
   setTempHiddenToken: (token: string | null) => void;
   setActiveTab: (

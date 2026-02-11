@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Tag } from '@/shared/types/db';
 import { useAppStore } from '@/shared/lib/store';
 import { Tag as TagIcon, MoreVertical, Trash2, Edit2 } from 'lucide-react';
-import { Button } from '@/entrypoints/overlay.content/aistudio/components/ui/button';
-import { Input } from '@/entrypoints/overlay.content/aistudio/components/ui/input';
+import { Button } from '@/entrypoints/overlay.content/shared/components/ui/button';
+import { Input } from '@/entrypoints/overlay.content/shared/components/ui/input';
 import { cn } from '@/shared/lib/utils';
 import {
   DropdownMenu,
@@ -16,7 +16,7 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
-} from '@/entrypoints/overlay.content/aistudio/components/ui/context-menu';
+} from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
 import { modal } from '@/shared/lib/modal';
 import { useI18n } from '@/shared/hooks/useI18n';
 

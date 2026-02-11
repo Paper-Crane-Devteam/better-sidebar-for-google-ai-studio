@@ -1,4 +1,5 @@
-import { messageRepo } from '@/shared/db/operations';
+import { messageRepo, conversationRepo, folderRepo } from '@/shared/db/operations';
+import i18n from '@/locale/i18n';
 import type { ExtensionMessage, ExtensionResponse } from '@/shared/types/messages';
 import type { MessageSender } from '../types';
 
@@ -47,6 +48,16 @@ export async function handleMessages(
       try {
         const { conversationId, messages } = message.payload;
         await messageRepo.replace(conversationId, messages);
+        return { success: true };
+      } catch (e: unknown) {
+        return { success: false, error: (e as Error).message };
+      }
+    }
+    case 'UPSERT_MESSAGES': {
+      try {
+        const { conversationId, messages } = message.payload;
+
+        await messageRepo.upsert(conversationId, messages);
         return { success: true };
       } catch (e: unknown) {
         return { success: false, error: (e as Error).message };

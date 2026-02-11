@@ -17,10 +17,26 @@ import {
   ContextMenuTrigger,
 } from '../../components/ui/context-menu';
 
-// No props needed as they are now handled by store or not passed down
-interface ExplorerTabProps {}
+import type { ExplorerTypeFilter } from '../../types/filter';
 
-export const ExplorerTab = ({}: ExplorerTabProps) => {
+interface ExplorerTabProps {
+  onNewChat: () => void;
+  filterTypes?: ExplorerTypeFilter[];
+  extraHeaderButtons?: React.ReactNode;
+  visibleFilters?: ('search' | 'tags' | 'type' | 'favorites')[];
+  menuActions?: {
+    onViewHistory?: () => void;
+    onSwitchToOriginalUI?: () => void;
+  };
+}
+
+export const ExplorerTab = ({
+  onNewChat,
+  filterTypes,
+  extraHeaderButtons,
+  visibleFilters,
+  menuActions,
+}: ExplorerTabProps) => {
   const { t } = useI18n();
   const {
     folders,
@@ -32,8 +48,6 @@ export const ExplorerTab = ({}: ExplorerTabProps) => {
     tags: allTags,
     setIsScanning
   } = useAppStore();
-
-  const newChatBehavior = useSettingsStore((state) => state.newChatBehavior);
 
   const { isScanning } = ui.overlay;
   const { viewMode } = ui.explorer;
@@ -74,9 +88,9 @@ export const ExplorerTab = ({}: ExplorerTabProps) => {
   // Handle New Chat Creation (Listen to event from Main World)
   useEffect(() => {
     const handleCreate = async (event: any) => {
-      const { id, title, prompt_metadata, created_at, type } = event.detail;
+      const { id, title, prompt_metadata, created_at, type, messages } = event.detail;
       console.log(
-        'Better Sidebar for Google AI Studio: Overlay received AI_STUDIO_PROMPT_CREATE',
+        'Better Sidebar for Google AI Studio: Overlay received BETTER_SIDEBAR_PROMPT_CREATE',
         id
       );
 
@@ -97,30 +111,32 @@ export const ExplorerTab = ({}: ExplorerTabProps) => {
 
       try {
         await browser.runtime.sendMessage({
-          type: 'CREATE_CONVERSATION',
+          type: 'SAVE_CONVERSATION',
           payload: {
             id,
             title,
             prompt_metadata,
             created_at,
+            updated_at: created_at,
             external_id: id,
-            folderId: targetFolderId,
+            folder_id: targetFolderId,
             type,
+            messages
           },
         });
         // Refresh data to show new item immediately
         fetchData(true);
       } catch (e) {
         console.error(
-          'Better Sidebar for Google AI Studio: Failed to handle AI_STUDIO_PROMPT_CREATE',
+          'Better Sidebar for Google AI Studio: Failed to handle BETTER_SIDEBAR_PROMPT_CREATE',
           e
         );
       }
     };
 
-    globalThis.addEventListener('AI_STUDIO_PROMPT_CREATE', handleCreate);
+    globalThis.addEventListener('BETTER_SIDEBAR_PROMPT_CREATE', handleCreate);
     return () =>
-      globalThis.removeEventListener('AI_STUDIO_PROMPT_CREATE', handleCreate);
+      globalThis.removeEventListener('BETTER_SIDEBAR_PROMPT_CREATE', handleCreate);
   }, [selectedNode, fetchData]);
 
   // Handle URL changes to auto-select prompt
@@ -198,15 +214,6 @@ export const ExplorerTab = ({}: ExplorerTabProps) => {
     }
   };
 
-  const handleNewChat = () => {
-    const url = 'https://aistudio.google.com/prompts/new_chat';
-    if (newChatBehavior === 'new-tab') {
-      window.open(url, '_blank');
-    } else {
-      navigate(url);
-    }
-  };
-
   const handleCollapseAll = () => {
     treeRef.current?.collapseAll();
   };
@@ -231,8 +238,12 @@ export const ExplorerTab = ({}: ExplorerTabProps) => {
       <ExplorerHeader
         onNewFolder={handleNewFolder}
         onCollapseAll={handleCollapseAll}
-        onNewChat={handleNewChat}
+        onNewChat={onNewChat}
         filter={filter}
+        filterTypes={filterTypes}
+        extraHeaderButtons={extraHeaderButtons}
+        visibleFilters={visibleFilters}
+        menuActions={menuActions}
       />
 
       <FilterBar filter={filter} allTags={allTags} />

@@ -13,7 +13,7 @@ import {
 import {
   ContextMenu,
   ContextMenuTrigger,
-} from '@/entrypoints/overlay.content/aistudio/components/ui/context-menu';
+} from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
 
 import { NodeProps } from './types';
 import { NodeContent } from './NodeContent';

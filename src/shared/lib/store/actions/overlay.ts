@@ -4,6 +4,7 @@ export function createOverlayActions(set: SetState): Pick<
   AppState,
   | 'setCurrentPlatform'
   | 'setOverlayOpen'
+  | 'setSidebarExpanded'
   | 'setSettingsOpen'
   | 'setTempHiddenToken'
   | 'setActiveTab'
@@ -18,6 +19,10 @@ export function createOverlayActions(set: SetState): Pick<
     setOverlayOpen: (isOpen) =>
       set((state) => ({
         ui: { ...state.ui, overlay: { ...state.ui.overlay, isOpen } },
+      })),
+    setSidebarExpanded: (isSidebarExpanded) =>
+      set((state) => ({
+        ui: { ...state.ui, overlay: { ...state.ui.overlay, isSidebarExpanded } },
       })),
     setSettingsOpen: (isSettingsOpen) =>
       set((state) => ({

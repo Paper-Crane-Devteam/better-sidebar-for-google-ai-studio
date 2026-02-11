@@ -21,6 +21,10 @@ interface SidePanelMenuProps {
   viewMode?: 'tree' | 'timeline';
   /** When provided, shows "Import AI Studio System" below view mode (Prompts tab). */
   onImportAiStudioSystem?: () => void | Promise<void>;
+  menuActions?: {
+    onViewHistory?: () => void;
+    onSwitchToOriginalUI?: () => void;
+  };
 }
 
 export const SidePanelMenu = ({ 
@@ -31,6 +35,7 @@ export const SidePanelMenu = ({
   onToggleViewMode,
   viewMode,
   onImportAiStudioSystem,
+  menuActions,
 }: SidePanelMenuProps) => {
   const { t } = useI18n();
   const { 
@@ -96,20 +101,24 @@ export const SidePanelMenu = ({
         {(onToggleViewMode || onImportAiStudioSystem) && <DropdownMenuSeparator />}
         
         {/* Section 3: Tools & Settings */}
-        <DropdownMenuItem onClick={() => navigate('https://aistudio.google.com/library')}>
-          <History className="mr-2 h-4 w-4" />
-          <span>{t('menu.viewHistory')}</span>
-        </DropdownMenuItem>
+        {menuActions?.onViewHistory && (
+          <DropdownMenuItem onClick={menuActions.onViewHistory}>
+            <History className="mr-2 h-4 w-4" />
+            <span>{t('menu.viewHistory')}</span>
+          </DropdownMenuItem>
+        )}
 
         <DropdownMenuItem onClick={handleScanLibrary} disabled={isScanning}>
           <RefreshCw className={`mr-2 h-4 w-4 ${isScanning ? 'animate-spin' : ''}`} />
           <span>{isScanning ? t('menu.scanning') : t('menu.scanChatList')}</span>
         </DropdownMenuItem>
 
-        <DropdownMenuItem onClick={() => setOverlayOpen(false)}>
-          <Layout className="mr-2 h-4 w-4" />
-          <span>{t('menu.switchToOriginalUI')}</span>
-        </DropdownMenuItem>
+        {menuActions?.onSwitchToOriginalUI && (
+          <DropdownMenuItem onClick={menuActions.onSwitchToOriginalUI}>
+            <Layout className="mr-2 h-4 w-4" />
+            <span>{t('menu.switchToOriginalUI')}</span>
+          </DropdownMenuItem>
+        )}
 
         {import.meta.env.DEV && (
           <DropdownMenuItem onClick={() => setShowSqlInterface(true)}>

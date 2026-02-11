@@ -88,16 +88,15 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
             .getPropertyValue('--bard-sidenav-closed-width');
           const closedWidth = parseInt(closedWidthStr, 10) || 63;
           // If current width is greater than closed width + margin, sidebar is open
-          const isSidebarOpen = width > closedWidth + 10;
-          useAppStore.getState().setOverlayOpen(isSidebarOpen);
+          const isSidebarExpanded = width > closedWidth + 10;
+          
+          useAppStore.getState().setSidebarExpanded(isSidebarExpanded);
         }
       });
       resizeObserver.observe(bardSidenavEl);
     }
 
     // 1. Find the container
-    // User specified: bard-sidenav .sidenav-with-history-container
-    // We search for the class directly as it is likely unique and deep inside shadow roots.
     const container = await waitForElement('.sidenav-with-history-container');
     
     if (!container) {
@@ -107,90 +106,162 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
 
     console.log('Better Sidebar: Found Gemini sidebar container', container);
 
-    // 2. Prepare the container
-    // User requirement: "put original content position absolute top left -9999px"
-    
     const wrapperId = 'better-sidebar-for-google-ai-studio-sidebar-wrapper';
     
-    // Check if we already injected (hmr support)
-    if (container.querySelector(`#${wrapperId}`)) {
-        return;
-    }
+    // Store references to elements we need to toggle
+    const elements = {
+        wrapper: null as HTMLElement | null,
+        sideNavMenuBtn: null as HTMLElement | null,
+        searchNavBtn: null as HTMLElement | null,
+        topBarActions: null as HTMLElement | null,
+        topBarActionsOriginalLeft: '' as string,
+    };
 
-    // Hide existing children by styling them
-    // We cast children to HTMLElement to access style
-    Array.from(container.children).forEach((child) => {
-        if (child.id !== wrapperId) {
-            const el = child as HTMLElement;
-            el.style.position = 'absolute';
-            el.style.top = '-9999px';
-            el.style.left = '-9999px';
-            // We don't set display: none because "some functions rely on inner things triggering click events"
+    // Start looking for external elements
+    waitForElement('.side-nav-menu-button').then(el => {
+        elements.sideNavMenuBtn = el as HTMLElement;
+        // Apply current state
+        const enabled = useAppStore.getState().ui.overlay.isOpen;
+        if (enabled) {
+            (el as HTMLElement).style.position = 'absolute';
+            (el as HTMLElement).style.top = '-9999px';
+            (el as HTMLElement).style.left = '-9999px';
         }
     });
 
-    // Also hide .side-nav-menu-button if it exists (outside the container)
-    waitForElement('.side-nav-menu-button').then((el) => {
-        (el as HTMLElement).style.position = 'absolute';
-        (el as HTMLElement).style.top = '-9999px';
-        (el as HTMLElement).style.left = '-9999px';
+    waitForElement('search-nav-button').then(el => {
+        elements.searchNavBtn = el as HTMLElement;
+        const enabled = useAppStore.getState().ui.overlay.isOpen;
+        if (enabled) {
+            (el as HTMLElement).style.display = 'none';
+        }
     });
-    // Also hide search-nav-button (Angular custom element) if it exists
-    // Fire-and-forget: wait until the element is rendered, then hide it
-    waitForElement('search-nav-button').then((el) => {
-        (el as HTMLElement).style.display = 'none';
-    });
-    // Adjust top-bar-actions position (Angular custom element)
-    waitForElement('top-bar-actions').then((el) => {
-        (el as HTMLElement).style.left = '361px';
-    });
-    
-    // Create wrapper
-    const wrapper = document.createElement('div');
-    wrapper.id = wrapperId;
-    wrapper.style.height = '100%';
-    wrapper.style.width = '100%'; 
-    
-    container.appendChild(wrapper);
 
-    // 3. Mount Shadow Root
-    const shadow = wrapper.attachShadow({ mode: 'open' });
-    applyShadowStyles(shadow, mainStyles);
+    waitForElement('top-bar-actions').then(el => {
+        elements.topBarActions = el as HTMLElement;
+        elements.topBarActionsOriginalLeft = (el as HTMLElement).style.left;
+        const enabled = useAppStore.getState().ui.overlay.isOpen;
+        if (enabled) {
+            (el as HTMLElement).style.left = '361px';
+        }
+    });
 
-    const rootContainer = document.createElement('div');
-    rootContainer.classList.add('shadow-body');
-    rootContainer.classList.add('theme-gemini');
-    rootContainer.style.height = '100%'; // Ensure full height
-    
-    // Theme sync
-    const syncTheme = () => {
-        const isDark = document.body.classList.contains('dark-theme') || 
-                       document.body.classList.contains('dark') ||
-                       document.body.getAttribute('data-theme') === 'dark';
-                       
-        TooltipHelper.getInstance().setTheme(isDark);
-        if (isDark) rootContainer.classList.add('dark');
-        else rootContainer.classList.remove('dark');
+
+    // Function to update visibility/state based on enabled status
+    const updateState = (enabled: boolean) => {
+        // 1. Manage Wrapper
+        if (enabled) {
+            if (!elements.wrapper) {
+                // Create wrapper if doesn't exist
+                const wrapper = document.createElement('div');
+                wrapper.id = wrapperId;
+                wrapper.style.height = '100%';
+                wrapper.style.width = '100%'; 
+                
+                container.appendChild(wrapper);
+                elements.wrapper = wrapper;
+
+                const shadow = wrapper.attachShadow({ mode: 'open' });
+                applyShadowStyles(shadow, mainStyles);
+
+                const rootContainer = document.createElement('div');
+                rootContainer.classList.add('shadow-body');
+                rootContainer.classList.add('theme-gemini');
+                rootContainer.style.height = '100%';
+                
+                // Theme sync
+                const syncTheme = () => {
+                    const isDark = document.body.classList.contains('dark-theme') || 
+                                   document.body.classList.contains('dark') ||
+                                   document.body.getAttribute('data-theme') === 'dark';
+                                   
+                    TooltipHelper.getInstance().setTheme(isDark);
+                    if (isDark) rootContainer.classList.add('dark');
+                    else rootContainer.classList.remove('dark');
+                };
+                syncTheme();
+                
+                const observer = new MutationObserver(syncTheme);
+                observer.observe(document.body, {
+                    attributes: true,
+                    attributeFilter: ['class', 'data-theme'],
+                });
+
+                shadow.appendChild(rootContainer);
+
+                // Render React App
+                const root = ReactDOM.createRoot(rootContainer);
+                root.render(
+                  <ShadowRootProvider container={rootContainer}>
+                    <div className="h-full w-full bg-background text-foreground">
+                      <OverlayPanel className="h-full" />
+                    </div>
+                  </ShadowRootProvider>
+                );
+            } else {
+                elements.wrapper.style.display = 'block';
+            }
+        } else {
+            if (elements.wrapper) {
+                elements.wrapper.style.display = 'none';
+            }
+        }
+
+        // 2. Hide/Show Original Elements (children of container)
+        Array.from(container.children).forEach((child) => {
+            if (child.id !== wrapperId) {
+                const el = child as HTMLElement;
+                if (enabled) {
+                    el.style.position = 'absolute';
+                    el.style.top = '-9999px';
+                    el.style.left = '-9999px';
+                } else {
+                    el.style.position = '';
+                    el.style.top = '';
+                    el.style.left = '';
+                }
+            }
+        });
+
+        // 3. Update External Elements
+        if (elements.sideNavMenuBtn) {
+            if (enabled) {
+                elements.sideNavMenuBtn.style.position = 'absolute';
+                elements.sideNavMenuBtn.style.top = '-9999px';
+                elements.sideNavMenuBtn.style.left = '-9999px';
+            } else {
+                elements.sideNavMenuBtn.style.position = '';
+                elements.sideNavMenuBtn.style.top = '';
+                elements.sideNavMenuBtn.style.left = '';
+            }
+        }
+
+        if (elements.searchNavBtn) {
+            if (enabled) {
+                elements.searchNavBtn.style.display = 'none';
+            } else {
+                elements.searchNavBtn.style.display = '';
+            }
+        }
+
+        if (elements.topBarActions) {
+            if (enabled) {
+                elements.topBarActions.style.left = '361px';
+            } else {
+                elements.topBarActions.style.left = elements.topBarActionsOriginalLeft;
+            }
+        }
     };
-    syncTheme();
-    
-    const observer = new MutationObserver(syncTheme);
-    observer.observe(document.body, {
-        attributes: true,
-        attributeFilter: ['class', 'data-theme'],
+
+    // Initial state check
+    updateState(useAppStore.getState().ui.overlay.isOpen);
+
+    // Subscribe to state changes
+    useAppStore.subscribe((state, prevState) => {
+        if (state.ui.overlay.isOpen !== prevState.ui.overlay.isOpen) {
+            updateState(state.ui.overlay.isOpen);
+        }
     });
-
-    shadow.appendChild(rootContainer);
-
-    // 4. Render React App
-    const root = ReactDOM.createRoot(rootContainer);
-    root.render(
-      <ShadowRootProvider container={rootContainer}>
-        <div className="h-full w-full bg-background text-foreground">
-          <OverlayPanel className="h-full" />
-        </div>
-      </ShadowRootProvider>
-    );
 
   } catch (e) {
     console.error('Better Sidebar: Gemini overlay initialization failed', e);

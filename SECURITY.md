@@ -8,7 +8,7 @@ We take the security of **Better Sidebar for Google AI Studio** seriously. If yo
 
 Please do **not** report security vulnerabilities through public GitHub issues.
 
-Instead, please report them via email to: `[Insert Your Support Email]` or use the Feedback form inside the extension with the subject line "SECURITY VULNERABILITY".
+Instead, please report them via email to: `zhangyu91101313@gmail.com` or use the Feedback form inside the extension with the subject line "SECURITY VULNERABILITY".
 
 ### What to Include
 

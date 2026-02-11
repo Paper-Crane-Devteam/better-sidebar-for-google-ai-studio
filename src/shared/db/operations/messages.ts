@@ -92,6 +92,97 @@ export const messageRepo = {
     await runBatch(operations);
   },
 
+  upsert: async (
+    conversationId: string,
+    messages: (Omit<Message, 'id' | 'timestamp' | 'conversation_id' | 'order_index'> & { id: string; created_at?: number | null })[]
+  ): Promise<void> => {
+    if (messages.length === 0) return;
+
+    // 1. Check which messages already exist
+    const incomingIds = messages.map(m => m.id);
+    const existingRows = await runQuery(
+      `SELECT id FROM messages WHERE id IN (${incomingIds.map(() => '?').join(',')})`,
+      incomingIds
+    );
+    const existingIds = new Set(existingRows.map((r: any) => r.id));
+
+    const newMessages = messages.filter(m => !existingIds.has(m.id));
+    const updateMessages = messages.filter(m => existingIds.has(m.id));
+
+    const operations: { sql: string; bind: any[] }[] = [];
+
+    // 2. Prepare Updates
+    if (updateMessages.length > 0) {
+      updateMessages.forEach((msg) => {
+        operations.push({
+          sql: `UPDATE messages SET 
+                  content = ?, 
+                  role = ?, 
+                  message_type = ?, 
+                  timestamp = CASE WHEN ? IS NOT NULL THEN ? ELSE timestamp END
+                WHERE id = ?`,
+          bind: [
+            msg.content,
+            msg.role,
+            msg.message_type || 'text',
+            msg.created_at,
+            msg.created_at,
+            msg.id
+          ]
+        });
+      });
+    }
+
+    // 3. Prepare Inserts
+    if (newMessages.length > 0) {
+      // Sort new messages by timestamp (asc). 
+      // Treat missing timestamps as Infinity so they go to the end
+      newMessages.sort((a, b) => (a.created_at ?? Infinity) - (b.created_at ?? Infinity));
+
+      // Get DB stats to determine insertion point
+      const stats = await runQuery(
+        `SELECT MIN(timestamp) as min_ts, MIN(order_index) as min_idx, MAX(order_index) as max_idx 
+         FROM messages WHERE conversation_id = ?`,
+        [conversationId]
+      );
+      
+      const dbMinTs = stats[0]?.min_ts;
+      const dbMinIdx = stats[0]?.min_idx ?? 0;
+      const dbMaxIdx = stats[0]?.max_idx ?? -1;
+      
+      const firstNewTs = newMessages[0].created_at;
+      
+      let startIdx = 0;
+      
+      // If DB has messages, and our new batch starts strictly BEFORE the earliest DB message
+      if (dbMinTs !== null && firstNewTs && firstNewTs < dbMinTs) {
+        startIdx = dbMinIdx - newMessages.length;
+      } else {
+        startIdx = dbMaxIdx + 1;
+      }
+
+      newMessages.forEach((msg, i) => {
+        operations.push({
+          sql: `INSERT INTO messages (id, conversation_id, role, content, message_type, timestamp, order_index) 
+                VALUES (?, ?, ?, ?, ?, COALESCE(?, unixepoch()), ?)`,
+          bind: [
+            msg.id,
+            conversationId,
+            msg.role,
+            msg.content,
+            msg.message_type || 'text',
+            msg.created_at,
+            startIdx + i
+          ]
+        });
+      });
+    }
+
+    if (operations.length > 0) {
+      await runBatch(operations);
+    }
+  },
+
   search: async (
     query: string,
     options: {

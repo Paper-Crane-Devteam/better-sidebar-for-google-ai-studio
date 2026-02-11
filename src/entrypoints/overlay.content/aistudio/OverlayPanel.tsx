@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useAppStore } from '@/shared/lib/store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
-import { Button } from './components/ui/button';
-import { Separator } from './components/ui/separator';
+import { Button } from '../shared/components/ui/button';
+import { Separator } from '../shared/components/ui/separator';
 import {
   Files,
   Star,
@@ -16,32 +16,35 @@ import {
   Search,
   Sparkles,
 } from 'lucide-react';
-import { SqlExecutor } from './components/menu/SqlExecutor';
-import { ExplorerTab } from './modules/explorer/ExplorerTab';
-import { PromptsTab } from './modules/prompts/PromptsTab';
-import { SearchTab } from './modules/search/SearchTab';
-import { FavoritesTab } from './modules/favorites/FavoritesTab';
-import { TagsTab } from './modules/tags/TagsTab';
-import { FeedbackTab } from './modules/feedback/FeedbackTab';
-import { SettingsModal } from './modules/settings/SettingsModal';
-import { WhatsNewDialog } from './modules/whats-new/WhatsNewDialog';
+import { SqlExecutor } from '../shared/components/menu/SqlExecutor';
+import { ExplorerTab } from '../shared/modules/explorer/ExplorerTab';
+import { PromptsTab } from '../shared/modules/prompts/PromptsTab';
+import { SearchTab } from '../shared/modules/search/SearchTab';
+import { FavoritesTab } from '../shared/modules/favorites/FavoritesTab';
+import { TagsTab } from '../shared/modules/tags/TagsTab';
+import { FeedbackTab } from '../shared/modules/feedback/FeedbackTab';
+import { SettingsModal } from '../shared/modules/settings/SettingsModal';
+import { WhatsNewDialog } from '../shared/modules/whats-new/WhatsNewDialog';
 import '@/index.css';
 import { GlobalModal } from '@/shared/components/GlobalModal';
 import { GlobalToast } from '@/shared/components/GlobalToast';
-import { useAppInit } from './hooks/useAppInit';
-import { OverlayToggle } from './components/OverlayToggle';
+import { useAppInit } from '../shared/hooks/useAppInit';
+import { OverlayToggle } from '../shared/components/OverlayToggle';
 import { toast } from '@/shared/lib/toast';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { navigate } from '@/shared/lib/navigation';
 import { useUrl } from '@/shared/hooks/useUrl';
+import { useModuleConfig } from './useModuleConfig';
 
 export const OverlayPanel = ({ className }: { className?: string }) => {
+  const moduleConfig = useModuleConfig();
   useAppInit();
   const { t } = useI18n();
   const { path } = useUrl();
 
   const [, setContainer] = useState<HTMLDivElement | null>(null);
   const layoutDensity = useSettingsStore((state) => state.layoutDensity);
+  const newChatBehavior = useSettingsStore((state) => state.newChatBehavior);
   const shortcuts = useSettingsStore((state) => state.shortcuts);
   const {
     fetchData,
@@ -54,6 +57,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     setExplorerSortOrder,
     setTempHiddenToken,
     setSettingsOpen: setIsSettingsOpen,
+    setOverlayOpen
   } = useAppStore();
 
   const {
@@ -330,7 +334,13 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {activeTab === 'files' ? (
-          <ExplorerTab />
+          <ExplorerTab
+            onNewChat={moduleConfig.explorer.onNewChat}
+            filterTypes={moduleConfig.explorer.filterTypes}
+            visibleFilters={moduleConfig.explorer.visibleFilters}
+            extraHeaderButtons={moduleConfig.explorer.extraHeaderButtons}
+            menuActions={moduleConfig.explorer.menuActions}
+          />
         ) : activeTab === 'search' ? (
           <SearchTab />
         ) : activeTab === 'prompts' ? (

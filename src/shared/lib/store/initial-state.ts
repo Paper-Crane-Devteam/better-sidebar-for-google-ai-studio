@@ -6,6 +6,7 @@ export const initialUIState: UIState = {
   overlay: {
     currentPlatform: Platform.AI_STUDIO,
     isOpen: true,
+    isSidebarExpanded: true,
     activeTab: 'files',
     isScanning: false,
     isSettingsOpen: false,

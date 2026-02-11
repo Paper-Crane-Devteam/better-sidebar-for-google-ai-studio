@@ -26,6 +26,9 @@ export type ExtensionMessage = (
         model_name?: string;
         updated_at: number;
         platform?: string;
+        created_at?: number;
+        prompt_metadata?: any;
+        type?: string;
         messages: {
           role: 'user' | 'model';
           content: string;
@@ -186,6 +189,20 @@ export type ExtensionMessage = (
           role: 'user' | 'model';
           content: string;
           message_type: 'text' | 'thought';
+        }[];
+      };
+    }
+  | {
+      type: 'UPSERT_MESSAGES';
+      payload: {
+        conversationId: string;
+        title?: string;
+        messages: {
+          id: string;
+          role: 'user' | 'model';
+          content: string;
+          message_type: 'text' | 'thought';
+          created_at?: number | null;
         }[];
       };
     }

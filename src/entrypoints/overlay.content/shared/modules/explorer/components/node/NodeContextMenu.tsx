@@ -11,7 +11,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuSubContent,
   ContextMenuCheckboxItem,
-} from '@/entrypoints/overlay.content/aistudio/components/ui/context-menu';
+} from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
 import {
   fetchMessagesForExport,
   buildExportText,
@@ -20,7 +20,9 @@ import {
   downloadBlob,
   safeFilename,
 } from '../../lib/exportConversation';
-import { FolderPlus, Edit2, Trash2, Star, StarOff, Tag as TagIcon, ExternalLink, Download, FileText, FileCode, Braces } from 'lucide-react';
+import { FolderPlus, Edit2, Trash2, Star, StarOff, Tag as TagIcon, ExternalLink, Download, FileText, FileCode, Braces, FolderInput } from 'lucide-react';
+import { modal } from '@/shared/lib/modal';
+import { MoveItemsDialog } from '../batch/MoveItemsDialog';
 import { NodeProps } from './types';
 
 interface NodeContextMenuProps extends NodeProps {
@@ -105,6 +107,25 @@ export const NodeContextMenu = ({
     }
   };
 
+  const handleMove = async () => {
+    let targetFolderId: string | null = null;
+    const confirmed = await modal.confirm({
+      title: t('batch.moveTitle'),
+      content: (
+        <MoveItemsDialog
+          selectedIds={[node.data.id]}
+          onSelect={(id) => (targetFolderId = id)}
+        />
+      ),
+      confirmText: t('common.move'),
+      cancelText: t('common.cancel'),
+    });
+
+    if (confirmed) {
+      await useAppStore.getState().moveItem(node.data.id, targetFolderId, node.data.type);
+    }
+  };
+
   // Cleanup timeouts on unmount
   React.useEffect(() => {
     return () => {
@@ -165,6 +186,11 @@ export const NodeContextMenu = ({
                 {t('node.addToFavorites')}
               </>
             )}
+          </ContextMenuItem>
+
+          <ContextMenuItem onClick={handleMove}>
+            <FolderInput className="mr-2 h-4 w-4" />
+            {t('node.moveTo')}
           </ContextMenuItem>
 
           <ContextMenuSub

@@ -36,7 +36,7 @@ export function handleCreatePromptResponse(response: any, url: string) {
         if (id) {
           console.log(`Better Sidebar: Detected new prompt creation: ${id}`);
           globalThis.dispatchEvent(
-            new CustomEvent('AI_STUDIO_PROMPT_CREATE', {
+            new CustomEvent('BETTER_SIDEBAR_PROMPT_CREATE', {
               detail: {
                 id,
                 title,

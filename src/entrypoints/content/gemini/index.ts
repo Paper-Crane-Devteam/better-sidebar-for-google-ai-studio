@@ -5,6 +5,7 @@ import { Platform } from '@/shared/types/platform';
 import { ExtensionMessage } from '@/shared/types/messages';
 import { scanLibrary } from './tasks/scan-library';
 import { apiScanner } from './tasks/scan-api';
+import { chatContentScanner } from './tasks/scan-chat-content';
 
 import { syncConversations } from './tasks/sync-conversations';
 
@@ -17,6 +18,7 @@ export function initGemini() {
 
   // Start API Scanner immediately to catch early requests
   apiScanner.start();
+  chatContentScanner.start();
 
   // Inject Main World Script
   const script = document.createElement('script');

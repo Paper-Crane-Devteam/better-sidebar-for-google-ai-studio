@@ -265,6 +265,7 @@
     "deleteNote": "注意：删除的项目可以通过从 AI Studio 重新导入来恢复。",
     "deleteFolderNote": "注意：删除的文件夹无法恢复，但对话可以从 AI Studio 重新导入。",
     "openInNewTab": "在新标签页打开",
+    "moveTo": "移动到...",
     "export": "导出",
     "exportAsText": "导出为纯文本",
     "exportAsMarkdown": "导出为 Markdown",

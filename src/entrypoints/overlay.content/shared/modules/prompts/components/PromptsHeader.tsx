@@ -6,7 +6,7 @@ import { FolderPlus, ListCollapse, ArrowDownAZ, Clock, ListChecks, Plus } from '
 import { PromptsFilterActions } from './PromptsFilterActions';
 import type { FilterState, PromptsTypeFilter } from '../../../types/filter';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { SidePanelMenu } from '@/entrypoints/overlay.content/aistudio/components/menu/SidePanelMenu';
+import { SidePanelMenu } from '@/entrypoints/overlay.content/shared/components/menu/SidePanelMenu';
 import { BatchToolbar } from './batch/BatchToolbar';
 import { toast } from '@/shared/lib/toast';
 
@@ -15,7 +15,6 @@ interface PromptsHeaderProps {
   onCollapseAll: () => void;
   onNewChat: () => void;
   filter: FilterState<PromptsTypeFilter>;
-  isPrompts?: boolean;
 }
 
 const AISTUDIO_SYSTEM_KEY = 'aistudio_all_system_instructions';
@@ -30,7 +29,6 @@ export const PromptsHeader = ({
   onCollapseAll,
   onNewChat,
   filter,
-  isPrompts,
 }: PromptsHeaderProps) => {
   const { t } = useI18n();
   const { ui, setPromptsSortOrder, setPromptsBatchMode, createPrompt, createPromptFolder, promptFolders } = useAppStore();

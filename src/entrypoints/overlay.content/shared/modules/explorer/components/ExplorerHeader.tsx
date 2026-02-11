@@ -4,7 +4,7 @@ import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Button } from '@/shared/components/ui/button';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { MessageSquarePlus, FolderPlus, ListCollapse, ArrowDownAZ, Clock, ListChecks } from 'lucide-react';
-import { SidePanelMenu } from '@/entrypoints/overlay.content/aistudio/components/menu/SidePanelMenu';
+import { SidePanelMenu } from '@/entrypoints/overlay.content/shared/components/menu/SidePanelMenu';
 import { FilterActions } from '../../../components/FilterActions';
 import type { FilterState, ExplorerTypeFilter } from '../../../types/filter';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -15,6 +15,13 @@ interface ExplorerHeaderProps {
   onCollapseAll: () => void;
   onNewChat: () => void;
   filter: FilterState<ExplorerTypeFilter>;
+  filterTypes?: ExplorerTypeFilter[];
+  extraHeaderButtons?: React.ReactNode;
+  visibleFilters?: ('search' | 'tags' | 'type' | 'favorites')[];
+  menuActions?: {
+    onViewHistory?: () => void;
+    onSwitchToOriginalUI?: () => void;
+  };
 }
 
 export const ExplorerHeader = ({
@@ -22,6 +29,10 @@ export const ExplorerHeader = ({
   onCollapseAll,
   onNewChat,
   filter,
+  filterTypes,
+  extraHeaderButtons,
+  visibleFilters,
+  menuActions,
 }: ExplorerHeaderProps) => {
   const { t } = useI18n();
   const { ui, setExplorerSortOrder, setExplorerViewMode, setExplorerBatchMode } = useAppStore();
@@ -97,6 +108,7 @@ export const ExplorerHeader = ({
               <SidePanelMenu
                 onToggleViewMode={handleToggleViewMode}
                 viewMode={viewMode}
+                menuActions={menuActions}
               />
             </>
           )}
@@ -105,7 +117,7 @@ export const ExplorerHeader = ({
 
       <div className="px-3 pb-2 pt-1 flex items-center justify-between">
         <div className="flex-1 mr-2">
-          <FilterActions filter={filter} />
+          <FilterActions filter={filter} availableTypes={filterTypes} visibleFilters={visibleFilters} />
         </div>
         <div className="flex items-center gap-1">
           {viewMode !== 'timeline' && (
@@ -130,6 +142,7 @@ export const ExplorerHeader = ({
               <MessageSquarePlus className="h-4 w-4" />
             </Button>
           </SimpleTooltip>
+          {extraHeaderButtons}
         </div>
       </div>
     </div>
