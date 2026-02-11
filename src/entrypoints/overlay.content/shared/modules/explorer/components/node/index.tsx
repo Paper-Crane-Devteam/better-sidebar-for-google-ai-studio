@@ -95,7 +95,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
 
   const isFile = node.data.type === 'file';
   const url = isFile
-    ? node.data.data?.external_url.replace('https://aistudio.google.com', '')
+    ? node.data?.data?.external_url
     : undefined;
 
   const toggleIcon =

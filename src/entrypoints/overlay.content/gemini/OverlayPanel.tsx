@@ -84,6 +84,10 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     }
   };
 
+  useEffect(() => {
+    console.log('isSidebarExpanded', isSidebarExpanded);
+    console.trace();
+  }, [isSidebarExpanded]);
   // Sync local state with global state
   useEffect(() => {
     updateLocalVisibility(isSidebarExpanded);
@@ -159,7 +163,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     const nextState = !isSidebarExpanded;
 
     updateLocalVisibility(nextState);
-    setSidebarExpanded(nextState);
 
     const menuBtn = document.querySelector(
       '.mdc-icon-button[aria-label="Main menu"]',
@@ -175,6 +178,10 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       setLocalIsVisible(isSidebarExpanded);
     }
   };
+
+  if (!isFeatureEnabled) {
+    return <OverlayToggle onToggle={() => setIsFeatureEnabled(true)} />;
+  }
 
   if (showSqlInterface) {
     return <SqlExecutor onClose={() => setShowSqlInterface(false)} />;

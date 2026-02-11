@@ -56,31 +56,54 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
   try {
     // 0. Override bard-sidenav CSS variables based on density settings
     const bardSidenav = await waitForElement('bard-sidenav');
-    const updateSidebarWidths = (density: 'compact' | 'relaxed') => {
+    const bardSidenavEl = bardSidenav as HTMLElement;
+
+    // Capture original values (check inline style first, then computed if needed, but usually we want to know if we should remove the inline override)
+    // Actually, if we use setProperty on the element, we are setting inline styles.
+    // If the original site used inline styles, we want to restore them.
+    // If it used class/stylesheet styles, removing our inline style will restore them.
+    // So storing what was in `style` attribute is correct.
+    const originalClosedWidth = bardSidenavEl.style.getPropertyValue('--bard-sidenav-closed-width');
+    const originalOpenWidth = bardSidenavEl.style.getPropertyValue('--bard-sidenav-open-width');
+
+    const updateSidebarWidths = (density: 'compact' | 'relaxed', enabled: boolean) => {
       if (!bardSidenav) return;
-      const el = bardSidenav as HTMLElement;
+      if (!enabled) {
+          // Restore original
+          if (originalClosedWidth) {
+              bardSidenavEl.style.setProperty('--bard-sidenav-closed-width', originalClosedWidth);
+          } else {
+              bardSidenavEl.style.removeProperty('--bard-sidenav-closed-width');
+          }
+
+          if (originalOpenWidth) {
+              bardSidenavEl.style.setProperty('--bard-sidenav-open-width', originalOpenWidth);
+          } else {
+              bardSidenavEl.style.removeProperty('--bard-sidenav-open-width');
+          }
+          return;
+      }
+
       if (density === 'compact') {
-        el.style.setProperty('--bard-sidenav-closed-width', '55px');
-        el.style.setProperty('--bard-sidenav-open-width', '345px');
+        bardSidenavEl.style.setProperty('--bard-sidenav-closed-width', '55px');
+        bardSidenavEl.style.setProperty('--bard-sidenav-open-width', '345px');
       } else {
         // relaxed (default)
-        el.style.setProperty('--bard-sidenav-closed-width', '63px');
-        el.style.setProperty('--bard-sidenav-open-width', '360px');
+        bardSidenavEl.style.setProperty('--bard-sidenav-closed-width', '63px');
+        bardSidenavEl.style.setProperty('--bard-sidenav-open-width', '360px');
       }
     };
 
-    // Initial application
-    const initialDensity = useSettingsStore.getState().layoutDensity;
-    updateSidebarWidths(initialDensity);
+    // Initial application handled in updateState
 
-    // Subscribe to changes
+    // Subscribe to density changes
     useSettingsStore.subscribe((state) => {
-      updateSidebarWidths(state.layoutDensity);
+      const enabled = useAppStore.getState().ui.overlay.isOpen;
+      updateSidebarWidths(state.layoutDensity, enabled);
     });
 
     // 0.5. Monitor bard-sidenav width to detect open/close state
     if (bardSidenav) {
-      const bardSidenavEl = bardSidenav as HTMLElement;
       const resizeObserver = new ResizeObserver((entries) => {
         for (const entry of entries) {
           const width = entry.contentRect.width;
@@ -114,7 +137,6 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
         sideNavMenuBtn: null as HTMLElement | null,
         searchNavBtn: null as HTMLElement | null,
         topBarActions: null as HTMLElement | null,
-        topBarActionsOriginalLeft: '' as string,
     };
 
     // Start looking for external elements
@@ -139,7 +161,6 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
 
     waitForElement('top-bar-actions').then(el => {
         elements.topBarActions = el as HTMLElement;
-        elements.topBarActionsOriginalLeft = (el as HTMLElement).style.left;
         const enabled = useAppStore.getState().ui.overlay.isOpen;
         if (enabled) {
             (el as HTMLElement).style.left = '361px';
@@ -149,6 +170,10 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
 
     // Function to update visibility/state based on enabled status
     const updateState = (enabled: boolean) => {
+        // 0. Update Sidebar Widths
+        const density = useSettingsStore.getState().layoutDensity;
+        updateSidebarWidths(density, enabled);
+
         // 1. Manage Wrapper
         if (enabled) {
             if (!elements.wrapper) {
@@ -248,7 +273,7 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
             if (enabled) {
                 elements.topBarActions.style.left = '361px';
             } else {
-                elements.topBarActions.style.left = elements.topBarActionsOriginalLeft;
+                elements.topBarActions.style.left = '';
             }
         }
     };
