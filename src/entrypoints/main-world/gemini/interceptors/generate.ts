@@ -118,7 +118,7 @@ export function handleGenerateResponse(response: any, url: string) {
                 let title: string | undefined;
                 for (let i = payloads.length - 1; i >= 0; i--) {
                   try {
-                    const t = payloads[i]?.[10]?.[0];
+                    const t = payloads[i]?.[10]?.[0] || payloads[i]?.[2]?.[11]?.[0];
                     if (typeof t === 'string' && t) {
                       title = t;
                       break;

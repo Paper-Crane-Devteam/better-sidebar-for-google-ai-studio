@@ -294,18 +294,20 @@ export const messageRepo = {
       params.push(...options.platforms);
     }
 
-    // If wholeWord is requested, we might need to fetch more results to filter them
-    const limit = options.wholeWord ? 1000 : 500;
+    // Fetch more results when post-filtering will reduce the set
+    const needsPostFilter = options.wholeWord || options.caseSensitive;
+    const limit = needsPostFilter ? 1000 : 500;
     sql += ` ORDER BY m.timestamp DESC LIMIT ${limit}`;
 
     try {
       let results = await runQuery(sql, params);
 
-      // Perform Whole Word filtering in memory if requested
-      if (options.wholeWord && query.trim().length > 0) {
+      // Post-filter in memory for wholeWord and/or caseSensitive
+      if (needsPostFilter && query.trim().length > 0) {
          const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
          const flags = options.caseSensitive ? '' : 'i';
-         const regex = new RegExp(`\\b${escapedQuery}\\b`, flags);
+         const pattern = options.wholeWord ? `\\b${escapedQuery}\\b` : escapedQuery;
+         const regex = new RegExp(pattern, flags);
          
          results = results.filter((row: any) => {
             return row.content && regex.test(row.content);
