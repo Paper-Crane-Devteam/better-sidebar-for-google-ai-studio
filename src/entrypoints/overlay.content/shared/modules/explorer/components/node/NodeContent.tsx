@@ -9,6 +9,7 @@ import { RenameForm } from './RenameForm';
 interface NodeContentProps extends NodeProps {
   isBatchMode: boolean;
   isBatchSelected: boolean;
+  isBatchIndeterminate?: boolean;
   onToggleBatchSelection: () => void;
   isFavorite: boolean;
   onToggleFavorite: (e: React.MouseEvent) => void;
@@ -24,6 +25,7 @@ export const NodeContent = ({
   node,
   isBatchMode,
   isBatchSelected,
+  isBatchIndeterminate,
   onToggleBatchSelection,
   isFavorite,
   onToggleFavorite,
@@ -39,9 +41,10 @@ export const NodeContent = ({
 
   return (
     <>
-      {isBatchMode && !isTimeGroup && (
+      {isBatchMode && (
         <BatchSelectionCheckbox
           checked={isBatchSelected}
+          indeterminate={isBatchIndeterminate}
           onChange={onToggleBatchSelection}
           className="ml-1"
         />

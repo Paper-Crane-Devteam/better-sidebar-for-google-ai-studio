@@ -20,9 +20,15 @@ import { PromptPreviewContent } from './components/PromptPreviewContent';
 import { PromptIconDisplay } from './lib/prompt-icons';
 import { modal } from '@/shared/lib/modal';
 
-interface PromptsTabProps {}
+interface PromptsTabProps {
+  menuActions?: {
+    onViewHistory?: () => void;
+    onSwitchToOriginalUI?: () => void;
+    onImportAiStudioSystem?: () => void;
+  };
+}
 
-export const PromptsTab = ({}: PromptsTabProps) => {
+export const PromptsTab = ({ menuActions }: PromptsTabProps) => {
   const { t } = useI18n();
   const {
     promptFolders,
@@ -196,6 +202,7 @@ export const PromptsTab = ({}: PromptsTabProps) => {
         onCollapseAll={handleCollapseAll}
         onNewChat={handleNewPrompt}
         filter={filter}
+        menuActions={menuActions}
       />
 
       <FilterBar filter={filter} allTags={[]} />

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { SearchInput } from './components/SearchInput';
 import { SearchResults, SearchResultItem } from './components/SearchResults';
 import { SidePanelMenu } from '../../components/menu/SidePanelMenu';
-import { Upload, ListCollapse } from 'lucide-react';
+import { ListCollapse } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -11,30 +11,39 @@ import { PlatformFilter } from './components/PlatformFilter';
 
 export const SearchTab = ({
   extraHeaderButtons,
-  ImportComponent,
+  menuActions,
+  onNavigate,
 }: {
   extraHeaderButtons?: React.ReactNode[];
-  ImportComponent?: React.ComponentType<{isOpen: boolean; onClose: () => void}>;
+  menuActions?: {
+    onViewHistory?: () => void;
+    onSwitchToOriginalUI?: () => void;
+    onImportAiStudioSystem?: () => void;
+  };
+  onNavigate?: (match: any) => void;
 }) => {
-  const [isImportOpen, setIsImportOpen] = useState(false);
-  const { results } = useAppStore(state => state.ui.search);
+  const { results } = useAppStore((state) => state.ui.search);
   const { t } = useI18n();
 
   // Group results
   const grouped = React.useMemo(() => {
-    const groups: Record<string, { conversation: any, matches: SearchResultItem[] }> = {};
+    const groups: Record<
+      string,
+      { conversation: any; matches: SearchResultItem[] }
+    > = {};
     results.forEach((item: SearchResultItem) => {
-        if (!groups[item.conversation_id]) {
-            groups[item.conversation_id] = {
-                conversation: {
-                    id: item.conversation_id,
-                    title: item.conversation_title,
-                    folderName: item.folder_name
-                },
-                matches: []
-            };
-        }
-        groups[item.conversation_id].matches.push(item);
+      if (!groups[item.conversation_id]) {
+        groups[item.conversation_id] = {
+          conversation: {
+            id: item.conversation_id,
+            title: item.conversation_title,
+            folderName: item.folder_name,
+            platform: item.platform,
+          },
+          matches: [],
+        };
+      }
+      groups[item.conversation_id].matches.push(item);
     });
     return groups;
   }, [results]);
@@ -43,15 +52,15 @@ export const SearchTab = ({
 
   // Auto-expand all when results change
   React.useEffect(() => {
-      setExpandedIds(new Set(Object.keys(grouped)));
+    setExpandedIds(new Set(Object.keys(grouped)));
   }, [grouped]);
 
   const toggleGroup = (id: string) => {
     const newExpanded = new Set(expandedIds);
     if (newExpanded.has(id)) {
-        newExpanded.delete(id);
+      newExpanded.delete(id);
     } else {
-        newExpanded.add(id);
+      newExpanded.add(id);
     }
     setExpandedIds(newExpanded);
   };
@@ -67,9 +76,6 @@ export const SearchTab = ({
           {t('search.title')}
         </h1>
         <div className="flex gap-0.5 items-center">
-          {extraHeaderButtons && extraHeaderButtons.map((btn, i) => (
-             <React.Fragment key={i}>{btn}</React.Fragment>
-          ))}
           <PlatformFilter />
           <SimpleTooltip content={t('menu.collapseAll')}>
             <Button
@@ -81,21 +87,12 @@ export const SearchTab = ({
               <ListCollapse className="h-4 w-4" />
             </Button>
           </SimpleTooltip>
+          {extraHeaderButtons &&
+            extraHeaderButtons.map((btn, i) => (
+              <React.Fragment key={i}>{btn}</React.Fragment>
+            ))}
 
-          {ImportComponent && (
-            <SimpleTooltip content={t('menu.importHistory')}>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => setIsImportOpen(true)}
-              >
-                <Upload className="h-4 w-4" />
-              </Button>
-            </SimpleTooltip>
-          )}
-
-          <SidePanelMenu />
+          <SidePanelMenu menuActions={menuActions} />
         </div>
       </div>
       <SearchInput />
@@ -104,14 +101,9 @@ export const SearchTab = ({
           grouped={grouped}
           expandedIds={expandedIds}
           onToggleGroup={toggleGroup}
+          onNavigate={onNavigate}
         />
       </div>
-      {ImportComponent && (
-        <ImportComponent
-          isOpen={isImportOpen}
-          onClose={() => setIsImportOpen(false)}
-        />
-      )}
     </div>
   );
 };

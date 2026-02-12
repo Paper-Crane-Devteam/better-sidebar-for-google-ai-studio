@@ -349,7 +349,8 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
         ) : activeTab === 'search' ? (
           <SearchTab
             extraHeaderButtons={moduleConfig.search.extraHeaderButtons}
-            ImportComponent={moduleConfig.search.ImportComponent}
+            menuActions={moduleConfig.general.menuActions}
+            onNavigate={moduleConfig.search.onNavigate}
           />
         ) : activeTab === 'prompts' ? (
           <PromptsTab />

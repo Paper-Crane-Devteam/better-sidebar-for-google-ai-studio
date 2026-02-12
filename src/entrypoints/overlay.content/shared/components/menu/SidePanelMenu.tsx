@@ -24,6 +24,8 @@ interface SidePanelMenuProps {
   menuActions?: {
     onViewHistory?: () => void;
     onSwitchToOriginalUI?: () => void;
+    handleScanLibrary?: () => void;
+    onImportAiStudioSystem?: () => void;
   };
 }
 
@@ -47,12 +49,7 @@ export const SidePanelMenu = ({
   } = useAppStore();
   const { isScanning } = ui.overlay;
 
-  const handleScanLibrary = () => {
-    if (isScanning) return;
-    setIsScanning(true);
-    console.log("Global Scan triggered");
-    browser.runtime.sendMessage({ type: 'SCAN_LIBRARY' });
-  };
+  const handleScanLibrary = menuActions?.handleScanLibrary;
 
   return (
     <DropdownMenu>
@@ -97,8 +94,14 @@ export const SidePanelMenu = ({
                 <span>{t('prompts.importAiStudioSystem')}</span>
             </DropdownMenuItem>
         )}
+        {handleScanLibrary && (
+            <DropdownMenuItem onClick={handleScanLibrary} disabled={isScanning}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isScanning ? 'animate-spin' : ''}`} />
+            <span>{isScanning ? t('menu.scanning') : t('menu.scanChatList')}</span>
+            </DropdownMenuItem>
+        )}
         
-        {(onToggleViewMode || onImportAiStudioSystem) && <DropdownMenuSeparator />}
+        {(onToggleViewMode || onImportAiStudioSystem || handleScanLibrary) && <DropdownMenuSeparator />}
         
         {/* Section 3: Tools & Settings */}
         {menuActions?.onViewHistory && (
@@ -107,11 +110,6 @@ export const SidePanelMenu = ({
             <span>{t('menu.viewHistory')}</span>
           </DropdownMenuItem>
         )}
-
-        <DropdownMenuItem onClick={handleScanLibrary} disabled={isScanning}>
-          <RefreshCw className={`mr-2 h-4 w-4 ${isScanning ? 'animate-spin' : ''}`} />
-          <span>{isScanning ? t('menu.scanning') : t('menu.scanChatList')}</span>
-        </DropdownMenuItem>
 
         {menuActions?.onSwitchToOriginalUI && (
           <DropdownMenuItem onClick={menuActions.onSwitchToOriginalUI}>

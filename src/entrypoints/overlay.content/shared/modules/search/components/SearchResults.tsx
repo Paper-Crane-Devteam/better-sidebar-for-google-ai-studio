@@ -11,6 +11,8 @@ import { Button } from '@/shared/components/ui/button';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { toast } from '@/shared/lib/toast';
 import type { Message } from '@/shared/types/db';
+import AIStudioIcon from '@/assets/icons/aistudio.png';
+import GeminiIcon from '@/assets/icons/gemini.svg';
 
 export interface SearchResultItem {
   id: string;
@@ -22,6 +24,7 @@ export interface SearchResultItem {
   folder_name: string | null;
   timestamp: number;
   external_url?: string;
+  platform?: string;
   scroll_index?: number;
 }
 
@@ -148,12 +151,14 @@ const ResultGroup = ({
   expanded, 
   onToggle,
   untitledLabel,
+  onNavigate,
 }: { 
   conversationId: string, 
   data: { conversation: any, matches: SearchResultItem[] }, 
   expanded: boolean, 
   onToggle: () => void;
   untitledLabel: string;
+  onNavigate?: (match: SearchResultItem) => void;
 }) => {
   return (
     <div className="flex flex-col">
@@ -179,7 +184,7 @@ const ResultGroup = ({
       {expanded && (
         <div className="flex flex-col ml-4 border-l pl-2">
           {data.matches.map(match => (
-            <MatchItem key={match.id} match={match} />
+            <MatchItem key={match.id} match={match} onNavigate={onNavigate} platform={data.conversation.platform} />
           ))}
         </div>
       )}
@@ -187,7 +192,7 @@ const ResultGroup = ({
   );
 };
 
-const MatchItem = ({ match }: { match: SearchResultItem }) => {
+const MatchItem = ({ match, onNavigate, platform }: { match: SearchResultItem, onNavigate?: (match: SearchResultItem) => void, platform?: string }) => {
   const { t } = useI18n();
   const { activeQuery, activeOptions } = useAppStore(state => state.ui.search);
   
@@ -195,9 +200,18 @@ const MatchItem = ({ match }: { match: SearchResultItem }) => {
     // Helper to render the container structure
     const userLabel = t('export.roleUser');
     const modelLabel = t('export.roleModel');
+    const showPlatformIcon = activeOptions.platforms && activeOptions.platforms.length > 1;
+
     const renderWrapper = (content: React.ReactNode) => (
         <div className="text-xs text-muted-foreground py-1 px-2 hover:bg-accent/30 cursor-pointer rounded">
-            <div className="font-mono text-[10px] mb-0.5 opacity-70">
+            <div className="font-mono text-[10px] mb-0.5 opacity-70 flex items-center gap-1">
+                {showPlatformIcon && platform && (
+                     <img 
+                        src={platform === 'gemini' ? GeminiIcon : AIStudioIcon} 
+                        className="w-3 h-3 object-contain" 
+                        alt={platform} 
+                     />
+                )}
                 {match.role === 'user' ? userLabel : modelLabel} • {dayjs(match.timestamp * 1000).format('ll')}
             </div>
             <div className="line-clamp-4 break-words whitespace-pre-wrap font-mono text-[11px] leading-relaxed">
@@ -253,61 +267,7 @@ const MatchItem = ({ match }: { match: SearchResultItem }) => {
   const handleNavigation = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    // 1. Navigate to conversation
-    const url = match.external_url || `https://aistudio.google.com/prompts/${match.conversation_id}`;
-    navigate(url);
-
-    let scrollIndex = match.scroll_index;
-
-    // 2. Fetch scroll index if missing (lazy load)
-    if (scrollIndex === undefined) {
-      try {
-        const response = await browser.runtime.sendMessage({
-          type: 'GET_MESSAGE_SCROLL_INDEX',
-          payload: {
-            messageId: match.id,
-            conversationId: match.conversation_id,
-          },
-        });
-        if (response && response.success) {
-          scrollIndex = response.data;
-        }
-      } catch (error) {
-        console.error('Failed to fetch scroll index', match.id, error);
-      }
-    }
-
-    // 3. Wait for editor to load and then scroll
-    if (typeof scrollIndex === 'number') {
-      const targetScrollIndex = scrollIndex;
-      const startTime = Date.now();
-      const timeout = 10000;
-
-      const checkAndClick = () => {
-        if (Date.now() - startTime > timeout) return;
-
-        const mainEditor = document.querySelector('.chunk-editor-main');
-        if (mainEditor) {
-          setTimeout(() => {
-            const scrollbar = document.querySelector('ms-prompt-scrollbar');
-            if (scrollbar) {
-              const items = scrollbar.querySelectorAll('.prompt-scrollbar-item');
-              if (items && items[targetScrollIndex]) {
-                const item = items[targetScrollIndex] as HTMLElement;
-                const button = item.querySelector('button');
-                button?.click();
-              }
-            }
-          }, 500);
-        } else {
-          setTimeout(checkAndClick, 100);
-        }
-      };
-      setTimeout(() => {
-        checkAndClick();
-      }, 500);
-    }
+    onNavigate?.(match);
   };
 
   const handleCopyAsText = async () => {
@@ -382,9 +342,10 @@ export interface SearchResultsProps {
     grouped: Record<string, { conversation: any, matches: SearchResultItem[] }>;
     expandedIds: Set<string>;
     onToggleGroup: (id: string) => void;
+    onNavigate?: (match: SearchResultItem) => void;
 }
 
-export const SearchResults = ({ grouped, expandedIds, onToggleGroup }: SearchResultsProps) => {
+export const SearchResults = ({ grouped, expandedIds, onToggleGroup, onNavigate }: SearchResultsProps) => {
   const { t } = useI18n();
   const { results, isSearching, activeQuery } = useAppStore(state => state.ui.search);
 
@@ -446,6 +407,7 @@ export const SearchResults = ({ grouped, expandedIds, onToggleGroup }: SearchRes
                 expanded={expandedIds.has(id)}
                 onToggle={() => onToggleGroup(id)}
                 untitledLabel={t('common.untitled')}
+                onNavigate={onNavigate}
             />
         ))}
       </div>

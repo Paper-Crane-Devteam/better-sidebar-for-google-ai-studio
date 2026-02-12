@@ -10,5 +10,5 @@ export interface ArboristTreeHandle {
   collapseAll: () => void;
   edit: (id: string) => void;
   select: (id: string) => void;
-  selectAll: () => void;
+  selectAll?: () => void;
 }

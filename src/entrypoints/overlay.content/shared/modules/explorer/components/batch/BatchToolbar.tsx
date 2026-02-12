@@ -18,17 +18,22 @@ export const BatchToolbar = ({ onSelectAll }: BatchToolbarProps) => {
   const { selectedIds } = ui.explorer.batch;
 
   const handleDelete = async () => {
-    if (selectedIds.length === 0) return;
+    const state = useAppStore.getState();
+    const validIds = selectedIds.filter(id => 
+      state.conversations.some(c => c.id === id) || 
+      state.folders.some(f => f.id === id)
+  );
+    if (validIds.length === 0) return;
 
     const confirmed = await modal.confirm({
-      title: t('batch.deleteConfirmTitle', { count: selectedIds.length }),
+      title: t('batch.deleteConfirmTitle', { count: validIds.length }),
       content: t('batch.deleteConfirmMessage'),
       confirmText: t('common.delete'),
       cancelText: t('common.cancel'),
     });
 
     if (confirmed) {
-        await deleteItems(selectedIds);
+        await deleteItems(validIds);
         setExplorerBatchSelection([]);
     }
   };

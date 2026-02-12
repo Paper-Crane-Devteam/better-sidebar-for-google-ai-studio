@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useDataManagement } from '../hooks/useDataManagement';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { ImportHistoryDialog } from '../../search/components/ImportHistoryDialog';
+import { ImportHistoryDialog } from '@/entrypoints/overlay.content/aistudio/modules/search/components/ImportHistoryDialog';
 
 export const DataSettings = () => {
   const { t } = useI18n();

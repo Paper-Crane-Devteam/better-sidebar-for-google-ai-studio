@@ -8,20 +8,18 @@ import type { FilterState, PromptsTypeFilter } from '../../../types/filter';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { SidePanelMenu } from '@/entrypoints/overlay.content/shared/components/menu/SidePanelMenu';
 import { BatchToolbar } from './batch/BatchToolbar';
-import { toast } from '@/shared/lib/toast';
 
 interface PromptsHeaderProps {
   onNewFolder: () => void;
   onCollapseAll: () => void;
   onNewChat: () => void;
   filter: FilterState<PromptsTypeFilter>;
-}
-
-const AISTUDIO_SYSTEM_KEY = 'aistudio_all_system_instructions';
-
-interface AiStudioSystemItem {
-  title?: string;
-  text?: string;
+  menuActions?: {
+    onViewHistory?: () => void;
+    onSwitchToOriginalUI?: () => void;
+    handleScanLibrary?: () => void;
+    onImportAiStudioSystem?: () => void;
+  };
 }
 
 export const PromptsHeader = ({
@@ -29,9 +27,10 @@ export const PromptsHeader = ({
   onCollapseAll,
   onNewChat,
   filter,
+  menuActions,
 }: PromptsHeaderProps) => {
   const { t } = useI18n();
-  const { ui, setPromptsSortOrder, setPromptsBatchMode, createPrompt, createPromptFolder, promptFolders } = useAppStore();
+  const { ui, setPromptsSortOrder, setPromptsBatchMode } = useAppStore();
 
   const { sortOrder } = ui.prompts;
   const { isBatchMode } = ui.prompts.batch;
@@ -39,51 +38,6 @@ export const PromptsHeader = ({
   const handleSort = () => {
     const newOrder = sortOrder === 'alpha' ? 'date' : 'alpha';
     setPromptsSortOrder(newOrder);
-  };
-
-  const handleImportAiStudioSystem = async () => {
-    try {
-      const res = await browser.runtime.sendMessage({
-        type: 'GET_PAGE_LOCAL_STORAGE',
-        payload: { key: AISTUDIO_SYSTEM_KEY },
-      });
-      if (!res?.success || res.data == null || res.data === '') {
-        toast.info(t('toast.importAiStudioSystemNoData'));
-        return;
-      }
-      let items: AiStudioSystemItem[];
-      try {
-        items = JSON.parse(res.data);
-      } catch {
-        toast.error(t('toast.importAiStudioSystemInvalid'));
-        return;
-      }
-      if (!Array.isArray(items) || items.length === 0) {
-        toast.info(t('toast.importAiStudioSystemNoData'));
-        return;
-      }
-      const folderName = t('prompts.aiStudioSystemFolderName');
-      let folderId: string | null = promptFolders.find((f) => f.name === folderName)?.id ?? null;
-      if (folderId == null) {
-        folderId = await createPromptFolder(folderName, null);
-      }
-      if (folderId == null) {
-        toast.error(t('toast.importAiStudioSystemFailed'));
-        return;
-      }
-      let count = 0;
-      for (const item of items) {
-        const title = (item.title ?? item.text ?? '').trim() || t('prompts.untitledSystem');
-        const content = (item.text ?? item.title ?? '').trim() || '';
-        if (!content) continue;
-        await createPrompt(title, content, 'system', 'Bot', folderId);
-        count += 1;
-      }
-      toast.success(t('toast.importAiStudioSystemSuccess', { count }));
-    } catch (err) {
-      console.error('Import AI Studio system failed:', err);
-      toast.error(t('toast.importAiStudioSystemFailed'));
-    }
   };
 
   return (
@@ -141,7 +95,7 @@ export const PromptsHeader = ({
                 </Button>
               </SimpleTooltip>
 
-              <SidePanelMenu onImportAiStudioSystem={handleImportAiStudioSystem} />
+              <SidePanelMenu menuActions={menuActions} />
             </>
           )}
         </div>

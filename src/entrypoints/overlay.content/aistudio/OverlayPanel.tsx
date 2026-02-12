@@ -214,7 +214,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           onClick={() => handleTabChange('files')}
           className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
         >
-          <Files className="h-5 w-5" />
+          <Files className="sidebar-icon" />
         </Button>
         <Button
           variant={activeTab === 'search' ? 'secondary' : 'ghost'}
@@ -223,7 +223,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           onClick={() => handleTabChange('search')}
           className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
         >
-          <Search className="h-5 w-5" />
+          <Search className="sidebar-icon" />
         </Button>
         <Button
           variant={activeTab === 'prompts' ? 'secondary' : 'ghost'}
@@ -232,7 +232,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           onClick={() => handleTabChange('prompts')}
           className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
         >
-          <Sparkles className="h-5 w-5" />
+          <Sparkles className="sidebar-icon" />
         </Button>
         {shortcuts?.favorites && (
           <Button
@@ -242,7 +242,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             onClick={() => handleTabChange('favorites')}
             className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
           >
-            <Star className="h-5 w-5" />
+            <Star className="sidebar-icon" />
           </Button>
         )}
         <Button
@@ -252,7 +252,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           onClick={() => handleTabChange('tags')}
           className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
         >
-          <Tag className="h-5 w-5" />
+          <Tag className="sidebar-icon" />
         </Button>
 
         {(shortcuts?.build ||
@@ -267,7 +267,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             onClick={() => handleNavigation('/apps')}
             className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
           >
-            <Hammer className="h-5 w-5" />
+            <Hammer className="sidebar-icon" />
           </Button>
         )}
 
@@ -279,7 +279,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             onClick={() => handleNavigation('/api-keys')}
             className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
           >
-            <LayoutDashboard className="h-5 w-5" />
+            <LayoutDashboard className="sidebar-icon" />
           </Button>
         )}
 
@@ -293,7 +293,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             }
             className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
           >
-            <BookOpen className="h-5 w-5" />
+            <BookOpen className="sidebar-icon" />
           </Button>
         )}
 
@@ -307,7 +307,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             onClick={() => setIsUIVisible(false)}
             className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
           >
-            <LogOut className="h-5 w-5" />
+            <LogOut className="sidebar-icon" />
           </Button>
         )}
 
@@ -318,7 +318,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           onClick={() => handleTabChange('feedback')}
           className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
         >
-          <MessageSquare className="h-5 w-5" />
+          <MessageSquare className="sidebar-icon" />
         </Button>
         <Button
           variant={isSettingsOpen ? 'secondary' : 'ghost'}
@@ -327,7 +327,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           onClick={() => handleTabChange('settings')}
           className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
         >
-          <Settings className="h-5 w-5" />
+          <Settings className="sidebar-icon" />
         </Button>
       </div>
 
@@ -339,19 +339,20 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             filterTypes={moduleConfig.explorer.filterTypes}
             visibleFilters={moduleConfig.explorer.visibleFilters}
             extraHeaderButtons={moduleConfig.explorer.extraHeaderButtons}
-            menuActions={moduleConfig.explorer.menuActions}
+            menuActions={moduleConfig.general.menuActions}
           />
         ) : activeTab === 'search' ? (
           <SearchTab
             extraHeaderButtons={moduleConfig.search.extraHeaderButtons}
-            ImportComponent={moduleConfig.search.ImportComponent}
+            menuActions={moduleConfig.general.menuActions}
+            onNavigate={moduleConfig.search.onNavigate}
           />
         ) : activeTab === 'prompts' ? (
-          <PromptsTab />
+          <PromptsTab menuActions={moduleConfig.general.menuActions}/>
         ) : activeTab === 'favorites' ? (
-          <FavoritesTab />
+          <FavoritesTab menuActions={moduleConfig.general.menuActions}/>
         ) : activeTab === 'tags' ? (
-          <TagsTab />
+          <TagsTab menuActions={moduleConfig.general.menuActions}/>
         ) : activeTab === 'feedback' ? (
           <FeedbackTab />
         ) : (

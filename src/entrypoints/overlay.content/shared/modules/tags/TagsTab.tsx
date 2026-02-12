@@ -7,9 +7,16 @@ import { TagItem } from './TagItem';
 import { SidePanelMenu } from '../../components/menu/SidePanelMenu';
 import { useI18n } from '@/shared/hooks/useI18n';
 
-interface TagsTabProps {}
+interface TagsTabProps {
+  menuActions?: {
+    onViewHistory?: () => void;
+    onSwitchToOriginalUI?: () => void;
+    handleScanLibrary?: () => void;
+    onImportAiStudioSystem?: () => void;
+  };
+}
 
-export const TagsTab = ({}: TagsTabProps) => {
+export const TagsTab = ({ menuActions }: TagsTabProps) => {
     const { t } = useI18n();
     const { tags, createTag } = useAppStore();
     const [newTagName, setNewTagName] = useState('');
@@ -31,7 +38,7 @@ export const TagsTab = ({}: TagsTabProps) => {
                     {t('tabs.tags')}
                 </h1>
                 <div className="flex gap-0.5 items-center">
-                    <SidePanelMenu />
+                    <SidePanelMenu menuActions={menuActions} />
                 </div>
             </div>
 

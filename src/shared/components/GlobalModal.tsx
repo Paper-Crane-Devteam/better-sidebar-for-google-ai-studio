@@ -56,7 +56,7 @@ export const GlobalModal = () => {
                   </Button>
                 )}
                 <Button
-                  variant={type === 'error' ? 'destructive' : 'default'}
+                  variant={type === 'error' ? 'destructive' : 'outline'}
                   onClick={
                     type === 'confirm'
                       ? onConfirm

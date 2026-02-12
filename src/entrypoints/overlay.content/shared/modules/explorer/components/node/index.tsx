@@ -25,6 +25,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
     removeTagFromConversation,
     ui,
     toggleExplorerBatchSelection,
+    setExplorerBatchSelection,
     favorites,
     toggleFavorite,
     createFolder,
@@ -33,11 +34,26 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   const [newName, setNewName] = useState(node.data.name);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
 
+  const isTimeGroup = node.data.data?.isTimeGroup;
+  const isFile = node.data.type === 'file';
+
   const isFavorite = favorites.some(
     (f) => f.target_id === node.data.id && f.target_type === 'conversation'
   );
   const { isBatchMode, selectedIds: batchSelectedIds } = ui.explorer.batch;
-  const isBatchSelected = batchSelectedIds.includes(node.data.id);
+  
+  // Calculate selection state
+  let isBatchSelected = false;
+  let isBatchIndeterminate = false;
+  
+  if (isTimeGroup) {
+      const childrenIds = node.data.children?.map(c => c.id) || [];
+      const selectedChildrenCount = childrenIds.filter(id => batchSelectedIds.includes(id)).length;
+      isBatchSelected = childrenIds.length > 0 && selectedChildrenCount === childrenIds.length;
+      isBatchIndeterminate = selectedChildrenCount > 0 && selectedChildrenCount < childrenIds.length;
+  } else {
+      isBatchSelected = batchSelectedIds.includes(node.data.id);
+  }
 
   const handleCreateFolder = async (parentId: string) => {
     const newFolderId = await createFolder(t('node.newFolder'), parentId);
@@ -86,14 +102,12 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
     }
   };
 
-  const isTimeGroup = node.data.data?.isTimeGroup;
   const FolderIconComponent = isTimeGroup
     ? Calendar
     : node.isOpen
     ? FolderOpen
     : FolderIcon;
 
-  const isFile = node.data.type === 'file';
   const url = isFile
     ? node.data?.data?.external_url
     : undefined;
@@ -130,9 +144,27 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
         }}
         isBatchMode={isBatchMode}
         isBatchSelected={isBatchSelected}
-        onToggleBatchSelection={() =>
-          toggleExplorerBatchSelection(node.data.id)
-        }
+        isBatchIndeterminate={isBatchIndeterminate}
+        onToggleBatchSelection={() => {
+          if (isTimeGroup) {
+            const childrenIds = node.data.children?.map(c => c.id) || [];
+            if (childrenIds.length === 0) return;
+
+            let newSelection = [...batchSelectedIds];
+            if (isBatchSelected) {
+              // Deselect all children
+              newSelection = newSelection.filter(id => !childrenIds.includes(id));
+            } else {
+              // Select all children
+              const childrenSet = new Set(childrenIds);
+              newSelection = newSelection.filter(id => !childrenSet.has(id)); // Remove existing to avoid dupes
+              newSelection = [...newSelection, ...childrenIds];
+            }
+            setExplorerBatchSelection(newSelection);
+          } else {
+            toggleExplorerBatchSelection(node.data.id);
+          }
+        }}
         isFavorite={isFavorite}
         folderIcon={folderIcon}
         fileIcon={fileIcon}
@@ -195,7 +227,11 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
         onClick={(e) => {
           if (isBatchMode) {
             e.preventDefault();
-            toggleExplorerBatchSelection(node.data.id);
+            if (isTimeGroup) {
+              node.toggle();
+            } else {
+              toggleExplorerBatchSelection(node.data.id);
+            }
             return;
           }
 
@@ -211,7 +247,11 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             if (isBatchMode) {
-              toggleExplorerBatchSelection(node.data.id);
+              if (isTimeGroup) {
+                node.toggle();
+              } else {
+                toggleExplorerBatchSelection(node.data.id);
+              }
               return;
             }
 

@@ -22,6 +22,7 @@ interface ExplorerHeaderProps {
   menuActions?: {
     onViewHistory?: () => void;
     onSwitchToOriginalUI?: () => void;
+    handleScanLibrary?: () => void;
   };
 }
 

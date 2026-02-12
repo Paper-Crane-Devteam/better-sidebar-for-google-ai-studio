@@ -1,4 +1,5 @@
 import { navigate } from '@/shared/lib/navigation';
+import { handleSearchNavigation } from '../shared/utils';
 import type { ExplorerTypeFilter } from '../shared/types/filter';
 import React, { useState, useEffect } from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
@@ -7,29 +8,7 @@ import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { MessageSquareDashed } from 'lucide-react';
 import { useAppStore } from '@/shared/lib/store';
 import { useI18n } from '@/shared/hooks/useI18n';
-
-export interface ModuleConfig {
-  general: {
-    menuActions?: {
-      onViewHistory?: () => void;
-      onSwitchToOriginalUI?: () => void;
-    };
-  },
-  explorer: {
-    onNewChat: () => void;
-    filterTypes?: ExplorerTypeFilter[];
-    extraHeaderButtons?: React.ReactNode;
-    visibleFilters?: ('search' | 'tags' | 'type' | 'favorites')[];
-  };
-  prompts: {
-    // Placeholder for future prompts module customization
-    enabled: boolean;
-  };
-  search: {
-    extraHeaderButtons?: React.ReactNode[];
-    ImportComponent?: React.ComponentType<{isOpen: boolean; onClose: () => void}>;
-  };
-}
+import type { ModuleConfig } from '../shared/types/moduleConfig';
 
 const TemporaryChatButton = () => {
   const { t } = useI18n();
@@ -189,6 +168,8 @@ export const useModuleConfig = (): ModuleConfig => {
     prompts: {
       enabled: true,
     },
-    search: {},
+    search: {
+      onNavigate: handleSearchNavigation
+    },
   };
 };

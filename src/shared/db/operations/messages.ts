@@ -251,7 +251,7 @@ export const messageRepo = {
       console.log('[DB] FTS Search:', matchQuery);
 
       sql += `
-        SELECT m.*, c.title as conversation_title, c.folder_id, f.name as folder_name, c.external_url
+        SELECT m.*, c.title as conversation_title, c.folder_id, f.name as folder_name, c.external_url, c.platform
         FROM messages_fts fts
         JOIN messages m ON fts.id = m.id
         JOIN conversations c ON m.conversation_id = c.id
@@ -264,7 +264,7 @@ export const messageRepo = {
       console.log('[DB] Short query, fallback to LIKE:', query);
       
       sql += `
-        SELECT m.*, c.title as conversation_title, c.folder_id, f.name as folder_name, c.external_url
+        SELECT m.*, c.title as conversation_title, c.folder_id, f.name as folder_name, c.external_url, c.platform
         FROM messages m
         JOIN conversations c ON m.conversation_id = c.id
         LEFT JOIN folders f ON c.folder_id = f.id

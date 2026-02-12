@@ -1,14 +1,15 @@
 import React from 'react';
 import { cn } from '@/shared/lib/utils';
-import { Check } from 'lucide-react';
+import { Check, Minus } from 'lucide-react';
 
 interface BatchSelectionCheckboxProps {
   checked: boolean;
+  indeterminate?: boolean;
   onChange: () => void;
   className?: string;
 }
 
-export const BatchSelectionCheckbox = ({ checked, onChange, className }: BatchSelectionCheckboxProps) => {
+export const BatchSelectionCheckbox = ({ checked, indeterminate, onChange, className }: BatchSelectionCheckboxProps) => {
   return (
     <div 
       className={cn(
@@ -22,9 +23,10 @@ export const BatchSelectionCheckbox = ({ checked, onChange, className }: BatchSe
     >
       <div className={cn(
         "h-4 w-4 rounded border flex items-center justify-center transition-colors",
-        checked ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground bg-transparent"
+        (checked || indeterminate) ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground bg-transparent"
       )}>
-        {checked && <Check className="h-3 w-3" />}
+        {checked && !indeterminate && <Check className="h-3 w-3" />}
+        {indeterminate && <Minus className="h-3 w-3" />}
       </div>
     </div>
   );

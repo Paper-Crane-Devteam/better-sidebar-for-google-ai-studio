@@ -7,9 +7,16 @@ import { FilterBar } from '../../components/FilterBar';
 import { FilterActions } from '../../components/FilterActions';
 import { useI18n } from '@/shared/hooks/useI18n';
 
-interface FavoritesTabProps {}
+interface FavoritesTabProps {
+  menuActions?: {
+    onViewHistory?: () => void;
+    onSwitchToOriginalUI?: () => void;
+    handleScanLibrary?: () => void;
+    onImportAiStudioSystem?: () => void;
+  };
+}
 
-export const FavoritesTab = ({}: FavoritesTabProps) => {
+export const FavoritesTab = ({ menuActions }: FavoritesTabProps) => {
   const { t } = useI18n();
   const { tags: allTags } = useAppStore();
   const filter = useStoreFilter('favorites');
@@ -27,7 +34,7 @@ export const FavoritesTab = ({}: FavoritesTabProps) => {
             visibleFilters={['search', 'tags', 'type']}
           />
           <div className="h-4 w-[1px] bg-border mx-1" />
-          <SidePanelMenu />
+          <SidePanelMenu menuActions={menuActions} />
         </div>
       </div>
 

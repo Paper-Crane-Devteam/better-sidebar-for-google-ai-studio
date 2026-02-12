@@ -28,6 +28,7 @@ interface ExplorerTabProps {
   menuActions?: {
     onViewHistory?: () => void;
     onSwitchToOriginalUI?: () => void;
+    onImportAiStudioSystem?: () => void;
   };
 }
 
@@ -221,7 +222,7 @@ export const ExplorerTab = ({
   };
 
   const handleSelectAll = () => {
-    treeRef.current?.selectAll();
+    treeRef.current?.selectAll?.();
   };
 
   const handleScanLibrary = () => {
@@ -250,7 +251,10 @@ export const ExplorerTab = ({
         filterTypes={filterTypes}
         extraHeaderButtons={extraHeaderButtons}
         visibleFilters={visibleFilters}
-        menuActions={menuActions}
+        menuActions={{
+          ...menuActions,
+          handleScanLibrary,
+        }}
       />
 
       <FilterBar filter={filter} allTags={allTags} />
