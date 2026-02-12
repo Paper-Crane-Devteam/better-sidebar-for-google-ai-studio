@@ -64,8 +64,8 @@ export const TagsTab = ({ menuActions }: TagsTabProps) => {
             </div>
 
             {/* Tags List */}
-            <div className="flex-1 overflow-y-auto p-2">
-                <div className="flex flex-col gap-1">
+            <div className="flex-1 overflow-y-auto">
+                <div className="flex flex-col py-[2px]">
                     {tags.length === 0 ? (
                         <div className="text-center text-muted-foreground py-8 text-sm">
                             {t('tags.noTagsYet')}

@@ -91,7 +91,7 @@ export const NodeContent = ({
         {isFavorite && (
           <div
             role="button"
-            className="h-5 w-5 shrink-0 flex items-center justify-center rounded-sm hover:bg-muted/50 transition-colors group-hover:hidden"
+            className="h-5 w-5 shrink-0 flex items-center justify-center rounded-md hover:bg-muted/50 transition-colors"
             onClick={onToggleFavorite}
           >
             <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />

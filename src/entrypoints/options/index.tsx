@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 // import '../../../theme.css'; // Import AI Studio theme variables for standalone pages
-import '@/index.css'
+import '@/index.scss'
 import { useI18n } from '@/shared/hooks/useI18n'
 
 const Options = () => {

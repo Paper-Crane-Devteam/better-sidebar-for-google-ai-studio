@@ -29,7 +29,7 @@ import { TagsTab } from '../shared/modules/tags/TagsTab';
 import { FeedbackTab } from '../shared/modules/feedback/FeedbackTab';
 import { SettingsModal } from '../shared/modules/settings/SettingsModal';
 import { WhatsNewDialog } from '../shared/modules/whats-new/WhatsNewDialog';
-import '@/index.css';
+import '@/index.scss';
 import { GlobalModal } from '@/shared/components/GlobalModal';
 import { GlobalToast } from '@/shared/components/GlobalToast';
 import { useAppInit } from '../shared/hooks/useAppInit';
@@ -84,10 +84,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     }
   };
 
-  useEffect(() => {
-    console.log('isSidebarExpanded', isSidebarExpanded);
-    console.trace();
-  }, [isSidebarExpanded]);
   // Sync local state with global state
   useEffect(() => {
     updateLocalVisibility(isSidebarExpanded);

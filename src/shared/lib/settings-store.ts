@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { detectPlatform, Platform } from '../types/platform';
+import { syncGeminiTheme, syncAiStudioTheme } from './utils';
 
 interface SettingsState {
   theme: 'light' | 'dark' | 'system';
@@ -104,14 +105,6 @@ const getStorageName = () => {
   return 'prompt-manager-for-google-ai-studio-settings';
 };
 
-// Determine localStorage key for theme preference sync
-const getLocalStorageKey = () => {
-  if (platform === Platform.GEMINI) {
-    return 'geminiUserPreference';
-  }
-  return 'aiStudioUserPreference';
-};
-
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
@@ -139,18 +132,11 @@ export const useSettingsStore = create<SettingsState>()(
 
       setTheme: (theme) => {
         set({ theme });
-        try {
-          if (typeof localStorage !== 'undefined') {
-            const key = getLocalStorageKey();
-            const stored = localStorage.getItem(key);
-            if (stored) {
-              const prefs = JSON.parse(stored);
-              prefs.theme = theme;
-              localStorage.setItem(key, JSON.stringify(prefs));
-            }
-          }
-        } catch (e) {
-          // ignore
+        if (platform === Platform.GEMINI) {
+          syncGeminiTheme(theme);
+        }
+        if(platform === Platform.AI_STUDIO) {
+          syncAiStudioTheme(theme)
         }
       },
       setLayoutDensity: (layoutDensity) => set({ layoutDensity }),

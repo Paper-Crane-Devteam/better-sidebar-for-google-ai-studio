@@ -41,7 +41,7 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(({ onSelec
   const { sortOrder, tags: tagFilter, typeFilter, onlyFavorites } = ui.explorer;
   const { ignoredFolders } = explorer;
 
-  const rowHeight = layoutDensity === 'compact' ? 30 : 38;
+  const rowHeight = layoutDensity === 'compact' ? 32 : 38;
 
   // Transform data into tree structure
   const data = useMemo(() => {
@@ -249,7 +249,7 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(({ onSelec
         onToggle={handleToggle}
         width={dimensions.width}
         height={dimensions.height}
-        indent={12}
+        indent={8}
         rowHeight={rowHeight}
         openByDefault={false}
         initialOpenState={initialOpenState}

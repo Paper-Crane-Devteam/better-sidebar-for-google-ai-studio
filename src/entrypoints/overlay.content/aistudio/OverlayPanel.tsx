@@ -25,7 +25,7 @@ import { TagsTab } from '../shared/modules/tags/TagsTab';
 import { FeedbackTab } from '../shared/modules/feedback/FeedbackTab';
 import { SettingsModal } from '../shared/modules/settings/SettingsModal';
 import { WhatsNewDialog } from '../shared/modules/whats-new/WhatsNewDialog';
-import '@/index.css';
+import '@/index.scss';
 import { GlobalModal } from '@/shared/components/GlobalModal';
 import { GlobalToast } from '@/shared/components/GlobalToast';
 import { useAppInit } from '../shared/hooks/useAppInit';
@@ -206,13 +206,13 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       data-density={layoutDensity}
     >
       {/* Sidebar Tabs */}
-      <div className="w-12 border-r flex flex-col items-center py-2 gap-2 bg-muted/20 shrink-0">
+      <div className="sidebar-nav border-r flex flex-col items-center bg-muted/20 shrink-0">
         <Button
           variant={activeTab === 'files' ? 'secondary' : 'ghost'}
           size="icon"
           title={t('tabs.files')}
           onClick={() => handleTabChange('files')}
-          className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
+          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
         >
           <Files className="sidebar-icon" />
         </Button>
@@ -221,7 +221,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           size="icon"
           title={t('tabs.search')}
           onClick={() => handleTabChange('search')}
-          className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
+          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
         >
           <Search className="sidebar-icon" />
         </Button>
@@ -230,7 +230,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           size="icon"
           title={t('tabs.prompts')}
           onClick={() => handleTabChange('prompts')}
-          className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
+          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
         >
           <Sparkles className="sidebar-icon" />
         </Button>
@@ -240,7 +240,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             size="icon"
             title={t('tabs.favorites')}
             onClick={() => handleTabChange('favorites')}
-            className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
+            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
           >
             <Star className="sidebar-icon" />
           </Button>
@@ -250,7 +250,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           size="icon"
           title={t('tabs.tags')}
           onClick={() => handleTabChange('tags')}
-          className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
+          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
         >
           <Tag className="sidebar-icon" />
         </Button>
@@ -265,7 +265,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             size="icon"
             title={t('shortcuts.build')}
             onClick={() => handleNavigation('/apps')}
-            className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
+            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
           >
             <Hammer className="sidebar-icon" />
           </Button>
@@ -277,7 +277,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             size="icon"
             title={t('shortcuts.dashboard')}
             onClick={() => handleNavigation('/api-keys')}
-            className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
+            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
           >
             <LayoutDashboard className="sidebar-icon" />
           </Button>
@@ -291,7 +291,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             onClick={() =>
               handleExternalLink('https://ai.google.dev/gemini-api/docs')
             }
-            className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
+            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
           >
             <BookOpen className="sidebar-icon" />
           </Button>
@@ -305,7 +305,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             size="icon"
             title={t('shortcuts.originalUI')}
             onClick={() => setIsUIVisible(false)}
-            className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
+            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
           >
             <LogOut className="sidebar-icon" />
           </Button>
@@ -316,7 +316,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           size="icon"
           title={t('tabs.feedback')}
           onClick={() => handleTabChange('feedback')}
-          className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
+          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
         >
           <MessageSquare className="sidebar-icon" />
         </Button>
@@ -325,7 +325,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           size="icon"
           title={t('tabs.settings')}
           onClick={() => handleTabChange('settings')}
-          className="w-10 h-10 rounded-xl transition-all hover:rounded-xl"
+          className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
         >
           <Settings className="sidebar-icon" />
         </Button>

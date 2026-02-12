@@ -1,6 +1,6 @@
 // Overlay content script entry: routes to platform-specific layout
 
-import mainStyles from '@/index.css?inline';
+import mainStyles from '@/index.scss?inline';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 import '@/locale/i18n';
 

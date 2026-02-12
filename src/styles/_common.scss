@@ -1,0 +1,47 @@
+@layer base {
+  /* Sidebar Classes */
+  .sidebar-nav {
+    width: var(--sidebar-width);
+    padding-top: var(--sidebar-padding-y);
+    padding-bottom: var(--sidebar-padding-y);
+    gap: var(--sidebar-gap);
+  }
+
+  .sidebar-btn {
+    width: var(--sidebar-button-size) !important;
+    height: var(--sidebar-button-size) !important;
+  }
+
+  .sidebar-icon {
+    width: var(--sidebar-icon-size) !important;
+    height: var(--sidebar-icon-size) !important;
+    color: rgb(var(--sidebar-icon-color));
+  }
+
+  * {
+    @apply border-border;
+  }
+  html {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 20px;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  .shadow-body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 20px;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+@layer components {
+  /* Node Selection Styles */
+  .node-item-selected {
+    @apply bg-accent;
+  }
+}

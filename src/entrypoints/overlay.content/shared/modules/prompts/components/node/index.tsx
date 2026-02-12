@@ -187,22 +187,21 @@ export const Node = ({ node, style, dragHandle, tree, preview, onPreview }: Node
                 </div>
               </SimpleTooltip>
 
-             <SimpleTooltip content={isFavorite ? t('tooltip.removeFromFavorites') : t('tooltip.addToFavorites')}>
-                <div
-                  role="button"
-                  className={cn(
-                    "h-5 w-5 flex items-center justify-center rounded-sm hover:bg-muted/50 cursor-pointer transition-colors",
-                    isFavorite ? "text-yellow-500" : "text-muted-foreground hover:text-foreground"
-                  )}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    toggleFavorite(node.data.id, 'prompt', isFavorite);
-                  }}
-                >
-                  <Star className={cn("h-3.5 w-3.5", isFavorite && "fill-current")} />
-                </div>
-              </SimpleTooltip>
+             {!isFavorite && (
+               <SimpleTooltip content={t('tooltip.addToFavorites')}>
+                  <div
+                    role="button"
+                    className="h-5 w-5 flex items-center justify-center rounded-sm hover:bg-muted/50 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      toggleFavorite(node.data.id, 'prompt', isFavorite);
+                    }}
+                  >
+                    <Star className="h-3.5 w-3.5" />
+                  </div>
+               </SimpleTooltip>
+             )}
           </>
         )}
       </div>
@@ -210,60 +209,61 @@ export const Node = ({ node, style, dragHandle, tree, preview, onPreview }: Node
   );
 
   const commonClasses = cn(
-    'flex items-center gap-1.5 px-1 cursor-pointer hover:bg-accent/50 group relative pr-2 h-full text-foreground no-underline outline-none text-density',
+    'flex items-center gap-1.5 px-1 cursor-pointer group relative pr-2 h-full text-foreground no-underline outline-none text-density rounded-sm',
+    !((node.isSelected && !isFile) || isBatchSelected) && 'hover:bg-accent/50',
     // isFile && !isFavorite && 'group-hover:pr-14',
-    // isFile && isFavorite && 'group-hover:pr-8',
-    (node.isSelected || isBatchSelected) && 'bg-accent',
+    ((node.isSelected && !isFile) || isBatchSelected) && 'node-item-selected',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
     isContextMenuOpen && 'bg-accent/50',
-    // Remove padding adjustments as we are positioning actions absolutely on top
     // isContextMenuOpen && isFile && !isFavorite && 'pr-14'
   );
 
   const content = (
-    <div
-      style={style}
-      ref={dragHandle}
-      role="button"
-      tabIndex={0}
-      className={commonClasses}
-      onContextMenu={(e) => {
-        if (isBatchMode) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }}
-      onClick={(e) => {
-        if (isBatchMode) {
-          e.preventDefault();
-          togglePromptsBatchSelection(node.data.id);
-          return;
-        }
-
-        if (isFile) {
-            // Copy on click for files (may open variable-fill modal)
-            const content = node.data.data.content || '';
-            tryCopyContent(content);
-        }
-
-        node.select();
-        if (node.data.type === 'folder') {
-            node.toggle();
-        }
-      }}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+    <div style={style} className={cn("outline-none", "h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]")}>
+      <div
+        ref={dragHandle}
+        role="button"
+        tabIndex={0}
+        className={commonClasses}
+        onContextMenu={(e) => {
           if (isBatchMode) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }}
+        onClick={(e) => {
+          if (isBatchMode) {
+            e.preventDefault();
             togglePromptsBatchSelection(node.data.id);
             return;
           }
+
+          if (isFile) {
+              // Copy on click for files (may open variable-fill modal)
+              const content = node.data.data.content || '';
+              tryCopyContent(content);
+              return;
+          }
+
+          node.select();
           if (node.data.type === 'folder') {
               node.toggle();
           }
-        }
-      }}
-    >
-      {innerContent}
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            if (isBatchMode) {
+              togglePromptsBatchSelection(node.data.id);
+              return;
+            }
+            if (node.data.type === 'folder') {
+                node.toggle();
+            }
+          }
+        }}
+      >
+        {innerContent}
+      </div>
     </div>
   );
 

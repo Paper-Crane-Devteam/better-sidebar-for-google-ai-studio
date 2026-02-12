@@ -8,6 +8,7 @@ import { OverlayPanel } from './OverlayPanel';
 import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
 import { applyShadowStyles } from '@/shared/lib/utils';
+import { useSettingsStore } from '@/shared/lib/settings-store';
 
 const querySelectorDeep = (
   selector: string,
@@ -104,37 +105,51 @@ export async function initAiStudioOverlay(mainStyles: string): Promise<void> {
 
   const sidebarStyle = document.createElement('style');
   sidebarStyle.id = 'better-sidebar-for-google-ai-studio-sidebar-styles';
-  sidebarStyle.textContent = `
-    #better-sidebar-for-google-ai-studio-sidebar-wrapper {
-      height: 100%;
-      width: 300px;
-      flex-shrink: 0;
-      box-sizing: border-box;
-      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      overflow: hidden;
-      z-index: 999;
-      background: var(--background, #fff);
-    }
-    #better-sidebar-for-google-ai-studio-sidebar-wrapper.collapsed {
-      width: 0px;
-    }
-    @media screen and (max-width: 960px) {
+  
+  // Function to update sidebar width based on layout density
+  const updateSidebarWidth = (density: 'compact' | 'relaxed') => {
+    const width = density === 'compact' ? '300px' : '320px';
+    sidebarStyle.textContent = `
       #better-sidebar-for-google-ai-studio-sidebar-wrapper {
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100vh;
-        box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+        height: 100%;
+        width: ${width};
+        flex-shrink: 0;
+        box-sizing: border-box;
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        z-index: 999;
+        background: var(--background, #fff);
       }
-    }
-  `;
+      #better-sidebar-for-google-ai-studio-sidebar-wrapper.collapsed {
+        width: 0px;
+      }
+      @media screen and (max-width: 960px) {
+        #better-sidebar-for-google-ai-studio-sidebar-wrapper {
+          position: fixed;
+          top: 0;
+          left: 0;
+          height: 100vh;
+          box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+        }
+      }
+    `;
+  };
+
+  // Initial width based on current density
+  updateSidebarWidth(useSettingsStore.getState().layoutDensity);
   document.head.appendChild(sidebarStyle);
+
+  // Subscribe to density changes
+  useSettingsStore.subscribe((state) => {
+    updateSidebarWidth(state.layoutDensity);
+  });
 
   const shadow = wrapper.attachShadow({ mode: 'open' });
   applyShadowStyles(shadow, mainStyles);
 
   const rootContainer = document.createElement('div');
   rootContainer.classList.add('shadow-body');
+  rootContainer.classList.add('theme-aistudio');
 
   const syncTheme = () => {
     const isDark = document.body.classList.contains('dark-theme');

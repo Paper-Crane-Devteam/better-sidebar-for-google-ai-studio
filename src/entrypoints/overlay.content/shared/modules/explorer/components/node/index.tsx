@@ -212,7 +212,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   );
 
   const content = (
-    <div style={style} className={cn("outline-none", "h-[calc(100%-2px)] mt-[1px]")}>
+    <div style={style} className={cn("outline-none", "h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]")}>
       <div
         ref={dragHandle}
         role="button"

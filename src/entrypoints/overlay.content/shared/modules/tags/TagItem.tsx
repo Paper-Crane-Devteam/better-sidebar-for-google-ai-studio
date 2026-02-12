@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Tag } from '@/shared/types/db';
 import { useAppStore } from '@/shared/lib/store';
+import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Tag as TagIcon, MoreVertical, Trash2, Edit2 } from 'lucide-react';
 import { Button } from '@/entrypoints/overlay.content/shared/components/ui/button';
 import { Input } from '@/entrypoints/overlay.content/shared/components/ui/input';
@@ -27,6 +28,9 @@ interface TagItemProps {
 export const TagItem = ({ tag }: TagItemProps) => {
   const { t } = useI18n();
   const { deleteTag, updateTag } = useAppStore();
+  const layoutDensity = useSettingsStore((state) => state.layoutDensity);
+  const rowHeight = layoutDensity === 'compact' ? 32 : 38;
+
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(tag.name);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
@@ -93,44 +97,46 @@ export const TagItem = ({ tag }: TagItemProps) => {
   return (
     <ContextMenu onOpenChange={setIsContextMenuOpen}>
       <ContextMenuTrigger>
-        <div
-          className={cn(
-            'group flex items-center justify-between p-2 rounded-md text-sm border border-transparent transition-colors cursor-default',
-            isActive
-              ? 'bg-accent/50 border-border'
-              : 'hover:bg-accent/50 hover:border-border'
-          )}
-        >
-          <div className="flex items-center gap-2 overflow-hidden">
-            <TagIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span className="truncate font-medium">{tag.name}</span>
-          </div>
+        <div style={{ height: rowHeight }} className="w-full px-1">
           <div
             className={cn(
-              'flex items-center transition-opacity',
-              isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+              'group flex items-center justify-between px-2 rounded-sm text-sm border border-transparent transition-colors cursor-default h-[calc(100%-2px)] mt-[1px]',
+              isActive
+                ? 'bg-accent/50'
+                : 'hover:bg-accent/50'
             )}
           >
-            <DropdownMenu onOpenChange={setIsDropdownOpen}>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6">
-                  <MoreVertical className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                  <Edit2 className="mr-2 h-4 w-4" />
-                  {t('tags.rename')}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleDelete}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  {t('common.delete')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-2 overflow-hidden">
+              <TagIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+              <span className="truncate font-medium">{tag.name}</span>
+            </div>
+            <div
+              className={cn(
+                'flex items-center transition-opacity',
+                isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+              )}
+            >
+              <DropdownMenu onOpenChange={setIsDropdownOpen}>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <MoreVertical className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                    <Edit2 className="mr-2 h-4 w-4" />
+                    {t('tags.rename')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleDelete}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    {t('common.delete')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </ContextMenuTrigger>

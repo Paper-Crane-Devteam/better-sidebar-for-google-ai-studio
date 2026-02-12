@@ -1,8 +1,8 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 /** Strip markdown syntax to produce plain text (e.g. for copy-as-text). */
@@ -15,7 +15,9 @@ export function stripMarkdown(md: string): string {
   // Bold/strong: ** or __
   s = s.replace(/\*\*([^*]+)\*\*/g, '$1').replace(/__([^_]+)__/g, '$1');
   // Italic: * or _ (single, not double)
-  s = s.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '$1').replace(/(?<!_)_([^_]+)_(?!_)/g, '$1');
+  s = s
+    .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '$1')
+    .replace(/(?<!_)_([^_]+)_(?!_)/g, '$1');
   // Strikethrough
   s = s.replace(/~~([^~]+)~~/g, '$1');
   // Links: [text](url) -> text
@@ -42,7 +44,10 @@ export function applyShadowStyles(shadow: ShadowRoot, css: string) {
     styleSheet.replaceSync(css);
     shadow.adoptedStyleSheets = [styleSheet];
   } catch (e) {
-    console.warn('Better Sidebar: Failed to use adoptedStyleSheets, falling back to <style>', e);
+    console.warn(
+      'Better Sidebar: Failed to use adoptedStyleSheets, falling back to <style>',
+      e,
+    );
     const style = document.createElement('style');
     style.textContent = css;
     shadow.appendChild(style);
@@ -52,7 +57,10 @@ export function applyShadowStyles(shadow: ShadowRoot, css: string) {
 function parseNodeToMarkdown(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) {
     // Attempt to preserve whitespace for elements like <pre>
-    if (node.parentElement?.tagName.toUpperCase() === 'CODE' || node.parentElement?.tagName.toUpperCase() === 'PRE') {
+    if (
+      node.parentElement?.tagName.toUpperCase() === 'CODE' ||
+      node.parentElement?.tagName.toUpperCase() === 'PRE'
+    ) {
       return node.textContent || '';
     }
     return node.textContent?.trim() || '';
@@ -75,9 +83,7 @@ function parseNodeToMarkdown(node: Node): string {
     // Ignore Xray wrapper access errors
   }
 
-  let childrenMarkdown = children
-    .map(parseNodeToMarkdown)
-    .join('');
+  let childrenMarkdown = children.map(parseNodeToMarkdown).join('');
 
   switch (tagName) {
     case 'P':
@@ -106,7 +112,8 @@ function parseNodeToMarkdown(node: Node): string {
         '\n' +
         listItems
           .map(
-            (item, index) => `${index + 1}. ${parseNodeToMarkdown(item).trim()}`,
+            (item, index) =>
+              `${index + 1}. ${parseNodeToMarkdown(item).trim()}`,
           )
           .join('\n') +
         '\n'
@@ -133,7 +140,7 @@ function parseNodeToMarkdown(node: Node): string {
     }
     case 'PRE':
     case 'CODE':
-        return childrenMarkdown;
+      return childrenMarkdown;
     // These are container tags, just process their children.
     case 'MS-PROMPT-CHUNK':
     case 'MS-TEXT-CHUNK':
@@ -152,14 +159,76 @@ export function htmlToMarkdown(container: HTMLElement): string {
   const cleanHtml = container.innerHTML.replace(/<!--[\s\S]*?-->/g, '');
   const tempContainer = document.createElement('div');
   tempContainer.innerHTML = cleanHtml;
-  
+
   // First, try to find the specific content node (common in Model responses)
   const cmarkNode = tempContainer.querySelector('ms-cmark-node');
   if (cmarkNode) {
     // We clean up excessive newlines that might be generated
-    return parseNodeToMarkdown(cmarkNode).trim().replace(/\n{3,}/g, '\n\n');
+    return parseNodeToMarkdown(cmarkNode)
+      .trim()
+      .replace(/\n{3,}/g, '\n\n');
   }
 
   // Fallback: Parse the entire container if no specific wrapper is found (e.g. User messages)
-  return parseNodeToMarkdown(tempContainer).trim().replace(/\n{3,}/g, '\n\n');
+  return parseNodeToMarkdown(tempContainer)
+    .trim()
+    .replace(/\n{3,}/g, '\n\n');
+}
+
+export async function syncGeminiTheme(theme: 'light' | 'dark' | 'system') {
+  if (typeof document === 'undefined') return;
+  const settingsButton = document.querySelector(
+    'button[aria-label="Settings & help"]',
+  ) as HTMLElement;
+  if (!settingsButton) return;
+
+  settingsButton.click();
+
+  // Wait for menu to open
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  const themeButton = document.querySelector(
+    'button[data-test-id="desktop-theme-menu-button"]',
+  ) as HTMLElement;
+  if (!themeButton) return;
+
+  themeButton.click();
+
+  // Wait for theme options to appear
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  const menuContent = document.querySelector('.mat-mdc-menu-content');
+  if (!menuContent) return;
+
+  const buttons = Array.from(
+    menuContent.querySelectorAll('button'),
+  ) as HTMLElement[];
+  if (buttons.length < 3) return;
+
+  const themeMap = {
+    system: 0,
+    light: 1,
+    dark: 2,
+  };
+
+  const buttonIndex = themeMap[theme];
+  if (buttons[buttonIndex]) {
+    buttons[buttonIndex].click();
+  }
+}
+
+export function syncAiStudioTheme(theme: 'light' | 'dark' | 'system') {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const key = 'aiStudioUserPreference';
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        const prefs = JSON.parse(stored);
+        prefs.theme = theme;
+        localStorage.setItem(key, JSON.stringify(prefs));
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
 }

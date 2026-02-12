@@ -2,6 +2,7 @@ import React, { useMemo, forwardRef, useImperativeHandle } from 'react';
 import { Tree, NodeRendererProps } from 'react-arborist';
 import { usePromptsTree, STORAGE_KEY } from '../hooks/usePromptsTree';
 import { useAppStore } from '@/shared/lib/store';
+import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Node } from './node';
 import { NodeData, ArboristTreeHandle } from '../types';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -39,8 +40,9 @@ export const PromptsTree = forwardRef<ArboristTreeHandle, PromptsTreeProps>(
     const { t } = useI18n();
     const { favorites } = useAppStore();
     const { sortOrder, typeFilter, onlyFavorites } = ui.prompts;
+    const layoutDensity = useSettingsStore((state) => state.layoutDensity);
 
-    const rowHeight = 28;
+    const rowHeight = layoutDensity === 'compact' ? 32 : 38;
 
     useImperativeHandle(ref, () => ({
       collapseAll: () => {
@@ -169,6 +171,7 @@ export const PromptsTree = forwardRef<ArboristTreeHandle, PromptsTreeProps>(
     return (
       <div ref={containerRef} className="h-full w-full">
         <Tree
+          padding={2}
           ref={treeRef}
           data={data}
           onMove={onMove}
@@ -178,7 +181,7 @@ export const PromptsTree = forwardRef<ArboristTreeHandle, PromptsTreeProps>(
           onToggle={handleToggle}
           width={dimensions.width}
           height={dimensions.height}
-          indent={12}
+          indent={8}
           rowHeight={rowHeight}
           openByDefault={false}
           initialOpenState={initialOpenState}
