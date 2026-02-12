@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Tree, TreeApi, NodeApi, NodeRendererProps } from 'react-arborist';
 import { useAppStore } from '@/shared/lib/store';
-import { Folder as FolderIcon, FileText, ChevronRight, ChevronDown, Edit2, Trash2, FolderOpen } from 'lucide-react';
+import { Folder as FolderIcon, MessageSquare, ChevronRight, ChevronDown, Edit2, Trash2, FolderOpen } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/shared/components/ui/button';
 
@@ -286,7 +286,7 @@ const Node = ({ node, style, dragHandle }: NodeRendererProps<NodeData>) => {
          {node.data.type === 'folder' ? (
              <FolderIconComponent className="w-4 h-4 text-blue-400" />
          ) : (
-             <FileText className="w-4 h-4" />
+             <MessageSquare className="w-4 h-4" />
          )}
       </div>
 

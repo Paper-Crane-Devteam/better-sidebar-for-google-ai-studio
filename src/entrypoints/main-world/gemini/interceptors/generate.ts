@@ -154,23 +154,26 @@ export function handleGenerateResponse(response: any, url: string) {
                 });
 
                 if (title) {
-                    globalThis.dispatchEvent(new CustomEvent('BETTER_SIDEBAR_PROMPT_CREATE', {
-                        detail: {
-                            id: conversationId,
-                            title,
-                            messages,
-                            created_at: timestamp,
-                            type: 'conversation',
-                            platform: 'gemini'
-                        }
-                    }));
+                  globalThis.dispatchEvent(
+                    new CustomEvent('BETTER_SIDEBAR_PROMPT_CREATE', {
+                      detail: {
+                        id: conversationId,
+                        title,
+                        messages,
+                        created_at: timestamp,
+                        type: 'conversation',
+                      },
+                    }),
+                  );
                 } else {
-                    globalThis.dispatchEvent(new CustomEvent('GEMINI_CHAT_CONTENT_RESPONSE', {
-                        detail: {
-                            conversationId,
-                            messages
-                        }
-                    }));
+                  globalThis.dispatchEvent(
+                    new CustomEvent('GEMINI_CHAT_CONTENT_RESPONSE', {
+                      detail: {
+                        conversationId,
+                        messages,
+                      },
+                    }),
+                  );
                 }
               }
             } catch (e) {
@@ -181,23 +184,6 @@ export function handleGenerateResponse(response: any, url: string) {
             }
           }
         }
-
-        const lastChunk = chunks[chunks.length - 1];
-        console.log('Better Sidebar (Gemini): Last Chunk:', lastChunk);
-
-        globalThis.dispatchEvent(
-          new CustomEvent('GEMINI_RESPONSE', {
-            detail: {
-              type: 'generate',
-              chunks,
-              lastChunk,
-              originalUrl: url,
-              requestBody: response.config?.body,
-              requestData: response.config?.data,
-              prompt: prompt,
-            },
-          }),
-        );
       }
     } catch (e) {
       console.error(

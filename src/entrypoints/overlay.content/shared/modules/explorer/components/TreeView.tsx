@@ -36,26 +36,12 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(({ onSelec
   } = useArboristTree();
 
   const { t } = useI18n();
-  const { conversationTags, favorites } = useAppStore();
+  const { conversationTags, favorites, setExplorerBatchSelection } = useAppStore();
   const { layoutDensity, explorer } = useSettingsStore();
   const { sortOrder, tags: tagFilter, typeFilter, onlyFavorites } = ui.explorer;
   const { ignoredFolders } = explorer;
 
-  const rowHeight = layoutDensity === 'compact' ? 28 : 36;
-
-  useImperativeHandle(ref, () => ({
-    collapseAll: () => {
-      treeRef.current?.closeAll();
-      localStorage.removeItem(STORAGE_KEY);
-    },
-    edit: (id: string) => {
-        treeRef.current?.edit(id);
-    },
-    select: (id: string) => {
-        treeRef.current?.select(id);
-        treeRef.current?.scrollTo(id);
-    }
-  }));
+  const rowHeight = layoutDensity === 'compact' ? 30 : 38;
 
   // Transform data into tree structure
   const data = useMemo(() => {
@@ -217,11 +203,43 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(({ onSelec
 
   sortNodes(rootNodes);
   return rootNodes;
-}, [folders, conversations, sortOrder, favorites, tagFilter.selected, conversationTags, typeFilter, onlyFavorites, ignoredFolders, t]);
+  }, [folders, conversations, sortOrder, favorites, tagFilter.selected, conversationTags, typeFilter, onlyFavorites, ignoredFolders, t]);
 
-return (
-  <div ref={containerRef} className="h-full w-full">
+  useImperativeHandle(ref, () => ({
+    collapseAll: () => {
+      treeRef.current?.closeAll();
+      localStorage.removeItem(STORAGE_KEY);
+    },
+    edit: (id: string) => {
+        treeRef.current?.edit(id);
+    },
+    select: (id: string) => {
+        treeRef.current?.select(id);
+        treeRef.current?.scrollTo(id);
+    },
+    selectAll: () => {
+        const getAllIds = (nodes: NodeData[]): string[] => {
+            let ids: string[] = [];
+            nodes.forEach(node => {
+                const matches = !searchTerm || node.name.toLowerCase().includes(searchTerm.toLowerCase());
+                if (node.type === 'file' && matches) {
+                    ids.push(node.id);
+                }
+                if (node.children) {
+                    ids = ids.concat(getAllIds(node.children));
+                }
+            });
+            return ids;
+        };
+        const allIds = getAllIds(data);
+        setExplorerBatchSelection(allIds);
+    }
+  }));
+
+  return (
+    <div ref={containerRef} className="h-full w-full">
       <Tree
+        padding={2}
         ref={treeRef}
         data={data}
         onMove={onMove}

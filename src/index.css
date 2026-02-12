@@ -3,35 +3,36 @@
 @tailwind utilities;
 
 @layer base {
-  :root, :host {
+  :root,
+  :host {
     /* Light Theme - Adapted from theme.main.css */
-    --background: 255 255 255;      /* #ffffff */
-    --foreground: 50 48 44;         /* #32302c */
+    --background: 255 255 255; /* #ffffff */
+    --foreground: 50 48 44; /* #32302c */
 
-    --card: 255 255 255;            /* #ffffff */
-    --card-foreground: 50 48 44;    /* #32302c */
+    --card: 255 255 255; /* #ffffff */
+    --card-foreground: 50 48 44; /* #32302c */
 
-    --popover: 255 255 255;         /* #ffffff */
+    --popover: 255 255 255; /* #ffffff */
     --popover-foreground: 50 48 44; /* #32302c */
 
-    --primary: 255 255 255;         /* #ffffff */
+    --primary: 255 255 255; /* #ffffff */
     --primary-foreground: 50 48 44; /* #32302c */
 
-    --secondary: 228 228 226;       /* #e4e4e2 */
+    --secondary: 228 228 226; /* #e4e4e2 */
     --secondary-foreground: 50 48 44; /* #32302c */
 
-    --muted: 228 228 226;           /* #e4e4e2 */
-    --muted-foreground: 93 93 95;   /* #5d5d5f */
+    --muted: 228 228 226; /* #e4e4e2 */
+    --muted-foreground: 93 93 95; /* #5d5d5f */
 
-    --accent: 228 228 226;          /* #e4e4e2 (same as secondary/surface-container-highest) */
-    --accent-foreground: 50 48 44;  /* #32302c */
+    --accent: 228 228 226; /* #e4e4e2 (same as secondary/surface-container-highest) */
+    --accent-foreground: 50 48 44; /* #32302c */
 
-    --destructive: 186 26 26;       /* #ba1a1a */
+    --destructive: 186 26 26; /* #ba1a1a */
     --destructive-foreground: 255 255 255; /* #ffffff */
 
-    --border: 238 238 236;          /* rgb(238, 238, 236) */
-    --input: 225 225 225;           /* #e1e1e1 */
-    --ring: 36 131 226;             /* #2483e2 */
+    --border: 238 238 236; /* rgb(238, 238, 236) */
+    --input: 225 225 225; /* #e1e1e1 */
+    --ring: 36 131 226; /* #2483e2 */
 
     --radius: 0.5rem;
 
@@ -49,10 +50,14 @@
     --sidebar-icon-size: 1.25rem;
     --sidebar-gap: 0.5rem;
     --sidebar-padding-y: 0.5rem;
+
+    /* Font Family Defaults */
+    --font-sans: 'Inter', sans-serif;
   }
 
   /* Relaxed Mode */
-  [data-density="relaxed"], :host([data-density="relaxed"]) {
+  [data-density='relaxed'],
+  :host([data-density='relaxed']) {
     --density-row-height: 36px;
     --density-icon-size: 18px;
     --density-font-size: 14px;
@@ -80,59 +85,61 @@
     width: var(--sidebar-button-size) !important;
     height: var(--sidebar-button-size) !important;
   }
-  
+
   .sidebar-icon {
     width: var(--sidebar-icon-size) !important;
     height: var(--sidebar-icon-size) !important;
   }
 
-  .dark, :host(.dark) {
+  .dark,
+  :host(.dark) {
     /* Dark Theme - Adapted from theme.main.css */
-    --background: 25 25 25;         /* #191919 */
-    --foreground: 212 212 212;      /* #d4d4d4 */
+    --background: 25 25 25; /* #191919 */
+    --foreground: 212 212 212; /* #d4d4d4 */
 
-    --card: 31 31 31;               /* #1f1f1f */
+    --card: 31 31 31; /* #1f1f1f */
     --card-foreground: 212 212 212; /* #d4d4d4 */
 
-    --popover: 31 31 31;            /* #1f1f1f */
+    --popover: 31 31 31; /* #1f1f1f */
     --popover-foreground: 212 212 212; /* #d4d4d4 */
 
-    --primary: 50 50 50;            /* #323232 */
+    --primary: 50 50 50; /* #323232 */
     --primary-foreground: 252 252 252; /* #fcfcfc */
 
-    --secondary: 42 42 42;          /* #2a2a2a */
+    --secondary: 42 42 42; /* #2a2a2a */
     --secondary-foreground: 212 212 212; /* #d4d4d4 */
 
-    --muted: 42 42 42;              /* #2a2a2a */
+    --muted: 42 42 42; /* #2a2a2a */
     --muted-foreground: 140 140 140; /* #8c8c8c */
 
-    --accent: 42 42 42;             /* #2a2a2a (same as secondary/surface-container-highest) */
+    --accent: 42 42 42; /* #2a2a2a (same as secondary/surface-container-highest) */
     --accent-foreground: 212 212 212; /* #d4d4d4 */
 
-    --destructive: 255 180 171;     /* #ffb4ab */
+    --destructive: 255 180 171; /* #ffb4ab */
     --destructive-foreground: 105 0 5; /* #690005 */
 
-    --border: 42 42 42;             /* rgb(42, 42, 42) */
-    --input: 62 62 62;              /* #3e3e3e */
-    --ring: 135 169 255;            /* #87a9ff */
+    --border: 42 42 42; /* rgb(42, 42, 42) */
+    --input: 62 62 62; /* #3e3e3e */
+    --ring: 135 169 255; /* #87a9ff */
   }
 
   /* Gemini Theme */
-  .theme-gemini, :host(.theme-gemini) {
+  .theme-gemini,
+  :host(.theme-gemini) {
     /* Light Theme */
     --background: 233 238 246; /* #e9eef6 */
-    --foreground: 31 31 31;    /* #1f1f1f */
+    --foreground: 31 31 31; /* #1f1f1f */
 
-    --card: 255 255 255;       /* #ffffff */
+    --card: 255 255 255; /* #ffffff */
     --card-foreground: 31 31 31;
 
     --popover: 255 255 255;
     --popover-foreground: 31 31 31;
 
-    --primary: 11 87 208;      /* #0b57d0 */
+    --primary: 11 87 208; /* #0b57d0 */
     --primary-foreground: 255 255 255;
 
-    --secondary: 221 227 234;  /* #dde3ea */
+    --secondary: 221 227 234; /* #dde3ea */
     --secondary-foreground: 31 31 31;
 
     --muted: 221 227 234;
@@ -141,14 +148,22 @@
     --accent: 221 227 234;
     --accent-foreground: 31 31 31;
 
-    --destructive: 179 38 30;  /* #b3261e */
+    --destructive: 179 38 30; /* #b3261e */
     --destructive-foreground: 255 255 255;
 
-    --border: 226 226 226;     /* #e2e2e2 */
-    --input: 116 119 117;      /* #747775 */
+    --border: 226 226 226; /* #e2e2e2 */
+    --input: 116 119 117; /* #747775 */
     --ring: 11 87 208;
 
     --radius: 16px;
+
+    /* Custom Gemini Colors */
+    --gem-sys-color--primary-container: #d3e3fd;
+    --gem-sys-color--on-primary-container: #0842a0;
+
+    /* Gemini Font */
+    --font-sans:
+      'Google Sans Flex', 'Google Sans', 'Helvetica Neue', sans-serif;
   }
 
   /* Gemini Scrollbar */
@@ -158,53 +173,54 @@
     .theme-gemini ::-webkit-scrollbar,
     .theme-gemini::-webkit-scrollbar-corner,
     .theme-gemini ::-webkit-scrollbar-corner {
-        background: transparent;
-        height: 12px;
-        width: 12px;
+      background: transparent;
+      height: 12px;
+      width: 12px;
     }
     .theme-gemini::-webkit-scrollbar-button,
     .theme-gemini ::-webkit-scrollbar-button {
-        height: 0;
-        width: 0;
+      height: 0;
+      width: 0;
     }
     .theme-gemini::-webkit-scrollbar-thumb,
     .theme-gemini ::-webkit-scrollbar-thumb {
-        background-color: transparent;
-        background-clip: content-box;
-        border: 4px solid transparent;
-        border-radius: 9999px;
-        min-height: 48px;
-        min-width: 48px;
+      background-color: transparent;
+      background-clip: content-box;
+      border: 4px solid transparent;
+      border-radius: 9999px;
+      min-height: 48px;
+      min-width: 48px;
     }
-    
+
     /* Show scrollbar when hovering the container */
     .theme-gemini:hover::-webkit-scrollbar-thumb,
     .theme-gemini:hover ::-webkit-scrollbar-thumb {
-        background-color: rgb(var(--muted-foreground) / 0.2);
+      background-color: rgb(var(--muted-foreground) / 0.2);
     }
 
     /* Darker on thumb hover */
     .theme-gemini::-webkit-scrollbar-thumb:hover,
     .theme-gemini ::-webkit-scrollbar-thumb:hover {
-        background-color: rgb(var(--muted-foreground) / 0.5);
+      background-color: rgb(var(--muted-foreground) / 0.5);
     }
   }
 
-  .theme-gemini.dark, :host(.theme-gemini.dark) {
+  .theme-gemini.dark,
+  :host(.theme-gemini.dark) {
     /* Dark Theme */
-    --background: 30 31 32;    /* #1e1f20 */
+    --background: 30 31 32; /* #1e1f20 */
     --foreground: 227 227 227; /* #e3e3e3 */
 
-    --card: 40 42 44;          /* #282a2c */
+    --card: 40 42 44; /* #282a2c */
     --card-foreground: 227 227 227;
 
     --popover: 40 42 44;
     --popover-foreground: 227 227 227;
 
-    --primary: 168 199 250;    /* #a8c7fa */
+    --primary: 168 199 250; /* #a8c7fa */
     --primary-foreground: 4 30 73; /* #041e49 */
 
-    --secondary: 59 68 86;     /* #3b4456 */
+    --secondary: 59 68 86; /* #3b4456 */
     --secondary-foreground: 227 227 227;
 
     --muted: 59 68 86;
@@ -216,9 +232,26 @@
     --destructive: 236 146 142; /* #ec928e */
     --destructive-foreground: 96 20 16; /* #601410 */
 
-    --border: 60 64 67;        /* #3c4043 */
-    --input: 142 145 143;      /* #8e918f */
+    --border: 60 64 67; /* #3c4043 */
+    --input: 142 145 143; /* #8e918f */
     --ring: 168 199 250;
+
+    /* Custom Gemini Colors */
+    --gem-sys-color--primary-container: #1f3760;
+    --gem-sys-color--on-primary-container: #d3e3fd;
+  }
+}
+
+@layer components {
+  /* Node Selection Styles */
+  .node-item-selected {
+    @apply bg-accent;
+  }
+
+  .theme-gemini .node-item-selected,
+  :host(.theme-gemini) .node-item-selected {
+    background-color: var(--gem-sys-color--primary-container);
+    color: var(--gem-sys-color--on-primary-container);
   }
 }
 
@@ -227,7 +260,7 @@
     @apply border-border;
   }
   html {
-    font-family: "Inter", sans-serif;
+    font-family: var(--font-sans);
     font-size: 14px;
     line-height: 20px;
   }
@@ -236,7 +269,7 @@
   }
   .shadow-body {
     @apply bg-background text-foreground antialiased;
-    font-family: "Inter", sans-serif;
+    font-family: var(--font-sans);
     font-size: 14px;
     line-height: 20px;
     width: 100%;

@@ -286,7 +286,8 @@
     "deleteSelected": "Delete Selected",
     "moveSelected": "Move Selected",
     "addTag": "Add Tag",
-    "exitBatchMode": "Exit Batch Mode"
+    "exitBatchMode": "Exit Batch Mode",
+    "selectAll": "Select All"
   },
   "tags": {
     "noTagsAvailable": "No tags available.",

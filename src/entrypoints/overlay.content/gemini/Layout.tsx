@@ -182,6 +182,7 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
                 wrapper.id = wrapperId;
                 wrapper.style.height = '100%';
                 wrapper.style.width = '100%'; 
+                wrapper.style.overflow = 'auto';
                 
                 container.appendChild(wrapper);
                 elements.wrapper = wrapper;

@@ -18,7 +18,7 @@ export interface PlatformConfig {
 }
 
 export const PLATFORM_CONFIG: Record<
-  Exclude<Platform, Platform.UNKNOWN>,
+  Platform,
   PlatformConfig
 > = {
   [Platform.AI_STUDIO]: {
@@ -53,6 +53,14 @@ export const PLATFORM_CONFIG: Record<
     icon: 'bot',
     color: 'orange',
     promptUrlTemplate: (id: string) => `https://claude.ai/chat/${id}`,
+  },
+  [Platform.UNKNOWN]: {
+    name: 'Unknown',
+    hostname: '',
+    urlPattern: '',
+    icon: 'question',
+    color: 'gray',
+    promptUrlTemplate: (id: string) => '',
   },
 };
 

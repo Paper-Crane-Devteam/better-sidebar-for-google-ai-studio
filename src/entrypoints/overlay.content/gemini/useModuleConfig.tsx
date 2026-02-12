@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Button } from '@/shared/components/ui/button';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
-import { UserMinus } from 'lucide-react';
+import { MessageSquareDashed } from 'lucide-react';
 import { useAppStore } from '@/shared/lib/store';
 import { useI18n } from '@/shared/hooks/useI18n';
 
@@ -138,7 +138,7 @@ const TemporaryChatButton = () => {
         className="h-7 w-7"
         onClick={toggleTempChat}
       >
-        <UserMinus className="h-4 w-4" />
+        <MessageSquareDashed className="h-4 w-4" />
       </Button>
     </SimpleTooltip>
   );

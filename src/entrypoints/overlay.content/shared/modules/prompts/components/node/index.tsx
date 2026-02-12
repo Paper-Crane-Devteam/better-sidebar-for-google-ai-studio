@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Folder as FolderIcon, FileText, ChevronRight, ChevronDown, FolderOpen, Star, Eye } from 'lucide-react';
+import { Folder as FolderIcon, MessageSquare, ChevronRight, ChevronDown, FolderOpen, Star, Eye } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { useAppStore } from '@/shared/lib/store';
@@ -81,7 +81,7 @@ export const Node = ({ node, style, dragHandle, tree, preview, onPreview }: Node
   const folderIcon = (
     <FolderIcon className="w-4 h-4 text-foreground/70" />
   );
-  const fileIcon = <FileText className="w-4 h-4" />;
+  const fileIcon = <MessageSquare className="w-4 h-4" />;
 
   const handleView = (e: React.MouseEvent) => {
     e.stopPropagation();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Folder as FolderIcon, FileText, ChevronRight, ChevronDown, FolderOpen, Star, Calendar, Image } from 'lucide-react';
+import { Folder as FolderIcon, MessageSquare, ChevronRight, ChevronDown, FolderOpen, Star, Calendar, Image } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { navigate, navigateToConversation } from '@/shared/lib/navigation';
@@ -114,7 +114,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
     node.data.data?.type === 'text-to-image' ? (
       <Image className="w-4 h-4" />
     ) : (
-      <FileText className="w-4 h-4" />
+      <MessageSquare className="w-4 h-4" />
     );
 
   const innerContent = (
@@ -170,59 +170,61 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   );
 
   const commonClasses = cn(
-    'flex items-center gap-1.5 px-1 cursor-pointer hover:bg-accent/50 group relative pr-2 h-full text-foreground no-underline outline-none text-density',
+    'flex items-center gap-1.5 px-1 cursor-pointer group relative pr-2 h-full text-foreground no-underline outline-none text-density rounded-sm',
+    !(node.isSelected || isBatchSelected) && 'hover:bg-accent/50',
     isFile && !isFavorite && 'group-hover:pr-8',
-    (node.isSelected || isBatchSelected) && 'bg-accent',
+    (node.isSelected || isBatchSelected) && 'node-item-selected',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
     isContextMenuOpen && 'bg-accent/50',
     isContextMenuOpen && isFile && !isFavorite && 'pr-8'
   );
 
   const content = (
-    <div
-      style={style}
-      ref={dragHandle}
-      role="button"
-      tabIndex={0}
-      className={commonClasses}
-      onContextMenu={(e) => {
-        if (isBatchMode) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }}
-      onClick={(e) => {
-        if (isBatchMode) {
-          e.preventDefault();
-          toggleExplorerBatchSelection(node.data.id);
-          return;
-        }
-
-        if (url) {
-          e.preventDefault();
-          node.select();
-          navigateToConversation(node.data.id);
-        } else {
-          node.select();
-          node.toggle();
-        }
-      }}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+    <div style={style} className={cn("outline-none", "h-[calc(100%-2px)] mt-[1px]")}>
+      <div
+        ref={dragHandle}
+        role="button"
+        tabIndex={0}
+        className={cn(commonClasses)}
+        onContextMenu={(e) => {
           if (isBatchMode) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }}
+        onClick={(e) => {
+          if (isBatchMode) {
+            e.preventDefault();
             toggleExplorerBatchSelection(node.data.id);
             return;
           }
 
           if (url) {
+            e.preventDefault();
+            node.select();
             navigateToConversation(node.data.id);
           } else {
+            node.select();
             node.toggle();
           }
-        }
-      }}
-    >
-      {innerContent}
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            if (isBatchMode) {
+              toggleExplorerBatchSelection(node.data.id);
+              return;
+            }
+
+            if (url) {
+              navigateToConversation(node.data.id);
+            } else {
+              node.toggle();
+            }
+          }
+        }}
+      >
+        {innerContent}
+      </div>
     </div>
   );
 

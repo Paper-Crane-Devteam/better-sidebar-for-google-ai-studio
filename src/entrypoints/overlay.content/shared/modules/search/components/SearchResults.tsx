@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '@/shared/lib/store';
 import { useModalStore } from '@/shared/lib/modal';
-import { ChevronRight, ChevronDown, FileText, Info, ExternalLink, Copy, FileCode, X, MessageSquare, User, Bot, Loader2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, Info, ExternalLink, Copy, FileCode, X, MessageSquare, User, Bot, Loader2 } from 'lucide-react';
 import { cn, stripMarkdown } from '@/shared/lib/utils';
 import dayjs from 'dayjs';
 import { navigate } from '@/shared/lib/navigation';
@@ -162,7 +162,7 @@ const ResultGroup = ({
         onClick={onToggle}
       >
         {expanded ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
-        <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+        <MessageSquare className="h-4 w-4 text-muted-foreground shrink-0" />
         <span className="font-medium truncate flex-1">
             {data.conversation.title || untitledLabel}
         </span>

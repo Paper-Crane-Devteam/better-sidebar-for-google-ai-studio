@@ -18,6 +18,7 @@ import {
 } from '../../components/ui/context-menu';
 
 import type { ExplorerTypeFilter } from '../../types/filter';
+import { getExternalUrl } from '../../utils';
 
 interface ExplorerTabProps {
   onNewChat: () => void;
@@ -119,6 +120,7 @@ export const ExplorerTab = ({
             created_at,
             updated_at: created_at,
             external_id: id,
+            external_url: getExternalUrl(id),
             folder_id: targetFolderId,
             type,
             messages
@@ -218,6 +220,10 @@ export const ExplorerTab = ({
     treeRef.current?.collapseAll();
   };
 
+  const handleSelectAll = () => {
+    treeRef.current?.selectAll();
+  };
+
   const handleScanLibrary = () => {
     if (isScanning) return;
     setIsScanning(true);
@@ -238,6 +244,7 @@ export const ExplorerTab = ({
       <ExplorerHeader
         onNewFolder={handleNewFolder}
         onCollapseAll={handleCollapseAll}
+        onSelectAll={handleSelectAll}
         onNewChat={onNewChat}
         filter={filter}
         filterTypes={filterTypes}

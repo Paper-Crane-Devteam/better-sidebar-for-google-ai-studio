@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/shared/components/ui/button';
-import { Trash2, FolderInput, Tag as TagIcon, X } from 'lucide-react';
+import { Trash2, FolderInput, Tag as TagIcon, X, CheckSquare } from 'lucide-react';
 import { useAppStore } from '@/shared/lib/store';
 import { modal } from '@/shared/lib/modal';
 import { MoveItemsDialog } from './MoveItemsDialog';
@@ -8,7 +8,11 @@ import { AddTagsDialog } from './AddTagsDialog';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 
-export const BatchToolbar = () => {
+interface BatchToolbarProps {
+  onSelectAll: () => void;
+}
+
+export const BatchToolbar = ({ onSelectAll }: BatchToolbarProps) => {
   const { t } = useI18n();
   const { ui, setExplorerBatchMode, setExplorerBatchSelection, deleteItems } = useAppStore();
   const { selectedIds } = ui.explorer.batch;
@@ -102,6 +106,12 @@ export const BatchToolbar = () => {
 
   return (
     <div className="flex items-center gap-1">
+      <SimpleTooltip content={t('batch.selectAll')}>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onSelectAll}>
+          <CheckSquare className="h-4 w-4" />
+        </Button>
+      </SimpleTooltip>
+
       <SimpleTooltip content={t('batch.deleteSelected')}>
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleDelete}>
           <Trash2 className="h-4 w-4" />

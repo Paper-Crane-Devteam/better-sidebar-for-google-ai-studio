@@ -20,7 +20,7 @@ import {
   downloadBlob,
   safeFilename,
 } from '../../lib/exportConversation';
-import { FolderPlus, Edit2, Trash2, Star, StarOff, Tag as TagIcon, ExternalLink, Download, FileText, FileCode, Braces, FolderInput } from 'lucide-react';
+import { FolderPlus, Edit2, Trash2, Star, StarOff, Tag as TagIcon, ExternalLink, Download, MessageSquare, FileCode, Braces, FolderInput } from 'lucide-react';
 import { modal } from '@/shared/lib/modal';
 import { MoveItemsDialog } from '../batch/MoveItemsDialog';
 import { NodeProps } from './types';
@@ -264,7 +264,7 @@ export const NodeContextMenu = ({
               onMouseLeave={handleExportSubMenuMouseLeave}
             >
               <ContextMenuItem onSelect={() => void handleExportAs('text')}>
-                <FileText className="mr-2 h-4 w-4" />
+                <MessageSquare className="mr-2 h-4 w-4" />
                 {t('node.exportAsText')}
               </ContextMenuItem>
               <ContextMenuItem onSelect={() => void handleExportAs('markdown')}>

@@ -13,6 +13,7 @@ import { BatchToolbar } from './batch/BatchToolbar';
 interface ExplorerHeaderProps {
   onNewFolder: () => void;
   onCollapseAll: () => void;
+  onSelectAll: () => void;
   onNewChat: () => void;
   filter: FilterState<ExplorerTypeFilter>;
   filterTypes?: ExplorerTypeFilter[];
@@ -27,6 +28,7 @@ interface ExplorerHeaderProps {
 export const ExplorerHeader = ({
   onNewFolder,
   onCollapseAll,
+  onSelectAll,
   onNewChat,
   filter,
   filterTypes,
@@ -59,7 +61,7 @@ export const ExplorerHeader = ({
 
         <div className="flex items-center gap-0.5">
           {isBatchMode ? (
-            <BatchToolbar />
+            <BatchToolbar onSelectAll={onSelectAll} />
           ) : (
             <>
               <SimpleTooltip content={t('menu.collapseAll')}>

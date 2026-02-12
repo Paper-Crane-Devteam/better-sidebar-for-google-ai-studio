@@ -67,6 +67,11 @@ export const NodeContent = ({
       <div className="w-4 h-4 flex items-center justify-center shrink-0 text-muted-foreground">
         {node.data.type === 'folder' ? folderIcon : fileIcon}
       </div>
+      {/* {node.data.type === 'folder' && (
+        <div className="w-4 h-4 flex items-center justify-center shrink-0 text-muted-foreground">
+          {folderIcon}
+        </div>
+      )} */}
 
       <div className="flex-1 min-w-0 flex items-center gap-1 overflow-hidden justify-between">
         {node.isEditing ? (
@@ -83,7 +88,7 @@ export const NodeContent = ({
         {isFavorite && (
           <div
             role="button"
-            className="h-5 w-5 shrink-0 flex items-center justify-center rounded-sm hover:bg-muted/50 transition-colors"
+            className="h-5 w-5 shrink-0 flex items-center justify-center rounded-md hover:bg-muted/50 transition-colors"
             onClick={onToggleFavorite}
           >
             <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
