@@ -203,15 +203,28 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
         <Separator className="w-8 my-1" />
 
         {!isSidebarExpanded ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            title={t('tooltip.newChat')}
-            onClick={() => moduleConfig.explorer.onNewChat()}
-            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-          >
-            <SquarePen className="sidebar-icon" />
-          </Button>
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              title={t('tooltip.newChat')}
+              onClick={() => moduleConfig.explorer.onNewChat()}
+              className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+            >
+              <SquarePen className="sidebar-icon" />
+            </Button>
+            <div className="flex-1" />
+
+            <Button
+              variant={isSettingsOpen ? 'secondary' : 'ghost'}
+              size="icon"
+              title={t('tabs.settings')}
+              onClick={() => handleTabChange('settings')}
+              className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+            >
+              <Settings className="sidebar-icon" />
+            </Button>
+          </>
         ) : (
           <>
             <Button
@@ -349,11 +362,11 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             onNavigate={moduleConfig.search.onNavigate}
           />
         ) : activeTab === 'prompts' ? (
-          <PromptsTab menuActions={moduleConfig.general.menuActions}/>
+          <PromptsTab menuActions={moduleConfig.general.menuActions} />
         ) : activeTab === 'favorites' ? (
-          <FavoritesTab menuActions={moduleConfig.general.menuActions}/>
+          <FavoritesTab menuActions={moduleConfig.general.menuActions} />
         ) : activeTab === 'tags' ? (
-          <TagsTab menuActions={moduleConfig.general.menuActions}/>
+          <TagsTab menuActions={moduleConfig.general.menuActions} />
         ) : activeTab === 'feedback' ? (
           <FeedbackTab />
         ) : (

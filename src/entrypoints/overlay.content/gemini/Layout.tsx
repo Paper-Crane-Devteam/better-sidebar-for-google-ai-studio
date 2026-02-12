@@ -85,11 +85,11 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
       }
 
       if (density === 'compact') {
-        bardSidenavEl.style.setProperty('--bard-sidenav-closed-width', '55px');
+        bardSidenavEl.style.setProperty('--bard-sidenav-closed-width', '56px');
         bardSidenavEl.style.setProperty('--bard-sidenav-open-width', '345px');
       } else {
         // relaxed (default)
-        bardSidenavEl.style.setProperty('--bard-sidenav-closed-width', '63px');
+        bardSidenavEl.style.setProperty('--bard-sidenav-closed-width', '64px');
         bardSidenavEl.style.setProperty('--bard-sidenav-open-width', '360px');
       }
     };
@@ -109,7 +109,7 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
           const width = entry.contentRect.width;
           const closedWidthStr = getComputedStyle(bardSidenavEl)
             .getPropertyValue('--bard-sidenav-closed-width');
-          const closedWidth = parseInt(closedWidthStr, 10) || 63;
+          const closedWidth = parseInt(closedWidthStr, 10) || 64;
           // If current width is greater than closed width + margin, sidebar is open
           const isSidebarExpanded = width > closedWidth + 10;
           
