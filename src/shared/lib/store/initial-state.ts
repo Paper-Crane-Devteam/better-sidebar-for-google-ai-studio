@@ -45,6 +45,7 @@ export const initialUIState: UIState = {
       include: '',
       exclude: '',
       roleFilter: 'all',
+      platforms: [],
       showOptions: false,
     },
     activeOptions: {
@@ -53,6 +54,7 @@ export const initialUIState: UIState = {
       include: '',
       exclude: '',
       roleFilter: 'all',
+      platforms: [],
     },
   },
 };

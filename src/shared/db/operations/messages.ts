@@ -191,6 +191,7 @@ export const messageRepo = {
       includeFolderNames?: string[];
       excludeFolderNames?: string[];
       roleFilter?: 'all' | 'user' | 'model';
+      platforms?: string[];
     } = {}
   ): Promise<any[]> => {
     const params: any[] = [];
@@ -285,6 +286,12 @@ export const messageRepo = {
     if (options.roleFilter && options.roleFilter !== 'all') {
       sql += ` AND m.role = ?`;
       params.push(options.roleFilter);
+    }
+
+    if (options.platforms && options.platforms.length > 0) {
+      const placeholders = options.platforms.map(() => '?').join(', ');
+      sql += ` AND c.platform IN (${placeholders})`;
+      params.push(...options.platforms);
     }
 
     // If wholeWord is requested, we might need to fetch more results to filter them

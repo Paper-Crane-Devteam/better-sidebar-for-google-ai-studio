@@ -9,19 +9,25 @@ import { useAppStore } from '@/shared/lib/store';
 import { useI18n } from '@/shared/hooks/useI18n';
 
 export interface ModuleConfig {
+  general: {
+    menuActions?: {
+      onViewHistory?: () => void;
+      onSwitchToOriginalUI?: () => void;
+    };
+  },
   explorer: {
     onNewChat: () => void;
     filterTypes?: ExplorerTypeFilter[];
     extraHeaderButtons?: React.ReactNode;
     visibleFilters?: ('search' | 'tags' | 'type' | 'favorites')[];
-    menuActions?: {
-      onViewHistory?: () => void;
-      onSwitchToOriginalUI?: () => void;
-    };
   };
   prompts: {
     // Placeholder for future prompts module customization
     enabled: boolean;
+  };
+  search: {
+    extraHeaderButtons?: React.ReactNode[];
+    ImportComponent?: React.ComponentType<{isOpen: boolean; onClose: () => void}>;
   };
 }
 
@@ -149,6 +155,16 @@ export const useModuleConfig = (): ModuleConfig => {
   const setOverlayOpen = useAppStore((state) => state.setOverlayOpen);
 
   return {
+    general: {
+      menuActions: {
+        onViewHistory: () => {
+           navigate('/search');
+        },
+        onSwitchToOriginalUI: () => {
+          setOverlayOpen(false);
+        },
+      },
+    },
     explorer: {
       onNewChat: () => {
         const url = 'https://gemini.google.com/app';
@@ -168,17 +184,11 @@ export const useModuleConfig = (): ModuleConfig => {
       },
       visibleFilters: ['search', 'tags', 'favorites'],
       extraHeaderButtons: <TemporaryChatButton />,
-      menuActions: {
-        onViewHistory: () => {
-           navigate('/search');
-        },
-        onSwitchToOriginalUI: () => {
-          setOverlayOpen(false);
-        },
-      },
+    
     },
     prompts: {
       enabled: true,
     },
+    search: {},
   };
 };

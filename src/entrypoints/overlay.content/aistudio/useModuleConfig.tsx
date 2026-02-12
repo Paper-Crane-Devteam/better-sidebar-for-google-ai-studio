@@ -3,6 +3,7 @@ import type { ExplorerTypeFilter } from '../shared/types/filter';
 import React from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useAppStore } from '@/shared/lib/store';
+import { ImportHistoryDialog } from './modules/search/components/ImportHistoryDialog';
 
 export interface ModuleConfig {
   explorer: {
@@ -17,6 +18,10 @@ export interface ModuleConfig {
   };
   prompts: {
     enabled: boolean;
+  };
+  search: {
+    extraHeaderButtons?: React.ReactNode[];
+    ImportComponent?: React.ComponentType<{isOpen: boolean; onClose: () => void}>;
   };
 }
 
@@ -48,6 +53,9 @@ export const useModuleConfig = (): ModuleConfig => {
     },
     prompts: {
       enabled: true,
+    },
+    search: {
+      ImportComponent: ImportHistoryDialog,
     },
   };
 };

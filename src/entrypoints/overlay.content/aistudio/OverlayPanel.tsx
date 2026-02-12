@@ -342,7 +342,10 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             menuActions={moduleConfig.explorer.menuActions}
           />
         ) : activeTab === 'search' ? (
-          <SearchTab />
+          <SearchTab
+            extraHeaderButtons={moduleConfig.search.extraHeaderButtons}
+            ImportComponent={moduleConfig.search.ImportComponent}
+          />
         ) : activeTab === 'prompts' ? (
           <PromptsTab />
         ) : activeTab === 'favorites' ? (

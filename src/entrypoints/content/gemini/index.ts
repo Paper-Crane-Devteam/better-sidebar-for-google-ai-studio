@@ -42,6 +42,22 @@ export function initGemini() {
     window.addEventListener('load', startSync);
   }
 
+  window.addEventListener('GEMINI_CHAT_DELETE', async (event: any) => {
+    const { id } = event.detail;
+    console.log(
+      'Better Sidebar: Content Script received GEMINI_CHAT_DELETE',
+      id
+    );
+    try {
+      await browser.runtime.sendMessage({
+        type: 'DELETE_CONVERSATION',
+        payload: { id },
+      });
+    } catch (e) {
+      console.error('Better Sidebar: Failed to handle GEMINI_CHAT_DELETE', e);
+    }
+  });
+
   // Message listener for library scan
   browser.runtime.onMessage.addListener(
     (message: ExtensionMessage, _sender, sendResponse) => {

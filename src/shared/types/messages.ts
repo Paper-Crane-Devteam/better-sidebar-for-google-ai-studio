@@ -159,6 +159,8 @@ export type ExtensionMessage = (
           wholeWord?: boolean;
           includeFolderNames?: string[];
           excludeFolderNames?: string[];
+          roleFilter?: 'all' | 'user' | 'model';
+          platforms?: string[];
         };
       };
     }

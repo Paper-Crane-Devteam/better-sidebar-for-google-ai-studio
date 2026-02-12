@@ -14,7 +14,7 @@ export interface PlatformConfig {
   urlPattern: string;
   icon: string;
   color: string;
-  promptUrlTemplate: (id: string) => string;
+  promptUrlTemplate: (id?: string) => string;
 }
 
 export const PLATFORM_CONFIG: Record<
@@ -24,35 +24,35 @@ export const PLATFORM_CONFIG: Record<
   [Platform.AI_STUDIO]: {
     name: 'Google AI Studio',
     hostname: 'aistudio.google.com',
-    urlPattern: 'https://aistudio.google.com/*',
+    urlPattern: 'https://aistudio.google.com',
     icon: 'api',
     color: 'blue',
-    promptUrlTemplate: (id: string) =>
-      `https://aistudio.google.com/prompts/${id}`,
+    promptUrlTemplate: (id?: string) =>
+      `https://aistudio.google.com/prompts/${id || ''}`,
   },
   [Platform.GEMINI]: {
     name: 'Google Gemini',
     hostname: 'gemini.google.com',
-    urlPattern: 'https://gemini.google.com/*',
+    urlPattern: 'https://gemini.google.com',
     icon: 'sparkles',
     color: 'purple',
-    promptUrlTemplate: (id: string) => `https://gemini.google.com/app/${id}`,
+    promptUrlTemplate: (id?: string) => `https://gemini.google.com/app/${id || ''}`,
   },
   [Platform.CHATGPT]: {
     name: 'ChatGPT',
     hostname: 'chatgpt.com',
-    urlPattern: 'https://chatgpt.com/*',
+    urlPattern: 'https://chatgpt.com',
     icon: 'message-circle',
     color: 'green',
-    promptUrlTemplate: (id: string) => `https://chatgpt.com/c/${id}`,
+    promptUrlTemplate: (id?: string) => `https://chatgpt.com/c/${id || ''}`,
   },
   [Platform.CLAUDE]: {
     name: 'Claude',
     hostname: 'claude.ai',
-    urlPattern: 'https://claude.ai/*',
+    urlPattern: 'https://claude.ai',
     icon: 'bot',
     color: 'orange',
-    promptUrlTemplate: (id: string) => `https://claude.ai/chat/${id}`,
+    promptUrlTemplate: (id?: string) => `https://claude.ai/chat/${id || ''}`,
   },
   [Platform.UNKNOWN]: {
     name: 'Unknown',
@@ -60,7 +60,7 @@ export const PLATFORM_CONFIG: Record<
     urlPattern: '',
     icon: 'question',
     color: 'gray',
-    promptUrlTemplate: (id: string) => '',
+    promptUrlTemplate: (id?: string) => '',
   },
 };
 

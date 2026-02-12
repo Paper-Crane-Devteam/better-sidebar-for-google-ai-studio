@@ -2,14 +2,20 @@ import React, { useState } from 'react';
 import { SearchInput } from './components/SearchInput';
 import { SearchResults, SearchResultItem } from './components/SearchResults';
 import { SidePanelMenu } from '../../components/menu/SidePanelMenu';
-import { ImportHistoryDialog } from './components/ImportHistoryDialog';
 import { Upload, ListCollapse } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
+import { PlatformFilter } from './components/PlatformFilter';
 
-export const SearchTab = () => {
+export const SearchTab = ({
+  extraHeaderButtons,
+  ImportComponent,
+}: {
+  extraHeaderButtons?: React.ReactNode[];
+  ImportComponent?: React.ComponentType<{isOpen: boolean; onClose: () => void}>;
+}) => {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const { results } = useAppStore(state => state.ui.search);
   const { t } = useI18n();
@@ -61,6 +67,10 @@ export const SearchTab = () => {
           {t('search.title')}
         </h1>
         <div className="flex gap-0.5 items-center">
+          {extraHeaderButtons && extraHeaderButtons.map((btn, i) => (
+             <React.Fragment key={i}>{btn}</React.Fragment>
+          ))}
+          <PlatformFilter />
           <SimpleTooltip content={t('menu.collapseAll')}>
             <Button
               variant="ghost"
@@ -72,16 +82,18 @@ export const SearchTab = () => {
             </Button>
           </SimpleTooltip>
 
-          <SimpleTooltip content={t('menu.importHistory')}>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setIsImportOpen(true)}
-            >
-              <Upload className="h-4 w-4" />
-            </Button>
-          </SimpleTooltip>
+          {ImportComponent && (
+            <SimpleTooltip content={t('menu.importHistory')}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => setIsImportOpen(true)}
+              >
+                <Upload className="h-4 w-4" />
+              </Button>
+            </SimpleTooltip>
+          )}
 
           <SidePanelMenu />
         </div>
@@ -94,10 +106,12 @@ export const SearchTab = () => {
           onToggleGroup={toggleGroup}
         />
       </div>
-      <ImportHistoryDialog
-        isOpen={isImportOpen}
-        onClose={() => setIsImportOpen(false)}
-      />
+      {ImportComponent && (
+        <ImportComponent
+          isOpen={isImportOpen}
+          onClose={() => setIsImportOpen(false)}
+        />
+      )}
     </div>
   );
 };

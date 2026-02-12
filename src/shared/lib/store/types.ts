@@ -56,6 +56,7 @@ export interface UIState {
       include: string;
       exclude: string;
       roleFilter: 'all' | 'user' | 'model';
+      platforms: string[];
       showOptions: boolean;
     };
     activeOptions: {
@@ -64,6 +65,7 @@ export interface UIState {
       include: string;
       exclude: string;
       roleFilter: 'all' | 'user' | 'model';
+      platforms: string[];
     };
   };
   prompts: {

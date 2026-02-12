@@ -58,6 +58,7 @@ export function createSearchActions(
               includeFolderNames,
               excludeFolderNames,
               roleFilter: options.roleFilter,
+              platforms: options.platforms,
             },
           },
         });

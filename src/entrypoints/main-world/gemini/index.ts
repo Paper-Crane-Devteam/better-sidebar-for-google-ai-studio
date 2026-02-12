@@ -2,6 +2,7 @@ import { proxy } from 'ajax-hook';
 import { handleGenerateResponse } from './interceptors/generate';
 import { handleChatContentResponse } from './interceptors/chat-content';
 import { handleListChatResponse } from './interceptors/list-chat';
+import { handleDeleteResponse } from './interceptors/delete';
 
 export function initGeminiInterceptors() {
   console.log('Better Sidebar: Main World Script (Gemini) Initialized');
@@ -28,6 +29,8 @@ export function initGeminiInterceptors() {
                 handleChatContentResponse(response, url);
             } else if (url.includes('rpcids=MaZiqc')) {
                 handleListChatResponse(response, url);
+            } else if (url.includes('rpcids=GzXR5e')) {
+                handleDeleteResponse(response, url);
             }
         }
       } catch (e) {
