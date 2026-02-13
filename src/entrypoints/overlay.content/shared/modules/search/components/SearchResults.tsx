@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '@/shared/lib/store';
 import { useModalStore } from '@/shared/lib/modal';
-import { ChevronRight, ChevronDown, Info, ExternalLink, Copy, FileCode, X, MessageSquare, User, Bot, Loader2 } from 'lucide-react';
+import {
+  ChevronRight,
+  ChevronDown,
+  Info,
+  ExternalLink,
+  Copy,
+  FileCode,
+  X,
+  MessageSquare,
+  User,
+  Bot,
+  Loader2,
+} from 'lucide-react';
 import { cn, stripMarkdown } from '@/shared/lib/utils';
 import dayjs from 'dayjs';
 import { navigate } from '@/shared/lib/navigation';
@@ -13,6 +25,7 @@ import { toast } from '@/shared/lib/toast';
 import type { Message } from '@/shared/types/db';
 import AIStudioIcon from '@/assets/icons/aistudio.png';
 import GeminiIcon from '@/assets/icons/gemini.svg';
+import { detectPlatform, Platform } from '@/shared/types/platform';
 
 export interface SearchResultItem {
   id: string;
@@ -35,7 +48,11 @@ interface MessagePreviewContentProps {
   activeOptions: { caseSensitive?: boolean; wholeWord?: boolean };
 }
 
-const MessagePreviewContent = ({ match, activeQuery, activeOptions }: MessagePreviewContentProps) => {
+const MessagePreviewContent = ({
+  match,
+  activeQuery,
+  activeOptions,
+}: MessagePreviewContentProps) => {
   const { t } = useI18n();
   const [adjacentMessage, setAdjacentMessage] = useState<Message | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,7 +82,8 @@ const MessagePreviewContent = ({ match, activeQuery, activeOptions }: MessagePre
     fetchAdjacentMessage();
   }, [match.id, match.conversation_id, match.role]);
 
-  const contextLabel = match.role === 'user' ? t('search.modelResponse') : t('search.userPrompt');
+  const contextLabel =
+    match.role === 'user' ? t('search.modelResponse') : t('search.userPrompt');
   const ContextIcon = match.role === 'user' ? Bot : User;
 
   return (
@@ -79,11 +97,15 @@ const MessagePreviewContent = ({ match, activeQuery, activeOptions }: MessagePre
             <Bot className="h-4 w-4" />
           )}
           <span className="font-medium">
-            {match.role === 'user' ? t('export.roleUser') : t('export.roleModel')}
+            {match.role === 'user'
+              ? t('export.roleUser')
+              : t('export.roleModel')}
           </span>
-          <span className="text-xs">• {dayjs(match.timestamp * 1000).format('lll')}</span>
+          <span className="text-xs">
+            • {dayjs(match.timestamp * 1000).format('lll')}
+          </span>
         </div>
-        <MarkdownRenderer 
+        <MarkdownRenderer
           highlight={activeQuery}
           highlightOptions={activeOptions}
         >
@@ -124,7 +146,9 @@ const MessagePreviewContent = ({ match, activeQuery, activeOptions }: MessagePre
                   <ContextIcon className="h-3.5 w-3.5" />
                   <span className="font-medium">{contextLabel}</span>
                   {adjacentMessage.timestamp && (
-                    <span>• {dayjs(adjacentMessage.timestamp * 1000).format('lll')}</span>
+                    <span>
+                      • {dayjs(adjacentMessage.timestamp * 1000).format('lll')}
+                    </span>
                   )}
                 </div>
                 <div className="max-h-[40vh] overflow-y-auto text-sm">
@@ -145,46 +169,55 @@ const MessagePreviewContent = ({ match, activeQuery, activeOptions }: MessagePre
   );
 };
 
-const ResultGroup = ({ 
-  conversationId, 
-  data, 
-  expanded, 
+const ResultGroup = ({
+  conversationId,
+  data,
+  expanded,
   onToggle,
   untitledLabel,
   onNavigate,
-}: { 
-  conversationId: string, 
-  data: { conversation: any, matches: SearchResultItem[] }, 
-  expanded: boolean, 
+}: {
+  conversationId: string;
+  data: { conversation: any; matches: SearchResultItem[] };
+  expanded: boolean;
   onToggle: () => void;
   untitledLabel: string;
   onNavigate?: (match: SearchResultItem) => void;
 }) => {
   return (
     <div className="flex flex-col">
-      <div 
+      <div
         className="flex items-center gap-1 p-1 hover:bg-accent/50 cursor-pointer text-sm"
         onClick={onToggle}
       >
-        {expanded ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+        {expanded ? (
+          <ChevronDown className="h-4 w-4 shrink-0" />
+        ) : (
+          <ChevronRight className="h-4 w-4 shrink-0" />
+        )}
         <MessageSquare className="h-4 w-4 text-muted-foreground shrink-0" />
         <span className="font-medium truncate flex-1">
-            {data.conversation.title || untitledLabel}
+          {data.conversation.title || untitledLabel}
         </span>
         {data.conversation.folderName && (
-            <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md truncate max-w-[100px]">
-                {data.conversation.folderName}
-            </span>
+          <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md truncate max-w-[100px]">
+            {data.conversation.folderName}
+          </span>
         )}
         <span className="text-xs text-muted-foreground ml-1 bg-muted rounded-full px-2">
-            {data.matches.length}
+          {data.matches.length}
         </span>
       </div>
-      
+
       {expanded && (
         <div className="flex flex-col ml-4 border-l pl-2">
-          {data.matches.map(match => (
-            <MatchItem key={match.id} match={match} onNavigate={onNavigate} platform={data.conversation.platform} />
+          {data.matches.map((match) => (
+            <MatchItem
+              key={match.id}
+              match={match}
+              onNavigate={onNavigate}
+              platform={data.conversation.platform}
+            />
           ))}
         </div>
       )}
@@ -192,75 +225,101 @@ const ResultGroup = ({
   );
 };
 
-const MatchItem = ({ match, onNavigate, platform }: { match: SearchResultItem, onNavigate?: (match: SearchResultItem) => void, platform?: string }) => {
+const MatchItem = ({
+  match,
+  onNavigate,
+  platform,
+}: {
+  match: SearchResultItem;
+  onNavigate?: (match: SearchResultItem) => void;
+  platform?: string;
+}) => {
   const { t } = useI18n();
-  const { activeQuery, activeOptions } = useAppStore(state => state.ui.search);
-  
+  const { activeQuery, activeOptions } = useAppStore(
+    (state) => state.ui.search,
+  );
+
   const getHighlightedText = (text: string, highlight: string) => {
     // Helper to render the container structure
     const userLabel = t('export.roleUser');
     const modelLabel = t('export.roleModel');
-    const showPlatformIcon = activeOptions.platforms && activeOptions.platforms.length > 1;
+    const showPlatformIcon =
+      activeOptions.platforms && activeOptions.platforms.length > 1;
 
     const renderWrapper = (content: React.ReactNode) => (
-        <div className="text-xs text-muted-foreground py-1 px-2 hover:bg-accent/30 cursor-pointer rounded">
-            <div className="font-mono text-[10px] mb-0.5 opacity-70 flex items-center gap-1">
-                {showPlatformIcon && platform && (
-                     <img 
-                        src={platform === 'gemini' ? GeminiIcon : AIStudioIcon} 
-                        className="w-3 h-3 object-contain" 
-                        alt={platform} 
-                     />
-                )}
-                {match.role === 'user' ? userLabel : modelLabel} • {dayjs(match.timestamp * 1000).format('ll')}
-            </div>
-            <div className="line-clamp-4 break-words whitespace-pre-wrap font-mono text-[11px] leading-relaxed">
-                {content}
-            </div>
+      <div className="text-xs text-muted-foreground py-1 px-2 hover:bg-accent/30 cursor-pointer rounded">
+        <div className="font-mono text-[10px] mb-0.5 opacity-70 flex items-center gap-1">
+          {showPlatformIcon && platform && (
+            <img
+              src={platform === 'gemini' ? GeminiIcon : AIStudioIcon}
+              className="w-3 h-3 object-contain"
+              alt={platform}
+            />
+          )}
+          {match.role === 'user' ? userLabel : modelLabel} •{' '}
+          {dayjs(match.timestamp * 1000).format('ll')}
         </div>
+        <div className="line-clamp-4 break-words whitespace-pre-wrap font-mono text-[11px] leading-relaxed">
+          {content}
+        </div>
+      </div>
     );
 
     if (!highlight.trim()) {
-        return renderWrapper(text.substring(0, 150) + (text.length > 150 ? '...' : ''));
+      return renderWrapper(
+        text.substring(0, 150) + (text.length > 150 ? '...' : ''),
+      );
     }
 
     const escapeRegExp = (string: string) => {
       return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     };
-    
+
     const escapedHighlight = escapeRegExp(highlight);
     let pattern = escapedHighlight;
     let flags = 'g';
-    
+
     if (!activeOptions.caseSensitive) {
       flags += 'i';
     }
-    
+
     if (activeOptions.wholeWord) {
       pattern = `\\b${pattern}\\b`;
     }
-    
+
     const regex = new RegExp(`(${pattern})`, flags);
     const searchRegex = new RegExp(pattern, flags.replace('g', ''));
     const matchResult = searchRegex.exec(text);
-    
+
     if (!matchResult) {
-        return renderWrapper(text.substring(0, 100) + (text.length > 100 ? '...' : ''));
+      return renderWrapper(
+        text.substring(0, 100) + (text.length > 100 ? '...' : ''),
+      );
     }
 
     const index = matchResult.index;
     const matchLength = matchResult[0].length;
     const start = Math.max(0, index - 40);
     const end = Math.min(text.length, index + matchLength + 60);
-    const snippet = (start > 0 ? '...' : '') + text.substring(start, end) + (end < text.length ? '...' : '');
+    const snippet =
+      (start > 0 ? '...' : '') +
+      text.substring(start, end) +
+      (end < text.length ? '...' : '');
 
     const parts = snippet.split(regex);
-    const highlightedContent = parts.map((part, i) => 
-        (i % 2 === 1) ? 
-            <span key={i} className="bg-yellow-500/30 text-foreground font-medium rounded-[2px] px-0.5">{part}</span> : 
-            part
+    const highlightedContent = parts.map((part, i) =>
+      i % 2 === 1 ? (
+        <span
+          key={i}
+          className="bg-yellow-500/30 text-foreground font-medium rounded-[2px] px-0.5"
+        >
+          {part}
+        </span>
+      ) : (
+        part
+      ),
     );
-    
+
     return renderWrapper(highlightedContent);
   };
 
@@ -271,57 +330,75 @@ const MatchItem = ({ match, onNavigate, platform }: { match: SearchResultItem, o
   };
 
   const handleCopyAsText = async () => {
-      const plain = stripMarkdown(match.content);
-      await navigator.clipboard.writeText(plain);
-      toast.success(t('toast.copiedToClipboard'), 1500);
+    const plain = stripMarkdown(match.content);
+    await navigator.clipboard.writeText(plain);
+    toast.success(t('toast.copiedToClipboard'), 1500);
   };
   const handleCopyAsMarkdown = async () => {
-      await navigator.clipboard.writeText(match.content);
-      toast.success(t('toast.copiedToClipboard'), 1500);
+    await navigator.clipboard.writeText(match.content);
+    toast.success(t('toast.copiedToClipboard'), 1500);
   };
 
   const handlePreview = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      useModalStore.getState().open({
-        title: t('search.messagePreview'),
-        content: (
-            <MessagePreviewContent
-                match={match}
-                activeQuery={activeQuery}
-                activeOptions={activeOptions}
-            />
-        ),
-        headerActions: (
-            <>
-                <Button variant="ghost" size="sm" onClick={handleCopyAsText} title={t('search.copyAsText')}>
-                    <Copy className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleCopyAsMarkdown} title={t('search.copyAsMarkdown')}>
-                    <FileCode className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => useModalStore.getState().close()} title={t('common.close')}>
-                    <X className="h-4 w-4" />
-                </Button>
-            </>
-        ),
-        modalClassName: 'max-w-4xl',
-        type: 'confirm',
-        confirmText: t('common.close'),
-        cancelText: t('search.jumpToConversation'),
-        onCancel: () => {
-             // We reuse the handleNavigation logic.
-             // But we need to close the modal first.
-             useModalStore.getState().close();
-             
-             // Wait for modal to close
-             setTimeout(() => {
-                 handleNavigation({ preventDefault: () => {}, stopPropagation: () => {} } as any);
-             }, 100);
-        },
-        onConfirm: () => {
-            useModalStore.getState().close();
-        }
-      });
+    e.stopPropagation();
+    useModalStore.getState().open({
+      title: t('search.messagePreview'),
+      content: (
+        <MessagePreviewContent
+          match={match}
+          activeQuery={activeQuery}
+          activeOptions={activeOptions}
+        />
+      ),
+      headerActions: (
+        <>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopyAsText}
+            title={t('search.copyAsText')}
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopyAsMarkdown}
+            title={t('search.copyAsMarkdown')}
+          >
+            <FileCode className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => useModalStore.getState().close()}
+            title={t('common.close')}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </>
+      ),
+      modalClassName: 'max-w-4xl',
+      type: 'confirm',
+      confirmText: t('common.close'),
+      cancelText: t('search.jumpToConversation'),
+      onCancel: () => {
+        // We reuse the handleNavigation logic.
+        // But we need to close the modal first.
+        useModalStore.getState().close();
+
+        // Wait for modal to close
+        setTimeout(() => {
+          handleNavigation({
+            preventDefault: () => {},
+            stopPropagation: () => {},
+          } as any);
+        }, 100);
+      },
+      onConfirm: () => {
+        useModalStore.getState().close();
+      },
+    });
   };
 
   return (
@@ -339,15 +416,22 @@ const MatchItem = ({ match, onNavigate, platform }: { match: SearchResultItem, o
 };
 
 export interface SearchResultsProps {
-    grouped: Record<string, { conversation: any, matches: SearchResultItem[] }>;
-    expandedIds: Set<string>;
-    onToggleGroup: (id: string) => void;
-    onNavigate?: (match: SearchResultItem) => void;
+  grouped: Record<string, { conversation: any; matches: SearchResultItem[] }>;
+  expandedIds: Set<string>;
+  onToggleGroup: (id: string) => void;
+  onNavigate?: (match: SearchResultItem) => void;
 }
 
-export const SearchResults = ({ grouped, expandedIds, onToggleGroup, onNavigate }: SearchResultsProps) => {
+export const SearchResults = ({
+  grouped,
+  expandedIds,
+  onToggleGroup,
+  onNavigate,
+}: SearchResultsProps) => {
   const { t } = useI18n();
-  const { results, isSearching, activeQuery } = useAppStore(state => state.ui.search);
+  const { results, isSearching, activeQuery } = useAppStore(
+    (state) => state.ui.search,
+  );
 
   if (results.length === 0 && !isSearching) {
     if (!activeQuery?.trim()) {
@@ -360,23 +444,31 @@ export const SearchResults = ({ grouped, expandedIds, onToggleGroup, onNavigate 
           {t('search.noResults', { query: activeQuery })}
         </div>
         <button
-          onClick={() => useModalStore.getState().open({
-            title: t('search.indexingInfoTitle'),
-            content: (
-              <div className="space-y-4 text-sm text-muted-foreground text-left">
-                <p className="leading-relaxed">{t('search.indexingInfoIntro')}</p>
-                <div className="rounded-md bg-secondary/40 border p-3 text-xs">
-                  <p className="font-medium text-foreground mb-2">{t('search.indexingHowTo')}</p>
-                  <ul className="list-disc pl-4 space-y-1.5">
-                    <li>{t('search.indexingImport')}</li>
-                    <li>{t('search.indexingScan')}</li>
-                  </ul>
+          onClick={() =>
+            useModalStore.getState().open({
+              title: t('search.indexingInfoTitle'),
+              content: (
+                <div className="space-y-4 text-sm text-muted-foreground text-left">
+                  <p className="leading-relaxed">
+                    {t('search.indexingInfoIntro')}
+                  </p>
+                  {detectPlatform() !== Platform.GEMINI && (
+                    <div className="rounded-md bg-secondary/40 border p-3 text-xs">
+                      <p className="font-medium text-foreground mb-2">
+                        {t('search.indexingHowTo')}
+                      </p>
+                      <ul className="list-disc pl-4 space-y-1.5">
+                        <li>{t('search.indexingImport')}</li>
+                        <li>{t('search.indexingScan')}</li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ),
-            type: 'info',
-            confirmText: t('search.understood')
-          })}
+              ),
+              type: 'info',
+              confirmText: t('search.understood'),
+            })
+          }
           className="text-xs text-blue-500 hover:text-blue-600 hover:underline font-medium inline-flex items-center gap-1"
         >
           <Info className="w-3 h-3" />
@@ -385,30 +477,39 @@ export const SearchResults = ({ grouped, expandedIds, onToggleGroup, onNavigate 
       </div>
     );
   }
-  
+
   if (results.length === 0 && isSearching) {
-      return <div className="p-4 text-center text-sm text-muted-foreground">{t('search.searching')}</div>;
+    return (
+      <div className="p-4 text-center text-sm text-muted-foreground">
+        {t('search.searching')}
+      </div>
+    );
   }
 
   const fileCount = Object.keys(grouped).length;
   const resultCount = results.length;
 
   return (
-    <div className={cn("flex flex-col h-full overflow-hidden", isSearching && "opacity-60")}>
+    <div
+      className={cn(
+        'flex flex-col h-full overflow-hidden',
+        isSearching && 'opacity-60',
+      )}
+    >
       <div className="p-2 text-xs text-muted-foreground font-medium border-b bg-muted/10">
         {t('search.resultsSummary', { count: resultCount, files: fileCount })}
       </div>
       <div className="flex-1 overflow-y-auto p-2">
         {Object.entries(grouped).map(([id, data]) => (
-            <ResultGroup 
-                key={id} 
-                conversationId={id} 
-                data={data} 
-                expanded={expandedIds.has(id)}
-                onToggle={() => onToggleGroup(id)}
-                untitledLabel={t('common.untitled')}
-                onNavigate={onNavigate}
-            />
+          <ResultGroup
+            key={id}
+            conversationId={id}
+            data={data}
+            expanded={expandedIds.has(id)}
+            onToggle={() => onToggleGroup(id)}
+            untitledLabel={t('common.untitled')}
+            onNavigate={onNavigate}
+          />
         ))}
       </div>
     </div>

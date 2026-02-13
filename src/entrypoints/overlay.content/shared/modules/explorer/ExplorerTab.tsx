@@ -92,7 +92,7 @@ export const ExplorerTab = ({
     const handleCreate = async (event: any) => {
       const { id, title, prompt_metadata, created_at, type, messages } = event.detail;
       console.log(
-        'Better Sidebar for Google AI Studio: Overlay received BETTER_SIDEBAR_PROMPT_CREATE',
+        'Better Sidebar for Gemini & AI Studio: Overlay received BETTER_SIDEBAR_PROMPT_CREATE',
         id
       );
 
@@ -131,7 +131,7 @@ export const ExplorerTab = ({
         fetchData(true);
       } catch (e) {
         console.error(
-          'Better Sidebar for Google AI Studio: Failed to handle BETTER_SIDEBAR_PROMPT_CREATE',
+          'Better Sidebar for Gemini & AI Studio: Failed to handle BETTER_SIDEBAR_PROMPT_CREATE',
           e
         );
       }

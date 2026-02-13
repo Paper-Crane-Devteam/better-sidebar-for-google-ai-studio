@@ -18,19 +18,24 @@ export function handleLibraryResponse(response: any) {
           let createdAtSeconds = null;
           let promptMetadata = null;
           let type = 'conversation';
+          let title = null;
 
-          if (
-            item[4] &&
-            Array.isArray(item[4]) &&
-            Array.isArray(item[4][4])
-          ) {
-            const metaArray = item[4][4];
-            const secondsStr = metaArray[0];
-            if (secondsStr) {
-              createdAtSeconds = parseInt(secondsStr, 10);
+          if (item[4] && Array.isArray(item[4])) {
+            // Extract title from item[4][0]
+            if (item[4][0]) {
+              title = item[4][0];
             }
-            if (metaArray.length > 1) {
-              promptMetadata = metaArray[1];
+
+            // Extract metadata from item[4][4]
+            if (Array.isArray(item[4][4])) {
+              const metaArray = item[4][4];
+              const secondsStr = metaArray[0];
+              if (secondsStr) {
+                createdAtSeconds = parseInt(secondsStr, 10);
+              }
+              if (metaArray.length > 1) {
+                promptMetadata = metaArray[1];
+              }
             }
 
             type = parsePromptType(item[4]?.[11]);
@@ -38,6 +43,7 @@ export function handleLibraryResponse(response: any) {
 
           return {
             id,
+            title,
             created_at: createdAtSeconds,
             prompt_metadata: promptMetadata,
             type,

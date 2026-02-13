@@ -14,9 +14,10 @@ interface FavoritesTabProps {
     handleScanLibrary?: () => void;
     onImportAiStudioSystem?: () => void;
   };
+  visibleFilters?: ('search' | 'tags' | 'type' | 'favorites')[];
 }
 
-export const FavoritesTab = ({ menuActions }: FavoritesTabProps) => {
+export const FavoritesTab = ({ menuActions, visibleFilters }: FavoritesTabProps) => {
   const { t } = useI18n();
   const { tags: allTags } = useAppStore();
   const filter = useStoreFilter('favorites');
@@ -31,7 +32,7 @@ export const FavoritesTab = ({ menuActions }: FavoritesTabProps) => {
         <div className="flex gap-0.5 items-center">
           <FilterActions
             filter={filter}
-            visibleFilters={['search', 'tags', 'type']}
+            visibleFilters={visibleFilters || ['search', 'tags', 'type']}
           />
           <div className="h-4 w-[1px] bg-border mx-1" />
           <SidePanelMenu menuActions={menuActions} />

@@ -2,7 +2,7 @@
 
 import { ExtensionMessage } from '@/shared/types/messages';
 import { scanLibrary } from './tasks/scan-library';
-import { apiScanner } from './tasks/scan-library/scan-api';
+import { autoSyncHandler } from './tasks/scan-library/sync-library';
 import { Platform } from '@/shared/types/platform';
 
 /**
@@ -12,42 +12,8 @@ import { Platform } from '@/shared/types/platform';
 export function initAiStudio() {
   console.log('Better Sidebar: AI Studio Content Script Initialized');
 
-  // Start API Scanner immediately to catch early requests
-  apiScanner.start();
-
-  // Theme synchronization（theme is stored elsewhere, when user change theme outside extension, will not update the setting) !TODO
-  // const syncTheme = () => {
-  //   const isDark = document.body.classList.contains('dark-theme');
-  //   const theme = isDark ? 'dark' : 'light';
-  //   browser.storage.local.set({ theme });
-  // };
-
-  // // Initial sync
-  // if (document.body) {
-  //   syncTheme();
-  //   // Observe body class changes
-  //   const themeObserver = new MutationObserver((mutations) => {
-  //     mutations.forEach((mutation) => {
-  //       if (mutation.attributeName === 'class') {
-  //         syncTheme();
-  //       }
-  //     });
-  //   });
-  //   themeObserver.observe(document.body, { attributes: true });
-  // } else {
-  //   // Fallback if body is not yet ready (though at document_end it should be)
-  //   document.addEventListener('DOMContentLoaded', () => {
-  //     syncTheme();
-  //     const themeObserver = new MutationObserver((mutations) => {
-  //       mutations.forEach((mutation) => {
-  //         if (mutation.attributeName === 'class') {
-  //           syncTheme();
-  //         }
-  //       });
-  //     });
-  //     themeObserver.observe(document.body, { attributes: true });
-  //   });
-  // }
+  // Start auto-sync handler to automatically sync conversations as they load
+  autoSyncHandler.start();
 
   // Inject Main World Script
   const script = document.createElement('script');

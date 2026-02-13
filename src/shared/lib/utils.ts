@@ -175,6 +175,30 @@ export function htmlToMarkdown(container: HTMLElement): string {
     .replace(/\n{3,}/g, '\n\n');
 }
 
+const CDK_OVERLAY_STYLE_ID = 'better-sidebar-cdk-overlay-style';
+
+function addCdkOverlayHideStyle(): HTMLStyleElement {
+  let el = document.getElementById(CDK_OVERLAY_STYLE_ID) as HTMLStyleElement | null;
+  if (!el) {
+    el = document.createElement('style');
+    el.id = CDK_OVERLAY_STYLE_ID;
+    el.textContent = `
+      .cdk-overlay-container {
+        position: absolute !important;
+        top: -9999px !important;
+        left: -9999px !important;
+      }
+    `;
+    document.head.appendChild(el);
+  }
+  return el;
+}
+
+function removeCdkOverlayHideStyle(): void {
+  const el = document.getElementById(CDK_OVERLAY_STYLE_ID);
+  if (el?.parentNode) el.parentNode.removeChild(el);
+}
+
 export async function syncGeminiTheme(theme: 'light' | 'dark' | 'system') {
   if (typeof document === 'undefined') return;
   const settingsButton = document.querySelector(
@@ -182,38 +206,75 @@ export async function syncGeminiTheme(theme: 'light' | 'dark' | 'system') {
   ) as HTMLElement;
   if (!settingsButton) return;
 
-  settingsButton.click();
+  addCdkOverlayHideStyle();
+  await new Promise((resolve) => setTimeout(resolve, 80));
 
-  // Wait for menu to open
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  try {
+    settingsButton.click();
 
-  const themeButton = document.querySelector(
-    'button[data-test-id="desktop-theme-menu-button"]',
-  ) as HTMLElement;
-  if (!themeButton) return;
+    // Wait for menu to open
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-  themeButton.click();
+    const themeButton = document.querySelector(
+      'button[data-test-id="desktop-theme-menu-button"]',
+    ) as HTMLElement;
+    if (!themeButton) return;
 
-  // Wait for theme options to appear
-  await new Promise((resolve) => setTimeout(resolve, 100));
+    themeButton.click();
 
-  const menuContent = document.querySelector('.mat-mdc-menu-content');
-  if (!menuContent) return;
+    // Wait for theme options to appear
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-  const buttons = Array.from(
-    menuContent.querySelectorAll('button'),
-  ) as HTMLElement[];
-  if (buttons.length < 3) return;
+    // Find the menu content that contains buttons with role="menuitemradio"
+    const menuContents = document.querySelectorAll('.mat-mdc-menu-content');
+    let menuContent: Element | null = null;
+    for (const content of menuContents) {
+      const hasMenuItemRadio = content.querySelector('button[role="menuitemradio"]');
+      if (hasMenuItemRadio) {
+        menuContent = content;
+        break;
+      }
+    }
+    if (!menuContent) return;
 
-  const themeMap = {
-    system: 0,
-    light: 1,
-    dark: 2,
-  };
+    const buttons = Array.from(
+      menuContent.querySelectorAll('button[role="menuitemradio"]'),
+    ) as HTMLElement[];
+    if (buttons.length < 3) return;
 
-  const buttonIndex = themeMap[theme];
-  if (buttons[buttonIndex]) {
-    buttons[buttonIndex].click();
+    const themeMap = {
+      system: 0,
+      light: 1,
+      dark: 2,
+    };
+
+    const buttonIndex = themeMap[theme];
+    if (buttons[buttonIndex]) {
+      buttons[buttonIndex].click();
+
+      // Wait a bit for the selection to register
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Click on empty space to close the menu
+      const backdrop = document.querySelector('.cdk-overlay-backdrop');
+      if (backdrop) {
+        (backdrop as HTMLElement).click();
+      } else {
+        document.body.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            key: 'Escape',
+            code: 'Escape',
+            keyCode: 27,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      }
+    }
+  } finally {
+    setTimeout(() => {
+      removeCdkOverlayHideStyle();
+    }, 500);
   }
 }
 

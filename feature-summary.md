@@ -1,4 +1,4 @@
-# Better Sidebar for Google AI Studio - Feature Summary
+# Better Sidebar for Gemini & AI Studio - Feature Summary
 
 ## Architecture Overview
 - Chrome Extension built with WXT framework

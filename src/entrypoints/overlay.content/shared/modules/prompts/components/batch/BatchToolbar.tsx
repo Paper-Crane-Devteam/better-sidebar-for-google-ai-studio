@@ -25,6 +25,7 @@ export const BatchToolbar = () => {
     if (confirmed) {
         await deletePromptItems(selectedIds);
         setPromptsBatchSelection([]);
+        setPromptsBatchMode(false);
     }
   };
 
@@ -51,6 +52,7 @@ export const BatchToolbar = () => {
         
         await movePromptItems(filesToMove, targetFolderId);
         setPromptsBatchSelection([]);
+        setPromptsBatchMode(false);
     }
   };
 

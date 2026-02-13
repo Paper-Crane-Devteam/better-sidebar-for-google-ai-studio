@@ -50,7 +50,7 @@ export const PlatformFilter = () => {
 
   const platforms = [
     { value: Platform.GEMINI, label: 'Gemini', icon: geminiIcon },
-    { value: Platform.AI_STUDIO, label: 'AI Studio', icon: aiStudioIcon },
+    { value: Platform.AI_STUDIO, label: 'GoogleAI Studio', icon: aiStudioIcon },
   ];
 
   // Calculate active count for badge/indicator if needed

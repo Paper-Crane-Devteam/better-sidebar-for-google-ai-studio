@@ -1,8 +1,10 @@
 {
   "name": "better-sidebar-for-google-ai-studio",
   "type": "module",
-  "version": "1.1.2",
+  "version": "2.0.0",
   "private": true,
+  "description": "A better sidebar for Gemini & AI Studio",
+  "author": "Paper Crane Devteam",
   "scripts": {
     "dev": "wxt",
     "dev:firefox": "wxt -b firefox",

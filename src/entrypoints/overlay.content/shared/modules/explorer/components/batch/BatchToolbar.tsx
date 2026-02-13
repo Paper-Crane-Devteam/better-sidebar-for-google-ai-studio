@@ -35,6 +35,7 @@ export const BatchToolbar = ({ onSelectAll }: BatchToolbarProps) => {
     if (confirmed) {
         await deleteItems(validIds);
         setExplorerBatchSelection([]);
+        setExplorerBatchMode(false);
     }
   };
 
@@ -65,6 +66,7 @@ export const BatchToolbar = ({ onSelectAll }: BatchToolbarProps) => {
         
         await useAppStore.getState().moveItems(filesToMove, targetFolderId);
         setExplorerBatchSelection([]);
+        setExplorerBatchMode(false);
     }
   };
 

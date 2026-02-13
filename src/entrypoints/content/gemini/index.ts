@@ -71,16 +71,16 @@ export function initGemini() {
           });
         return true;
       }
-      if (message.type === 'START_SYNC_CONVERSATIONS') {
-        syncConversations()
-          .then((count) => {
-            sendResponse({ success: true, data: { count } });
-          })
-          .catch((err) => {
-            sendResponse({ success: false, error: err.message });
-          });
-        return true;
-      }
+      // if (message.type === 'START_SYNC_CONVERSATIONS') {
+      //   syncConversations()
+      //     .then((count) => {
+      //       sendResponse({ success: true, data: { count } });
+      //     })
+      //     .catch((err) => {
+      //       sendResponse({ success: false, error: err.message });
+      //     });
+      //   return true;
+      // }
     }
   );
 }

@@ -156,7 +156,7 @@
   },
   "about": {
     "title": "About",
-    "appName": "Better Sidebar for Google AI Studio",
+    "appName": "Better Sidebar for Gemini & AI Studio",
     "version": "Version",
     "versionNumber": "1.1.0",
     "developer": "Developer",
@@ -167,7 +167,7 @@
   },
   "sponsor": {
     "title": "Support Development",
-    "enjoying": "Enjoying Better Sidebar for Google AI Studio?",
+    "enjoying": "Enjoying Better Sidebar for Gemini & AI Studio?",
     "description": "This project is free to use. If it helps you be more productive, consider supporting its development!",
     "sponsorOnGithub": "Star on GitHub",
     "buyMeACoffee": "Buy me a Coffee"
@@ -175,7 +175,7 @@
   "data": {
     "librarySync": "Data Sync",
     "scanLibrary": "Scan Library",
-    "scanLibraryDescription": "Scan your AI Studio library to populate the explorer",
+    "scanLibraryDescription": "Scan your library to populate the explorer",
     "importConversationData": "Import Conversation Data",
     "importConversationDataDescription": "Import conversation history from a ZIP exported from Google AI Studio",
     "storageManagement": "Storage Management",
@@ -240,7 +240,8 @@
     "build": "Build",
     "dashboard": "Dashboard",
     "documentation": "Documentation",
-    "switchToOriginalUI": "Switch to Original UI"
+    "switchToOriginalUI": "Switch to Original UI",
+    "temporaryChat": "Temporary chat"
   },
   "favorites": {
     "noFavoritesFound": "No favorites found matching your filters.",
@@ -308,7 +309,7 @@
     "unknownDate": "Unknown Date"
   },
   "options": {
-    "title": "Better Sidebar for Google AI Studio Options",
+    "title": "Better Sidebar for Gemini & AI Studio Options",
     "settingsPlaceholder": "Settings placeholder"
   },
   "feedback": {
@@ -344,6 +345,7 @@
     "foldersIncludeTooltip": "Separate multiple folder names with commas (e.g. 'project a, work, personal')",
     "foldersExcludeTooltip": "Separate multiple folder names with commas (e.g. 'archive, temp')",
     "filterByRole": "Filter by Role",
+    "filterPlatform": "Filter by platform",
     "all": "All",
     "userOnly": "User only",
     "modelOnly": "Model only",

@@ -2,7 +2,7 @@
 
 **Last Updated:** [06/01/2026]
 
-By downloading, installing, or using **Better Sidebar for Google AI Studio** ("the Extension"), you agree to be bound by these Terms of Service.
+By downloading, installing, or using **Better Sidebar for Gemini & AI Studio** ("the Extension"), you agree to be bound by these Terms of Service.
 
 ## 1. License
 

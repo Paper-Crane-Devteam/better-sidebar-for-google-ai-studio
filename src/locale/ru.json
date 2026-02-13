@@ -156,7 +156,7 @@
   },
   "about": {
     "title": "О программе",
-    "appName": "Улучшенная боковая панель для Google AI Studio",
+    "appName": "Улучшенная боковая панель для Gemini и AI Studio",
     "version": "Версия",
     "versionNumber": "1.1.0",
     "developer": "Разработчик",
@@ -167,7 +167,7 @@
   },
   "sponsor": {
     "title": "Поддержать разработку",
-    "enjoying": "Нравится улучшенная боковая панель для Google AI Studio?",
+    "enjoying": "Нравится улучшенная боковая панель для Gemini и AI Studio?",
     "description": "Этот проект бесплатен. Если он помогает вам быть более продуктивным, рассмотрите возможность поддержки его разработки!",
     "sponsorOnGithub": "Поставить звезду на GitHub",
     "buyMeACoffee": "Купить мне кофе"
@@ -175,7 +175,7 @@
   "data": {
     "librarySync": "Синхронизация данных",
     "scanLibrary": "Сканировать библиотеку",
-    "scanLibraryDescription": "Сканируйте вашу библиотеку AI Studio для заполнения проводника",
+    "scanLibraryDescription": "Сканируйте вашу библиотеку для заполнения проводника",
     "importConversationData": "Импорт данных разговоров",
     "importConversationDataDescription": "Импорт истории разговоров из ZIP, экспортированного из Google AI Studio",
     "storageManagement": "Управление хранилищем",
@@ -216,6 +216,8 @@
     "build": "Build",
     "dashboard": "Панель управления",
     "documentation": "Документация",
+    "myStuff": "Моё",
+    "gems": "Gems",
     "originalUI": "Переключиться на оригинальный интерфейс"
   },
   "overlay": {
@@ -238,7 +240,8 @@
     "build": "Build",
     "dashboard": "Панель управления",
     "documentation": "Документация",
-    "switchToOriginalUI": "Переключиться на оригинальный интерфейс"
+    "switchToOriginalUI": "Переключиться на оригинальный интерфейс",
+    "temporaryChat": "Временный чат"
   },
   "favorites": {
     "noFavoritesFound": "Не найдено избранного, соответствующего вашим фильтрам.",
@@ -263,6 +266,7 @@
     "deleteNote": "Примечание: Удалённые элементы можно восстановить, повторно импортировав их из AI Studio.",
     "deleteFolderNote": "Примечание: Удалённые папки нельзя восстановить, но диалоги можно повторно импортировать из AI Studio.",
     "openInNewTab": "Открыть в новой вкладке",
+    "moveTo": "Переместить в...",
     "export": "Экспорт",
     "exportAsText": "Экспорт как текст",
     "exportAsMarkdown": "Экспорт как Markdown",
@@ -283,7 +287,8 @@
     "deleteSelected": "Удалить выбранные",
     "moveSelected": "Переместить выбранные",
     "addTag": "Добавить тег",
-    "exitBatchMode": "Выйти из режима массового выбора"
+    "exitBatchMode": "Выйти из режима массового выбора",
+    "selectAll": "Выбрать все"
   },
   "tags": {
     "noTagsAvailable": "Нет доступных тегов.",
@@ -304,7 +309,7 @@
     "unknownDate": "Неизвестная дата"
   },
   "options": {
-    "title": "Параметры улучшенной боковой панели для Google AI Studio",
+    "title": "Параметры улучшенной боковой панели для Gemini и AI Studio",
     "settingsPlaceholder": "Заполнитель настроек"
   },
   "feedback": {
@@ -336,6 +341,7 @@
     "foldersIncludeTooltip": "Разделяйте несколько имён папок запятыми (напр.: project a, work, personal)",
     "foldersExcludeTooltip": "Разделяйте несколько имён папок запятыми (напр.: archive, temp)",
     "filterByRole": "Фильтр по роли",
+    "filterPlatform": "Фильтр по платформе",
     "all": "Все",
     "userOnly": "Только пользователь",
     "modelOnly": "Только модель",

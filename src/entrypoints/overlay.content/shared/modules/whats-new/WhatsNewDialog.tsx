@@ -37,7 +37,7 @@ export const WhatsNewDialog = () => {
                       {latestUpdate.features.map((feature, idx) => (
                         <li
                           key={idx}
-                          className="text-sm text-muted flex items-start gap-2"
+                          className="text-sm text-muted-foreground flex items-start gap-2"
                         >
                           <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
                           <span
@@ -57,7 +57,7 @@ export const WhatsNewDialog = () => {
                 {/* Fixes Section */}
                 {latestUpdate.fixes && latestUpdate.fixes.length > 0 && (
                   <div className="space-y-3">
-                    <h4 className="text-sm font-medium text-primary-foreground flex items-center gap-2">
+                    <h4 className="text-sm font-medium text-primary flex items-center gap-2">
                       <Wrench className="w-4 h-4" /> Improvements & Fixes
                     </h4>
                     <ul className="space-y-2">

@@ -156,7 +156,7 @@
   },
   "about": {
     "title": "關於",
-    "appName": "Google AI Studio 增強側邊欄",
+    "appName": "Gemini & AI Studio 增強側邊欄",
     "version": "版本",
     "versionNumber": "1.1.0",
     "developer": "開發者",
@@ -167,7 +167,7 @@
   },
   "sponsor": {
     "title": "支援開發",
-    "enjoying": "喜歡 Google AI Studio 增強側邊欄 嗎？",
+    "enjoying": "喜歡 Gemini & AI Studio 增強側邊欄 嗎？",
     "description": "此專案可免費使用。如果它幫助您提高工作效率，請考慮支援其開發！",
     "sponsorOnGithub": "在 GitHub 上按讚",
     "buyMeACoffee": "請我喝杯咖啡"
@@ -175,7 +175,7 @@
   "data": {
     "librarySync": "資料同步",
     "scanLibrary": "掃描資料庫",
-    "scanLibraryDescription": "掃描您的 AI Studio 資料庫以填入資源管理器",
+    "scanLibraryDescription": "掃描您的資料庫以填入資源管理器",
     "importConversationData": "匯入對話資料",
     "importConversationDataDescription": "從 Google AI Studio 匯出的 ZIP 匯入對話歷史",
     "storageManagement": "儲存管理",
@@ -216,6 +216,8 @@
     "build": "建置",
     "dashboard": "儀表板",
     "documentation": "文件",
+    "myStuff": "我的內容",
+    "gems": "Gems",
     "originalUI": "切換到原始介面"
   },
   "overlay": {
@@ -238,7 +240,8 @@
     "build": "建置",
     "dashboard": "儀表板",
     "documentation": "文件",
-    "switchToOriginalUI": "切換到原始介面"
+    "switchToOriginalUI": "切換到原始介面",
+    "temporaryChat": "臨時對話"
   },
   "favorites": {
     "noFavoritesFound": "找不到符合篩選條件的收藏",
@@ -263,6 +266,7 @@
     "deleteNote": "注意：刪除的項目可以透過從 AI Studio 重新匯入來還原。",
     "deleteFolderNote": "注意：刪除的資料夾無法還原，但對話可以從 AI Studio 重新匯入。",
     "openInNewTab": "在新標籤頁開啟",
+    "moveTo": "移動到...",
     "export": "匯出",
     "exportAsText": "匯出為純文字",
     "exportAsMarkdown": "匯出為 Markdown",
@@ -283,7 +287,8 @@
     "deleteSelected": "刪除選取項",
     "moveSelected": "移動選取項",
     "addTag": "新增標籤",
-    "exitBatchMode": "離開批次模式"
+    "exitBatchMode": "離開批次模式",
+    "selectAll": "全選"
   },
   "tags": {
     "noTagsAvailable": "沒有可用的標籤。",
@@ -304,7 +309,7 @@
     "unknownDate": "未知日期"
   },
   "options": {
-    "title": "Google AI Studio 增強側邊欄 選項",
+    "title": "Gemini & AI Studio 增強側邊欄 選項",
     "settingsPlaceholder": "設定佔位符"
   },
   "feedback": {
@@ -336,6 +341,7 @@
     "foldersIncludeTooltip": "多個資料夾名稱請用逗號分隔（如：project a, work, personal）",
     "foldersExcludeTooltip": "多個資料夾名稱請用逗號分隔（如：archive, temp）",
     "filterByRole": "依角色篩選",
+    "filterPlatform": "依平台篩選",
     "all": "全部",
     "userOnly": "僅使用者",
     "modelOnly": "僅模型",

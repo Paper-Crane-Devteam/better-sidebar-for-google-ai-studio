@@ -115,6 +115,7 @@ export const useModuleConfig = (): ModuleConfig => {
       visibleFilters: ['search', 'tags', 'type', 'favorites'],
       extraHeaderButtons: null,
     },
+    favorites: {},
     search: {
       extraHeaderButtons: [<ImportHistoryButton key="import" />],
       onNavigate: handleSearchNavigation,

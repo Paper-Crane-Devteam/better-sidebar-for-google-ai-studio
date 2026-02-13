@@ -119,9 +119,9 @@ export async function scanLibrary() {
     title: item.title || 'Untitled',
     external_id: item.id,
     external_url: `https://gemini.google.com/app/${item.id}`,
-    // created_at in Gemini interceptor is seconds, convert to ms
-    updated_at: item.created_at ? item.created_at * 1000 : Date.now(),
-    created_at: item.created_at ? item.created_at * 1000 : undefined,
+    // created_at in Gemini interceptor is already in seconds (Unix timestamp)
+    updated_at: item.created_at ?? Math.floor(Date.now() / 1000),
+    created_at: item.created_at,
     platform: Platform.GEMINI,
   }));
 

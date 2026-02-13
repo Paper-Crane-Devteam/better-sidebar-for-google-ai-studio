@@ -1,4 +1,4 @@
-# Better Sidebar for Google AI Studio
+# Better Sidebar for Gemini & AI Studio
 
 ![Better Sidebar Banner](./assets/images/marquee.jpg)
 
@@ -8,42 +8,43 @@
 [![Privacy Policy](https://img.shields.io/badge/Privacy-Policy-green?style=for-the-badge)](./PRIVACY.md)
 [![License](https://img.shields.io/badge/License-Open_Source-orange?style=for-the-badge)](./LICENSE)
 
-Hi there! Welcome to the home of **Better Sidebar for Google AI Studio**.
+Hi there! Welcome to the home of **Better Sidebar for Gemini & AI Studio**.
 
-If you use Google AI Studio heavily, you know the struggle: your chat list gets messy, old prompts get lost, and finding that *one* specific conversation from last week is a nightmare.
+If you use **Gemini** or **Google AI Studio** heavily, you know the struggle: your chat list gets messy, old prompts get lost, and finding that *one* specific conversation from last week is a nightmare.
 
-We built this extension to fix that. It gives you a clean, organized sidebar with folders, tags, and a powerful search engine that actually works—all while keeping your data 100% local and private.
+We built this extension to fix that. It gives you a clean, organized sidebar with folders, tags, and a powerful search engine that actually works across **both platforms**—all while keeping your data 100% local and private.
 
-## 🚀 What's New in v1.1.0?
+## 🚀 What's New in v2.0.0?
 
-This is our biggest update yet! We've introduced two powerful new modules and expanded platform support.
+This is a groundbreaking release! We've expanded platform support to Gemini and introduced unified data management across both platforms.
 
-### 📝 Prompt Library (New Module)
-A fully-featured prompt management system built right into your sidebar. The Prompt Library is designed to be your personal command center for prompt engineering.
-*   **Variable Support**: Create dynamic templates using variables (e.g., `{{topic}}`, `{{language}}`). When you use the prompt, a form appears to fill in the values instantly.
-*   **Organized Structure**: Keep your vast collection of prompts sorted with nested folders and colored tags. No more losing your best system prompts.
-*   **Quick Access**: Insert your optimized prompts into any chat with just a click, streamlining your workflow.
+### 🌟 Gemini Platform Support (Major Feature)
+Better Sidebar now works with **both Gemini and AI Studio**!
+*   **Dual Platform Support**: Seamlessly switch between Gemini and AI Studio with the same powerful sidebar features you love.
+*   **Unified Experience**: Manage all your AI conversations in one place, regardless of which Google AI platform you're using.
+*   **Feature Parity**: All core features—folders, tags, search, and prompt library—work identically on both platforms.
 
-### 📥 Conversation Export (New Feature)
-Export your conversations in multiple formats to share or archive them.
-*   **Multiple Formats**: Support for Markdown, Plain Text, and JSON.
-*   **Flexible**: Choose the format that fits your needs for documentation or backup.
+### 🔄 Automatic Conversation Sync
+Your conversations stay up-to-date without manual intervention.
+*   **Real-Time Updates**: The extension automatically syncs your latest conversations when you visit Gemini or AI Studio.
+*   **Seamless Integration**: No more manual "Scan Library" clicks—your sidebar always reflects your current conversation list.
+*   **Background Sync**: Works quietly in the background so you can focus on your work.
 
-### 🔍 Deep Search (New Module)
-The search engine AI Studio deserves.
-*   **Full-Text Indexing**: We don't just search titles. We index every single message in your history.
-*   **Advanced Filtering**: Narrow down results by specific folders, tags, or even by role (User vs. Model) to find exactly what you said vs. what the AI generated.
-*   **Instant Results**: Powered by a local search index for lightning-fast query times, even with thousands of messages.
+### 🔗 Unified Data Management
+One library for two platforms—your prompts and search work everywhere.
+*   **Shared Prompt Library**: Create a prompt once, use it on both Gemini and AI Studio. Your entire prompt collection is available across platforms.
+*   **Cross-Platform Search**: Search through conversations from both Gemini and AI Studio simultaneously using the unified search engine.
+*   **Single Source of Truth**: All your data lives in one place, making backup and export simpler.
 
-### 🌐 Expanded Browser Support
-We are bringing Better Sidebar to more users!
-*   **Firefox**: Fully supported.
-*   **Microsoft Edge**: Coming soon (not yet available).
+### 🎨 Improved UI Layouts
+Enhanced visual options for better comfort and productivity.
+*   **Compact View**: A denser layout for users who prefer seeing more information at once.
+*   **Relaxed View**: A more spacious design with better readability for extended use.
+*   **Smart Defaults**: The interface automatically adapts to your screen size and preferences.
 
-### ✨ Quality of Life Improvements
-*   **Sidebar Shortcuts**: Added 3 dedicated buttons for AI Studio's native **Build**, **Dashboard**, and **Documentation** pages, making it easier to navigate the platform without disabling the extension.
-*   **UI Optimization**: The "Switch to Original UI" button has been moved to a more convenient location outside the main list for better accessibility.
-*   **General Polish**: Various bug fixes and performance improvements to make the experience smoother.
+### ✨ Performance & Polish
+*   **Optimized Batch Operations**: Improved speed and reliability when performing bulk actions like moving multiple conversations or applying tags.
+*   **UI/UX Refinements**: Fixed numerous interface bugs and smoothed out interactions for a more polished experience across both platforms.
 
 ## ✨ Features
 
@@ -70,7 +71,7 @@ We take this seriously.
 *   **No Cloud:** Your folders, tags, and notes never leave your device.
 *   **No Training:** We don't use your data to train models.
 
-When you install, Chrome will say we can "Read and change data on aistudio.google.com". This is just so we can draw the sidebar on the page and read your chat titles to organize them. That's it.
+When you install, your browser will request permission to "Read and change data on aistudio.google.com and gemini.google.com". This is just so we can draw the sidebar on the page and read your chat titles to organize them. That's it.
 
 ## 🚧 Roadmap
 
@@ -78,7 +79,8 @@ We're just getting started. Here is what's on our mind:
 
 - [x] **Full Content Search** (Done in v1.1.0!)
 - [x] **Prompt Library** (Done in v1.1.0!)
-- [ ] **Multi-Platform Support**: Maybe bring this to ChatGPT or Claude?
+- [x] **Gemini Platform Support** (Done in v2.0.0!)
+- [ ] **Additional Platform Support**: Maybe bring this to ChatGPT or Claude?
 - [ ] **Cloud Sync**: Optional secure sync for those who work across multiple devices.
 - [ ] **AI Auto-Tagging**: Using a local LLM to help organize your chats automatically.
 
@@ -102,14 +104,14 @@ This project is now open source! If you're a developer and want to help make it 
 <summary><strong>1. The extension overlay isn't appearing.</strong></summary>
 
 *   **Refresh the page:** Sometimes the extension needs a page reload to inject properly, especially right after installation.
-*   **Check permissions:** Ensure the extension has permission to run on `aistudio.google.com`.
-*   **Conflict:** Disable other AI Studio extensions temporarily to check for conflicts.
+*   **Check permissions:** Ensure the extension has permission to run on `aistudio.google.com` and `gemini.google.com`.
+*   **Conflict:** Disable other Gemini or AI Studio extensions temporarily to check for conflicts.
 </details>
 
 <details>
 <summary><strong>2. My chats aren't showing up or I can't find specific messages.</strong></summary>
 
-*   **New chats missing?** Go to `Settings` -> `Data & Storage` and click **"Scan Library"**. This forces a sync with your AI Studio account.
+*   **New chats missing?** The extension automatically syncs when you visit the page. If conversations are still missing, go to `Settings` -> `Data & Storage` and click **"Scan Library"** to force a manual sync.
 *   **Missing message content?** If search can't find text from older chats, you might need to import them. Go to the **Search** tab and click **"Import History"**. You can upload a Google Takeout zip to fully index your past conversations.
 </details>
 

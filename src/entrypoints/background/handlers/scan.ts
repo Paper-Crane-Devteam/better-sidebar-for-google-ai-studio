@@ -87,9 +87,11 @@ export async function handleScan(
       const items = message.payload.items || [];
       const platform = message.platform || items[0]?.platform || 'aistudio';
 
+      let newCount = 0;
       if (items.length > 0) {
         const allExisting = await conversationRepo.getAll(platform);
         const existingMap = new Map(allExisting.map((c) => [c.external_id, c]));
+        newCount = items.filter((item) => !existingMap.has(item.external_id)).length;
 
         const importedFolderName = i18n.t('explorer.imported');
         const folders = await folderRepo.getAll(platform);
@@ -104,7 +106,7 @@ export async function handleScan(
 
         const conversationsToSave = items.map((item) => {
           const existing = existingMap.get(item.external_id);
-          const targetFolderId = existing?.folder_id ?? importedFolderId;
+          const targetFolderId = existing? existing.folder_id : importedFolderId;
           return { ...item, folder_id: targetFolderId, platform };
         });
 
@@ -113,8 +115,8 @@ export async function handleScan(
         }
       }
 
-      await notifyDataUpdated('SCAN_COMPLETE', { count: items.length });
-      return { success: true, data: { count: items.length } };
+      await notifyDataUpdated('SCAN_COMPLETE', { count: newCount });
+      return { success: true, data: { count: newCount } };
     }
     default:
       return null;

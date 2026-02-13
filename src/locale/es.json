@@ -156,7 +156,7 @@
   },
   "about": {
     "title": "Acerca de",
-    "appName": "Barra Lateral Mejorada para Google AI Studio",
+    "appName": "Barra Lateral Mejorada para Gemini y AI Studio",
     "version": "Versión",
     "versionNumber": "1.1.0",
     "developer": "Desarrollador",
@@ -167,7 +167,7 @@
   },
   "sponsor": {
     "title": "Apoyar el Desarrollo",
-    "enjoying": "¿Disfrutando de la Barra Lateral Mejorada para Google AI Studio?",
+    "enjoying": "¿Disfrutando de la Barra Lateral Mejorada para Gemini y AI Studio?",
     "description": "Este proyecto es gratuito. Si te ayuda a ser más productivo, ¡considera apoyar su desarrollo!",
     "sponsorOnGithub": "Dar Estrella en GitHub",
     "buyMeACoffee": "Cómprame un Café"
@@ -175,7 +175,7 @@
   "data": {
     "librarySync": "Sincronización de Datos",
     "scanLibrary": "Escanear Biblioteca",
-    "scanLibraryDescription": "Escanear tu biblioteca de AI Studio para poblar el explorador",
+    "scanLibraryDescription": "Escanear tu biblioteca para poblar el explorador",
     "importConversationData": "Importar Datos de Conversación",
     "importConversationDataDescription": "Importar historial de conversaciones desde un ZIP exportado de Google AI Studio",
     "storageManagement": "Gestión de Almacenamiento",
@@ -216,6 +216,8 @@
     "build": "Build",
     "dashboard": "Panel",
     "documentation": "Documentación",
+    "myStuff": "Mis Cosas",
+    "gems": "Gems",
     "originalUI": "Cambiar a Interfaz Original"
   },
   "overlay": {
@@ -238,7 +240,8 @@
     "build": "Build",
     "dashboard": "Panel",
     "documentation": "Documentación",
-    "switchToOriginalUI": "Cambiar a Interfaz Original"
+    "switchToOriginalUI": "Cambiar a Interfaz Original",
+    "temporaryChat": "Chat temporal"
   },
   "favorites": {
     "noFavoritesFound": "No se encontraron favoritos que coincidan con tus filtros.",
@@ -263,6 +266,7 @@
     "deleteNote": "Nota: Los elementos eliminados se pueden restaurar reimportándolos desde AI Studio.",
     "deleteFolderNote": "Nota: Las carpetas eliminadas no se pueden restaurar, pero las conversaciones se pueden reimportar desde AI Studio.",
     "openInNewTab": "Abrir en Nueva Pestaña",
+    "moveTo": "Mover a...",
     "export": "Exportar",
     "exportAsText": "Exportar como texto",
     "exportAsMarkdown": "Exportar como Markdown",
@@ -283,7 +287,8 @@
     "deleteSelected": "Eliminar Seleccionados",
     "moveSelected": "Mover Seleccionados",
     "addTag": "Añadir Etiqueta",
-    "exitBatchMode": "Salir del Modo de Lotes"
+    "exitBatchMode": "Salir del Modo de Lotes",
+    "selectAll": "Seleccionar Todo"
   },
   "tags": {
     "noTagsAvailable": "No hay etiquetas disponibles.",
@@ -304,7 +309,7 @@
     "unknownDate": "Fecha Desconocida"
   },
   "options": {
-    "title": "Opciones de la Barra Lateral Mejorada para Google AI Studio",
+    "title": "Opciones de la Barra Lateral Mejorada para Gemini y AI Studio",
     "settingsPlaceholder": "Marcador de posición de configuración"
   },
   "feedback": {
@@ -336,6 +341,7 @@
     "foldersIncludeTooltip": "Separa varios nombres de carpeta con comas (ej.: project a, work, personal)",
     "foldersExcludeTooltip": "Separa varios nombres de carpeta con comas (ej.: archive, temp)",
     "filterByRole": "Filtrar por rol",
+    "filterPlatform": "Filtrar por plataforma",
     "all": "Todos",
     "userOnly": "Solo usuario",
     "modelOnly": "Solo modelo",

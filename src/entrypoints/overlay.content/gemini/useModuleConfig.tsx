@@ -165,6 +165,9 @@ export const useModuleConfig = (): ModuleConfig => {
       extraHeaderButtons: <TemporaryChatButton />,
     
     },
+    favorites: {
+      visibleFilters: ['search', 'tags'],
+    },
     prompts: {
       enabled: true,
     },

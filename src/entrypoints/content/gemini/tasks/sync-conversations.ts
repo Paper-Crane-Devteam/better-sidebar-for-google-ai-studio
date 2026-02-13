@@ -88,8 +88,8 @@ async function processAndSendItems() {
         title: item.title || 'Untitled',
         external_id: item.id,
         external_url: `https://gemini.google.com/app/${item.id}`,
-        updated_at: item.created_at ? item.created_at * 1000 : Date.now(),
-        created_at: item.created_at ? item.created_at * 1000 : undefined,
+        updated_at: item.created_at ?? Math.floor(Date.now() / 1000),
+        created_at: item.created_at,
         platform: Platform.GEMINI,
     }));
 
@@ -102,7 +102,7 @@ async function processAndSendItems() {
                 payload: { items: payloadItems },
             });
             // Clear items from scanner after successful send so we don't send them again
-            apiScanner.clear();
+            // apiScanner.clear();
         } catch (err) {
             console.error('Gemini Sync: Failed to send items:', err);
         }
@@ -213,7 +213,7 @@ export async function syncConversations() {
 
   // Stop scanner
   apiScanner.stop();
-  apiScanner.clear();
+  // apiScanner.clear();
 
   return totalSynced;
 }

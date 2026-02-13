@@ -2,7 +2,7 @@
 
 **Last Updated:** [06/01/2026]
 
-This Privacy Policy describes how **Better Sidebar for Google AI Studio** ("we", "our", or "the Extension") handles your information. We are committed to protecting your privacy and ensuring you have full control over your data.
+This Privacy Policy describes how **Better Sidebar for Gemini & AI Studio** ("we", "our", or "the Extension") handles your information. We are committed to protecting your privacy and ensuring you have full control over your data.
 
 ## 1. Data Collection and Storage
 

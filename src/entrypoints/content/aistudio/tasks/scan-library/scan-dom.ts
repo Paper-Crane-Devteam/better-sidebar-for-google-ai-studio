@@ -1,3 +1,12 @@
+/**
+ * DOM Scanner for Manual Library Scan
+ * 
+ * This module performs a full DOM scan by scrolling through the library table
+ * and extracting conversation metadata. It's used only during manual scans.
+ * 
+ * For automatic syncing of conversations as they load naturally, see sync-library.ts
+ */
+
 // Helper to wait for an element to appear in the DOM
 function waitForElement<T extends Element = Element>(selector: string, timeout = 10000): Promise<T | null> {
   return new Promise((resolve) => {
@@ -121,7 +130,7 @@ export async function scanLibraryDom() {
           external_url: href.startsWith('http')
             ? href
             : `https://aistudio.google.com${href}`,
-          updated_at: Date.now(),
+          updated_at: Math.floor(Date.now() / 1000),
         });
       } catch (e) {
         console.warn('Error parsing row', e);

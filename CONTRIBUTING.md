@@ -1,4 +1,4 @@
-# Contributing to Better Sidebar for Google AI Studio
+# Contributing to Better Sidebar for Gemini & AI Studio
 
 First off, thank you for considering contributing to Better Sidebar!
 

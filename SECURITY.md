@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-We take the security of **Better Sidebar for Google AI Studio** seriously. If you have discovered a security vulnerability, we appreciate your help in disclosing it to us in a responsible manner.
+We take the security of **Better Sidebar for Gemini & AI Studio** seriously. If you have discovered a security vulnerability, we appreciate your help in disclosing it to us in a responsible manner.
 
 ### How to Report
 

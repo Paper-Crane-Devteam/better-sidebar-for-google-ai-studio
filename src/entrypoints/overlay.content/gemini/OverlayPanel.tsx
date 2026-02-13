@@ -103,10 +103,12 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       if (message.type === 'DATA_UPDATED') {
         console.log('Received DATA_UPDATED signal, refreshing...');
         fetchData(true);
-        setIsScanning(false);
 
         // Handle specific update types with payload
         if (message.updateType === 'SCAN_COMPLETE' && message.payload) {
+          // Only set isScanning to false when scan actually completes
+          setIsScanning(false);
+          
           const count = message.payload.count || 0;
           console.log(`Scan completed, imported ${count} items`);
           if (count > 0) {
@@ -364,7 +366,10 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
         ) : activeTab === 'prompts' ? (
           <PromptsTab menuActions={moduleConfig.general.menuActions} />
         ) : activeTab === 'favorites' ? (
-          <FavoritesTab menuActions={moduleConfig.general.menuActions} />
+          <FavoritesTab 
+            menuActions={moduleConfig.general.menuActions} 
+            visibleFilters={moduleConfig.favorites.visibleFilters}
+          />
         ) : activeTab === 'tags' ? (
           <TagsTab menuActions={moduleConfig.general.menuActions} />
         ) : activeTab === 'feedback' ? (

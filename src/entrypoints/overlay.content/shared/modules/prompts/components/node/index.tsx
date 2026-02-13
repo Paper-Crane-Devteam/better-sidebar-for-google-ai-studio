@@ -187,21 +187,22 @@ export const Node = ({ node, style, dragHandle, tree, preview, onPreview }: Node
                 </div>
               </SimpleTooltip>
 
-             {!isFavorite && (
-               <SimpleTooltip content={t('tooltip.addToFavorites')}>
-                  <div
-                    role="button"
-                    className="h-5 w-5 flex items-center justify-center rounded-sm hover:bg-muted/50 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      toggleFavorite(node.data.id, 'prompt', isFavorite);
-                    }}
-                  >
-                    <Star className="h-3.5 w-3.5" />
-                  </div>
-               </SimpleTooltip>
-             )}
+             <SimpleTooltip content={isFavorite ? t('tooltip.removeFromFavorites') : t('tooltip.addToFavorites')}>
+                <div
+                  role="button"
+                  className={cn(
+                    "h-5 w-5 flex items-center justify-center rounded-sm hover:bg-muted/50 cursor-pointer transition-colors",
+                    isFavorite ? "text-yellow-500" : "text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    toggleFavorite(node.data.id, 'prompt', isFavorite);
+                  }}
+                >
+                  <Star className={cn("h-3.5 w-3.5", isFavorite && "fill-current")} />
+                </div>
+              </SimpleTooltip>
           </>
         )}
       </div>
@@ -211,11 +212,9 @@ export const Node = ({ node, style, dragHandle, tree, preview, onPreview }: Node
   const commonClasses = cn(
     'flex items-center gap-1.5 px-1 cursor-pointer group relative pr-2 h-full text-foreground no-underline outline-none text-density rounded-sm',
     !((node.isSelected && !isFile) || isBatchSelected) && 'hover:bg-accent/50',
-    // isFile && !isFavorite && 'group-hover:pr-14',
     ((node.isSelected && !isFile) || isBatchSelected) && 'node-item-selected',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
-    isContextMenuOpen && 'bg-accent/50',
-    // isContextMenuOpen && isFile && !isFavorite && 'pr-14'
+    isContextMenuOpen && 'bg-accent/50'
   );
 
   const content = (

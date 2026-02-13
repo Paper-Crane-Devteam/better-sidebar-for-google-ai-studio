@@ -156,7 +156,7 @@
   },
   "about": {
     "title": "について",
-    "appName": "Google AI Studio 用の拡張サイドバー",
+    "appName": "Gemini & AI Studio 用の拡張サイドバー",
     "version": "バージョン",
     "versionNumber": "1.1.0",
     "developer": "開発者",
@@ -167,7 +167,7 @@
   },
   "sponsor": {
     "title": "開発をサポート",
-    "enjoying": "Google AI Studio 用の拡張サイドバー をお楽しみですか？",
+    "enjoying": "Gemini & AI Studio 用の拡張サイドバー をお楽しみですか？",
     "description": "このプロジェクトは無料で使用できます。生産性向上に役立つ場合は、開発のサポートをご検討ください！",
     "sponsorOnGithub": "GitHub でスターを付ける",
     "buyMeACoffee": "コーヒーを一杯"
@@ -175,7 +175,7 @@
   "data": {
     "librarySync": "データ同期",
     "scanLibrary": "ライブラリをスキャン",
-    "scanLibraryDescription": "AI Studio ライブラリをスキャンしてエクスプローラーに追加",
+    "scanLibraryDescription": "ライブラリをスキャンしてエクスプローラーに追加",
     "importConversationData": "会話データをインポート",
     "importConversationDataDescription": "Google AI Studio からエクスポートした ZIP で会話履歴をインポート",
     "storageManagement": "ストレージ管理",
@@ -216,6 +216,8 @@
     "build": "Build",
     "dashboard": "ダッシュボード",
     "documentation": "ドキュメント",
+    "myStuff": "マイストッフ",
+    "gems": "Gems",
     "originalUI": "元のUIに切り替え"
   },
   "overlay": {
@@ -238,7 +240,8 @@
     "build": "Build",
     "dashboard": "ダッシュボード",
     "documentation": "ドキュメント",
-    "switchToOriginalUI": "元のUIに切り替え"
+    "switchToOriginalUI": "元のUIに切り替え",
+    "temporaryChat": "一時チャット"
   },
   "favorites": {
     "noFavoritesFound": "フィルタに一致するお気に入りが見つかりません。",
@@ -263,6 +266,7 @@
     "deleteNote": "注意：削除された項目は、AI Studio から再インポートすることで復元できます。",
     "deleteFolderNote": "注意：削除されたフォルダは復元できませんが、会話は AI Studio から再インポートできます。",
     "openInNewTab": "新しいタブで開く",
+    "moveTo": "移動...",
     "export": "エクスポート",
     "exportAsText": "テキストとしてエクスポート",
     "exportAsMarkdown": "Markdownとしてエクスポート",
@@ -283,7 +287,8 @@
     "deleteSelected": "選択した項目を削除",
     "moveSelected": "選択した項目を移動",
     "addTag": "タグを追加",
-    "exitBatchMode": "一括モードを終了"
+    "exitBatchMode": "一括モードを終了",
+    "selectAll": "すべて選択"
   },
   "tags": {
     "noTagsAvailable": "利用可能なタグがありません。",
@@ -304,7 +309,7 @@
     "unknownDate": "不明な日付"
   },
   "options": {
-    "title": "Google AI Studio 用の拡張サイドバー オプション",
+    "title": "Gemini & AI Studio 用の拡張サイドバー オプション",
     "settingsPlaceholder": "設定プレースホルダー"
   },
   "feedback": {
@@ -336,6 +341,7 @@
     "foldersIncludeTooltip": "複数のフォルダ名はカンマで区切ってください（例：project a, work, personal）",
     "foldersExcludeTooltip": "複数のフォルダ名はカンマで区切ってください（例：archive, temp）",
     "filterByRole": "役割でフィルタ",
+    "filterPlatform": "プラットフォームでフィルタ",
     "all": "すべて",
     "userOnly": "ユーザーのみ",
     "modelOnly": "モデルのみ",

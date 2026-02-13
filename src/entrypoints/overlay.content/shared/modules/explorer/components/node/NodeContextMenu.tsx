@@ -281,7 +281,7 @@ export const NodeContextMenu = ({
           <ContextMenuSeparator />
         </>
       )}
-      {/* {(enableRightClickRename || node.data.type === 'folder') && (
+      {(node.data.type === 'folder') && (
         <ContextMenuItem
           onClick={() => {
             shouldPreventRef.current = true;
@@ -293,7 +293,7 @@ export const NodeContextMenu = ({
           <Edit2 className="mr-2 h-4 w-4" />
           {t('node.rename')}
         </ContextMenuItem>
-      )} */}
+      )}
       <ContextMenuItem
         onClick={onDelete}
         className="text-destructive focus:text-destructive"

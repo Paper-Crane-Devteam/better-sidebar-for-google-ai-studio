@@ -22,18 +22,11 @@ export const useDeleteHandler = () => {
       ? t('node.deleteFolderConfirm', { name })
       : t('node.deleteConfirm', { name });
 
-    const noteMessage = isFolder
-      ? t('node.deleteFolderNote')
-      : t('node.deleteNote');
-
     const confirmed = await modal.confirm({
       title: t('node.deleteItem'),
       content: (
         <div className="space-y-2">
           <p>{confirmMessage}</p>
-          <p className="text-xs text-muted-foreground bg-muted p-2 rounded">
-            {noteMessage}
-          </p>
         </div>
       ),
       confirmText: t('node.delete'),

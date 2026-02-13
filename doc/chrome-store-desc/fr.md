@@ -1,16 +1,15 @@
 Votre historique de prompts Google AI Studio devient-il un désordre ?
 Vous avez du mal à retrouver ce prompt parfait que vous avez écrit la semaine dernière ?
 
-Découvrez Better Sidebar for Google AI Studio — le booster de flux de travail ultime pour les développeurs, ingénieurs de prompts et passionnés d'IA.
+Découvrez Better Sidebar for Gemini & AI Studio — le booster de flux de travail ultime pour les développeurs, ingénieurs de prompts et passionnés d'IA.
 
 Nous transformons l'interface par défaut d'AI Studio en une base de connaissances puissante et organisée. Arrêtez de faire défiler sans fin et commencez à organiser vos idées efficacement.
 
-🔥 NOUVEAUTÉS (v1.1.0)
-• 📝 Bibliothèque de Prompts : Sauvegardez et gérez vos meilleurs prompts avec variables, dossiers et tags.
-• 📥 Export des conversations : Exportez en Markdown, texte brut ou JSON.
-• 🔍 Recherche Approfondie : Recherche en texte intégral dans tout l'historique des chats.
-• 🌐 Multi-navigateur : Disponible sur Firefox et Edge.
-• ⚡ Améliorations : Liens rapides vers le tableau de bord et interface améliorée.
+🔥 NOUVEAUTÉS (v2.0.0)
+• 🌟 Support de Gemini : Fonctionne désormais parfaitement avec Gemini et AI Studio !
+• 🔄 Synchronisation Automatique : Vos conversations se synchronisent automatiquement lorsque vous visitez la page.
+• 🔗 Données Unifiées : Bibliothèque de prompts et recherche partagées entre Gemini et AI Studio.
+• 🎨 Interface Améliorée : Options de vue compacte et détendue améliorées pour une meilleure lisibilité.
 
 🚀 FONCTIONNALITÉS PRINCIPALES
 
@@ -47,7 +46,7 @@ Nous prenons votre confidentialité au sérieux.
 • Pas d'Entraînement: Nous ne lisons pas vos conversations pour entraîner des modèles d'IA.
 
 Pourquoi l'extension a-t-elle besoin de permissions ?
-Nous avons besoin d'un accès à aistudio.google.com uniquement pour injecter l'interface de barre latérale améliorée et lire les titres de chat pour l'organisation. Nous n'accédons pas à votre autre historique de navigation.
+Nous avons besoin d'un accès à aistudio.google.com et gemini.google.com uniquement pour injecter l'interface de barre latérale améliorée et lire les titres de chat pour l'organisation. Nous n'accédons pas à votre autre historique de navigation.
 
 ---
 

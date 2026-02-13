@@ -2,7 +2,7 @@ import type { ExtensionMessage } from '@/shared/types/messages';
 import { handleMessage } from './message-handler';
 
 console.log(
-  'Better Sidebar for Google AI Studio: Background Service Worker Starting...',
+  'Better Sidebar for Gemini & AI Studio: Background Service Worker Starting...',
 );
 
 export default defineBackground(() => {

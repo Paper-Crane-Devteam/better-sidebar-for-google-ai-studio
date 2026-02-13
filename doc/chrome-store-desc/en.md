@@ -1,16 +1,15 @@
 Is your Google AI Studio prompt history becoming a mess?
 Struggling to find that one perfect prompt you wrote last week?
 
-Meet BETTER SIDEBAR FOR GOOGLE AI STUDIO — the ultimate workflow booster for developers, prompt engineers, and AI enthusiasts.
+Meet BETTER SIDEBAR FOR GEMINI & AI STUDIO — the ultimate workflow booster for developers, prompt engineers, and AI enthusiasts.
 
 We transform the default AI Studio interface into a powerful, organized knowledge base. Stop scrolling endlessly and start organizing your ideas efficiently.
 
-🔥 WHAT'S NEW (v1.1.0)
-• 📝 Prompt Library: Save and manage your best prompts with variables, folders, and tags.
-• 📥 Conversation Export: Export conversations as Markdown, Plain Text, or JSON.
-• 🔍 Deep Search: Full-text search across all your chat history, not just titles.
-• 🌐 Multi-Browser: Now available on Firefox and Edge.
-• ⚡ QoL Improvements: Quick links to Build/Dashboard and better UI.
+🔥 WHAT'S NEW (v2.0.0)
+• 🌟 Gemini Support: Now works seamlessly with both Gemini and AI Studio platforms!
+• 🔄 Auto-Sync: Your conversations automatically sync when you visit the page.
+• 🔗 Unified Data: Shared prompt library and search across both Gemini and AI Studio.
+• 🎨 Better UI: Enhanced compact and relaxed view options for improved readability.
 
 🚀 KEY FEATURES
 
@@ -51,7 +50,7 @@ We take your privacy seriously.
 
 WHY DOES THE EXTENSION NEED PERMISSIONS?
 
-We require access to aistudio.google.com solely to inject the enhanced sidebar interface and read chat titles for organization. We do not access your other browsing history.
+We require access to aistudio.google.com and gemini.google.com solely to inject the enhanced sidebar interface and read chat titles for organization. We do not access your other browsing history.
 
 ---
 

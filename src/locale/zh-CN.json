@@ -156,7 +156,7 @@
   },
   "about": {
     "title": "关于",
-    "appName": "Google AI Studio 增强侧边栏",
+    "appName": "Gemini & AI Studio 增强侧边栏",
     "version": "版本",
     "versionNumber": "1.1.0",
     "developer": "开发者",
@@ -167,7 +167,7 @@
   },
   "sponsor": {
     "title": "支持开发",
-    "enjoying": "喜欢 Google AI Studio 增强侧边栏 吗？",
+    "enjoying": "喜欢 Gemini & AI Studio 增强侧边栏 吗？",
     "description": "这个项目是免费使用的。如果它帮助您提高工作效率，请考虑支持其开发！",
     "sponsorOnGithub": "在 GitHub 上点星",
     "buyMeACoffee": "请我喝杯咖啡"
@@ -175,7 +175,7 @@
   "data": {
     "librarySync": "数据同步",
     "scanLibrary": "扫描库",
-    "scanLibraryDescription": "扫描您的 AI Studio 库以填充资源管理器",
+    "scanLibraryDescription": "扫描您的库以填充资源管理器",
     "importConversationData": "导入对话数据",
     "importConversationDataDescription": "从 Google AI Studio 导出的 ZIP 导入对话历史",
     "storageManagement": "存储管理",
@@ -240,7 +240,8 @@
     "build": "构建",
     "dashboard": "仪表盘",
     "documentation": "文档",
-    "switchToOriginalUI": "切换到原始界面"
+    "switchToOriginalUI": "切换到原始界面",
+    "temporaryChat": "临时对话"
   },
   "favorites": {
     "noFavoritesFound": "未找到匹配筛选条件的收藏",
@@ -286,7 +287,8 @@
     "deleteSelected": "删除选中项",
     "moveSelected": "移动选中项",
     "addTag": "添加标签",
-    "exitBatchMode": "退出批量模式"
+    "exitBatchMode": "退出批量模式",
+    "selectAll": "全选"
   },
   "tags": {
     "noTagsAvailable": "没有可用的标签。",
@@ -307,7 +309,7 @@
     "unknownDate": "未知日期"
   },
   "options": {
-    "title": "Google AI Studio 增强侧边栏 选项",
+    "title": "Gemini & AI Studio 增强侧边栏 选项",
     "settingsPlaceholder": "设置占位符"
   },
   "feedback": {
@@ -343,6 +345,7 @@
     "foldersIncludeTooltip": "多个文件夹名用逗号分隔（如：project a, work, personal）",
     "foldersExcludeTooltip": "多个文件夹名用逗号分隔（如：archive, temp）",
     "filterByRole": "按角色筛选",
+    "filterPlatform": "按平台筛选",
     "all": "全部",
     "userOnly": "仅用户",
     "modelOnly": "仅模型",

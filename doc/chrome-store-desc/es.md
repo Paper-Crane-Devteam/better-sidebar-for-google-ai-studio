@@ -1,16 +1,15 @@
 ¿Se está volviendo un desastre el historial de prompts de tu Google AI Studio?
 ¿Luchando por encontrar ese prompt perfecto que escribiste la semana pasada?
 
-Conoce Better Sidebar for Google AI Studio — el potenciador de flujo de trabajo definitivo para desarrolladores, ingenieros de prompts y entusiastas de la IA.
+Conoce Better Sidebar for Gemini & AI Studio — el potenciador de flujo de trabajo definitivo para desarrolladores, ingenieros de prompts y entusiastas de la IA.
 
 Transformamos la interfaz predeterminada de AI Studio en una base de conocimientos poderosa y organizada. Deja de desplazarte sin fin y comienza a organizar tus ideas de manera eficiente.
 
-🔥 NOVEDADES (v1.1.0)
-• 📝 Biblioteca de Prompts: Guarda y gestiona tus mejores prompts con variables, carpetas y etiquetas.
-• 📥 Exportar conversaciones: Exporta como Markdown, texto plano o JSON.
-• 🔍 Búsqueda Profunda: Búsqueda de texto completo en todo tu historial de chat, no solo en títulos.
-• 🌐 Multi-Navegador: Ahora disponible en Firefox y Edge.
-• ⚡ Mejoras de Calidad de Vida: Enlaces rápidos al Dashboard y mejor interfaz de usuario.
+🔥 NOVEDADES (v2.0.0)
+• 🌟 Soporte para Gemini: ¡Ahora funciona perfectamente con las plataformas Gemini y AI Studio!
+• 🔄 Sincronización Automática: Tus conversaciones se sincronizan automáticamente cuando visitas la página.
+• 🔗 Datos Unificados: Biblioteca de prompts y búsqueda compartida entre Gemini y AI Studio.
+• 🎨 Mejor Interfaz: Opciones mejoradas de vista compacta y relajada para mejor legibilidad.
 
 🚀 CARACTERÍSTICAS PRINCIPALES
 
@@ -50,7 +49,7 @@ Nos tomamos tu privacidad en serio.
 • Sin Entrenamiento: No leemos tus conversaciones para entrenar ningún modelo de IA.
 
 ¿Por qué la extensión necesita permisos?
-Requerimos acceso a aistudio.google.com únicamente para inyectar la interfaz de barra lateral mejorada y leer títulos de chat para organización. No accedemos a tu otro historial de navegación.
+Requerimos acceso a aistudio.google.com y gemini.google.com únicamente para inyectar la interfaz de barra lateral mejorada y leer títulos de chat para organización. No accedemos a tu otro historial de navegación.
 
 ---
 

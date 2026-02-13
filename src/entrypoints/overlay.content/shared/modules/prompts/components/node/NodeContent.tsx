@@ -76,7 +76,7 @@ export const NodeContent = ({
         {node.data.type === 'folder' ? folderIcon : displayFileIcon}
       </div>
 
-      <div className="flex-1 min-w-0 flex items-center gap-1 overflow-hidden justify-between">
+      <div className="flex-1 min-w-0 flex items-center gap-1 overflow-hidden">
         {node.isEditing ? (
           <RenameForm node={node} newName={newName} setNewName={setNewName} />
         ) : isFile ? (
@@ -87,15 +87,6 @@ export const NodeContent = ({
           </SimpleTooltip>
         ) : (
           <span className="truncate text-sm select-none">{node.data.name}</span>
-        )}
-        {isFavorite && (
-          <div
-            role="button"
-            className="h-5 w-5 shrink-0 flex items-center justify-center rounded-md hover:bg-muted/50 transition-colors"
-            onClick={onToggleFavorite}
-          >
-            <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
-          </div>
         )}
       </div>
     </>

@@ -26,4 +26,7 @@ export interface ModuleConfig {
       scroll_index?: number;
     }) => void;
   };
+  favorites: {
+    visibleFilters?: ('search' | 'tags' | 'type' | 'favorites')[];
+  };
 }
