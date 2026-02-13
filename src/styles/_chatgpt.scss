@@ -1,0 +1,175 @@
+@layer base {
+  /* ChatGPT Theme */
+  .theme-chatgpt,
+  :host(.theme-chatgpt) {
+    /* Light Theme */
+    /* Sidebar Defaults (ChatGPT Compact) */
+    --sidebar-width: 3.5rem;
+    --sidebar-button-size: 2.5rem;
+    --sidebar-icon-size: 1.25rem;
+    --sidebar-gap: 0.5rem;
+    --sidebar-padding-y: 0.5rem;
+    --sidebar-icon-color: 13 13 13; /* #0d0d0d */
+
+    /* Base Colors - Mapping ChatGPT's --bg-* and --text-* */
+    --background: 255 255 255; /* --bg-primary: #fff */
+    --foreground: 13 13 13; /* --text-primary: #0d0d0d */
+
+    --card: 255 255 255; /* --bg-elevated-primary */
+    --card-foreground: 13 13 13;
+
+    --popover: 255 255 255; /* --bg-elevated-primary */
+    --popover-foreground: 13 13 13;
+
+    /* Primary uses ChatGPT's interactive-bg-primary */
+    --primary: 13 13 13; /* --interactive-bg-primary-default */
+    --primary-foreground: 255 255 255; /* --interactive-label-primary-default */
+
+    /* Secondary uses ChatGPT's bg-secondary */
+    --secondary: 232 232 232; /* --bg-secondary: #e8e8e8 */
+    --secondary-foreground: 13 13 13;
+
+    /* Muted uses ChatGPT's bg-tertiary */
+    --muted: 243 243 243; /* --bg-tertiary: #f3f3f3 */
+    --muted-foreground: 93 93 93; /* --text-secondary: #5d5d5d */
+
+    /* Accent uses ChatGPT's interactive-bg-secondary */
+    --accent: 243 243 243; /* --bg-tertiary */
+    --accent-foreground: 13 13 13;
+
+    /* Destructive uses ChatGPT's danger colors */
+    --destructive: 255 92 76; /* Approximated from red-500 */
+    --destructive-foreground: 255 255 255;
+
+    /* Border and Input - using blended colors for consistency */
+    --border: 230 230 230; /* --border-default: #0d0d0d1a blended with white = #e6e6e6 */
+    --input: 242 242 242; /* --border-light: #0d0d0d0d blended with white = #f2f2f2 */
+    --ring: 100 150 255; /* Approximated blue-400 for focus ring */
+
+    --radius: 12px;
+
+    /* ChatGPT Font */
+    --font-sans:
+      'Söhne', 'ui-sans-serif', 'system-ui', 'Segoe UI', sans-serif;
+  }
+
+  .theme-chatgpt.dark,
+  :host(.theme-chatgpt.dark) {
+    /* Dark Theme */
+    --background: 33 33 33; /* --bg-primary: #212121 */
+    --foreground: 255 255 255; /* --text-primary: #fff */
+
+    --card: 48 48 48; /* --bg-elevated-primary: #303030 */
+    --card-foreground: 255 255 255;
+
+    --popover: 48 48 48; /* --bg-elevated-primary */
+    --popover-foreground: 255 255 255;
+
+    /* Primary uses ChatGPT's interactive-bg-primary (inverted in dark) */
+    --primary: 255 255 255; /* --interactive-bg-primary-default */
+    --primary-foreground: 13 13 13; /* --interactive-label-primary-default */
+
+    /* Secondary uses ChatGPT's bg-secondary */
+    --secondary: 48 48 48; /* --bg-secondary: #303030 */
+    --secondary-foreground: 255 255 255;
+
+    /* Muted uses ChatGPT's bg-tertiary */
+    --muted: 65 65 65; /* --bg-tertiary: #414141 */
+    --muted-foreground: 243 243 243; /* --text-secondary: #f3f3f3 */
+
+    /* Accent uses ChatGPT's interactive-bg-secondary */
+    --accent: 65 65 65; /* --bg-tertiary */
+    --accent-foreground: 255 255 255;
+
+    /* Destructive uses ChatGPT's danger colors */
+    --destructive: 255 92 76; /* Approximated from red-500 */
+    --destructive-foreground: 255 255 255;
+
+    /* Sidebar Icon Color */
+    --sidebar-icon-color: 232 232 232; /* --icon-primary: #e8e8e8 */
+
+    /* Border and Input - using blended colors for consistency */
+    --border: 66 66 66; /* --border-default: #ffffff26 blended with #212121 = #424242 */
+    --input: 53 53 53; /* --border-light: #ffffff0d blended with #212121 = #353535 */
+    --ring: 168 199 250; /* Approximated blue-100 for focus ring */
+  }
+
+  /* Relaxed Mode - Theme Specific Overrides */
+  .theme-chatgpt [data-density='relaxed'],
+  :host(.theme-chatgpt) [data-density='relaxed'] {
+    --sidebar-width: 4rem;
+    --sidebar-button-size: 2.8rem;
+    --sidebar-gap: 0.75rem;
+    --sidebar-padding-y: 0.75rem;
+  }
+}
+
+/* ChatGPT Scrollbar */
+@media (pointer: fine) {
+  /* Target scrollbars on the theme container itself AND its descendants */
+  .theme-chatgpt::-webkit-scrollbar,
+  .theme-chatgpt ::-webkit-scrollbar,
+  .theme-chatgpt::-webkit-scrollbar-corner,
+  .theme-chatgpt ::-webkit-scrollbar-corner {
+    background: transparent;
+    height: 12px;
+    width: 12px;
+  }
+  .theme-chatgpt::-webkit-scrollbar-button,
+  .theme-chatgpt ::-webkit-scrollbar-button {
+    height: 0;
+    width: 0;
+  }
+  .theme-chatgpt::-webkit-scrollbar-thumb,
+  .theme-chatgpt ::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    background-clip: content-box;
+    border: 4px solid transparent;
+    border-radius: 9999px;
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  /* Light Theme Scrollbar */
+  .theme-chatgpt:hover::-webkit-scrollbar-thumb,
+  .theme-chatgpt:hover ::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.04); /* --utility-scrollbar: #0000000a */
+  }
+
+  .theme-chatgpt::-webkit-scrollbar-thumb:hover,
+  .theme-chatgpt ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
+  /* Dark Theme Scrollbar */
+  .theme-chatgpt.dark:hover::-webkit-scrollbar-thumb,
+  .theme-chatgpt.dark:hover ::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2); /* --utility-scrollbar: #fff3 */
+  }
+
+  .theme-chatgpt.dark::-webkit-scrollbar-thumb:hover,
+  .theme-chatgpt.dark ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+}
+
+@layer components {
+  /* Node Selection Styles - ChatGPT Specific */
+  .theme-chatgpt .node-item-selected,
+  :host(.theme-chatgpt) .node-item-selected {
+    background-color: rgb(var(--muted));
+    color: rgb(var(--foreground));
+  }
+
+  .theme-chatgpt.dark .node-item-selected,
+  :host(.theme-chatgpt.dark) .node-item-selected {
+    background-color: rgb(var(--muted));
+    color: rgb(var(--foreground));
+  }
+
+  /* ChatGPT-specific button styles if needed */
+  .theme-chatgpt button,
+  :host(.theme-chatgpt) button {
+    transition: all 0.15s ease;
+  }
+}

@@ -8,6 +8,7 @@ export default defineContentScript({
   matches: [
     'https://aistudio.google.com/*',
     'https://gemini.google.com/*',
+    'https://chatgpt.com/*',
   ],
   cssInjectionMode: 'ui',
   async main() {
@@ -25,6 +26,11 @@ export default defineContentScript({
       case Platform.GEMINI: {
         const { initGeminiOverlay } = await import('./gemini/Layout');
         await initGeminiOverlay(mainStyles);
+        break;
+      }
+      case Platform.CHATGPT: {
+        const { initChatGPTOverlay } = await import('./chatgpt/Layout');
+        await initChatGPTOverlay(mainStyles);
         break;
       }
       default:
