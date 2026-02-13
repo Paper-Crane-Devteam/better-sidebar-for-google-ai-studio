@@ -21,15 +21,12 @@ This is a groundbreaking release! We've expanded platform support to Gemini and 
 ### 🌟 Gemini Platform Support (Major Feature)
 Better Sidebar now works with **both Gemini and AI Studio**!
 *   **Dual Platform Support**: Seamlessly switch between Gemini and AI Studio with the same powerful sidebar features you love.
-*   **Unified Experience**: Manage all your AI conversations in one place, regardless of which Google AI platform you're using.
 *   **Feature Parity**: All core features—folders, tags, search, and prompt library—work identically on both platforms.
 
 ### 🔄 Automatic Conversation Sync
 Your conversations stay up-to-date without manual intervention.
 *   **Real-Time Updates**: The extension automatically syncs your latest conversations when you visit Gemini or AI Studio.
 *   **Seamless Integration**: No more manual "Scan Library" clicks—your sidebar always reflects your current conversation list.
-*   **Background Sync**: Works quietly in the background so you can focus on your work.
-
 ### 🔗 Unified Data Management
 One library for two platforms—your prompts and search work everywhere.
 *   **Shared Prompt Library**: Create a prompt once, use it on both Gemini and AI Studio. Your entire prompt collection is available across platforms.
@@ -40,7 +37,6 @@ One library for two platforms—your prompts and search work everywhere.
 Enhanced visual options for better comfort and productivity.
 *   **Compact View**: A denser layout for users who prefer seeing more information at once.
 *   **Relaxed View**: A more spacious design with better readability for extended use.
-*   **Smart Defaults**: The interface automatically adapts to your screen size and preferences.
 
 ### ✨ Performance & Polish
 *   **Optimized Batch Operations**: Improved speed and reliability when performing bulk actions like moving multiple conversations or applying tags.
