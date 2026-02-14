@@ -99,7 +99,6 @@ export const useModuleConfig = (): ModuleConfig => {
         onSwitchToOriginalUI: () => {
           setOverlayOpen(false);
         },
-        onImportAiStudioSystem: handleImportAiStudioSystem,
       },
     },
     explorer: {
@@ -122,6 +121,9 @@ export const useModuleConfig = (): ModuleConfig => {
     },
     prompts: {
       enabled: true,
+      menuActions: {
+        onImportAiStudioSystem: handleImportAiStudioSystem,
+      },
     },
   };
 };

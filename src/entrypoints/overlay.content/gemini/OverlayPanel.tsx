@@ -364,7 +364,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             onNavigate={moduleConfig.search.onNavigate}
           />
         ) : activeTab === 'prompts' ? (
-          <PromptsTab menuActions={moduleConfig.general.menuActions} />
+          <PromptsTab menuActions={{...moduleConfig.general.menuActions, ...moduleConfig.prompts.menuActions}} />
         ) : activeTab === 'favorites' ? (
           <FavoritesTab 
             menuActions={moduleConfig.general.menuActions} 

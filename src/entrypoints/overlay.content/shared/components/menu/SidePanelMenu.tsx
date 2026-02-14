@@ -19,8 +19,6 @@ interface SidePanelMenuProps {
   sortOrder?: 'alpha' | 'date';
   onToggleViewMode?: () => void;
   viewMode?: 'tree' | 'timeline';
-  /** When provided, shows "Import AI Studio System" below view mode (Prompts tab). */
-  onImportAiStudioSystem?: () => void | Promise<void>;
   menuActions?: {
     onViewHistory?: () => void;
     onSwitchToOriginalUI?: () => void;
@@ -36,7 +34,6 @@ export const SidePanelMenu = ({
   sortOrder,
   onToggleViewMode,
   viewMode,
-  onImportAiStudioSystem,
   menuActions,
 }: SidePanelMenuProps) => {
   const { t } = useI18n();
@@ -88,8 +85,8 @@ export const SidePanelMenu = ({
                 <span>{viewMode === 'tree' ? t('menu.switchToTimelineView') : t('menu.switchToFolderView')}</span>
             </DropdownMenuItem>
         )}
-        {onImportAiStudioSystem && (
-            <DropdownMenuItem onClick={() => void onImportAiStudioSystem()}>
+        {menuActions?.onImportAiStudioSystem && (
+            <DropdownMenuItem onClick={() => void menuActions.onImportAiStudioSystem?.()}>
                 <Upload className="mr-2 h-4 w-4" />
                 <span>{t('prompts.importAiStudioSystem')}</span>
             </DropdownMenuItem>
@@ -101,7 +98,7 @@ export const SidePanelMenu = ({
             </DropdownMenuItem>
         )}
         
-        {(onToggleViewMode || onImportAiStudioSystem || handleScanLibrary) && <DropdownMenuSeparator />}
+        {(onToggleViewMode || menuActions?.onImportAiStudioSystem || handleScanLibrary) && <DropdownMenuSeparator />}
         
         {/* Section 3: Tools & Settings */}
         {menuActions?.onViewHistory && (

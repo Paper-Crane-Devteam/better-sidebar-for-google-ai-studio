@@ -4,7 +4,6 @@ export interface ModuleConfig {
     menuActions?: {
       onViewHistory?: () => void;
       onSwitchToOriginalUI?: () => void;
-      onImportAiStudioSystem?: () => void;
     };
   },
   explorer: {
@@ -14,8 +13,10 @@ export interface ModuleConfig {
     visibleFilters?: ('search' | 'tags' | 'type' | 'favorites')[];
   };
   prompts: {
-    // Placeholder for future prompts module customization
     enabled: boolean;
+    menuActions?: {
+      onImportAiStudioSystem?: () => void;
+    };
   };
   search: {
     extraHeaderButtons?: React.ReactNode[];
