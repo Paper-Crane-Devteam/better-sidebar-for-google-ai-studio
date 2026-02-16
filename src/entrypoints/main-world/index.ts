@@ -4,6 +4,8 @@
 import { detectPlatform, Platform } from '@/shared/types/platform';
 import { initAiStudioInterceptors } from './aistudio';
 import { initGeminiInterceptors } from './gemini';
+import { initChatGPTInterceptors } from './chatgpt';
+
 export default defineUnlistedScript(() => {
   const platform = detectPlatform();
   console.log(`Better Sidebar: Main World Script Initialized (Platform: ${platform})`);
@@ -15,6 +17,10 @@ export default defineUnlistedScript(() => {
     }
     case Platform.GEMINI: {
       initGeminiInterceptors();
+      break;
+    }
+    case Platform.CHATGPT: {
+      initChatGPTInterceptors();
       break;
     }
     default:

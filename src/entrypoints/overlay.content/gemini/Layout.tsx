@@ -7,46 +7,9 @@ import ReactDOM from 'react-dom/client';
 import { OverlayPanel } from './OverlayPanel';
 import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
-import { applyShadowStyles } from '@/shared/lib/utils';
+import { applyShadowStyles, querySelectorDeep, waitForElement } from '@/shared/lib/utils';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useAppStore } from '@/shared/lib/store';
-
-const querySelectorDeep = (
-  selector: string,
-  root: Document | Element = document
-): Element | null => {
-  if (!root) return null;
-  try {
-    const found = root.querySelector(selector);
-    if (found) return found;
-  } catch (e) {}
-  try {
-    const allElements = root.querySelectorAll('*');
-    for (const el of allElements) {
-      try {
-        if (el.shadowRoot) {
-          const deepFound = querySelectorDeep(
-            selector,
-            el.shadowRoot as unknown as Element
-          );
-          if (deepFound) return deepFound;
-        }
-      } catch (e) {}
-    }
-  } catch (e) {}
-  return null;
-};
-
-const waitForElement = (selector: string): Promise<Element> => {
-  return new Promise((resolve) => {
-    const check = () => {
-      const el = querySelectorDeep(selector);
-      if (el) resolve(el);
-      else requestAnimationFrame(check);
-    };
-    check();
-  });
-};
 
 export async function initGeminiOverlay(mainStyles: string): Promise<void> {
   console.log('Better Sidebar: Overlay (Gemini) Initialized');

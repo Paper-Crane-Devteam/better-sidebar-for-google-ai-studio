@@ -6,7 +6,8 @@ export const navigate = (url: string) => {
 };
 
 export const navigateToConversation = (targetId: string) => {
-  if (detectPlatform() === Platform.GEMINI) {
+  const platform = detectPlatform();
+  if (platform === Platform.GEMINI) {
     const links = document.querySelectorAll('a[data-test-id="conversation"]');
     const targetHref = `/app/${targetId}`;
     
@@ -23,6 +24,13 @@ export const navigateToConversation = (targetId: string) => {
     console.warn(`Conversation link not found for id: ${targetId}, falling back to location.href`);
     window.location.href = `/app/${targetId}`;
   }
-  // aistudio
-  navigate(`/prompts/${targetId}`);
+  if(platform === Platform.AI_STUDIO) {
+    navigate(`/prompts/${targetId}`);
+  }
+  if(platform === Platform.CHATGPT) {
+    navigate(`/c/${targetId}`);
+  }
+  if(platform === Platform.CLAUDE) {
+    navigate(`/chat/${targetId}`);
+  }
 };

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { detectPlatform, Platform } from '../types/platform';
-import { syncGeminiTheme, syncAiStudioTheme } from './utils';
+import { syncGeminiTheme, syncAiStudioTheme, syncChatGPTTheme } from './utils/utils';
 
 interface SettingsState {
   theme: 'light' | 'dark' | 'system';
@@ -21,6 +21,9 @@ interface SettingsState {
     build: boolean;
     dashboard: boolean;
     documentation: boolean;
+    images: boolean;
+    apps: boolean;
+    codex: boolean;
     myStuff: boolean;
     gems: boolean;
     originalUI: boolean;
@@ -102,7 +105,16 @@ const getStorageName = () => {
   if (platform === Platform.GEMINI) {
     return 'better-sidebar-for-gemini-settings';
   }
-  return 'prompt-manager-for-google-ai-studio-settings';
+  if (platform === Platform.AI_STUDIO) {
+    return 'prompt-manager-for-google-ai-studio-settings';
+  }
+  if (platform === Platform.CHATGPT) {
+    return 'prompt-manager-for-chatgpt-settings';
+  }
+  if (platform === Platform.CLAUDE) {
+    return 'prompt-manager-for-claude-settings';
+  }
+  return 'better-sidebar-for-unknown-settings';
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -125,6 +137,9 @@ export const useSettingsStore = create<SettingsState>()(
         build: true,
         dashboard: true,
         documentation: true,
+        images: true,
+        apps: true,
+        codex: true,
         myStuff: true,
         gems: true,
         originalUI: true,
@@ -138,6 +153,12 @@ export const useSettingsStore = create<SettingsState>()(
         if(platform === Platform.AI_STUDIO) {
           syncAiStudioTheme(theme)
         }
+        if(platform === Platform.CHATGPT) {
+          syncChatGPTTheme(theme)
+        }
+        // if(platform === Platform.CLAUDE) {
+        //   syncClaudeTheme(theme)
+        // }
       },
       setLayoutDensity: (layoutDensity) => set({ layoutDensity }),
       setNewChatBehavior: (newChatBehavior) => set({ newChatBehavior }),

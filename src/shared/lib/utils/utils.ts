@@ -293,3 +293,13 @@ export function syncAiStudioTheme(theme: 'light' | 'dark' | 'system') {
     // ignore
   }
 }
+
+export function syncChatGPTTheme(theme: 'light' | 'dark' | 'system') {
+  if (typeof document === 'undefined') return;
+  const settingsButton = document.querySelector(
+    'button[aria-label="Settings & help"]',
+  ) as HTMLElement;
+  if (!settingsButton) return;
+
+  settingsButton.click();
+}

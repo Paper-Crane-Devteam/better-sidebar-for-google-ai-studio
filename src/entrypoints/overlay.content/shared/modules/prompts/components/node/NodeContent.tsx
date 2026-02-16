@@ -3,7 +3,7 @@ import { NodeProps } from './types';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { Star } from 'lucide-react';
 import { BatchSelectionCheckbox } from '../batch/BatchSelectionCheckbox';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/shared/lib/utils/utils';
 import { RenameForm } from './RenameForm';
 import { PromptIconDisplay } from '../../lib/prompt-icons';
 

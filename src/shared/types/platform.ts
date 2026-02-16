@@ -1,4 +1,8 @@
 // Platform definitions for multi-platform support
+import AIStudioIcon from '@/assets/icons/aistudio.png';
+import GeminiIcon from '@/assets/icons/gemini.svg';
+import ChatGPTIcon from '@/assets/icons/chatgpt.svg';
+import ClaudeIcon from '@/assets/icons/claude.svg';
 
 export enum Platform {
   AI_STUDIO = 'aistudio',
@@ -9,6 +13,7 @@ export enum Platform {
 }
 
 export interface PlatformConfig {
+  id: Platform;
   name: string;
   hostname: string;
   urlPattern: string;
@@ -22,39 +27,44 @@ export const PLATFORM_CONFIG: Record<
   PlatformConfig
 > = {
   [Platform.AI_STUDIO]: {
+    id: Platform.AI_STUDIO,
     name: 'Google AI Studio',
     hostname: 'aistudio.google.com',
     urlPattern: 'https://aistudio.google.com',
-    icon: 'api',
+    icon: AIStudioIcon,
     color: 'blue',
     promptUrlTemplate: (id?: string) =>
       `https://aistudio.google.com/prompts/${id || ''}`,
   },
   [Platform.GEMINI]: {
+    id: Platform.GEMINI,
     name: 'Google Gemini',
     hostname: 'gemini.google.com',
     urlPattern: 'https://gemini.google.com',
-    icon: 'sparkles',
+    icon: GeminiIcon,
     color: 'purple',
     promptUrlTemplate: (id?: string) => `https://gemini.google.com/app/${id || ''}`,
   },
   [Platform.CHATGPT]: {
+    id: Platform.CHATGPT,
     name: 'ChatGPT',
     hostname: 'chatgpt.com',
     urlPattern: 'https://chatgpt.com',
-    icon: 'message-circle',
+    icon: ChatGPTIcon,
     color: 'green',
     promptUrlTemplate: (id?: string) => `https://chatgpt.com/c/${id || ''}`,
   },
   [Platform.CLAUDE]: {
+    id: Platform.CLAUDE,
     name: 'Claude',
     hostname: 'claude.ai',
     urlPattern: 'https://claude.ai',
-    icon: 'bot',
+    icon: ClaudeIcon,
     color: 'orange',
     promptUrlTemplate: (id?: string) => `https://claude.ai/chat/${id || ''}`,
   },
   [Platform.UNKNOWN]: {
+    id: Platform.UNKNOWN,
     name: 'Unknown',
     hostname: '',
     urlPattern: '',
@@ -75,6 +85,7 @@ export function detectPlatform(
 ): Platform {
   for (const [platform, config] of Object.entries(PLATFORM_CONFIG)) {
     if (hostname === config.hostname) {
+      console.log('Detected platform:', platform);
       return platform as Platform;
     }
   }

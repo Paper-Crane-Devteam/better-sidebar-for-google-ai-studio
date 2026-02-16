@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Folder as FolderIcon, MessageSquare, ChevronRight, ChevronDown, FolderOpen, Star, Eye } from 'lucide-react';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/shared/lib/utils/utils';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { useAppStore } from '@/shared/lib/store';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useModalStore } from '@/shared/lib/modal';
 import {
   hasPromptVariables,
-  extractPromptVariables,
+  parsePromptVariables,
   substitutePromptVariables,
+  hasImportReferences,
+  resolveImports,
 } from '@/shared/lib/prompt-variables';
 import {
   ContextMenu,
@@ -96,10 +98,21 @@ export const Node = ({ node, style, dragHandle, tree, preview, onPreview }: Node
     toast.success(t('prompts.promptCopiedToClipboard'), 1000);
   };
 
+  const resolveContent = (content: string): string => {
+    if (!hasImportReferences(content)) return content;
+    const allPrompts = useAppStore.getState().prompts;
+    return resolveImports(content, (title) => {
+      const found = allPrompts.find((p) => p.title === title);
+      return found?.content;
+    });
+  };
+
   const tryCopyContent = (content: string) => {
     if (!content) return;
-    if (hasPromptVariables(content)) {
-      const variables = extractPromptVariables(content);
+    // Resolve @import references first
+    const resolved = resolveContent(content);
+    const variables = parsePromptVariables(resolved).filter((v) => v.kind !== 'import');
+    if (variables.length > 0) {
       useModalStore.getState().open({
         type: 'confirm',
         title: t('prompts.fillVariablesTitle'),
@@ -111,7 +124,7 @@ export const Node = ({ node, style, dragHandle, tree, preview, onPreview }: Node
         onConfirm: () => {
           const values = variableFormRef.current?.getValues();
           if (values != null) {
-            const filled = substitutePromptVariables(content, values);
+            const filled = substitutePromptVariables(resolved, values);
             navigator.clipboard.writeText(filled);
             toast.success(t('prompts.promptCopiedToClipboard'), 1000);
           }
@@ -120,7 +133,7 @@ export const Node = ({ node, style, dragHandle, tree, preview, onPreview }: Node
         onCancel: () => useModalStore.getState().close(),
       });
     } else {
-      doCopy(content);
+      doCopy(resolved);
     }
   };
 

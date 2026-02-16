@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Folder as FolderIcon, MessageSquare, ChevronRight, ChevronDown, FolderOpen, Star, Calendar, Image } from 'lucide-react';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/shared/lib/utils/utils';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { navigate, navigateToConversation } from '@/shared/lib/navigation';
 import { useAppStore } from '@/shared/lib/store';

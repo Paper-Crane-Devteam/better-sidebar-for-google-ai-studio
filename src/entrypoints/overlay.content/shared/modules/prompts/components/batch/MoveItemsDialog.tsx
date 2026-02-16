@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useAppStore } from '@/shared/lib/store';
 import { TreeView } from '@/shared/components/ui/tree-view';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/shared/lib/utils/utils';
 import { Folder } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
 

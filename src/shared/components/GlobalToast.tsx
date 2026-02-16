@@ -1,7 +1,7 @@
 import React from 'react';
 import { useToastStore } from '@/shared/lib/toast';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
-import { cn } from '@/shared/lib/utils'; // Assuming cn utility exists, usually does in shadcn projects
+import { cn } from '@/shared/lib/utils/utils'; // Assuming cn utility exists, usually does in shadcn projects
 
 const icons = {
   success: <CheckCircle className="h-5 w-5 text-green-500" />,

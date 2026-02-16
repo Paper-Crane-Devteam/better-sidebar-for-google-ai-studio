@@ -14,7 +14,7 @@ import {
   Bot,
   Loader2,
 } from 'lucide-react';
-import { cn, stripMarkdown } from '@/shared/lib/utils';
+import { cn, stripMarkdown } from '@/shared/lib/utils/utils';
 import dayjs from 'dayjs';
 import { navigate } from '@/shared/lib/navigation';
 import { browser } from 'wxt/browser';
@@ -25,7 +25,7 @@ import { toast } from '@/shared/lib/toast';
 import type { Message } from '@/shared/types/db';
 import AIStudioIcon from '@/assets/icons/aistudio.png';
 import GeminiIcon from '@/assets/icons/gemini.svg';
-import { detectPlatform, Platform } from '@/shared/types/platform';
+import { detectPlatform, PLATFORM_CONFIG, Platform } from '@/shared/types/platform';
 
 export interface SearchResultItem {
   id: string;
@@ -251,9 +251,9 @@ const MatchItem = ({
         <div className="font-mono text-[10px] mb-0.5 opacity-70 flex items-center gap-1">
           {showPlatformIcon && platform && (
             <img
-              src={platform === 'gemini' ? GeminiIcon : AIStudioIcon}
+              src={PLATFORM_CONFIG[platform as Platform].icon}
               className="w-3 h-3 object-contain"
-              alt={platform}
+              alt={PLATFORM_CONFIG[platform as Platform].name}
             />
           )}
           {match.role === 'user' ? userLabel : modelLabel} •{' '}
@@ -452,7 +452,7 @@ export const SearchResults = ({
                   <p className="leading-relaxed">
                     {t('search.indexingInfoIntro')}
                   </p>
-                  {detectPlatform() !== Platform.GEMINI && (
+                  {detectPlatform() === Platform.AI_STUDIO && (
                     <div className="rounded-md bg-secondary/40 border p-3 text-xs">
                       <p className="font-medium text-foreground mb-2">
                         {t('search.indexingHowTo')}

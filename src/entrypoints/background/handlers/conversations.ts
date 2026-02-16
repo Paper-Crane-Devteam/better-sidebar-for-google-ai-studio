@@ -81,6 +81,8 @@ export async function handleConversations(
         providedExternalUrl ??
         (platform === 'gemini'
           ? `https://gemini.google.com/app/${id}`
+          : platform === 'chatgpt'
+          ? `https://chatgpt.com/c/${id}`
           : `https://aistudio.google.com/prompts/${id}`);
       await conversationRepo.save({
         id,

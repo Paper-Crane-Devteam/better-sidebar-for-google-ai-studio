@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '@/shared/lib/store';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/shared/lib/utils/utils';
 import { Tag as TagIcon, Check } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
 

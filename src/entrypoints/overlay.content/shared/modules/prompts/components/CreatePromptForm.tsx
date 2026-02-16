@@ -9,7 +9,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/shared/lib/utils/utils';
 import { useModalStore } from '@/shared/lib/modal';
 import { useI18n } from '@/shared/hooks/useI18n';
 import {
@@ -58,11 +58,28 @@ export const CreatePromptForm = ({ initialValues, onChange, formRef, onValidSubm
           <p className="leading-relaxed">
             {t('prompts.variablePromptModalIntro')}
           </p>
+          {/* Basic variable */}
           <div className="rounded-md bg-secondary/40 border p-3 text-xs">
             <p className="font-medium text-foreground mb-2">{t('prompts.variablePromptModalExample')}</p>
             <pre className="whitespace-pre-wrap break-words font-mono text-foreground/90">
               Write a {'{{tone}}'} email to {'{{recipient}}'} about {'{{topic}}'}.
             </pre>
+          </div>
+          {/* Dropdown variable */}
+          <div className="rounded-md bg-secondary/40 border p-3 text-xs">
+            <p className="font-medium text-foreground mb-2">{t('prompts.dropdownVariableExample')}</p>
+            <pre className="whitespace-pre-wrap break-words font-mono text-foreground/90">
+              {'{{tone:professional,humorous,concise}}'}
+            </pre>
+            <p className="mt-1.5 text-muted-foreground">{t('prompts.dropdownVariableHint')}</p>
+          </div>
+          {/* @import */}
+          <div className="rounded-md bg-secondary/40 border p-3 text-xs">
+            <p className="font-medium text-foreground mb-2">{t('prompts.importExample')}</p>
+            <pre className="whitespace-pre-wrap break-words font-mono text-foreground/90">
+              {'{{@import:General System Instructions}}'}
+            </pre>
+            <p className="mt-1.5 text-muted-foreground">{t('prompts.importHint')}</p>
           </div>
         </div>
       ),

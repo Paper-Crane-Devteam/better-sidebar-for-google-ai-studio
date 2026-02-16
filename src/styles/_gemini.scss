@@ -143,5 +143,6 @@
   :host(.theme-gemini) .node-item-selected {
     background-color: var(--gem-sys-color--primary-container);
     color: var(--gem-sys-color--on-primary-container);
+    font-weight: 500;
   }
 }

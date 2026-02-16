@@ -7,45 +7,9 @@ import ReactDOM from 'react-dom/client';
 import { OverlayPanel } from './OverlayPanel';
 import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
-import { applyShadowStyles } from '@/shared/lib/utils';
+import { applyShadowStyles, waitForElement } from '@/shared/lib/utils';
 import { useSettingsStore } from '@/shared/lib/settings-store';
-
-const querySelectorDeep = (
-  selector: string,
-  root: Document | Element = document
-): Element | null => {
-  if (!root) return null;
-  try {
-    const found = root.querySelector(selector);
-    if (found) return found;
-  } catch (e) {}
-  try {
-    const allElements = root.querySelectorAll('*');
-    for (const el of allElements) {
-      try {
-        if (el.shadowRoot) {
-          const deepFound = querySelectorDeep(
-            selector,
-            el.shadowRoot as unknown as Element
-          );
-          if (deepFound) return deepFound;
-        }
-      } catch (e) {}
-    }
-  } catch (e) {}
-  return null;
-};
-
-const waitForElement = (selector: string): Promise<Element> => {
-  return new Promise((resolve) => {
-    const check = () => {
-      const el = querySelectorDeep(selector);
-      if (el) resolve(el);
-      else requestAnimationFrame(check);
-    };
-    check();
-  });
-};
+import { useAppStore } from '@/shared/lib/store';
 
 export async function initChatGPTOverlay(mainStyles: string): Promise<void> {
   console.log('Better Sidebar: Overlay (ChatGPT) Initialized');
@@ -72,27 +36,18 @@ export async function initChatGPTOverlay(mainStyles: string): Promise<void> {
     waitForHydration();
   });
 
-  // 1. Hide original sidebar
+  // 1. Hide original sidebar (keep in render tree for scrolling during scan)
   const style = document.createElement('style');
   style.id = 'better-sidebar-for-google-ai-studio-chatgpt-sidebar-hider';
   style.textContent = `
     #stage-slideover-sidebar {
-      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
       position: absolute !important;
-      left: -9999px !important;
-      top: -9999px !important;
+      z-index: -1 !important;
     }
   `;
   document.head.appendChild(style);
-
-  try {
-    const originalSidebar = await waitForElement('#stage-slideover-sidebar');
-    (originalSidebar as HTMLElement).style.display = 'none';
-    (originalSidebar as HTMLElement).style.position = 'absolute';
-    (originalSidebar as HTMLElement).style.left = '-9999px';
-  } catch (e) {
-    console.error('Better Sidebar: Failed to find #stage-slideover-sidebar', e);
-  }
 
   // 2. Inject custom sidebar as first child of parent
   const originalSidebar = await waitForElement('#stage-slideover-sidebar');
@@ -119,7 +74,9 @@ export async function initChatGPTOverlay(mainStyles: string): Promise<void> {
     });
   });
 
-  // TODO: Sync sidebar collapse state if needed
+  const sidebarHider = document.getElementById(
+    'better-sidebar-for-google-ai-studio-chatgpt-sidebar-hider',
+  ) as HTMLStyleElement;
 
   const sidebarStyle = document.createElement('style');
   sidebarStyle.id = 'better-sidebar-for-google-ai-studio-sidebar-styles';
@@ -188,6 +145,52 @@ export async function initChatGPTOverlay(mainStyles: string): Promise<void> {
 
   shadow.appendChild(rootContainer);
 
+  let reactRoot: ReactDOM.Root | null = null;
+  const renderContent = () => {
+    if (!reactRoot) {
+      reactRoot = ReactDOM.createRoot(rootContainer);
+    }
+    reactRoot.render(
+      <ShadowRootProvider container={rootContainer}>
+        <div 
+          className="h-full w-full bg-background border-r text-foreground"
+          suppressHydrationWarning
+        >
+          <OverlayPanel className="h-full" />
+        </div>
+      </ShadowRootProvider>
+    );
+  };
+
+  // Re-mount wrapper and re-render if ChatGPT's React removed our wrapper from the DOM
+  const ensureWrapperAndRender = () => {
+    if (!document.contains(wrapper) && parent) {
+      parent.insertBefore(wrapper, parent.firstChild);
+      renderContent();
+    }
+  };
+
+  // Update visibility/state based on overlay open state (stylesheet alone hides/shows original)
+  const updateState = (enabled: boolean) => {
+    if (enabled) {
+      if (sidebarHider) sidebarHider.disabled = false;
+      if (wrapper) {
+        ensureWrapperAndRender();
+        wrapper.style.display = 'block';
+      }
+    } else {
+      if (sidebarHider) sidebarHider.disabled = true;
+      if (wrapper) wrapper.style.display = 'none';
+    }
+  };
+
+  updateState(useAppStore.getState().ui.overlay.isOpen);
+  useAppStore.subscribe((state, prevState) => {
+    if (state.ui.overlay.isOpen !== prevState.ui.overlay.isOpen) {
+      updateState(state.ui.overlay.isOpen);
+    }
+  });
+
   // Use requestAnimationFrame to ensure React renders after ChatGPT's React is done
   // This prevents hydration errors from ChatGPT's React interfering
   requestAnimationFrame(() => {
@@ -205,17 +208,7 @@ export async function initChatGPTOverlay(mainStyles: string): Promise<void> {
       originalError.apply(console, args);
     };
 
-    const root = ReactDOM.createRoot(rootContainer);
-    root.render(
-      <ShadowRootProvider container={rootContainer}>
-        <div 
-          className="h-full w-full bg-background border-r text-foreground"
-          suppressHydrationWarning
-        >
-          <OverlayPanel className="h-full" />
-        </div>
-      </ShadowRootProvider>
-    );
+    renderContent();
 
     // Restore console.error after a delay
     setTimeout(() => {

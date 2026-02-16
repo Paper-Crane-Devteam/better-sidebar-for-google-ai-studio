@@ -24,6 +24,7 @@ import { FolderPlus, Edit2, Trash2, Star, StarOff, Tag as TagIcon, ExternalLink,
 import { modal } from '@/shared/lib/modal';
 import { MoveItemsDialog } from '../batch/MoveItemsDialog';
 import { NodeProps } from './types';
+import { detectPlatform, PLATFORM_CONFIG } from '@/shared/types/platform';
 
 interface NodeContextMenuProps extends NodeProps {
   isFavorite: boolean;
@@ -88,7 +89,7 @@ export const NodeContextMenu = ({
     const conversationId = node.data.id;
     const messages = await fetchMessagesForExport(conversationId);
     if (!messages?.length) {
-      toast.error(t('toast.noContentToExport'));
+      toast.error(t('toast.noContentToExport', { platform: PLATFORM_CONFIG[detectPlatform()].name }));
       return;
     }
     const baseName = safeFilename(node.data.name || conversationId);

@@ -2,7 +2,7 @@ import React from 'react';
 import { useModalStore } from '@/shared/lib/modal';
 import { Button } from './ui/button';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/shared/lib/utils/utils';
 
 const BASE_Z = 100;
 

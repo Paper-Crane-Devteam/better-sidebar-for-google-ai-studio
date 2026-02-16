@@ -5,7 +5,7 @@ import { Star, Image as ImageIcon, MessageSquare } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { navigate } from '@/shared/lib/navigation';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/shared/lib/utils/utils';
 import { useCurrentConversationId } from '../../../hooks/useCurrentConversationId';
 import type { ExplorerTypeFilter } from '../../../types/filter';
 import { useI18n } from '@/shared/hooks/useI18n';

@@ -5,7 +5,7 @@ import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Tag as TagIcon, MoreVertical, Trash2, Edit2 } from 'lucide-react';
 import { Button } from '@/entrypoints/overlay.content/shared/components/ui/button';
 import { Input } from '@/entrypoints/overlay.content/shared/components/ui/input';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/shared/lib/utils/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,

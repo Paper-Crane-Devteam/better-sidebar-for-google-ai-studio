@@ -1,4 +1,4 @@
-import { applyShadowStyles } from './utils';
+import { applyShadowStyles } from './utils/utils';
 
 export class TooltipHelper {
   private static instance: TooltipHelper;

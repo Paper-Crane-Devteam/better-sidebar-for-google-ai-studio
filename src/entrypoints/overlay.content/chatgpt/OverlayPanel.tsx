@@ -9,9 +9,9 @@ import {
   Tag,
   MessageSquare,
   Settings,
-  Hammer,
-  LayoutDashboard,
-  BookOpen,
+  Image,
+  LayoutGrid,
+  Code2,
   LogOut,
   Search,
   Sparkles,
@@ -49,61 +49,21 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const {
     fetchData,
     ui,
-    setOverlayOpen: setIsUIVisible,
     setActiveTab,
     setIsScanning,
-    setShowSqlInterface,
     setExplorerViewMode,
     setExplorerSortOrder,
-    setTempHiddenToken,
     setSettingsOpen: setIsSettingsOpen,
-    setOverlayOpen
+    setOverlayOpen,
+    setShowSqlInterface,
   } = useAppStore();
 
   const {
     isOpen: isUIVisible,
     activeTab,
-    isScanning,
-    showSqlInterface,
-    tempHiddenToken,
     isSettingsOpen,
+    showSqlInterface,
   } = ui.overlay;
-
-  // Handle auto-switching UI based on URL
-  useEffect(() => {
-    // TODO: Implement URL-based UI switching for ChatGPT if needed
-  }, [path, isUIVisible, setIsUIVisible, tempHiddenToken, setTempHiddenToken]);
-
-  // 1. Handle UI Toggle Side Effects
-  useEffect(() => {
-    const sidebarHider = document.getElementById(
-      'better-sidebar-for-google-ai-studio-chatgpt-sidebar-hider',
-    ) as HTMLStyleElement;
-    const originalSidebar = document.querySelector('#stage-slideover-sidebar') as HTMLElement;
-    const wrapper = document.getElementById(
-      'better-sidebar-for-google-ai-studio-sidebar-wrapper',
-    );
-
-    if (isUIVisible) {
-      // Show Enhanced UI, Hide Original
-      if (sidebarHider) sidebarHider.disabled = false;
-      if (originalSidebar) {
-        originalSidebar.style.display = 'none';
-        originalSidebar.style.position = 'absolute';
-        originalSidebar.style.left = '-9999px';
-      }
-      if (wrapper) wrapper.style.display = 'block';
-    } else {
-      // Hide Enhanced UI, Show Original
-      if (sidebarHider) sidebarHider.disabled = true;
-      if (originalSidebar) {
-        originalSidebar.style.display = ''; // Reset to default
-        originalSidebar.style.position = '';
-        originalSidebar.style.left = '';
-      }
-      if (wrapper) wrapper.style.display = 'none';
-    }
-  }, [isUIVisible]);
 
   useEffect(() => {
     // Initial fetch
@@ -173,21 +133,22 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     setActiveTab(tab);
   };
 
-  if (!isUIVisible) {
-    return <OverlayToggle onToggle={() => setIsUIVisible(true)} />;
-  }
-
-  if (showSqlInterface) {
-    return <SqlExecutor onClose={() => setShowSqlInterface(false)} />;
-  }
-
   const handleNavigation = (url: string) => {
-    // TODO: Implement navigation for ChatGPT
+    navigate(url);
   };
 
   const handleExternalLink = (url: string) => {
     window.open(url, '_blank');
   };
+
+  // Conditional rendering based on UI state
+  if (!isUIVisible) {
+    return <OverlayToggle onToggle={() => setOverlayOpen(true)} />;
+  }
+
+  if (showSqlInterface) {
+    return <SqlExecutor onClose={() => setShowSqlInterface(false)} />;
+  }
 
   return (
     <div
@@ -245,45 +206,45 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           <Tag className="sidebar-icon" />
         </Button>
 
-        {(shortcuts?.build ||
-          shortcuts?.dashboard ||
-          shortcuts?.documentation) && <Separator className="w-8 my-1" />}
+        {(shortcuts?.images ||
+          shortcuts?.apps ||
+          shortcuts?.codex) && <Separator className="w-8 my-1" />}
 
-        {shortcuts?.build && (
+        {shortcuts?.images && (
           <Button
             variant="ghost"
             size="icon"
-            title={t('shortcuts.build')}
-            onClick={() => handleNavigation('/')}
+            title={t('shortcuts.images')}
+            onClick={() => handleNavigation('/images')}
             className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
           >
-            <Hammer className="sidebar-icon" />
+            <Image className="sidebar-icon" />
           </Button>
         )}
 
-        {shortcuts?.dashboard && (
+        {shortcuts?.apps && (
           <Button
             variant="ghost"
             size="icon"
-            title={t('shortcuts.dashboard')}
-            onClick={() => handleNavigation('/')}
+            title={t('shortcuts.apps')}
+            onClick={() => handleNavigation('/apps')}
             className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
           >
-            <LayoutDashboard className="sidebar-icon" />
+            <LayoutGrid className="sidebar-icon" />
           </Button>
         )}
 
-        {shortcuts?.documentation && (
+        {shortcuts?.codex && (
           <Button
             variant="ghost"
             size="icon"
-            title={t('shortcuts.documentation')}
+            title={t('shortcuts.codex')}
             onClick={() =>
-              handleExternalLink('https://help.openai.com/')
+              handleExternalLink('https://chatgpt.com/codex')
             }
             className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
           >
-            <BookOpen className="sidebar-icon" />
+            <Code2 className="sidebar-icon" />
           </Button>
         )}
 
@@ -294,7 +255,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             variant="ghost"
             size="icon"
             title={t('shortcuts.originalUI')}
-            onClick={() => setIsUIVisible(false)}
+            onClick={() => setOverlayOpen(false)}
             className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
           >
             <LogOut className="sidebar-icon" />

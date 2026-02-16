@@ -36,7 +36,7 @@ export async function handleSearchNavigation(match: SearchMatch) {
   }
 
   // 2. Handle same-platform navigation
-  if (currentPlatform === Platform.GEMINI) {
+  if (currentPlatform !== Platform.AI_STUDIO) {
     navigateToConversation(match.conversation_id);
     return;
   }

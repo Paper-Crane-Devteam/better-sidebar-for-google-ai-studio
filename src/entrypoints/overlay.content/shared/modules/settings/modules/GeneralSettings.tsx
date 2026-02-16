@@ -270,6 +270,43 @@ export const GeneralSettings = () => {
               </div>
             </>
           )}
+          {platform === Platform.CHATGPT && (
+            <>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <label className="text-sm font-medium">
+                    {t('shortcuts.images')}
+                  </label>
+                </div>
+                <Switch
+                  checked={shortcuts?.images ?? true}
+                  onCheckedChange={(c) => setShortcutVisible('images', c)}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <label className="text-sm font-medium">
+                    {t('shortcuts.apps')}
+                  </label>
+                </div>
+                <Switch
+                  checked={shortcuts?.apps ?? true}
+                  onCheckedChange={(c) => setShortcutVisible('apps', c)}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <label className="text-sm font-medium">
+                    {t('shortcuts.codex')}
+                  </label>
+                </div>
+                <Switch
+                  checked={shortcuts?.codex ?? true}
+                  onCheckedChange={(c) => setShortcutVisible('codex', c)}
+                />
+              </div>
+            </>
+          )}
           {platform === Platform.GEMINI && (
             <>
               <div className="flex items-center justify-between">

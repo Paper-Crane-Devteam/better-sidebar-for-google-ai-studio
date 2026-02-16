@@ -1,4 +1,4 @@
-import { stripMarkdown } from '@/shared/lib/utils';
+import { stripMarkdown } from '@/shared/lib/utils/utils';
 import type { Message } from '@/shared/types/db';
 import i18n from '@/locale/i18n';
 

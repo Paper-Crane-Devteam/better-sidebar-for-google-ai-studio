@@ -11,10 +11,8 @@ import {
 } from '@/shared/components/ui/dropdown-menu';
 import { Filter } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { Platform } from '@/shared/types/platform';
+import { Platform, PLATFORM_CONFIG } from '@/shared/types/platform';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
-import geminiIcon from '@/assets/icons/gemini.svg';
-import aiStudioIcon from '@/assets/icons/aistudio.png';
 
 export const PlatformFilter = () => {
   const { t } = useI18n();
@@ -49,8 +47,10 @@ export const PlatformFilter = () => {
   };
 
   const platforms = [
-    { value: Platform.GEMINI, label: 'Gemini', icon: geminiIcon },
-    { value: Platform.AI_STUDIO, label: 'GoogleAI Studio', icon: aiStudioIcon },
+    {...PLATFORM_CONFIG[Platform.GEMINI]},
+    {...PLATFORM_CONFIG[Platform.AI_STUDIO]},
+    {...PLATFORM_CONFIG[Platform.CHATGPT]},
+    // {...PLATFORM_CONFIG[Platform.CLAUDE]},
   ];
 
   // Calculate active count for badge/indicator if needed
@@ -70,14 +70,14 @@ export const PlatformFilter = () => {
         <DropdownMenuSeparator />
         {platforms.map((platform) => (
           <DropdownMenuCheckboxItem
-            key={platform.value}
-            checked={options.platforms?.includes(platform.value) ?? false}
-            onCheckedChange={(checked) => handlePlatformChange(platform.value, checked)}
-            disabled={platform.value === currentPlatform}
+            key={platform.id}
+            checked={options.platforms?.includes(platform.id) ?? false}
+            onCheckedChange={(checked) => handlePlatformChange(platform.id, checked)}
+            disabled={platform.id === currentPlatform}
           >
             <div className="flex items-center gap-2">
-              <img src={platform.icon} alt={platform.label} className="h-4 w-4" />
-              <span>{platform.label}</span>
+              <img src={platform.icon} alt={platform.name} className="h-4 w-4" />
+              <span>{platform.name}</span>
             </div>
           </DropdownMenuCheckboxItem>
         ))}

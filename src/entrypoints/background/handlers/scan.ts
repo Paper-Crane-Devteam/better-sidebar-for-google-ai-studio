@@ -4,6 +4,7 @@ import i18n from '@/locale/i18n';
 import type { ExtensionMessage, ExtensionResponse } from '@/shared/types/messages';
 import type { MessageSender } from '../types';
 import { notifyDataUpdated } from '../notify';
+import { Platform } from '@/shared/types/platform';
 
 function getPageLocalStorage(key: string): string | null {
   try {
@@ -40,12 +41,16 @@ export async function handleScan(
     case 'SCAN_LIBRARY': {
       const platform = message.platform || 'aistudio';
       const url =
-        platform === 'gemini'
+        platform === Platform.GEMINI
           ? 'https://gemini.google.com/search'
+          : platform === Platform.CHATGPT
+          ? 'https://chatgpt.com/'
           : 'https://aistudio.google.com/library';
       const matchUrl =
-        platform === 'gemini'
+        platform === Platform.GEMINI
           ? 'https://gemini.google.com/*'
+          : platform === Platform.CHATGPT
+          ? 'https://chatgpt.com/*'
           : 'https://aistudio.google.com/*';
 
       const [existingTab] = await browser.tabs.query({
