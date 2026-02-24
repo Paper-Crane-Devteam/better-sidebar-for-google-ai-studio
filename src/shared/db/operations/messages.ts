@@ -258,6 +258,7 @@ export const messageRepo = {
         LEFT JOIN folders f ON c.folder_id = f.id
         WHERE messages_fts MATCH ?
         AND m.message_type != 'thought'
+        AND c.deleted_at IS NULL
       `;
       params.push(matchQuery);
     } else {
@@ -270,6 +271,7 @@ export const messageRepo = {
         LEFT JOIN folders f ON c.folder_id = f.id
         WHERE m.content LIKE ?
         AND m.message_type != 'thought'
+        AND c.deleted_at IS NULL
       `;
       params.push(`%${query}%`);
     }

@@ -3,6 +3,7 @@
 import { ExtensionMessage } from '@/shared/types/messages';
 import { scanLibrary } from './tasks/scan-library';
 import { autoSyncHandler } from './tasks/scan-library/sync-library';
+import { apiScanner } from './tasks/scan-library/scan-api'
 import { Platform } from '@/shared/types/platform';
 
 /**
@@ -14,6 +15,7 @@ export function initAiStudio() {
 
   // Start auto-sync handler to automatically sync conversations as they load
   autoSyncHandler.start();
+  apiScanner.start();
 
   // Inject Main World Script
   const script = document.createElement('script');

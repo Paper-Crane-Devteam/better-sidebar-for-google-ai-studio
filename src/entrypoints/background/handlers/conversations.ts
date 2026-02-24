@@ -110,13 +110,13 @@ export async function handleConversations(
     case 'SYNC_CONVERSATIONS': {
       const { items } = message.payload;
       const platform = message.platform ?? 'aistudio';
-      const allConversations = await conversationRepo.getAll(platform);
-      const existingIds = new Set(allConversations.map((c) => c.id));
-      
-      const newItems = items.filter((item) => !existingIds.has(item.id));
-      
-      if (newItems.length > 0) {
-        const conversationsToSave = newItems.map((item) => ({
+      const deletedIds = await conversationRepo.getDeletedIds(platform);
+      const deletedSet = new Set(deletedIds);
+
+      const itemsToSync = items.filter((item) => !deletedSet.has(item.id));
+
+      if (itemsToSync.length > 0) {
+        const conversationsToSave = itemsToSync.map((item) => ({
           ...item,
           folder_id: null,
           platform,
@@ -124,7 +124,7 @@ export async function handleConversations(
         await conversationRepo.bulkSave(conversationsToSave);
         await notifyDataUpdated();
       }
-      return { success: true, data: { added: newItems.length } };
+      return { success: true, data: { added: itemsToSync.length } };
     }
     default:
       return null;

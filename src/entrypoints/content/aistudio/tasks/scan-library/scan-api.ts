@@ -20,7 +20,7 @@ export class ApiScanner {
     start() {
         if (this.isListening) return;
         console.log('ApiScanner: Started listening for AI_STUDIO_LIBRARY_DATA');
-        this.clear(); // Clear previous items when starting
+        // this.clear(); // comment this, this will cause the scan fail if the page is in hitory page as it collides with sync conversation
         window.addEventListener('AI_STUDIO_LIBRARY_DATA', this.listener);
         this.isListening = true;
     }

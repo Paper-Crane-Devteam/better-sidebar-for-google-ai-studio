@@ -69,12 +69,36 @@ export const folderRepo = {
   },
 
   delete: async (id: string): Promise<void> => {
+    // Get all descendant folder IDs using recursive CTE
+    const descendants = await runQuery(`
+      WITH RECURSIVE descendants AS (
+        SELECT id FROM folders WHERE parent_id = ?
+        UNION ALL
+        SELECT f.id FROM folders f
+        INNER JOIN descendants d ON f.parent_id = d.id
+      )
+      SELECT id FROM descendants
+    `, [id]);
+    
+    const allFolderIds = [id, ...descendants.map((r: any) => r.id)];
+    const placeholders = allFolderIds.map(() => '?').join(',');
+    
+    // Soft delete all conversations in these folders and remove folder association
+    await runCommand(
+      `UPDATE conversations SET deleted_at = unixepoch(), folder_id = NULL WHERE folder_id IN (${placeholders})`,
+      allFolderIds
+    );
+    
+    // Hard delete all folders (CASCADE will handle child folders)
     await runCommand('DELETE FROM folders WHERE id = ?', [id]);
   },
 
   deleteMultiple: async (ids: string[]): Promise<void> => {
     if (ids.length === 0) return;
-    const placeholders = ids.map(() => '?').join(',');
-    await runCommand(`DELETE FROM folders WHERE id IN (${placeholders})`, ids);
+    
+    // For each folder, delete it (which will cascade soft delete conversations)
+    for (const id of ids) {
+      await folderRepo.delete(id);
+    }
   },
 };

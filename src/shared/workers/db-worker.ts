@@ -128,6 +128,13 @@ const runMigrations = async (db: any) => {
       await db.run("ALTER TABLE folders ADD COLUMN platform TEXT DEFAULT 'aistudio'");
     }
 
+    // Migration: Add deleted_at to conversations if missing (soft deletion)
+    if (!(await hasColumn('conversations', 'deleted_at'))) {
+      console.log('Worker: Migrating conversations table - adding deleted_at for soft deletion');
+      await db.run("ALTER TABLE conversations ADD COLUMN deleted_at INTEGER DEFAULT NULL");
+      await db.run("CREATE INDEX IF NOT EXISTS idx_conversations_deleted ON conversations(deleted_at)");
+    }
+
   } catch (err) {
     console.error('Worker: Migration failed:', err);
   }

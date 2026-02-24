@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS conversations (
   updated_at INTEGER DEFAULT (unixepoch()),
   created_at INTEGER DEFAULT (unixepoch()),
   prompt_metadata TEXT,
+  deleted_at INTEGER DEFAULT NULL, -- soft delete: unix timestamp in seconds, NULL = active
   FOREIGN KEY(folder_id) REFERENCES folders(id) ON DELETE CASCADE
 );
 

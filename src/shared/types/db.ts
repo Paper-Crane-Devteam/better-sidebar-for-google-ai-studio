@@ -21,6 +21,7 @@ export interface Conversation {
   updated_at: number;
   created_at: number;
   prompt_metadata: any;
+  deleted_at: number | null; // Unix timestamp in seconds, NULL = active (not deleted)
 }
 
 export interface Message {

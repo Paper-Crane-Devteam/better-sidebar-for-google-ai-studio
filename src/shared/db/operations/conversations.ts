@@ -8,8 +8,8 @@ export const conversationRepo = {
     const platform = c.platform ?? 'aistudio';
     await runCommand(
       `
-      INSERT INTO conversations (id, title, folder_id, external_id, external_url, model_name, type, platform, updated_at, created_at, prompt_metadata)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO conversations (id, title, folder_id, external_id, external_url, model_name, type, platform, updated_at, created_at, prompt_metadata, deleted_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
         folder_id = COALESCE(excluded.folder_id, conversations.folder_id),
@@ -19,7 +19,8 @@ export const conversationRepo = {
         platform = COALESCE(excluded.platform, conversations.platform),
         updated_at = excluded.updated_at,
         created_at = COALESCE(excluded.created_at, conversations.created_at),
-        prompt_metadata = COALESCE(excluded.prompt_metadata, conversations.prompt_metadata)
+        prompt_metadata = COALESCE(excluded.prompt_metadata, conversations.prompt_metadata),
+        deleted_at = NULL
     `,
       [
         c.id,
@@ -38,7 +39,7 @@ export const conversationRepo = {
   },
 
   getById: async (id: string): Promise<Conversation | undefined> => {
-    const result = await runQuery('SELECT * FROM conversations WHERE id = ?', [
+    const result = await runQuery('SELECT * FROM conversations WHERE id = ? AND deleted_at IS NULL', [
       id,
     ]);
     const row = result[0];
@@ -49,11 +50,11 @@ export const conversationRepo = {
   getByFolderId: async (folderId: string | null): Promise<Conversation[]> => {
     if (folderId === null) {
       return (await runQuery(
-        'SELECT * FROM conversations WHERE folder_id IS NULL ORDER BY updated_at DESC'
+        'SELECT * FROM conversations WHERE folder_id IS NULL AND deleted_at IS NULL ORDER BY updated_at DESC'
       )) as Conversation[];
     } else {
       return (await runQuery(
-        'SELECT * FROM conversations WHERE folder_id = ? ORDER BY updated_at DESC',
+        'SELECT * FROM conversations WHERE folder_id = ? AND deleted_at IS NULL ORDER BY updated_at DESC',
         [folderId]
       )) as Conversation[];
     }
@@ -62,12 +63,12 @@ export const conversationRepo = {
   getAll: async (platform?: string): Promise<Conversation[]> => {
     if (platform) {
       return (await runQuery(
-        'SELECT * FROM conversations WHERE platform = ? ORDER BY updated_at DESC',
+        'SELECT * FROM conversations WHERE platform = ? AND deleted_at IS NULL ORDER BY updated_at DESC',
         [platform]
       )) as Conversation[];
     }
     return (await runQuery(
-      'SELECT * FROM conversations ORDER BY updated_at DESC'
+      'SELECT * FROM conversations WHERE deleted_at IS NULL ORDER BY updated_at DESC'
     )) as Conversation[];
   },
 
@@ -106,7 +107,7 @@ export const conversationRepo = {
   },
 
   delete: async (id: string): Promise<void> => {
-    await runCommand('DELETE FROM conversations WHERE id = ?', [id]);
+    await runCommand('UPDATE conversations SET deleted_at = unixepoch() WHERE id = ?', [id]);
   },
 
   move: async (id: string, folderId: string | null): Promise<void> => {
@@ -137,8 +138,8 @@ export const conversationRepo = {
       const platform = c.platform ?? 'aistudio';
       return {
         sql: `
-      INSERT INTO conversations (id, title, folder_id, external_id, external_url, model_name, type, platform, updated_at, created_at, prompt_metadata)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO conversations (id, title, folder_id, external_id, external_url, model_name, type, platform, updated_at, created_at, prompt_metadata, deleted_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
         folder_id = COALESCE(excluded.folder_id, conversations.folder_id),
@@ -148,7 +149,8 @@ export const conversationRepo = {
         platform = COALESCE(excluded.platform, conversations.platform),
         updated_at = excluded.updated_at,
         created_at = COALESCE(excluded.created_at, conversations.created_at),
-        prompt_metadata = COALESCE(excluded.prompt_metadata, conversations.prompt_metadata)
+        prompt_metadata = COALESCE(excluded.prompt_metadata, conversations.prompt_metadata),
+        deleted_at = NULL
     `,
         bind: [
           c.id,
@@ -170,7 +172,7 @@ export const conversationRepo = {
   },
 
   getAllIds: async (): Promise<string[]> => {
-    const result = await runQuery('SELECT id FROM conversations');
+    const result = await runQuery('SELECT id FROM conversations WHERE deleted_at IS NULL');
     return result.map((r: any) => r.id);
   },
 
@@ -178,8 +180,20 @@ export const conversationRepo = {
     if (ids.length === 0) return;
     const placeholders = ids.map(() => '?').join(',');
     await runCommand(
-      `DELETE FROM conversations WHERE id IN (${placeholders})`,
+      `UPDATE conversations SET deleted_at = unixepoch() WHERE id IN (${placeholders})`,
       ids
     );
+  },
+
+  getDeletedIds: async (platform?: string): Promise<string[]> => {
+    if (platform) {
+      const result = await runQuery(
+        'SELECT id FROM conversations WHERE platform = ? AND deleted_at IS NOT NULL',
+        [platform]
+      );
+      return result.map((r: any) => r.id);
+    }
+    const result = await runQuery('SELECT id FROM conversations WHERE deleted_at IS NOT NULL');
+    return result.map((r: any) => r.id);
   },
 };
