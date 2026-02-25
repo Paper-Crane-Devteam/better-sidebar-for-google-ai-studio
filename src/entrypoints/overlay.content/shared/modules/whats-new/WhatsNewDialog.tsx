@@ -1,26 +1,30 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useWhatsNew } from './useWhatsNew';
-import { CHANGELOG, CURRENT_VERSION } from './changelog';
+import { getChangelog, CURRENT_VERSION, type ChangeLogItem } from './changelog';
 import { Sparkles, CheckCircle2, Wrench, Github, Star } from 'lucide-react';
 import { useModalStore } from '@/shared/lib/modal';
 
 export const WhatsNewDialog = () => {
+  const { t, i18n } = useTranslation();
   const { isOpen, markAsSeen } = useWhatsNew();
   const open = useModalStore((state) => state.open);
   const close = useModalStore((state) => state.close);
 
   useEffect(() => {
     if (isOpen) {
+      const changelog = getChangelog();
       const latestUpdate =
-        CHANGELOG.find((item) => item.version === CURRENT_VERSION) ||
-        CHANGELOG[0];
+        changelog.find(
+          (item: ChangeLogItem) => item.version === CURRENT_VERSION,
+        ) || changelog[0];
 
       open({
         id: 'whats-new-modal',
         title: (
           <div className="flex items-center gap-2 text-xl">
             <Sparkles className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-            What's New in v{CURRENT_VERSION}
+            {t('whatsNew.title', { version: CURRENT_VERSION })}
           </div>
         ),
         content: (
@@ -31,25 +35,27 @@ export const WhatsNewDialog = () => {
                 {latestUpdate.features && latestUpdate.features.length > 0 && (
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium text-primary flex items-center gap-2">
-                      <Sparkles className="w-4 h-4" /> New Features
+                      <Sparkles className="w-4 h-4" /> {t('whatsNew.features')}
                     </h4>
                     <ul className="space-y-3">
-                      {latestUpdate.features.map((feature, idx) => (
-                        <li
-                          key={idx}
-                          className="text-sm text-muted-foreground flex items-start gap-2"
-                        >
-                          <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                          <span
-                            dangerouslySetInnerHTML={{
-                              __html: feature.replace(
-                                /\*\*(.*?)\*\*/g,
-                                '<strong>$1</strong>',
-                              ),
-                            }}
-                          />
-                        </li>
-                      ))}
+                      {latestUpdate.features.map(
+                        (feature: string, idx: number) => (
+                          <li
+                            key={idx}
+                            className="text-sm text-muted-foreground flex items-start gap-2"
+                          >
+                            <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                            <span
+                              dangerouslySetInnerHTML={{
+                                __html: feature.replace(
+                                  /\*\*(.*?)\*\*/g,
+                                  '<strong>$1</strong>',
+                                ),
+                              }}
+                            />
+                          </li>
+                        ),
+                      )}
                     </ul>
                   </div>
                 )}
@@ -58,10 +64,10 @@ export const WhatsNewDialog = () => {
                 {latestUpdate.fixes && latestUpdate.fixes.length > 0 && (
                   <div className="space-y-3">
                     <h4 className="text-sm font-medium text-primary flex items-center gap-2">
-                      <Wrench className="w-4 h-4" /> Improvements & Fixes
+                      <Wrench className="w-4 h-4" /> {t('whatsNew.fixes')}
                     </h4>
                     <ul className="space-y-2">
-                      {latestUpdate.fixes.map((fix, idx) => (
+                      {latestUpdate.fixes.map((fix: string, idx: number) => (
                         <li
                           key={idx}
                           className="text-sm text-muted-foreground flex items-start gap-2"
@@ -96,12 +102,12 @@ export const WhatsNewDialog = () => {
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Welcome to the latest version! Enjoy the updates.
+                {t('whatsNew.welcome')}
               </p>
             )}
           </div>
         ),
-        confirmText: 'Awesome!',
+        confirmText: t('whatsNew.awesome'),
         onConfirm: () => {
           markAsSeen();
           close();
@@ -109,7 +115,7 @@ export const WhatsNewDialog = () => {
         modalClassName: 'sm:max-w-[600px]',
       });
     }
-  }, [isOpen, open, close, markAsSeen]);
+  }, [isOpen, open, close, markAsSeen, t, i18n.language]);
 
   return null;
 };

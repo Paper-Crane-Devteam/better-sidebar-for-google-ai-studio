@@ -315,10 +315,13 @@
     "previous30Days": "Últimos 30 Días",
     "unknownDate": "Fecha Desconocida"
   },
-  "options": {
-    "title": "Opciones de la Barra Lateral Mejorada para Gemini y AI Studio",
-    "settingsPlaceholder": "Marcador de posición de configuración"
+  "popup": {
+    "title": "Better Sidebar",
+    "description": "Configura las plataformas donde Better Sidebar está activo. Desactivar una plataforma hará que la extensión deje de ejecutarse por completo en ese sitio.",
+    "platforms": "Plataformas compatibles",
+    "enablePlatform": "Activar en {{platform}}"
   },
+  "options": {},
   "feedback": {
     "title": "Comentarios",
     "sendFeedback": "Envíanos tus comentarios",
@@ -368,7 +371,11 @@
     "modelResponse": "Respuesta del modelo",
     "userPrompt": "Mensaje del usuario",
     "noContextFound": "No se encontró mensaje relacionado",
-    "loadingContext": "Cargando contexto..."
+    "loadingContext": "Cargando contexto...",
+    "searchScope": "Ámbito de búsqueda",
+    "allConversations": "Todas las conversaciones",
+    "currentConversationOnly": "Conversación actual",
+    "notInConversation": "Abre una conversación para usar este filtro"
   },
   "importHistory": {
     "selectZipHint": "Selecciona el archivo ZIP descargado de Google Drive que contiene tu historial de chat.",
@@ -405,5 +412,89 @@
   "dataManagement": {
     "resetDatabase": "Restablecer Base de Datos",
     "resetDatabaseConfirm": "¿Estás seguro de que deseas eliminar todos los datos almacenados? Esto no se puede deshacer."
+  },
+  "rating": {
+    "title": "¿Te gusta esta extensión?",
+    "description": "Tu opinión es muy importante para nosotros.",
+    "notReally": "No mucho",
+    "yes": "¡Sí, me gusta!",
+    "awesome": "¡Genial!",
+    "rateDescription": "Si pudieras tomarte un minuto para darnos 5 estrellas en la tienda, ¡significaría mucho para nosotros!",
+    "maybeLater": "Quizás más tarde",
+    "rateUs": "Valorar 5 estrellas",
+    "sorry": "Lamentamos oír eso",
+    "sorryDescription": "Por favor, cuéntanos cómo podemos mejorar. Puedes compartir tu opinión a través de cualquiera de estos canales:",
+    "inAppFeedback": "Pestaña de comentarios en la app",
+    "githubIssue": "Enviar incidencia en GitHub",
+    "googleForm": "Rellenar formulario de Google",
+    "skip": "Omitir"
+  },
+  "onboarding": {
+    "welcome": "Bienvenido a Better Sidebar",
+    "description": "Potencia tu flujo de trabajo en Google AI Studio, Gemini, ChatGPT y Claude con gestión de archivos mejorada y una interfaz atractiva.",
+    "getStarted": "Comenzar ahora",
+    "comingSoon": "Próximamente",
+    "unsupported": "Actualmente no compatible"
+  },
+  "guidedTour": {
+    "next": "Siguiente",
+    "prev": "Atrás",
+    "finish": "¡Entendido!",
+    "skip": "Omitir",
+    "prompt": {
+      "title": "¡Bienvenido! ¿Quieres un recorrido rápido?",
+      "description": "Te mostraremos las funciones principales de la barra lateral en solo unos pasos.",
+      "start": "Iniciar recorrido",
+      "skip": "Omitir"
+    },
+    "steps": {
+      "files": {
+        "title": "Explorador de conversaciones",
+        "description": "Explora, organiza y gestiona todas tus conversaciones. Crea carpetas, arrastra para ordenar y haz clic derecho para más opciones."
+      },
+      "search": {
+        "title": "Búsqueda de texto completo",
+        "description": "Busca en todo el contenido de tus conversaciones, no solo en los títulos. Filtra por rol, carpeta y más."
+      },
+      "prompts": {
+        "title": "Biblioteca de prompts",
+        "description": "Guarda, organiza y reutiliza tus prompts favoritos. Soporta variables y copia con un clic."
+      },
+      "tags": {
+        "title": "Gestión de etiquetas",
+        "description": "Crea etiquetas para categorizar tus conversaciones. Filtra y encuentra rápidamente lo que necesitas."
+      },
+      "favorites": {
+        "title": "Favoritos",
+        "description": "Accede rápidamente a tus conversaciones destacadas. Haz clic derecho en cualquier conversación para añadirla a favoritos."
+      },
+      "myStuff": {
+        "title": "Mis cosas",
+        "description": "Acceso rápido a tu biblioteca de Gemini: conversaciones guardadas, archivos y más."
+      },
+      "gems": {
+        "title": "Gems",
+        "description": "Accede a Gemini Gems: expertos de IA personalizados para tareas específicas."
+      },
+      "originalUI": {
+        "title": "Cambiar a interfaz original",
+        "description": "Vuelve a la barra lateral integrada de Gemini en cualquier momento. Tus datos siempre se conservan."
+      },
+      "feedback": {
+        "title": "Comentarios",
+        "description": "¿Tienes sugerencias o encontraste un error? Envíanos tus comentarios directamente desde aquí."
+      },
+      "settings": {
+        "title": "Configuración",
+        "description": "Personaliza tema, diseño, idioma, atajos y más para adaptarlos a tu flujo de trabajo."
+      }
+    }
+  },
+  "whatsNew": {
+    "title": "Novedades en v{{version}}",
+    "features": "Nuevas características",
+    "fixes": "Mejoras y correcciones",
+    "welcome": "¡Bienvenido a la última versión! Disfruta de las actualizaciones.",
+    "awesome": "¡Genial!"
   }
 }

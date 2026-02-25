@@ -8,6 +8,8 @@ export const useWhatsNew = () => {
 
   useEffect(() => {
     const checkVersion = async () => {
+      // debug
+      // setIsOpen(true);
       try {
         const result = await browser.storage.local.get(STORAGE_KEY);
         const lastSeenVersion = result[STORAGE_KEY];

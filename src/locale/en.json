@@ -434,6 +434,67 @@
     "getStarted": "Get Started now",
     "comingSoon": "Coming Soon",
     "unsupported": "Currently Unsupported"
+  },
+  "guidedTour": {
+    "next": "Next",
+    "prev": "Back",
+    "finish": "Got it!",
+    "skip": "Skip",
+    "prompt": {
+      "title": "Welcome! Want a quick tour?",
+      "description": "We'll show you around the sidebar's key features in just a few steps.",
+      "start": "Start Tour",
+      "skip": "Skip"
+    },
+    "steps": {
+      "files": {
+        "title": "Conversation Explorer",
+        "description": "Browse, organize, and manage all your conversations. Create folders, drag to sort, and right-click for more options."
+      },
+      "search": {
+        "title": "Full-Text Search",
+        "description": "Search across all your conversation content — not just titles. Filter by role, folder, and more."
+      },
+      "prompts": {
+        "title": "Prompt Library",
+        "description": "Save, organize, and reuse your favorite prompts. Supports variables and one-click copy."
+      },
+      "tags": {
+        "title": "Tag Management",
+        "description": "Create tags to categorize your conversations. Quickly filter and find what you need."
+      },
+      "favorites": {
+        "title": "Favorites",
+        "description": "Quickly access your starred conversations. Right-click any conversation to add it to favorites."
+      },
+      "myStuff": {
+        "title": "My Stuff",
+        "description": "Quick access to your Gemini library — saved conversations, files, and more."
+      },
+      "gems": {
+        "title": "Gems",
+        "description": "Access Gemini Gems — customized AI experts for specific tasks."
+      },
+      "originalUI": {
+        "title": "Switch to Original UI",
+        "description": "Toggle back to Gemini's built-in sidebar anytime. Your data is always preserved."
+      },
+      "feedback": {
+        "title": "Feedback",
+        "description": "Have suggestions or found a bug? Send us your feedback directly from here."
+      },
+      "settings": {
+        "title": "Settings",
+        "description": "Customize theme, layout, language, shortcuts, and more to fit your workflow."
+      }
+    }
+  },
+  "whatsNew": {
+    "title": "What's New in v{{version}}",
+    "features": "New Features",
+    "fixes": "Improvements & Fixes",
+    "welcome": "Welcome to the latest version! Enjoy the updates.",
+    "awesome": "Awesome!"
   }
 }
 

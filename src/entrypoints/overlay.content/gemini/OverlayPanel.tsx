@@ -43,10 +43,15 @@ import { toast } from '@/shared/lib/toast';
 import { detectAccount } from '@/entrypoints/content/shared/detect-account';
 import { Platform } from '@/shared/types/platform';
 import { RatingPromptDialog } from '../shared/modules/feedback/RatingPromptDialog';
+import { GuidedTour } from '../shared/modules/guided-tour/GuidedTour';
+import { TourPromptDialog } from '../shared/modules/guided-tour/TourPromptDialog';
+import { useGuidedTour } from '../shared/modules/guided-tour/useGuidedTour';
+import { GEMINI_TOUR_STEPS } from '../shared/modules/guided-tour/tour-steps';
 
 export const OverlayPanel = ({ className }: { className?: string }) => {
   const moduleConfig = useModuleConfig();
   useAppInit();
+  const guidedTour = useGuidedTour();
   const { t } = useI18n();
   const { path } = useUrl();
 
@@ -253,6 +258,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
               title={t('tabs.files')}
               onClick={() => handleTabChange('files')}
               className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+              data-tour-id="tour-files"
             >
               <Files className="sidebar-icon" />
             </Button>
@@ -262,6 +268,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
               title={t('tabs.search')}
               onClick={() => handleTabChange('search')}
               className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+              data-tour-id="tour-search"
             >
               <Search className="sidebar-icon" />
             </Button>
@@ -271,6 +278,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
               title={t('tabs.prompts')}
               onClick={() => handleTabChange('prompts')}
               className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+              data-tour-id="tour-prompts"
             >
               <Sparkles className="sidebar-icon" />
             </Button>
@@ -281,6 +289,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
                 title={t('tabs.favorites')}
                 onClick={() => handleTabChange('favorites')}
                 className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+                data-tour-id="tour-favorites"
               >
                 <Star className="sidebar-icon" />
               </Button>
@@ -291,6 +300,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
               title={t('tabs.tags')}
               onClick={() => handleTabChange('tags')}
               className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+              data-tour-id="tour-tags"
             >
               <Tag className="sidebar-icon" />
             </Button>
@@ -306,6 +316,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
                 title={t('shortcuts.myStuff')}
                 onClick={() => navigate('https://gemini.google.com/mystuff')}
                 className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+                data-tour-id="tour-mystuff"
               >
                 <Library className="sidebar-icon" />
               </Button>
@@ -318,6 +329,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
                 title={t('shortcuts.gems')}
                 onClick={() => navigate('https://gemini.google.com/gems/view')}
                 className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+                data-tour-id="tour-gems"
               >
                 <Gem className="sidebar-icon" />
               </Button>
@@ -332,6 +344,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
                 title={t('shortcuts.originalUI')}
                 onClick={() => setIsFeatureEnabled(false)}
                 className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+                data-tour-id="tour-original-ui"
               >
                 <LogOut className="sidebar-icon" />
               </Button>
@@ -343,6 +356,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
               title={t('tabs.feedback')}
               onClick={() => handleTabChange('feedback')}
               className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+              data-tour-id="tour-feedback"
             >
               <MessageSquare className="sidebar-icon" />
             </Button>
@@ -352,6 +366,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
               title={t('tabs.settings')}
               onClick={() => handleTabChange('settings')}
               className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+              data-tour-id="tour-settings"
             >
               <Settings className="sidebar-icon" />
             </Button>
@@ -409,6 +424,23 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       <ProfilePickerDialog />
       <RatingPromptDialog />
       <GlobalToast />
+      {guidedTour.showPrompt && isSidebarExpanded && (
+        <TourPromptDialog
+          isOpen={guidedTour.showPrompt}
+          onStartTour={guidedTour.acceptTour}
+          onSkip={guidedTour.dismissPrompt}
+        />
+      )}
+      {guidedTour.isActive && isSidebarExpanded && (
+        <GuidedTour
+          steps={GEMINI_TOUR_STEPS}
+          currentStep={guidedTour.currentStep}
+          isActive={guidedTour.isActive}
+          onNext={guidedTour.nextStep}
+          onPrev={guidedTour.prevStep}
+          onSkip={guidedTour.skipTour}
+        />
+      )}
     </div>
   );
 };

@@ -315,10 +315,13 @@
     "previous30Days": "過去30日間",
     "unknownDate": "不明な日付"
   },
-  "options": {
-    "title": "Gemini & AI Studio 用の拡張サイドバー オプション",
-    "settingsPlaceholder": "設定プレースホルダー"
+  "popup": {
+    "title": "Better Sidebar",
+    "description": "Better Sidebar が有効なプラットフォームを設定します。プラットフォームを無効にすると、そのサイトでは拡張機能は動作しなくなります。",
+    "platforms": "対応プラットフォーム",
+    "enablePlatform": "{{platform}} で有効にする"
   },
+  "options": {},
   "feedback": {
     "title": "フィードバック",
     "sendFeedback": "フィードバックをお送りください",
@@ -368,7 +371,11 @@
     "modelResponse": "モデルの応答",
     "userPrompt": "ユーザーのプロンプト",
     "noContextFound": "関連メッセージが見つかりません",
-    "loadingContext": "コンテキストを読み込み中..."
+    "loadingContext": "コンテキストを読み込み中...",
+    "searchScope": "検索範囲",
+    "allConversations": "すべての会話",
+    "currentConversationOnly": "現在の会話のみ",
+    "notInConversation": "このフィルターを使うには会話を開いてください"
   },
   "importHistory": {
     "selectZipHint": "Google ドライブからダウンロードしたチャット履歴を含む ZIP ファイルを選択してください。",
@@ -405,5 +412,89 @@
   "dataManagement": {
     "resetDatabase": "データベースをリセット",
     "resetDatabaseConfirm": "保存されているすべてのデータを削除してもよろしいですか？この操作は元に戻せません。"
+  },
+  "rating": {
+    "title": "この拡張機能は気に入りましたか？",
+    "description": "ご意見・ご感想をお聞かせください。",
+    "notReally": "あまり",
+    "yes": "はい、気に入っています！",
+    "awesome": "素晴らしい！",
+    "rateDescription": "ストアで5つ星の評価をいただけると大変嬉しいです！",
+    "maybeLater": "後で",
+    "rateUs": "5つ星で評価",
+    "sorry": "お役に立てず申し訳ありません",
+    "sorryDescription": "改善のためご意見をお聞かせください。以下のいずれかの方法でフィードバックをお送りいただけます：",
+    "inAppFeedback": "アプリ内フィードバックタブ",
+    "githubIssue": "GitHub で Issue を送信",
+    "googleForm": "Google フォームで回答",
+    "skip": "スキップ"
+  },
+  "onboarding": {
+    "welcome": "Better Sidebar へようこそ",
+    "description": "Google AI Studio、Gemini、ChatGPT、Claude で、強化されたファイル管理と美しい UI でワークフローを効率化。",
+    "getStarted": "今すぐ始める",
+    "comingSoon": "近日公開",
+    "unsupported": "現在非対応"
+  },
+  "guidedTour": {
+    "next": "次へ",
+    "prev": "戻る",
+    "finish": "了解！",
+    "skip": "スキップ",
+    "prompt": {
+      "title": "ようこそ！簡単ツアーはいかがですか？",
+      "description": "サイドバーの主な機能を数ステップでご案内します。",
+      "start": "ツアーを開始",
+      "skip": "スキップ"
+    },
+    "steps": {
+      "files": {
+        "title": "会話エクスプローラー",
+        "description": "会話の閲覧、整理、管理。フォルダ作成、ドラッグで並べ替え、右クリックでその他の操作。"
+      },
+      "search": {
+        "title": "全文検索",
+        "description": "タイトルだけでなく会話の内容全体を検索。役割・フォルダなどでフィルタ可能。"
+      },
+      "prompts": {
+        "title": "プロンプトライブラリ",
+        "description": "お気に入りのプロンプトを保存・整理・再利用。変数対応、ワンクリックでコピー。"
+      },
+      "tags": {
+        "title": "タグ管理",
+        "description": "会話を分類するタグを作成。素早くフィルタして必要なものを見つけられます。"
+      },
+      "favorites": {
+        "title": "お気に入り",
+        "description": "スター付きの会話にすぐアクセス。会話を右クリックしてお気に入りに追加。"
+      },
+      "myStuff": {
+        "title": "マイストッフ",
+        "description": "Gemini ライブラリへクイックアクセス — 保存した会話、ファイルなど。"
+      },
+      "gems": {
+        "title": "Gems",
+        "description": "Gemini Gems — 特定タスク用のカスタム AI エキスパートにアクセス。"
+      },
+      "originalUI": {
+        "title": "元の UI に切り替え",
+        "description": "いつでも Gemini 標準のサイドバーに戻せます。データは保持されます。"
+      },
+      "feedback": {
+        "title": "フィードバック",
+        "description": "ご要望や不具合がありましたら、ここから直接お送りください。"
+      },
+      "settings": {
+        "title": "設定",
+        "description": "テーマ、レイアウト、言語、ショートカットなどをワークフローに合わせてカスタマイズ。"
+      }
+    }
+  },
+  "whatsNew": {
+    "title": "v{{version}} の新機能",
+    "features": "新機能",
+    "fixes": "改善と修正",
+    "welcome": "最新バージョンへようこそ！",
+    "awesome": "素晴らしい！"
   }
 }

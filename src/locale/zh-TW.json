@@ -315,10 +315,13 @@
     "previous30Days": "最近30天",
     "unknownDate": "未知日期"
   },
-  "options": {
-    "title": "Gemini & AI Studio 增強側邊欄 選項",
-    "settingsPlaceholder": "設定佔位符"
+  "popup": {
+    "title": "Better Sidebar",
+    "description": "設定 Better Sidebar 啟用的平台。停用某平台後，擴充功能將完全不會在該網站上執行。",
+    "platforms": "支援平台",
+    "enablePlatform": "在 {{platform}} 啟用"
   },
+  "options": {},
   "feedback": {
     "title": "意見回饋",
     "sendFeedback": "向我們發送意見回饋",
@@ -410,20 +413,88 @@
     "resetDatabase": "重設資料庫",
     "resetDatabaseConfirm": "您確定要刪除所有儲存的資料嗎？此操作無法復原。"
   },
+  "onboarding": {
+    "welcome": "歡迎使用 Better Sidebar",
+    "description": "在 Google AI Studio、Gemini、ChatGPT 與 Claude 上強化檔案管理與介面，提升您的工作流程。",
+    "getStarted": "立即開始",
+    "comingSoon": "即將推出",
+    "unsupported": "目前不支援"
+  },
+  "guidedTour": {
+    "next": "下一步",
+    "prev": "上一步",
+    "finish": "知道了！",
+    "skip": "略過",
+    "prompt": {
+      "title": "歡迎！要來段快速導覽嗎？",
+      "description": "我們將用幾個步驟帶您認識側邊欄的主要功能。",
+      "start": "開始導覽",
+      "skip": "略過"
+    },
+    "steps": {
+      "files": {
+        "title": "對話總管",
+        "description": "瀏覽、整理並管理所有對話。建立資料夾、拖曳排序，右鍵可進行更多操作。"
+      },
+      "search": {
+        "title": "全文搜尋",
+        "description": "搜尋所有對話內容，不限標題。可依角色、資料夾等篩選。"
+      },
+      "prompts": {
+        "title": "Prompt 庫",
+        "description": "儲存、整理並重複使用常用 Prompt。支援變數與一鍵複製。"
+      },
+      "tags": {
+        "title": "標籤管理",
+        "description": "建立標籤分類對話，快速篩選與尋找所需內容。"
+      },
+      "favorites": {
+        "title": "收藏",
+        "description": "快速存取已加星的對話。在任一對話上右鍵即可加入收藏。"
+      },
+      "myStuff": {
+        "title": "我的內容",
+        "description": "快速存取 Gemini 資料庫 — 已儲存的對話、檔案等。"
+      },
+      "gems": {
+        "title": "Gems",
+        "description": "使用 Gemini Gems — 針對特定任務的客製化 AI 助手。"
+      },
+      "originalUI": {
+        "title": "切換到原始介面",
+        "description": "隨時可切回 Gemini 內建側邊欄，您的資料都會保留。"
+      },
+      "feedback": {
+        "title": "意見回饋",
+        "description": "有建議或發現問題？可直接從這裡傳送意見回饋給我們。"
+      },
+      "settings": {
+        "title": "設定",
+        "description": "自訂主題、版面、語言、捷徑等，讓介面更符合您的工作方式。"
+      }
+    }
+  },
   "rating": {
     "title": "您喜歡這個插件嗎？",
     "description": "您的回饋對我們非常重要。",
-    "notReally": "不太喜欢",
-    "yes": "很喜欢",
+    "notReally": "不太喜歡",
+    "yes": "很喜歡",
     "awesome": "太棒了！",
-    "rateDescription": "如果您能花一分鐘在應用商店裡給我們一個 5 星好評，那將是對我們最大的肯定和支持！",
+    "rateDescription": "如果您能花一分鐘在應用商店裡給我們一個 5 星好評，那將是對我們最大的肯定與支持！",
     "maybeLater": "以後再說",
-    "rateUs": "去给好评",
+    "rateUs": "去給好評",
     "sorry": "很抱歉給您帶來不好的體驗",
-    "sorryDescription": "您可以透過以下方式告訴我们您的建議或遇到的問題，我們會儘快改進。",
-    "inAppFeedback": "外挂内回饋 (Feedback Tab)",
+    "sorryDescription": "您可以透過以下方式告訴我們您的建議或遇到的問題，我們會儘快改進。",
+    "inAppFeedback": "應用內意見回饋 (Feedback 標籤)",
     "githubIssue": "提交 GitHub Issue",
     "googleForm": "填寫回饋表單",
     "skip": "跳過"
+  },
+  "whatsNew": {
+    "title": "v{{version}} 更新內容",
+    "features": "新功能",
+    "fixes": "改進與修復",
+    "welcome": "歡迎使用最新版本！",
+    "awesome": "太棒了！"
   }
 }

@@ -434,5 +434,66 @@
     "getStarted": "立即开始使用",
     "comingSoon": "即将推出",
     "unsupported": "暂不支持"
+  },
+  "guidedTour": {
+    "next": "下一步",
+    "prev": "上一步",
+    "finish": "知道了！",
+    "skip": "跳过",
+    "prompt": {
+      "title": "欢迎！需要快速了解一下吗？",
+      "description": "只需几步，我们带您了解侧边栏的核心功能。",
+      "start": "开始引导",
+      "skip": "跳过"
+    },
+    "steps": {
+      "files": {
+        "title": "对话管理器",
+        "description": "浏览、整理和管理所有对话。可创建文件夹、拖拽排序，右键可查看更多操作。"
+      },
+      "search": {
+        "title": "全文搜索",
+        "description": "搜索所有对话的完整内容——不仅仅是标题。支持按角色、文件夹等条件筛选。"
+      },
+      "prompts": {
+        "title": "Prompt 库",
+        "description": "保存、整理和复用常用 Prompt。支持变量替换和一键复制。"
+      },
+      "tags": {
+        "title": "标签管理",
+        "description": "创建标签对对话进行分类，快速筛选和查找所需内容。"
+      },
+      "favorites": {
+        "title": "收藏",
+        "description": "快速访问已收藏的对话。右键点击任意对话即可将其添加到收藏。"
+      },
+      "myStuff": {
+        "title": "我的内容",
+        "description": "快速访问您的 Gemini 资料库——已保存的对话、文件等。"
+      },
+      "gems": {
+        "title": "Gems",
+        "description": "访问 Gemini Gems——为特定任务定制的 AI 专家。"
+      },
+      "originalUI": {
+        "title": "切换到原始界面",
+        "description": "随时切换回 Gemini 自带的侧边栏。您的数据始终会被保留。"
+      },
+      "feedback": {
+        "title": "反馈",
+        "description": "有建议或发现了 Bug？在这里直接向我们发送反馈。"
+      },
+      "settings": {
+        "title": "设置",
+        "description": "自定义主题、布局、语言、快捷方式等，让工具适配你的工作方式。"
+      }
+    }
+  },
+  "whatsNew": {
+    "title": "v{{version}} 更新内容",
+    "features": "新功能",
+    "fixes": "改进与修复",
+    "welcome": "欢迎使用最新版本！",
+    "awesome": "太棒了！"
   }
 }
