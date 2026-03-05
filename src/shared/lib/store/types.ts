@@ -12,6 +12,7 @@ export interface Folder {
   name: string;
   order_index: number;
   parent_id?: string | null;
+  color?: string | null;
 }
 
 export interface Conversation {
@@ -126,6 +127,7 @@ export interface AppState {
   ) => Promise<string | null>;
   deleteItem: (itemId: string, type: 'folder' | 'file') => Promise<void>;
   deleteItems: (itemIds: string[]) => Promise<void>;
+  updateFolderColor: (folderId: string, color: string | null) => Promise<void>;
   toggleFavorite: (
     targetId: string,
     targetType: 'conversation' | 'message' | 'prompt',
@@ -153,7 +155,14 @@ export interface AppState {
   setSettingsOpen: (isOpen: boolean) => void;
   setTempHiddenToken: (token: string | null) => void;
   setActiveTab: (
-    tab: 'files' | 'favorites' | 'tags' | 'feedback' | 'settings' | 'search' | 'prompts',
+    tab:
+      | 'files'
+      | 'favorites'
+      | 'tags'
+      | 'feedback'
+      | 'settings'
+      | 'search'
+      | 'prompts',
   ) => void;
   setIsScanning: (isScanning: boolean) => void;
   setShowSqlInterface: (show: boolean) => void;

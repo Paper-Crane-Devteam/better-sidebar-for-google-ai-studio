@@ -77,7 +77,9 @@
     "japanese": "日本語",
     "portuguese": "Português",
     "spanish": "Español",
-    "russian": "Русский"
+    "russian": "Русский",
+    "resizableSidebar": "可拖曳側邊欄",
+    "resizableSidebarDescription": "允許透過拖曳改變側邊欄寬度"
   },
   "modal": {
     "resetDatabase": "重設資料庫",
@@ -278,7 +280,29 @@
     "exportAsText": "匯出為純文字",
     "exportAsMarkdown": "匯出為 Markdown",
     "exportAsJson": "匯出為 JSON",
-    "duplicate": "複製"
+    "duplicate": "複製",
+    "changeColor": "更改顏色"
+  },
+  "folderSettings": {
+    "title": "資料夾設定",
+    "name": "名稱",
+    "color": "圖示顏色",
+    "defaultColor": "預設",
+    "customColor": "自訂："
+  },
+  "folderColor": {
+    "indigo": "靛藍",
+    "violet": "紫羅蘭",
+    "pink": "粉紅",
+    "red": "紅色",
+    "orange": "橘色",
+    "yellow": "黃色",
+    "green": "綠色",
+    "teal": "青色",
+    "cyan": "藍綠",
+    "blue": "藍色",
+    "lavender": "薰衣草",
+    "rose": "玫瑰"
   },
   "export": {
     "roleUser": "用戶",

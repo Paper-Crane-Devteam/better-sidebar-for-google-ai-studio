@@ -58,6 +58,18 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const [, setContainer] = useState<HTMLDivElement | null>(null);
   const layoutDensity = useSettingsStore((state) => state.layoutDensity);
   const shortcuts = useSettingsStore((state) => state.shortcuts);
+  const enableResizableSidebar = useSettingsStore(
+    (state) => state.enableResizableSidebar,
+  );
+  const customSidebarWidth = useSettingsStore(
+    (state) => state.customSidebarWidth,
+  );
+  const setCustomSidebarWidth = useSettingsStore(
+    (state) => state.setCustomSidebarWidth,
+  );
+  const [isResizing, setIsResizing] = useState(false);
+  const startXRef = React.useRef(0);
+  const startWidthRef = React.useRef(0);
   const {
     fetchData,
     ui,
@@ -198,6 +210,33 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       // For now just syncing back to source of truth is enough.
       setLocalIsVisible(isSidebarExpanded);
     }
+  };
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    startXRef.current = e.clientX;
+    startWidthRef.current =
+      useSettingsStore.getState().customSidebarWidth ||
+      (layoutDensity === 'compact' ? 345 : 360);
+
+    const handleMouseMove = (mouseMoveEvent: MouseEvent) => {
+      mouseMoveEvent.preventDefault();
+      const delta = mouseMoveEvent.clientX - startXRef.current;
+      let newWidth = startWidthRef.current + delta;
+      newWidth = Math.max(260, Math.min(newWidth, 800));
+      useSettingsStore.getState().setCustomSidebarWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
   };
 
   if (!isFeatureEnabled) {
@@ -440,6 +479,19 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           onPrev={guidedTour.prevStep}
           onSkip={guidedTour.skipTour}
         />
+      )}
+
+      {enableResizableSidebar && localIsVisible && (
+        <>
+          <div
+            className={`absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-primary/20 transition-colors z-50 ${isResizing ? 'bg-primary/30' : ''}`}
+            style={{ right: '-1px' }}
+            onMouseDown={handleResizeStart}
+          />
+          {isResizing && (
+            <div className="fixed inset-0 z-40 cursor-col-resize select-none" />
+          )}
+        </>
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-import { Folder, Tag, Prompt, PromptFolder } from "./db";
+import { Folder, Tag, Prompt, PromptFolder } from './db';
 
 export type ExtensionMessage = (
   | { type: 'GET_FOLDERS' }
@@ -10,7 +10,9 @@ export type ExtensionMessage = (
       type: 'UPDATE_FOLDER';
       payload: {
         id: string;
-        updates: Partial<Pick<Folder, 'name' | 'parent_id' | 'order_index'>>;
+        updates: Partial<
+          Pick<Folder, 'name' | 'parent_id' | 'order_index' | 'color'>
+        >;
       };
     }
   | { type: 'DELETE_FOLDER'; payload: { id: string } }

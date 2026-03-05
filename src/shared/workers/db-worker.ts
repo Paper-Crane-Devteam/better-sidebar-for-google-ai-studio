@@ -81,10 +81,13 @@ const initDB = async (newDbName?: string) => {
 
 const runMigrations = async (db: any) => {
   console.log('Worker: Checking for migrations...');
-  
+
   try {
     // Helper to check if a column exists in a table
-    const hasColumn = async (table: string, column: string): Promise<boolean> => {
+    const hasColumn = async (
+      table: string,
+      column: string,
+    ): Promise<boolean> => {
       const columns = await db.run(`PRAGMA table_info(${table})`);
       return columns.some((col: any) => col.name === column);
     };
@@ -92,61 +95,90 @@ const runMigrations = async (db: any) => {
     // Migration: Add order_index to messages if missing
     if (!(await hasColumn('messages', 'order_index'))) {
       console.log('Worker: Migrating messages table - adding order_index');
-      await db.run("ALTER TABLE messages ADD COLUMN order_index INTEGER DEFAULT 0");
+      await db.run(
+        'ALTER TABLE messages ADD COLUMN order_index INTEGER DEFAULT 0',
+      );
     }
 
     // Migration: Add message_type to messages if missing
     if (!(await hasColumn('messages', 'message_type'))) {
       console.log('Worker: Migrating messages table - adding message_type');
-      await db.run("ALTER TABLE messages ADD COLUMN message_type TEXT DEFAULT 'text'");
+      await db.run(
+        "ALTER TABLE messages ADD COLUMN message_type TEXT DEFAULT 'text'",
+      );
     }
 
     // Migration: Add order_index to conversations if missing
     if (!(await hasColumn('conversations', 'order_index'))) {
       console.log('Worker: Migrating conversations table - adding order_index');
-      await db.run("ALTER TABLE conversations ADD COLUMN order_index INTEGER DEFAULT 0");
+      await db.run(
+        'ALTER TABLE conversations ADD COLUMN order_index INTEGER DEFAULT 0',
+      );
     }
 
     // Migration: Add prompt_metadata to conversations if missing
     if (!(await hasColumn('conversations', 'prompt_metadata'))) {
-      console.log('Worker: Migrating conversations table - adding prompt_metadata');
-      await db.run("ALTER TABLE conversations ADD COLUMN prompt_metadata TEXT");
+      console.log(
+        'Worker: Migrating conversations table - adding prompt_metadata',
+      );
+      await db.run('ALTER TABLE conversations ADD COLUMN prompt_metadata TEXT');
     }
 
     // Migration: Add type to conversations if missing
     if (!(await hasColumn('conversations', 'type'))) {
       console.log('Worker: Migrating conversations table - adding type');
-      await db.run("ALTER TABLE conversations ADD COLUMN type TEXT DEFAULT 'conversation'");
+      await db.run(
+        "ALTER TABLE conversations ADD COLUMN type TEXT DEFAULT 'conversation'",
+      );
     }
 
     // Migration: Add platform to conversations if missing
     if (!(await hasColumn('conversations', 'platform'))) {
       console.log('Worker: Migrating conversations table - adding platform');
-      await db.run("ALTER TABLE conversations ADD COLUMN platform TEXT DEFAULT 'aistudio'");
+      await db.run(
+        "ALTER TABLE conversations ADD COLUMN platform TEXT DEFAULT 'aistudio'",
+      );
     }
 
     // Always ensure platform index exists (moved out of SCHEMA to avoid startup errors on old DBs)
-    await db.run("CREATE INDEX IF NOT EXISTS idx_conversations_platform ON conversations(platform)");
+    await db.run(
+      'CREATE INDEX IF NOT EXISTS idx_conversations_platform ON conversations(platform)',
+    );
 
     // Migration: Add order_index to folders if missing
     if (!(await hasColumn('folders', 'order_index'))) {
       console.log('Worker: Migrating folders table - adding order_index');
-      await db.run("ALTER TABLE folders ADD COLUMN order_index INTEGER DEFAULT 0");
+      await db.run(
+        'ALTER TABLE folders ADD COLUMN order_index INTEGER DEFAULT 0',
+      );
     }
 
     // Migration: Add platform to folders if missing
     if (!(await hasColumn('folders', 'platform'))) {
       console.log('Worker: Migrating folders table - adding platform');
-      await db.run("ALTER TABLE folders ADD COLUMN platform TEXT DEFAULT 'aistudio'");
+      await db.run(
+        "ALTER TABLE folders ADD COLUMN platform TEXT DEFAULT 'aistudio'",
+      );
     }
 
     // Migration: Add deleted_at to conversations if missing (soft deletion)
     if (!(await hasColumn('conversations', 'deleted_at'))) {
-      console.log('Worker: Migrating conversations table - adding deleted_at for soft deletion');
-      await db.run("ALTER TABLE conversations ADD COLUMN deleted_at INTEGER DEFAULT NULL");
-      await db.run("CREATE INDEX IF NOT EXISTS idx_conversations_deleted ON conversations(deleted_at)");
+      console.log(
+        'Worker: Migrating conversations table - adding deleted_at for soft deletion',
+      );
+      await db.run(
+        'ALTER TABLE conversations ADD COLUMN deleted_at INTEGER DEFAULT NULL',
+      );
+      await db.run(
+        'CREATE INDEX IF NOT EXISTS idx_conversations_deleted ON conversations(deleted_at)',
+      );
     }
 
+    // Migration: Add color to folders if missing
+    if (!(await hasColumn('folders', 'color'))) {
+      console.log('Worker: Migrating folders table - adding color');
+      await db.run('ALTER TABLE folders ADD COLUMN color TEXT');
+    }
   } catch (err) {
     console.error('Worker: Migration failed:', err);
   }
@@ -173,174 +205,194 @@ const DB_LOG_PREFIX = '[DB]';
 
 // Helper to execute SQL with binding
 const execSql = async (sql: string, bind?: any[]) => {
-    if (!db) throw new Error('DB not initialized');
-    
-    const logSql = sql.trim().replace(/\s+/g, ' ');
-    console.log(`${DB_LOG_PREFIX} SQL:`, logSql, bind != null && bind.length ? `bind: [${bind.join(', ')}]` : '');
+  if (!db) throw new Error('DB not initialized');
 
-    const result = await db.run(sql, bind);
+  const logSql = sql.trim().replace(/\s+/g, ' ');
+  console.log(
+    `${DB_LOG_PREFIX} SQL:`,
+    logSql,
+    bind != null && bind.length ? `bind: [${bind.join(', ')}]` : '',
+  );
 
-    if (result.length > 0) {
-        console.log(`${DB_LOG_PREFIX} Result: ${result.length} row(s)`, result.length <= 3 ? result : result.slice(0, 3));
-    } else {
-        console.log(`${DB_LOG_PREFIX} Result: 0 rows (ok)`);
-    }
-    return result;
+  const result = await db.run(sql, bind);
+
+  if (result.length > 0) {
+    console.log(
+      `${DB_LOG_PREFIX} Result: ${result.length} row(s)`,
+      result.length <= 3 ? result : result.slice(0, 3),
+    );
+  } else {
+    console.log(`${DB_LOG_PREFIX} Result: 0 rows (ok)`);
+  }
+  return result;
 };
 
 // Helper to convert Base64 to Uint8Array
 const base64ToUint8Array = (base64: string): Uint8Array => {
-    const binaryString = self.atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes;
+  const binaryString = self.atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
 };
 
 const handleExport = async (id: string): Promise<void> => {
-    // Compact DB before dump to avoid OOM: re-importing the same ZIP causes
-    // many DELETE+INSERT (replace messages), which leaves free pages and
-    // inflates the file; dump() reads the whole file, so we VACUUM first.
-    try {
-        console.log('Worker: Optimizing FTS index...');
-        await db.run("INSERT INTO messages_fts(messages_fts) VALUES('optimize');");
+  // Compact DB before dump to avoid OOM: re-importing the same ZIP causes
+  // many DELETE+INSERT (replace messages), which leaves free pages and
+  // inflates the file; dump() reads the whole file, so we VACUUM first.
+  try {
+    console.log('Worker: Optimizing FTS index...');
+    await db.run("INSERT INTO messages_fts(messages_fts) VALUES('optimize');");
 
-        console.log('Worker: Checkpointing WAL...');
-        await db.run("PRAGMA wal_checkpoint(TRUNCATE);");
+    console.log('Worker: Checkpointing WAL...');
+    await db.run('PRAGMA wal_checkpoint(TRUNCATE);');
 
-        console.log('Worker: Vacuuming database...');
-        await db.run('VACUUM;');
-    } catch (e) {
-        console.warn('Worker: Cleanup before export failed, exporting without compacting', e);
+    console.log('Worker: Vacuuming database...');
+    await db.run('VACUUM;');
+  } catch (e) {
+    console.warn(
+      'Worker: Cleanup before export failed, exporting without compacting',
+      e,
+    );
+  }
+
+  const data: Uint8Array = await db.dump();
+  const totalLength = data.byteLength;
+  // Chunk size must be a multiple of 3 to align with Base64 encoding without padding issues in concatenation
+  const CHUNK_SIZE = 3 * 1024 * 1024; // 3MB
+  const totalChunks = Math.ceil(totalLength / CHUNK_SIZE);
+
+  // Batch size for String.fromCharCode to avoid stack overflow
+  const BATCH_SIZE = 32768;
+
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * CHUNK_SIZE;
+    const end = Math.min(start + CHUNK_SIZE, totalLength);
+    const chunk = data.subarray(start, end);
+
+    // Efficiently convert chunk to binary string
+    let binary = '';
+    for (let j = 0; j < chunk.length; j += BATCH_SIZE) {
+      const batchEnd = Math.min(j + BATCH_SIZE, chunk.length);
+      // Use apply to convert a batch of bytes to string
+      binary += String.fromCharCode.apply(
+        null,
+        chunk.subarray(j, batchEnd) as unknown as number[],
+      );
     }
 
-    const data: Uint8Array = await db.dump();
-    const totalLength = data.byteLength;
-    // Chunk size must be a multiple of 3 to align with Base64 encoding without padding issues in concatenation
-    const CHUNK_SIZE = 3 * 1024 * 1024; // 3MB
-    const totalChunks = Math.ceil(totalLength / CHUNK_SIZE);
-    
-    // Batch size for String.fromCharCode to avoid stack overflow
-    const BATCH_SIZE = 32768; 
+    const base64 = self.btoa(binary);
 
-    for (let i = 0; i < totalChunks; i++) {
-        const start = i * CHUNK_SIZE;
-        const end = Math.min(start + CHUNK_SIZE, totalLength);
-        const chunk = data.subarray(start, end);
+    self.postMessage({
+      id,
+      success: true,
+      data: base64,
+      chunk: {
+        index: i,
+        total: totalChunks,
+      },
+    });
 
-        // Efficiently convert chunk to binary string
-        let binary = '';
-        for (let j = 0; j < chunk.length; j += BATCH_SIZE) {
-            const batchEnd = Math.min(j + BATCH_SIZE, chunk.length);
-            // Use apply to convert a batch of bytes to string
-            binary += String.fromCharCode.apply(null, chunk.subarray(j, batchEnd) as unknown as number[]);
-        }
-
-        const base64 = self.btoa(binary);
-
-        self.postMessage({
-            id,
-            success: true,
-            data: base64,
-            chunk: {
-                index: i,
-                total: totalChunks
-            }
-        });
-
-        // Yield to event loop to allow GC and UI responsiveness
-        await new Promise(resolve => setTimeout(resolve, 0));
-    }
+    // Yield to event loop to allow GC and UI responsiveness
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
 };
 
 // Helper to buffer chunks for import
 const importBuffer: string[] = [];
 
-const handleImport = async (base64: string, chunk?: { index: number; total: number }): Promise<void> => {
-    // Collect chunks
-    if (chunk) {
-        importBuffer[chunk.index] = base64;
-        // Check if all chunks received
-        let receivedCount = 0;
-        for (let i=0; i < chunk.total; i++) {
-            if (importBuffer[i]) receivedCount++;
-        }
-        
-        if (receivedCount < chunk.total) {
-            return; // Wait for more chunks
-        }
-        
-        // All chunks received, rebuild base64 string
-        base64 = importBuffer.join('');
-        // Clear buffer
-        importBuffer.length = 0;
+const handleImport = async (
+  base64: string,
+  chunk?: { index: number; total: number },
+): Promise<void> => {
+  // Collect chunks
+  if (chunk) {
+    importBuffer[chunk.index] = base64;
+    // Check if all chunks received
+    let receivedCount = 0;
+    for (let i = 0; i < chunk.total; i++) {
+      if (importBuffer[i]) receivedCount++;
     }
 
-    try {
-        const useOpfs = await isOpfsSupported();
-        
-        if (useOpfs) {
-            console.log('Worker: Starting OPFS import (manual overwrite)...');
-            
-            // 1. Close existing DB connection to release lock
-            if (db) {
-                console.log('Worker: Closing database...');
-                if (typeof db.close === 'function') {
-                    await db.close();
-                }
-                db = null;
-                initPromise = null;
-            }
-
-            // 2. Decode data
-            const bytes = base64ToUint8Array(base64);
-
-            // 3. Get OPFS root
-            const root = await navigator.storage.getDirectory();
-            
-            // 4. Clean up auxiliary files
-            for (const suffix of ['-journal', '-wal', '-shm']) {
-                try {
-                    await root.removeEntry(dbName + suffix);
-                } catch (e) {
-                    // Ignore if file doesn't exist
-                }
-            }
-            
-            // 5. Overwrite the main DB file
-            const fileHandle = await root.getFileHandle(dbName, {
-              create: true,
-            });
-            const writable = await fileHandle.createWritable();
-            await writable.write(bytes as any);
-            await writable.close();
-            
-            console.log('Worker: OPFS file overwritten successfully.');
-
-            // 6. Re-initialize DB
-            await initDB();
-            return;
-        }
-
-        // Fallback for non-OPFS (IndexedDB)
-        if (db && typeof db.sync === 'function') {
-            const bytes = base64ToUint8Array(base64);
-            const blob = new Blob([bytes as any]);
-            const stream = blob.stream();
-            await db.sync(stream);
-        } else {
-            throw new Error('Database import not supported in this configuration');
-        }
-    } catch (err) {
-        console.error('Worker: Import failed:', err);
-        // Try to recover DB connection if it was closed
-        if (!db) {
-            try { await initDB(); } catch(e) { console.error('Worker: Recovery init failed:', e); }
-        }
-        throw err;
+    if (receivedCount < chunk.total) {
+      return; // Wait for more chunks
     }
+
+    // All chunks received, rebuild base64 string
+    base64 = importBuffer.join('');
+    // Clear buffer
+    importBuffer.length = 0;
+  }
+
+  try {
+    const useOpfs = await isOpfsSupported();
+
+    if (useOpfs) {
+      console.log('Worker: Starting OPFS import (manual overwrite)...');
+
+      // 1. Close existing DB connection to release lock
+      if (db) {
+        console.log('Worker: Closing database...');
+        if (typeof db.close === 'function') {
+          await db.close();
+        }
+        db = null;
+        initPromise = null;
+      }
+
+      // 2. Decode data
+      const bytes = base64ToUint8Array(base64);
+
+      // 3. Get OPFS root
+      const root = await navigator.storage.getDirectory();
+
+      // 4. Clean up auxiliary files
+      for (const suffix of ['-journal', '-wal', '-shm']) {
+        try {
+          await root.removeEntry(dbName + suffix);
+        } catch (e) {
+          // Ignore if file doesn't exist
+        }
+      }
+
+      // 5. Overwrite the main DB file
+      const fileHandle = await root.getFileHandle(dbName, {
+        create: true,
+      });
+      const writable = await fileHandle.createWritable();
+      await writable.write(bytes as any);
+      await writable.close();
+
+      console.log('Worker: OPFS file overwritten successfully.');
+
+      // 6. Re-initialize DB
+      await initDB();
+      return;
+    }
+
+    // Fallback for non-OPFS (IndexedDB)
+    if (db && typeof db.sync === 'function') {
+      const bytes = base64ToUint8Array(base64);
+      const blob = new Blob([bytes as any]);
+      const stream = blob.stream();
+      await db.sync(stream);
+    } else {
+      throw new Error('Database import not supported in this configuration');
+    }
+  } catch (err) {
+    console.error('Worker: Import failed:', err);
+    // Try to recover DB connection if it was closed
+    if (!db) {
+      try {
+        await initDB();
+      } catch (e) {
+        console.error('Worker: Recovery init failed:', e);
+      }
+    }
+    throw err;
+  }
 };
 
 const processMessage = async (e: MessageEvent) => {
@@ -377,7 +429,7 @@ const processMessage = async (e: MessageEvent) => {
 
       case 'RUN': {
         const { sql, bind } = payload;
-        await execSql(sql, bind); 
+        await execSql(sql, bind);
         self.postMessage({ id, success: true });
         break;
       }
@@ -393,7 +445,7 @@ const processMessage = async (e: MessageEvent) => {
           self.postMessage({ id, success: true });
         } catch (e) {
           try {
-             await db.run('ROLLBACK;');
+            await db.run('ROLLBACK;');
           } catch (_e) {}
           throw e;
         }
@@ -424,12 +476,12 @@ const processMessage = async (e: MessageEvent) => {
 };
 
 self.onmessage = (e) => {
-    // Chain the request to the queue to ensure serial execution
-    requestQueue = requestQueue.then(async () => {
-        try {
-            await processMessage(e);
-        } catch (error: any) {
-             console.error('Worker: Unhandled error in message queue', error);
-        }
-    });
+  // Chain the request to the queue to ensure serial execution
+  requestQueue = requestQueue.then(async () => {
+    try {
+      await processMessage(e);
+    } catch (error: any) {
+      console.error('Worker: Unhandled error in message queue', error);
+    }
+  });
 };

@@ -278,7 +278,29 @@
     "exportAsText": "Exportar como texto",
     "exportAsMarkdown": "Exportar como Markdown",
     "exportAsJson": "Exportar como JSON",
-    "duplicate": "Duplicar"
+    "duplicate": "Duplicar",
+    "changeColor": "Alterar Cor"
+  },
+  "folderSettings": {
+    "title": "Configurações da Pasta",
+    "name": "Nome",
+    "color": "Cor do Ícone",
+    "defaultColor": "Padrão",
+    "customColor": "Personalizado:"
+  },
+  "folderColor": {
+    "indigo": "Índigo",
+    "violet": "Violeta",
+    "pink": "Rosa",
+    "red": "Vermelho",
+    "orange": "Laranja",
+    "yellow": "Amarelo",
+    "green": "Verde",
+    "teal": "Cerceta",
+    "cyan": "Ciano",
+    "blue": "Azul",
+    "lavender": "Lavanda",
+    "rose": "Rosa"
   },
   "export": {
     "roleUser": "Usuário",

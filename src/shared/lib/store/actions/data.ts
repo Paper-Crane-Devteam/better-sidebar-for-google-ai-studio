@@ -2,7 +2,7 @@ import type { AppState, SetState, GetState } from '../types';
 
 export function createDataActions(
   set: SetState,
-  get: GetState
+  get: GetState,
 ): Pick<
   AppState,
   | 'setFolders'
@@ -17,6 +17,7 @@ export function createDataActions(
   | 'deleteItem'
   | 'deleteItems'
   | 'toggleFavorite'
+  | 'updateFolderColor'
 > {
   return {
     setFolders: (folders) => set({ folders }),
@@ -45,11 +46,15 @@ export function createDataActions(
           browser.runtime.sendMessage({ type: 'GET_PROMPTS' }),
         ]);
         if (foldersResponse.success) set({ folders: foldersResponse.data });
-        if (conversationsResponse.success) set({ conversations: conversationsResponse.data });
-        if (favoritesResponse.success) set({ favorites: favoritesResponse.data });
+        if (conversationsResponse.success)
+          set({ conversations: conversationsResponse.data });
+        if (favoritesResponse.success)
+          set({ favorites: favoritesResponse.data });
         if (tagsResponse.success) set({ tags: tagsResponse.data });
-        if (conversationTagsResponse.success) set({ conversationTags: conversationTagsResponse.data });
-        if (promptFoldersResponse.success) set({ promptFolders: promptFoldersResponse.data });
+        if (conversationTagsResponse.success)
+          set({ conversationTags: conversationTagsResponse.data });
+        if (promptFoldersResponse.success)
+          set({ promptFolders: promptFoldersResponse.data });
         if (promptsResponse.success) set({ prompts: promptsResponse.data });
       } catch (error) {
         console.error('Failed to fetch data:', error);
@@ -148,8 +153,12 @@ export function createDataActions(
     deleteItems: async (itemIds) => {
       try {
         const state = get();
-        const folderIds = itemIds.filter((id) => state.folders.some((f) => f.id === id));
-        const conversationIds = itemIds.filter((id) => state.conversations.some((c) => c.id === id));
+        const folderIds = itemIds.filter((id) =>
+          state.folders.some((f) => f.id === id),
+        );
+        const conversationIds = itemIds.filter((id) =>
+          state.conversations.some((c) => c.id === id),
+        );
         if (folderIds.length === 0 && conversationIds.length === 0) return;
         await browser.runtime.sendMessage({
           type: 'DELETE_ITEMS',
@@ -177,6 +186,18 @@ export function createDataActions(
         await get().fetchData(true);
       } catch (error) {
         console.error('Failed to toggle favorite:', error);
+      }
+    },
+
+    updateFolderColor: async (folderId, color) => {
+      try {
+        await browser.runtime.sendMessage({
+          type: 'UPDATE_FOLDER',
+          payload: { id: folderId, updates: { color } },
+        });
+        await get().fetchData(true);
+      } catch (error) {
+        console.error('Failed to update folder color:', error);
       }
     },
   };

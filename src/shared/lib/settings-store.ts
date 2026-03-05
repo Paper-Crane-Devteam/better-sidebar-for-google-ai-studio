@@ -1,7 +1,11 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { detectPlatform, Platform } from '../types/platform';
-import { syncGeminiTheme, syncAiStudioTheme, syncChatGPTTheme } from './utils/utils';
+import {
+  syncGeminiTheme,
+  syncAiStudioTheme,
+  syncChatGPTTheme,
+} from './utils/utils';
 
 interface SettingsState {
   theme: 'light' | 'dark' | 'system';
@@ -9,6 +13,8 @@ interface SettingsState {
   newChatBehavior: 'current-tab' | 'new-tab';
   autoScanLibrary: boolean;
   overlayPosition: 'bottom-left' | 'bottom-right';
+  enableResizableSidebar: boolean;
+  customSidebarWidth: number;
   language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru';
   explorer: {
     viewMode: 'tree' | 'timeline';
@@ -35,6 +41,8 @@ interface SettingsState {
   setNewChatBehavior: (behavior: 'current-tab' | 'new-tab') => void;
   setAutoScanLibrary: (enabled: boolean) => void;
   setOverlayPosition: (position: 'bottom-left' | 'bottom-right') => void;
+  setEnableResizableSidebar: (enabled: boolean) => void;
+  setCustomSidebarWidth: (width: number) => void;
   setLanguage: (
     language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru',
   ) => void;
@@ -75,7 +83,14 @@ const storage: StateStorage = {
 };
 
 // Get default language from browser
-const getDefaultLanguage = (): 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru' => {
+const getDefaultLanguage = ():
+  | 'zh-CN'
+  | 'zh-TW'
+  | 'en'
+  | 'ja'
+  | 'pt'
+  | 'es'
+  | 'ru' => {
   const browserLang = navigator.language || navigator.languages?.[0] || 'en';
   if (browserLang.startsWith('zh-TW') || browserLang.startsWith('zh-Hant')) {
     return 'zh-TW';
@@ -125,6 +140,8 @@ export const useSettingsStore = create<SettingsState>()(
       newChatBehavior: 'current-tab',
       autoScanLibrary: false,
       overlayPosition: 'bottom-left',
+      enableResizableSidebar: false,
+      customSidebarWidth: 360,
       language: getDefaultLanguage(),
       explorer: {
         viewMode: 'tree',
@@ -150,11 +167,11 @@ export const useSettingsStore = create<SettingsState>()(
         if (platform === Platform.GEMINI) {
           syncGeminiTheme(theme);
         }
-        if(platform === Platform.AI_STUDIO) {
-          syncAiStudioTheme(theme)
+        if (platform === Platform.AI_STUDIO) {
+          syncAiStudioTheme(theme);
         }
-        if(platform === Platform.CHATGPT) {
-          syncChatGPTTheme(theme)
+        if (platform === Platform.CHATGPT) {
+          syncChatGPTTheme(theme);
         }
         // if(platform === Platform.CLAUDE) {
         //   syncClaudeTheme(theme)
@@ -164,6 +181,10 @@ export const useSettingsStore = create<SettingsState>()(
       setNewChatBehavior: (newChatBehavior) => set({ newChatBehavior }),
       setAutoScanLibrary: (autoScanLibrary) => set({ autoScanLibrary }),
       setOverlayPosition: (overlayPosition) => set({ overlayPosition }),
+      setEnableResizableSidebar: (enableResizableSidebar) =>
+        set({ enableResizableSidebar }),
+      setCustomSidebarWidth: (customSidebarWidth) =>
+        set({ customSidebarWidth }),
       setLanguage: (language) => set({ language }),
       setExplorerViewMode: (viewMode) =>
         set((state) => ({ explorer: { ...state.explorer, viewMode } })),

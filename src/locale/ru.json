@@ -278,7 +278,29 @@
     "exportAsText": "Экспорт как текст",
     "exportAsMarkdown": "Экспорт как Markdown",
     "exportAsJson": "Экспорт как JSON",
-    "duplicate": "Дублировать"
+    "duplicate": "Дублировать",
+    "changeColor": "Изменить цвет"
+  },
+  "folderSettings": {
+    "title": "Настройки папки",
+    "name": "Имя",
+    "color": "Цвет иконки",
+    "defaultColor": "По умолчанию",
+    "customColor": "Пользовательский:"
+  },
+  "folderColor": {
+    "indigo": "Индиго",
+    "violet": "Фиолетовый",
+    "pink": "Розовый",
+    "red": "Красный",
+    "orange": "Оранжевый",
+    "yellow": "Жёлтый",
+    "green": "Зелёный",
+    "teal": "Бирюзовый",
+    "cyan": "Голубой",
+    "blue": "Синий",
+    "lavender": "Лавандовый",
+    "rose": "Розовый"
   },
   "export": {
     "roleUser": "Пользователь",

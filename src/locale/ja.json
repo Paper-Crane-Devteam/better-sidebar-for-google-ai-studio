@@ -278,7 +278,29 @@
     "exportAsText": "テキストとしてエクスポート",
     "exportAsMarkdown": "Markdownとしてエクスポート",
     "exportAsJson": "JSONとしてエクスポート",
-    "duplicate": "複製"
+    "duplicate": "複製",
+    "changeColor": "色を変更"
+  },
+  "folderSettings": {
+    "title": "フォルダー設定",
+    "name": "名前",
+    "color": "アイコンの色",
+    "defaultColor": "デフォルト",
+    "customColor": "カスタム:"
+  },
+  "folderColor": {
+    "indigo": "インディゴ",
+    "violet": "バイオレット",
+    "pink": "ピンク",
+    "red": "赤",
+    "orange": "オレンジ",
+    "yellow": "黄色",
+    "green": "緑",
+    "teal": "ティール",
+    "cyan": "シアン",
+    "blue": "青",
+    "lavender": "ラベンダー",
+    "rose": "ローズ"
   },
   "export": {
     "roleUser": "ユーザー",

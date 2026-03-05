@@ -278,7 +278,29 @@
     "exportAsText": "Exportar como texto",
     "exportAsMarkdown": "Exportar como Markdown",
     "exportAsJson": "Exportar como JSON",
-    "duplicate": "Duplicar"
+    "duplicate": "Duplicar",
+    "changeColor": "Cambiar Color"
+  },
+  "folderSettings": {
+    "title": "Configuración de Carpeta",
+    "name": "Nombre",
+    "color": "Color del Ícono",
+    "defaultColor": "Predeterminado",
+    "customColor": "Personalizado:"
+  },
+  "folderColor": {
+    "indigo": "Índigo",
+    "violet": "Violeta",
+    "pink": "Rosa",
+    "red": "Rojo",
+    "orange": "Naranja",
+    "yellow": "Amarillo",
+    "green": "Verde",
+    "teal": "Verde azulado",
+    "cyan": "Cian",
+    "blue": "Azul",
+    "lavender": "Lavanda",
+    "rose": "Rosa"
   },
   "export": {
     "roleUser": "Usuario",

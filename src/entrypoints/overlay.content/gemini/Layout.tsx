@@ -7,7 +7,11 @@ import ReactDOM from 'react-dom/client';
 import { OverlayPanel } from './OverlayPanel';
 import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
-import { applyShadowStyles, querySelectorDeep, waitForElement } from '@/shared/lib/utils';
+import {
+  applyShadowStyles,
+  querySelectorDeep,
+  waitForElement,
+} from '@/shared/lib/utils';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useAppStore } from '@/shared/lib/store';
 
@@ -26,25 +30,38 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
     // If the original site used inline styles, we want to restore them.
     // If it used class/stylesheet styles, removing our inline style will restore them.
     // So storing what was in `style` attribute is correct.
-    const originalClosedWidth = bardSidenavEl.style.getPropertyValue('--bard-sidenav-closed-width');
-    const originalOpenWidth = bardSidenavEl.style.getPropertyValue('--bard-sidenav-open-width');
+    const originalClosedWidth = bardSidenavEl.style.getPropertyValue(
+      '--bard-sidenav-closed-width',
+    );
+    const originalOpenWidth = bardSidenavEl.style.getPropertyValue(
+      '--bard-sidenav-open-width',
+    );
 
-    const updateSidebarWidths = (density: 'compact' | 'relaxed', enabled: boolean) => {
+    const updateSidebarWidths = (
+      density: 'compact' | 'relaxed',
+      enabled: boolean,
+    ) => {
       if (!bardSidenav) return;
       if (!enabled) {
-          // Restore original
-          if (originalClosedWidth) {
-              bardSidenavEl.style.setProperty('--bard-sidenav-closed-width', originalClosedWidth);
-          } else {
-              bardSidenavEl.style.removeProperty('--bard-sidenav-closed-width');
-          }
+        // Restore original
+        if (originalClosedWidth) {
+          bardSidenavEl.style.setProperty(
+            '--bard-sidenav-closed-width',
+            originalClosedWidth,
+          );
+        } else {
+          bardSidenavEl.style.removeProperty('--bard-sidenav-closed-width');
+        }
 
-          if (originalOpenWidth) {
-              bardSidenavEl.style.setProperty('--bard-sidenav-open-width', originalOpenWidth);
-          } else {
-              bardSidenavEl.style.removeProperty('--bard-sidenav-open-width');
-          }
-          return;
+        if (originalOpenWidth) {
+          bardSidenavEl.style.setProperty(
+            '--bard-sidenav-open-width',
+            originalOpenWidth,
+          );
+        } else {
+          bardSidenavEl.style.removeProperty('--bard-sidenav-open-width');
+        }
+        return;
       }
 
       if (density === 'compact') {
@@ -70,12 +87,13 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
       const resizeObserver = new ResizeObserver((entries) => {
         for (const entry of entries) {
           const width = entry.contentRect.width;
-          const closedWidthStr = getComputedStyle(bardSidenavEl)
-            .getPropertyValue('--bard-sidenav-closed-width');
+          const closedWidthStr = getComputedStyle(
+            bardSidenavEl,
+          ).getPropertyValue('--bard-sidenav-closed-width');
           const closedWidth = parseInt(closedWidthStr, 10) || 64;
           // If current width is greater than closed width + margin, sidebar is open
           const isSidebarExpanded = width > closedWidth + 10;
-          
+
           useAppStore.getState().setSidebarExpanded(isSidebarExpanded);
         }
       });
@@ -84,16 +102,18 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
 
     // 1. Find the container
     const container = await waitForElement('.sidenav-with-history-container');
-    
+
     if (!container) {
-        console.error('Better Sidebar: Failed to find .sidenav-with-history-container');
-        return;
+      console.error(
+        'Better Sidebar: Failed to find .sidenav-with-history-container',
+      );
+      return;
     }
 
     console.log('Better Sidebar: Found Gemini sidebar container', container);
 
     const wrapperId = 'better-sidebar-for-google-ai-studio-sidebar-wrapper';
-    
+
     // Store references to elements we need to toggle
     const elements = {
       wrapper: null as HTMLElement | null,
@@ -128,146 +148,138 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
       }
     });
 
-    waitForElement('search-nav-button').then(el => {
-        elements.searchNavBtn = el as HTMLElement;
-        const enabled = useAppStore.getState().ui.overlay.isOpen;
-        if (enabled) {
-            (el as HTMLElement).style.display = 'none';
-        }
+    waitForElement('search-nav-button').then((el) => {
+      elements.searchNavBtn = el as HTMLElement;
+      const enabled = useAppStore.getState().ui.overlay.isOpen;
+      if (enabled) {
+        (el as HTMLElement).style.display = 'none';
+      }
     });
 
-    waitForElement('top-bar-actions').then(el => {
-        elements.topBarActions = el as HTMLElement;
-        const enabled = useAppStore.getState().ui.overlay.isOpen;
-        if (enabled) {
-            (el as HTMLElement).style.left = '361px';
-        }
+    waitForElement('top-bar-actions').then((el) => {
+      elements.topBarActions = el as HTMLElement;
+      const enabled = useAppStore.getState().ui.overlay.isOpen;
+      if (enabled) {
+        (el as HTMLElement).style.left = '361px';
+      }
     });
-
 
     // Function to update visibility/state based on enabled status
     const updateState = (enabled: boolean) => {
-        // 0. Update Sidebar Widths
-        const density = useSettingsStore.getState().layoutDensity;
-        updateSidebarWidths(density, enabled);
+      // 0. Update Sidebar Widths
+      const density = useSettingsStore.getState().layoutDensity;
+      updateSidebarWidths(density, enabled);
 
-        // 1. Manage Wrapper
-        if (enabled) {
-            if (!elements.wrapper) {
-                // Create wrapper if doesn't exist
-                const wrapper = document.createElement('div');
-                wrapper.id = wrapperId;
-                wrapper.style.height = '100%';
-                wrapper.style.width = '100%'; 
-                wrapper.style.overflow = 'auto';
-                
-                container.appendChild(wrapper);
-                elements.wrapper = wrapper;
+      // 1. Manage Wrapper
+      if (enabled) {
+        if (!elements.wrapper) {
+          // Create wrapper if doesn't exist
+          const wrapper = document.createElement('div');
+          wrapper.id = wrapperId;
+          wrapper.style.height = '100%';
+          wrapper.style.width = '100%';
+          wrapper.style.overflow = 'auto';
 
-                const shadow = wrapper.attachShadow({ mode: 'open' });
-                applyShadowStyles(shadow, mainStyles);
+          container.appendChild(wrapper);
+          elements.wrapper = wrapper;
 
-                const rootContainer = document.createElement('div');
-                rootContainer.classList.add('shadow-body');
-                rootContainer.classList.add('theme-gemini');
-                rootContainer.style.height = '100%';
-                
-                // Theme sync
-                const syncTheme = () => {
-                    const isDark = document.body.classList.contains('dark-theme') || 
-                                   document.body.classList.contains('dark') ||
-                                   document.body.getAttribute('data-theme') === 'dark';
-                                   
-                    TooltipHelper.getInstance().setTheme(isDark);
-                    if (isDark) rootContainer.classList.add('dark');
-                    else rootContainer.classList.remove('dark');
-                };
-                syncTheme();
-                
-                const observer = new MutationObserver(syncTheme);
-                observer.observe(document.body, {
-                    attributes: true,
-                    attributeFilter: ['class', 'data-theme'],
-                });
+          const shadow = wrapper.attachShadow({ mode: 'open' });
+          applyShadowStyles(shadow, mainStyles);
 
-                shadow.appendChild(rootContainer);
+          const rootContainer = document.createElement('div');
+          rootContainer.classList.add('shadow-body');
+          rootContainer.classList.add('theme-gemini');
+          rootContainer.style.height = '100%';
 
-                // Render React App
-                const root = ReactDOM.createRoot(rootContainer);
-                root.render(
-                  <ShadowRootProvider container={rootContainer}>
-                    <div className="h-full w-full bg-background text-foreground">
-                      <OverlayPanel className="h-full" />
-                    </div>
-                  </ShadowRootProvider>
-                );
-            } else {
-                elements.wrapper.style.display = 'block';
-            }
+          // Theme sync
+          const syncTheme = () => {
+            const isDark =
+              document.body.classList.contains('dark-theme') ||
+              document.body.classList.contains('dark') ||
+              document.body.getAttribute('data-theme') === 'dark';
+
+            TooltipHelper.getInstance().setTheme(isDark);
+            if (isDark) rootContainer.classList.add('dark');
+            else rootContainer.classList.remove('dark');
+          };
+          syncTheme();
+
+          const observer = new MutationObserver(syncTheme);
+          observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ['class', 'data-theme'],
+          });
+
+          shadow.appendChild(rootContainer);
+
+          // Render React App
+          const root = ReactDOM.createRoot(rootContainer);
+          root.render(
+            <ShadowRootProvider container={rootContainer}>
+              <div className="h-full w-full bg-background text-foreground">
+                <OverlayPanel className="h-full" />
+              </div>
+            </ShadowRootProvider>,
+          );
         } else {
-            if (elements.wrapper) {
-                elements.wrapper.style.display = 'none';
-            }
+          elements.wrapper.style.display = 'block';
         }
-
-        // 2. Hide/Show Original Elements (children of container)
-        Array.from(container.children).forEach((child) => {
-            if (child.id !== wrapperId) {
-                const el = child as HTMLElement;
-                if (enabled) {
-                    el.style.position = 'absolute';
-                    el.style.top = '-9999px';
-                    el.style.left = '-9999px';
-                } else {
-                    el.style.position = '';
-                    el.style.top = '';
-                    el.style.left = '';
-                }
-            }
-        });
-
-        // 3. Update External Elements
-        if (elements.sideNavMenuBtn) {
-            if (enabled) {
-                elements.sideNavMenuBtn.style.position = 'absolute';
-                elements.sideNavMenuBtn.style.top = '-9999px';
-                elements.sideNavMenuBtn.style.left = '-9999px';
-            } else {
-                elements.sideNavMenuBtn.style.position = '';
-                elements.sideNavMenuBtn.style.top = '';
-                elements.sideNavMenuBtn.style.left = '';
-            }
+      } else {
+        if (elements.wrapper) {
+          elements.wrapper.style.display = 'none';
         }
+      }
 
-        if (elements.bardModeSwitcher) {
+      // 2. Hide/Show Original Elements (children of container)
+      Array.from(container.children).forEach((child) => {
+        if (child.id !== wrapperId) {
+          const el = child as HTMLElement;
           if (enabled) {
-            const width = density === 'compact' ? '281px' : '296px';
-            elements.bardModeSwitcher.style.setProperty(
-              '--bard-sidenav-open-closed-width-diff',
-              width,
-            );
+            el.style.position = 'absolute';
+            el.style.top = '-9999px';
+            el.style.left = '-9999px';
           } else {
-            elements.bardModeSwitcher.style.removeProperty(
-              '--bard-sidenav-open-closed-width-diff',
-            );
+            el.style.position = '';
+            el.style.top = '';
+            el.style.left = '';
           }
         }
+      });
 
-        if (elements.searchNavBtn) {
-            if (enabled) {
-                elements.searchNavBtn.style.display = 'none';
-            } else {
-                elements.searchNavBtn.style.display = '';
-            }
+      // 3. Update External Elements
+      if (elements.sideNavMenuBtn) {
+        if (enabled) {
+          elements.sideNavMenuBtn.style.position = 'absolute';
+          elements.sideNavMenuBtn.style.top = '-9999px';
+          elements.sideNavMenuBtn.style.left = '-9999px';
+        } else {
+          elements.sideNavMenuBtn.style.position = '';
+          elements.sideNavMenuBtn.style.top = '';
+          elements.sideNavMenuBtn.style.left = '';
         }
+      }
 
-        if (elements.topBarActions) {
-            if (enabled) {
-                elements.topBarActions.style.left = '361px';
-            } else {
-                elements.topBarActions.style.left = '';
-            }
+      if (elements.bardModeSwitcher) {
+        if (!enabled) {
+          elements.bardModeSwitcher.style.removeProperty(
+            '--bard-sidenav-open-closed-width-diff',
+          );
         }
+      }
+
+      if (elements.searchNavBtn) {
+        if (enabled) {
+          elements.searchNavBtn.style.display = 'none';
+        } else {
+          elements.searchNavBtn.style.display = '';
+        }
+      }
+
+      if (elements.topBarActions) {
+        if (!enabled) {
+          elements.topBarActions.style.left = '';
+        }
+      }
     };
 
     // Initial state check
@@ -275,11 +287,10 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
 
     // Subscribe to state changes
     useAppStore.subscribe((state, prevState) => {
-        if (state.ui.overlay.isOpen !== prevState.ui.overlay.isOpen) {
-            updateState(state.ui.overlay.isOpen);
-        }
+      if (state.ui.overlay.isOpen !== prevState.ui.overlay.isOpen) {
+        updateState(state.ui.overlay.isOpen);
+      }
     });
-
   } catch (e) {
     console.error('Better Sidebar: Gemini overlay initialization failed', e);
   }

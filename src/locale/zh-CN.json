@@ -77,7 +77,9 @@
     "japanese": "日本語",
     "portuguese": "Português",
     "spanish": "Español",
-    "russian": "Русский"
+    "russian": "Русский",
+    "resizableSidebar": "可拖拽侧边栏",
+    "resizableSidebarDescription": "允许通过拖拽改变侧边栏宽度"
   },
   "modal": {
     "resetDatabase": "重置数据库",
@@ -278,7 +280,29 @@
     "exportAsText": "导出为纯文本",
     "exportAsMarkdown": "导出为 Markdown",
     "exportAsJson": "导出为 JSON",
-    "duplicate": "复制"
+    "duplicate": "复制",
+    "changeColor": "更改颜色"
+  },
+  "folderSettings": {
+    "title": "文件夹设置",
+    "name": "名称",
+    "color": "图标颜色",
+    "defaultColor": "默认",
+    "customColor": "自定义："
+  },
+  "folderColor": {
+    "indigo": "靛蓝",
+    "violet": "紫罗兰",
+    "pink": "粉红",
+    "red": "红色",
+    "orange": "橙色",
+    "yellow": "黄色",
+    "green": "绿色",
+    "teal": "青色",
+    "cyan": "蓝绿",
+    "blue": "蓝色",
+    "lavender": "薰衣草",
+    "rose": "玫瑰"
   },
   "export": {
     "roleUser": "用户",

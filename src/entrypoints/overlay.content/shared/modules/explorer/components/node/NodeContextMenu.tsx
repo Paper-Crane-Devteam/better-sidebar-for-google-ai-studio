@@ -20,16 +20,34 @@ import {
   downloadBlob,
   safeFilename,
 } from '../../lib/exportConversation';
-import { FolderPlus, Edit2, Trash2, Star, StarOff, Tag as TagIcon, ExternalLink, Download, MessageSquare, FileCode, Braces, FolderInput } from 'lucide-react';
+import {
+  FolderPlus,
+  Edit2,
+  Trash2,
+  Star,
+  StarOff,
+  Tag as TagIcon,
+  ExternalLink,
+  Download,
+  MessageSquare,
+  FileCode,
+  Braces,
+  FolderInput,
+  Palette,
+  Check,
+} from 'lucide-react';
 import { modal } from '@/shared/lib/modal';
 import { MoveItemsDialog } from '../batch/MoveItemsDialog';
 import { NodeProps } from './types';
 import { detectPlatform, PLATFORM_CONFIG } from '@/shared/types/platform';
+import { FOLDER_COLOR_PRESETS } from '@/shared/lib/folder-colors';
 
 interface NodeContextMenuProps extends NodeProps {
   isFavorite: boolean;
   onDelete: () => void;
   onTagToggle: (tagId: string, checked: boolean) => void;
+  onColorChange: (color: string | null) => void;
+  folderColor: string | null;
   // Make sure these match what Node passes
   onCreateFolder: (parentId: string) => void;
   onToggleFavorite: (id: string, isFav: boolean) => void;
@@ -41,7 +59,9 @@ export const NodeContextMenu = ({
   onToggleFavorite,
   onDelete,
   onTagToggle,
+  onColorChange,
   isFavorite,
+  folderColor,
 }: NodeContextMenuProps) => {
   const { t } = useI18n();
   const { tags, conversationTags } = useAppStore();
@@ -50,8 +70,10 @@ export const NodeContextMenu = ({
   const shouldPreventRef = React.useRef(false);
   const [isTagSubMenuOpen, setIsTagSubMenuOpen] = React.useState(false);
   const [isExportSubMenuOpen, setIsExportSubMenuOpen] = React.useState(false);
+  const [isColorSubMenuOpen, setIsColorSubMenuOpen] = React.useState(false);
   const closeTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const exportCloseTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const colorCloseTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const isFile = node.data.type === 'file';
 
@@ -83,13 +105,29 @@ export const NodeContextMenu = ({
     }, 150);
   };
 
-  const handleExportAs = async (
-    format: 'text' | 'markdown' | 'json'
-  ) => {
+  const handleColorSubMenuMouseEnter = () => {
+    if (colorCloseTimeoutRef.current) {
+      clearTimeout(colorCloseTimeoutRef.current);
+      colorCloseTimeoutRef.current = null;
+    }
+    setIsColorSubMenuOpen(true);
+  };
+
+  const handleColorSubMenuMouseLeave = () => {
+    colorCloseTimeoutRef.current = setTimeout(() => {
+      setIsColorSubMenuOpen(false);
+    }, 150);
+  };
+
+  const handleExportAs = async (format: 'text' | 'markdown' | 'json') => {
     const conversationId = node.data.id;
     const messages = await fetchMessagesForExport(conversationId);
     if (!messages?.length) {
-      toast.error(t('toast.noContentToExport', { platform: PLATFORM_CONFIG[detectPlatform()].name }));
+      toast.error(
+        t('toast.noContentToExport', {
+          platform: PLATFORM_CONFIG[detectPlatform()].name,
+        }),
+      );
       return;
     }
     const baseName = safeFilename(node.data.name || conversationId);
@@ -124,7 +162,9 @@ export const NodeContextMenu = ({
     });
 
     if (confirmed) {
-      await useAppStore.getState().moveItem(node.data.id, targetFolderId, node.data.type);
+      await useAppStore
+        .getState()
+        .moveItem(node.data.id, targetFolderId, node.data.type);
       if (targetFolderId && node.isSelected) {
         node.tree.open(targetFolderId);
         setTimeout(() => {
@@ -138,7 +178,10 @@ export const NodeContextMenu = ({
   React.useEffect(() => {
     return () => {
       if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
-      if (exportCloseTimeoutRef.current) clearTimeout(exportCloseTimeoutRef.current);
+      if (exportCloseTimeoutRef.current)
+        clearTimeout(exportCloseTimeoutRef.current);
+      if (colorCloseTimeoutRef.current)
+        clearTimeout(colorCloseTimeoutRef.current);
     };
   }, []);
 
@@ -226,7 +269,7 @@ export const NodeContextMenu = ({
                   const hasTag = conversationTags.some(
                     (ct) =>
                       ct.conversation_id === node.data.id &&
-                      ct.tag_id === tag.id
+                      ct.tag_id === tag.id,
                   );
                   return (
                     <ContextMenuCheckboxItem
@@ -289,18 +332,65 @@ export const NodeContextMenu = ({
           <ContextMenuSeparator />
         </>
       )}
-      {(node.data.type === 'folder') && (
-        <ContextMenuItem
-          onClick={() => {
-            shouldPreventRef.current = true;
-            // Delay to allow context menu to close and focus to settle
-            // Prevents the input from immediately losing focus (blurring)
-            node.edit();
-          }}
-        >
-          <Edit2 className="mr-2 h-4 w-4" />
-          {t('node.rename')}
-        </ContextMenuItem>
+      {node.data.type === 'folder' && (
+        <>
+          <ContextMenuItem
+            onClick={() => {
+              shouldPreventRef.current = true;
+              node.edit();
+            }}
+          >
+            <Edit2 className="mr-2 h-4 w-4" />
+            {t('node.rename')}
+          </ContextMenuItem>
+
+          {/* Change Color Submenu */}
+          <ContextMenuSub
+            open={isColorSubMenuOpen}
+            onOpenChange={setIsColorSubMenuOpen}
+          >
+            <ContextMenuSubTrigger
+              onMouseEnter={handleColorSubMenuMouseEnter}
+              onMouseLeave={handleColorSubMenuMouseLeave}
+            >
+              <Palette className="mr-2 h-4 w-4" />
+              {t('node.changeColor')}
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent
+              className="w-auto p-2"
+              onMouseEnter={handleColorSubMenuMouseEnter}
+              onMouseLeave={handleColorSubMenuMouseLeave}
+            >
+              <div className="flex flex-wrap gap-1.5 max-w-[180px]">
+                {/* Default (no color) */}
+                <button
+                  type="button"
+                  className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center hover:scale-110 transition-transform"
+                  onClick={() => onColorChange(null)}
+                  title={t('folderSettings.defaultColor')}
+                >
+                  {folderColor === null && (
+                    <Check className="w-3 h-3 text-muted-foreground" />
+                  )}
+                </button>
+                {FOLDER_COLOR_PRESETS.map((preset) => (
+                  <button
+                    key={preset.value}
+                    type="button"
+                    className="w-6 h-6 rounded-full border-2 border-transparent flex items-center justify-center hover:scale-110 transition-transform"
+                    style={{ backgroundColor: preset.value }}
+                    onClick={() => onColorChange(preset.value)}
+                    title={t(preset.labelKey)}
+                  >
+                    {folderColor === preset.value && (
+                      <Check className="w-3 h-3 text-white drop-shadow-sm" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+        </>
       )}
       <ContextMenuItem
         onClick={onDelete}

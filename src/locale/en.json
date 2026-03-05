@@ -77,7 +77,9 @@
     "japanese": "日本語",
     "portuguese": "Português",
     "spanish": "Español",
-    "russian": "Русский"
+    "russian": "Русский",
+    "resizableSidebar": "Resizable Sidebar",
+    "resizableSidebarDescription": "Allow modifying sidebar width by dragging"
   },
   "modal": {
     "resetDatabase": "Reset Database",
@@ -278,7 +280,29 @@
     "exportAsText": "Export as Text",
     "exportAsMarkdown": "Export as Markdown",
     "exportAsJson": "Export as JSON",
-    "duplicate": "Duplicate"
+    "duplicate": "Duplicate",
+    "changeColor": "Change Color"
+  },
+  "folderSettings": {
+    "title": "Folder Settings",
+    "name": "Name",
+    "color": "Icon Color",
+    "defaultColor": "Default",
+    "customColor": "Custom:"
+  },
+  "folderColor": {
+    "indigo": "Indigo",
+    "violet": "Violet",
+    "pink": "Pink",
+    "red": "Red",
+    "orange": "Orange",
+    "yellow": "Yellow",
+    "green": "Green",
+    "teal": "Teal",
+    "cyan": "Cyan",
+    "blue": "Blue",
+    "lavender": "Lavender",
+    "rose": "Rose"
   },
   "export": {
     "roleUser": "User",
@@ -497,4 +521,3 @@
     "awesome": "Awesome!"
   }
 }
-

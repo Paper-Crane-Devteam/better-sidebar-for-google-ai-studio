@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS folders (
   name TEXT NOT NULL,
   parent_id TEXT,
   platform TEXT DEFAULT 'aistudio', -- 'aistudio' | 'gemini' | 'chatgpt' | 'claude'
+  color TEXT, -- hex color for folder icon, e.g. '#4F46E5'
   order_index INTEGER DEFAULT 0,
   created_at INTEGER DEFAULT (unixepoch()),
   updated_at INTEGER DEFAULT (unixepoch()),

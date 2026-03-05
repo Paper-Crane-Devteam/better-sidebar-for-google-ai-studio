@@ -11,7 +11,7 @@ export const folderRepo = {
     const platform = folder.platform ?? 'aistudio';
     await runCommand(
       'INSERT INTO folders (id, name, parent_id, platform) VALUES (?, ?, ?, ?)',
-      [folder.id, folder.name, folder.parentId || null, platform]
+      [folder.id, folder.name, folder.parentId || null, platform],
     );
   },
 
@@ -22,22 +22,22 @@ export const folderRepo = {
 
   getByParentId: async (
     parentId: string | null,
-    platform?: string
+    platform?: string,
   ): Promise<Folder[]> => {
     if (parentId === null) {
       if (platform) {
         return (await runQuery(
           'SELECT * FROM folders WHERE parent_id IS NULL AND platform = ? ORDER BY order_index ASC, name ASC',
-          [platform]
+          [platform],
         )) as Folder[];
       }
       return (await runQuery(
-        'SELECT * FROM folders WHERE parent_id IS NULL ORDER BY order_index ASC, name ASC'
+        'SELECT * FROM folders WHERE parent_id IS NULL ORDER BY order_index ASC, name ASC',
       )) as Folder[];
     }
     return (await runQuery(
       'SELECT * FROM folders WHERE parent_id = ? ORDER BY order_index ASC, name ASC',
-      [parentId]
+      [parentId],
     )) as Folder[];
   },
 
@@ -45,17 +45,19 @@ export const folderRepo = {
     if (platform) {
       return (await runQuery(
         'SELECT * FROM folders WHERE platform = ? ORDER BY order_index ASC, name ASC',
-        [platform]
+        [platform],
       )) as Folder[];
     }
     return (await runQuery(
-      'SELECT * FROM folders ORDER BY order_index ASC, name ASC'
+      'SELECT * FROM folders ORDER BY order_index ASC, name ASC',
     )) as Folder[];
   },
 
   update: async (
     id: string,
-    updates: Partial<Pick<Folder, 'name' | 'parent_id' | 'order_index'>>
+    updates: Partial<
+      Pick<Folder, 'name' | 'parent_id' | 'order_index' | 'color'>
+    >,
   ): Promise<void> => {
     const fields = Object.keys(updates);
     const values = Object.values(updates);
@@ -64,13 +66,14 @@ export const folderRepo = {
     const setClause = fields.map((field) => `${field} = ?`).join(', ');
     await runCommand(
       `UPDATE folders SET ${setClause}, updated_at = unixepoch() WHERE id = ?`,
-      [...values, id]
+      [...values, id],
     );
   },
 
   delete: async (id: string): Promise<void> => {
     // Get all descendant folder IDs using recursive CTE
-    const descendants = await runQuery(`
+    const descendants = await runQuery(
+      `
       WITH RECURSIVE descendants AS (
         SELECT id FROM folders WHERE parent_id = ?
         UNION ALL
@@ -78,24 +81,26 @@ export const folderRepo = {
         INNER JOIN descendants d ON f.parent_id = d.id
       )
       SELECT id FROM descendants
-    `, [id]);
-    
+    `,
+      [id],
+    );
+
     const allFolderIds = [id, ...descendants.map((r: any) => r.id)];
     const placeholders = allFolderIds.map(() => '?').join(',');
-    
+
     // Soft delete all conversations in these folders and remove folder association
     await runCommand(
       `UPDATE conversations SET deleted_at = unixepoch(), folder_id = NULL WHERE folder_id IN (${placeholders})`,
-      allFolderIds
+      allFolderIds,
     );
-    
+
     // Hard delete all folders (CASCADE will handle child folders)
     await runCommand('DELETE FROM folders WHERE id = ?', [id]);
   },
 
   deleteMultiple: async (ids: string[]): Promise<void> => {
     if (ids.length === 0) return;
-    
+
     // For each folder, delete it (which will cascade soft delete conversations)
     for (const id of ids) {
       await folderRepo.delete(id);

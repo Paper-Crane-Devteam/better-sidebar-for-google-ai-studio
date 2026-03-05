@@ -17,6 +17,7 @@ interface NodeContentProps extends NodeProps {
   fileIcon: React.ReactNode;
   toggleIcon: React.ReactNode;
   handleToggle: (e: React.MouseEvent) => void;
+  folderColor?: string | null;
   newName: string;
   setNewName: (name: string) => void;
 }
@@ -33,6 +34,7 @@ export const NodeContent = ({
   fileIcon,
   toggleIcon,
   handleToggle,
+  folderColor,
   newName,
   setNewName,
 }: NodeContentProps) => {
@@ -55,7 +57,7 @@ export const NodeContent = ({
         tabIndex={0}
         className={cn(
           'w-4 h-4 flex items-center justify-center shrink-0 text-muted-foreground',
-          isFile && isBatchMode && 'hidden'
+          isFile && isBatchMode && 'hidden',
         )}
         onClick={handleToggle}
         onKeyDown={(e) => {
@@ -67,14 +69,14 @@ export const NodeContent = ({
         {toggleIcon}
       </div>
 
-      <div className="w-4 h-4 flex items-center justify-center shrink-0 text-muted-foreground">
+      {/* <div className="w-4 h-4 flex items-center justify-center shrink-0 text-muted-foreground">
         {node.data.type === 'folder' ? folderIcon : fileIcon}
-      </div>
-      {/* {node.data.type === 'folder' && (
+      </div> */}
+      {node.data.type === 'folder' && (
         <div className="w-4 h-4 flex items-center justify-center shrink-0 text-muted-foreground">
           {folderIcon}
         </div>
-      )} */}
+      )}
 
       <div className="flex-1 min-w-0 flex items-center gap-1 overflow-hidden justify-between">
         {node.isEditing ? (
@@ -86,7 +88,12 @@ export const NodeContent = ({
             </span>
           </SimpleTooltip>
         ) : (
-          <span className="truncate text-sm select-none">{node.data.name}</span>
+          <span
+            className="truncate text-sm select-none"
+            style={folderColor ? { color: folderColor } : undefined}
+          >
+            {node.data.name}
+          </span>
         )}
         {isFavorite && (
           <div
