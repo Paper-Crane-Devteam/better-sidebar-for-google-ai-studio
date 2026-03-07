@@ -304,6 +304,20 @@
     "lavender": "薰衣草",
     "rose": "玫瑰"
   },
+  "presetColor": {
+    "indigo": "靛蓝",
+    "violet": "紫罗兰",
+    "pink": "粉红",
+    "red": "红色",
+    "orange": "橙色",
+    "yellow": "黄色",
+    "green": "绿色",
+    "teal": "青色",
+    "cyan": "蓝绿",
+    "blue": "蓝色",
+    "lavender": "薰衣草",
+    "rose": "玫瑰"
+  },
   "export": {
     "roleUser": "用户",
     "roleModel": "模型",
@@ -327,7 +341,9 @@
     "noTagsYet": "还没有标签。请在上方创建一个。",
     "deleteTag": "删除标签",
     "deleteTagConfirm": "您确定要删除此标签吗？",
-    "rename": "重命名"
+    "rename": "重命名",
+    "changeColor": "更改颜色",
+    "selectColor": "选择颜色"
   },
   "moveItemsDialog": {
     "rootLevel": "根目录（顶层）"

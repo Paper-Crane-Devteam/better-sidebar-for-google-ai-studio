@@ -7,14 +7,21 @@ import {
   syncChatGPTTheme,
 } from './utils/utils';
 
+interface GeminiEnhancedFeatures {
+  defaultModel: 'default' | 'fast' | 'thinking' | 'pro';
+  sidebarWidth: number;
+  chatWidth: number;
+  inputWidth: number;
+  hideBrand: boolean;
+  hideDisclaimer: boolean;
+}
+
 interface SettingsState {
   theme: 'light' | 'dark' | 'system';
   layoutDensity: 'compact' | 'relaxed';
   newChatBehavior: 'current-tab' | 'new-tab';
   autoScanLibrary: boolean;
   overlayPosition: 'bottom-left' | 'bottom-right';
-  enableResizableSidebar: boolean;
-  customSidebarWidth: number;
   language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru';
   explorer: {
     viewMode: 'tree' | 'timeline';
@@ -34,6 +41,9 @@ interface SettingsState {
     gems: boolean;
     originalUI: boolean;
   };
+  enhancedFeatures: {
+    gemini: GeminiEnhancedFeatures;
+  };
 
   // Actions
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
@@ -41,8 +51,6 @@ interface SettingsState {
   setNewChatBehavior: (behavior: 'current-tab' | 'new-tab') => void;
   setAutoScanLibrary: (enabled: boolean) => void;
   setOverlayPosition: (position: 'bottom-left' | 'bottom-right') => void;
-  setEnableResizableSidebar: (enabled: boolean) => void;
-  setCustomSidebarWidth: (width: number) => void;
   setLanguage: (
     language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru',
   ) => void;
@@ -53,6 +61,10 @@ interface SettingsState {
   setShortcutVisible: (
     key: keyof SettingsState['shortcuts'],
     visible: boolean,
+  ) => void;
+  setGeminiFeature: <K extends keyof GeminiEnhancedFeatures>(
+    key: K,
+    value: GeminiEnhancedFeatures[K],
   ) => void;
 }
 
@@ -140,8 +152,6 @@ export const useSettingsStore = create<SettingsState>()(
       newChatBehavior: 'current-tab',
       autoScanLibrary: false,
       overlayPosition: 'bottom-left',
-      enableResizableSidebar: false,
-      customSidebarWidth: 360,
       language: getDefaultLanguage(),
       explorer: {
         viewMode: 'tree',
@@ -160,6 +170,16 @@ export const useSettingsStore = create<SettingsState>()(
         myStuff: true,
         gems: true,
         originalUI: true,
+      },
+      enhancedFeatures: {
+        gemini: {
+          defaultModel: 'default',
+          sidebarWidth: 360,
+          chatWidth: 100,
+          inputWidth: 100,
+          hideBrand: false,
+          hideDisclaimer: false,
+        },
       },
 
       setTheme: (theme) => {
@@ -181,10 +201,6 @@ export const useSettingsStore = create<SettingsState>()(
       setNewChatBehavior: (newChatBehavior) => set({ newChatBehavior }),
       setAutoScanLibrary: (autoScanLibrary) => set({ autoScanLibrary }),
       setOverlayPosition: (overlayPosition) => set({ overlayPosition }),
-      setEnableResizableSidebar: (enableResizableSidebar) =>
-        set({ enableResizableSidebar }),
-      setCustomSidebarWidth: (customSidebarWidth) =>
-        set({ customSidebarWidth }),
       setLanguage: (language) => set({ language }),
       setExplorerViewMode: (viewMode) =>
         set((state) => ({ explorer: { ...state.explorer, viewMode } })),
@@ -200,10 +216,36 @@ export const useSettingsStore = create<SettingsState>()(
         set((state) => ({
           shortcuts: { ...state.shortcuts, [key]: visible },
         })),
+      setGeminiFeature: (key, value) =>
+        set((state) => ({
+          enhancedFeatures: {
+            ...state.enhancedFeatures,
+            gemini: { ...state.enhancedFeatures.gemini, [key]: value },
+          },
+        })),
     }),
     {
       name: getStorageName(),
       storage: createJSONStorage(() => storage),
+      version: 1,
+      migrate: (persistedState: any, version: number) => {
+        if (version === 0) {
+          const oldEnhanced = persistedState.enhancedFeatures || {};
+          persistedState.enhancedFeatures = {
+            gemini: {
+              defaultModel: oldEnhanced.defaultModel || 'default',
+              sidebarWidth: persistedState.customSidebarWidth || 360,
+              chatWidth: 100,
+              inputWidth: 100,
+              hideBrand: false,
+              hideDisclaimer: false,
+            },
+          };
+          delete persistedState.enableResizableSidebar;
+          delete persistedState.customSidebarWidth;
+        }
+        return persistedState;
+      },
     },
   ),
 );

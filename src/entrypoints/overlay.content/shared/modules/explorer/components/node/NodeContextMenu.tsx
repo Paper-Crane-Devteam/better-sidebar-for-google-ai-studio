@@ -283,12 +283,10 @@ export const NodeContextMenu = ({
                       }}
                     >
                       <div className="flex items-center gap-2">
-                        {tag.color && (
-                          <div
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: tag.color }}
-                          />
-                        )}
+                        <div
+                          className="w-2 h-2 rounded-full"
+                          style={tag.color ? { backgroundColor: tag.color } : undefined}
+                        />
                         {tag.name}
                       </div>
                     </ContextMenuCheckboxItem>

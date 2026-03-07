@@ -1,0 +1,61 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { GeminiEnhancedFeatures } from './GeminiEnhancedFeatures';
+import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
+import { applyShadowStyles } from '@/shared/lib/utils';
+
+/**
+ * Independent mounting of Gemini enhanced features (like Default Model selector)
+ * that should persist regardless of whether the main OverlayPanel is active.
+ */
+export function mountEnhancedFeatures(mainStyles: string) {
+  try {
+    const enhancedWrapper = document.createElement('div');
+    enhancedWrapper.id = 'better-sidebar-enhanced-features';
+    enhancedWrapper.style.position = 'relative';
+    enhancedWrapper.style.zIndex = '999999';
+    document.body.appendChild(enhancedWrapper);
+
+    const enhancedShadow = enhancedWrapper.attachShadow({ mode: 'open' });
+    applyShadowStyles(enhancedShadow, mainStyles);
+
+    const enhancedRoot = document.createElement('div');
+    enhancedRoot.classList.add('shadow-body', 'theme-gemini');
+
+    // Theme sync for enhanced features container
+    const syncEnhancedTheme = () => {
+      const themeValue = localStorage.getItem('Bard-Color-Theme');
+      let isDark = false;
+      if (!themeValue) {
+        isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      } else {
+        isDark = themeValue === 'Bard-Dark-Theme';
+      }
+      if (isDark) enhancedRoot.classList.add('dark');
+      else enhancedRoot.classList.remove('dark');
+    };
+    syncEnhancedTheme();
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'Bard-Color-Theme') syncEnhancedTheme();
+    });
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncEnhancedTheme);
+    new MutationObserver(syncEnhancedTheme).observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme'],
+    });
+
+    enhancedShadow.appendChild(enhancedRoot);
+
+    const enhancedReactRoot = ReactDOM.createRoot(enhancedRoot);
+    enhancedReactRoot.render(
+      <ShadowRootProvider container={enhancedRoot}>
+        <GeminiEnhancedFeatures />
+      </ShadowRootProvider>,
+    );
+
+    console.log('Better Sidebar: Enhanced features mounted independently');
+  } catch (e) {
+    console.error('Better Sidebar: Enhanced features initialization failed', e);
+  }
+}

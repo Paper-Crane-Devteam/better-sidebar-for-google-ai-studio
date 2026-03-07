@@ -5,6 +5,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { OverlayPanel } from './OverlayPanel';
+import { mountEnhancedFeatures } from './enhanced-features/mount';
 import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
 import {
@@ -193,16 +194,26 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
 
           // Theme sync
           const syncTheme = () => {
-            const isDark =
-              document.body.classList.contains('dark-theme') ||
-              document.body.classList.contains('dark') ||
-              document.body.getAttribute('data-theme') === 'dark';
+            const themeValue = localStorage.getItem('Bard-Color-Theme');
+            let isDark = false;
+            if (!themeValue) {
+              isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            } else {
+              isDark = themeValue === 'Bard-Dark-Theme';
+            }
 
             TooltipHelper.getInstance().setTheme(isDark);
             if (isDark) rootContainer.classList.add('dark');
             else rootContainer.classList.remove('dark');
           };
           syncTheme();
+
+          window.addEventListener('storage', (e) => {
+            if (e.key === 'Bard-Color-Theme') {
+              syncTheme();
+            }
+          });
+          window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncTheme);
 
           const observer = new MutationObserver(syncTheme);
           observer.observe(document.body, {
@@ -294,4 +305,7 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
   } catch (e) {
     console.error('Better Sidebar: Gemini overlay initialization failed', e);
   }
+
+  // Mount Enhanced Features independently from OverlayPanel
+  mountEnhancedFeatures(mainStyles);
 }

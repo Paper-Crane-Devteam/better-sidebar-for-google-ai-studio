@@ -101,12 +101,26 @@ export const FilterBar = ({ filter, allTags }: FilterBarProps) => {
             </Button>
             {allTags.map(tag => {
               const isSelected = tags.selected.includes(tag.id);
+              const hasColor = !!tag.color;
+              
               return (
                 <Button
                   key={tag.id}
-                  variant={isSelected ? "secondary" : "ghost"}
+                  variant={hasColor ? "outline" : (isSelected ? "secondary" : "ghost")}
                   size="sm"
-                  className="h-6 text-xs whitespace-nowrap"
+                  className={`h-6 text-xs whitespace-nowrap transition-all duration-200 ${
+                    hasColor 
+                      ? isSelected 
+                        ? '!bg-[var(--tag-bg-solid)] !border-[var(--tag-bg-solid)] !text-white'
+                        : '!bg-[var(--tag-bg)] !border-transparent !text-[var(--tag-color)] hover:!bg-[var(--tag-bg-sel)]'
+                      : ''
+                  }`}
+                  style={hasColor ? {
+                    '--tag-color': tag.color,
+                    '--tag-bg': `${tag.color}1A`, // 10% opacity
+                    '--tag-bg-sel': `${tag.color}33`, // 20% opacity
+                    '--tag-bg-solid': `${tag.color}E6`, // 90% opacity to reduce brightness slightly
+                  } as React.CSSProperties : undefined}
                   onClick={() => {
                     const newSelected = isSelected
                       ? tags.selected.filter(id => id !== tag.id)

@@ -110,7 +110,6 @@ export const WhatsNewDialog = () => {
         confirmText: t('whatsNew.awesome'),
         onConfirm: () => {
           markAsSeen();
-          close();
         },
         modalClassName: 'sm:max-w-[600px]',
       });

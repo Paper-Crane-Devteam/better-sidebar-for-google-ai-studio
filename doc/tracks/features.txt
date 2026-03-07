@@ -1,0 +1,13 @@
+1. resizable sidebar
+2. gemini smart scroll bar
+3. gemini default model
+4. gemini view witdh
+5. gemini fullscreen immersive view
+6. bulk export
+7. google drive sync data
+8. google drive sync chat data
+9. chatgpt support
+10. claude support
+11. nano banana watermark removal
+12. add tag drop down beside title
+13. gemini gem mangement 

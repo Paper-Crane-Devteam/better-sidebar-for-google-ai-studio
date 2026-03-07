@@ -140,7 +140,7 @@ export const FavoritesList = ({
                 )}
                 onClick={() => handleOpen(item.external_url)}
               >
-                {isImage ? (
+                {/* {isImage ? (
                   <ImageIcon
                     className={cn(
                       'w-4 h-4 shrink-0',
@@ -158,7 +158,7 @@ export const FavoritesList = ({
                         : 'text-muted-foreground',
                     )}
                   />
-                )}
+                )} */}
                 <span className="truncate flex-1">{item.title}</span>
 
                 <SimpleTooltip content={t('tooltip.removeFromFavorites')}>

@@ -214,26 +214,7 @@ export const GeneralSettings = () => {
             </div>
           </div>
 
-          {platform === Platform.GEMINI && (
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <span className="text-sm font-medium">
-                  {t('settings.resizableSidebar')}
-                </span>
-                <p className="text-xs text-muted-foreground">
-                  {t('settings.resizableSidebarDescription')}
-                </p>
-              </div>
-              <Switch
-                checked={useSettingsStore(
-                  (state) => state.enableResizableSidebar,
-                )}
-                onCheckedChange={(c) =>
-                  useSettingsStore.getState().setEnableResizableSidebar(c)
-                }
-              />
-            </div>
-          )}
+
         </div>
       </div>
 

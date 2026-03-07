@@ -84,8 +84,6 @@ export const CreatePromptForm = ({ initialValues, onChange, formRef, onValidSubm
         </div>
       ),
       confirmText: t('common.ok'),
-      onConfirm: () => useModalStore.getState().close(),
-      onCancel: () => useModalStore.getState().close(),
     });
   };
 
