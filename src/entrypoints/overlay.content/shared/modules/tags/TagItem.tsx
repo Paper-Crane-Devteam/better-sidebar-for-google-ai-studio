@@ -126,11 +126,11 @@ export const TagItem = ({ tag }: TagItemProps) => {
                 ? 'bg-accent/50'
                 : 'hover:bg-accent/50'
             )}
+           
           >
-            <div className="flex items-center gap-2 overflow-hidden">
+            <div className="flex items-center gap-2 overflow-hidden" style={tag.color ? { color: tag.color } : undefined}>
               <TagIcon
                 className="h-4 w-4 shrink-0"
-                style={tag.color ? { color: tag.color } : undefined}
               />
               <span className="truncate font-medium">{tag.name}</span>
             </div>

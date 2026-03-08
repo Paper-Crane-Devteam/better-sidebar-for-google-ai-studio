@@ -14,6 +14,9 @@ interface GeminiEnhancedFeatures {
   inputWidth: number;
   hideBrand: boolean;
   hideDisclaimer: boolean;
+  hideUpgrade: boolean;
+  showTopBarTag: boolean;
+  zenMode: boolean;
 }
 
 interface SettingsState {
@@ -179,6 +182,9 @@ export const useSettingsStore = create<SettingsState>()(
           inputWidth: 100,
           hideBrand: false,
           hideDisclaimer: false,
+          hideUpgrade: false,
+          showTopBarTag: false,
+          zenMode: false,
         },
       },
 
@@ -239,6 +245,8 @@ export const useSettingsStore = create<SettingsState>()(
               inputWidth: 100,
               hideBrand: false,
               hideDisclaimer: false,
+              hideUpgrade: false,
+              zenMode: false,
             },
           };
           delete persistedState.enableResizableSidebar;

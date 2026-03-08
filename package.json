@@ -32,6 +32,8 @@
     "@subframe7536/sqlite-wasm": "^0.5.8",
     "@tailwindcss/typography": "^0.5.19",
     "@types/webextension-polyfill": "^0.12.4",
+    "@webext-pegasus/store-zustand": "^0.3.6",
+    "@webext-pegasus/transport": "^0.3.6",
     "ajax-hook": "^3.0.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",

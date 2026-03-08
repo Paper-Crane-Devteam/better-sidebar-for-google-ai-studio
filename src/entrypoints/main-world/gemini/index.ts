@@ -3,6 +3,7 @@ import { handleGenerateResponse } from './interceptors/generate';
 import { handleChatContentResponse } from './interceptors/chat-content';
 import { handleListChatResponse } from './interceptors/list-chat';
 import { handleDeleteResponse } from './interceptors/delete';
+import { handleDownloadResponse } from './interceptors/download';
 
 export function initGeminiInterceptors() {
   console.log('Better Sidebar: Main World Script (Gemini) Initialized');
@@ -31,6 +32,8 @@ export function initGeminiInterceptors() {
                 handleListChatResponse(response, url);
             } else if (url.includes('rpcids=GzXR5e')) {
                 handleDeleteResponse(response, url);
+            } else if (url.includes('rpcids=c8o8Fe')) {
+                handleDownloadResponse(response, url);
             }
         }
       } catch (e) {

@@ -79,25 +79,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     isSettingsOpen,
   } = ui.overlay;
 
-  const [localIsVisible, setLocalIsVisible] = useState(isSidebarExpanded);
-
-  const updateLocalVisibility = (visible: boolean) => {
-    if (visible) {
-      // Opening: add delay
-      setTimeout(() => {
-        setLocalIsVisible(true);
-      }, 100);
-    } else {
-      // Closing: hide immediately
-      setLocalIsVisible(false);
-    }
-  };
-
-  // Sync local state with global state
-  useEffect(() => {
-    updateLocalVisibility(isSidebarExpanded);
-  }, [isSidebarExpanded]);
-
   useEffect(() => {
     // Initial fetch
     fetchData();
@@ -181,10 +162,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   };
 
   const handleMainMenuClick = () => {
-    const nextState = !isSidebarExpanded;
-
-    updateLocalVisibility(nextState);
-
     const menuBtn = document.querySelector(
       '.mdc-icon-button[aria-label="Main menu"]',
     ) as HTMLElement;
@@ -192,11 +169,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       menuBtn.click();
     } else {
       console.warn('Main menu button not found');
-      // If button not found, revert local state to avoid getting stuck
-      // We need to handle the timeout case too if we want to be perfectly safe,
-      // but typically if button is missing we have bigger problems.
-      // For now just syncing back to source of truth is enough.
-      setLocalIsVisible(isSidebarExpanded);
     }
   };
 
@@ -211,7 +183,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
 
   return (
     <div
-      className={`flex bg-background text-foreground ${className || 'h-full'} relative`}
+      className={`flex bg-background text-foreground ${className || 'h-full'} relative overflow-hidden`}
       data-density={layoutDensity}
     >
       {/* Sidebar Tabs */}
@@ -227,160 +199,173 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
         </Button>
         <Separator className="w-8 my-1" />
 
-        {!isSidebarExpanded ? (
-          <>
+        <div className={!isSidebarExpanded ? "flex flex-col flex-1 h-full items-center w-full gap-2 pb-2" : "hidden"}>
+          <Button
+            variant="ghost"
+            size="icon"
+            title={t('tooltip.newChat')}
+            onClick={() => moduleConfig.explorer.onNewChat()}
+            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+          >
+            <SquarePen className="sidebar-icon" />
+          </Button>
+          <div className="flex-1" />
+          {shortcuts?.originalUI && (
             <Button
               variant="ghost"
               size="icon"
-              title={t('tooltip.newChat')}
-              onClick={() => moduleConfig.explorer.onNewChat()}
+              title={t('shortcuts.originalUI')}
+              onClick={() => setIsFeatureEnabled(false)}
               className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+              data-tour-id="tour-original-ui"
             >
-              <SquarePen className="sidebar-icon" />
+              <LogOut className="sidebar-icon" />
             </Button>
-            <div className="flex-1" />
+          )}
+          <Button
+            variant={isSettingsOpen ? 'secondary' : 'ghost'}
+            size="icon"
+            title={t('tabs.settings')}
+            onClick={() => handleTabChange('settings')}
+            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+          >
+            <Settings className="sidebar-icon" />
+          </Button>
+        </div>
 
+        <div className={isSidebarExpanded ? "flex flex-col flex-1 h-full items-center w-full gap-2 pb-2" : "hidden"}>
+          <Button
+            variant={activeTab === 'files' ? 'secondary' : 'ghost'}
+            size="icon"
+            title={t('tabs.files')}
+            onClick={() => handleTabChange('files')}
+            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+            data-tour-id="tour-files"
+          >
+            <Files className="sidebar-icon" />
+          </Button>
+          <Button
+            variant={activeTab === 'search' ? 'secondary' : 'ghost'}
+            size="icon"
+            title={t('tabs.search')}
+            onClick={() => handleTabChange('search')}
+            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+            data-tour-id="tour-search"
+          >
+            <Search className="sidebar-icon" />
+          </Button>
+          <Button
+            variant={activeTab === 'prompts' ? 'secondary' : 'ghost'}
+            size="icon"
+            title={t('tabs.prompts')}
+            onClick={() => handleTabChange('prompts')}
+            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+            data-tour-id="tour-prompts"
+          >
+            <Sparkles className="sidebar-icon" />
+          </Button>
+          {shortcuts?.favorites && (
             <Button
-              variant={isSettingsOpen ? 'secondary' : 'ghost'}
+              variant={activeTab === 'favorites' ? 'secondary' : 'ghost'}
               size="icon"
-              title={t('tabs.settings')}
-              onClick={() => handleTabChange('settings')}
+              title={t('tabs.favorites')}
+              onClick={() => handleTabChange('favorites')}
               className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+              data-tour-id="tour-favorites"
             >
-              <Settings className="sidebar-icon" />
+              <Star className="sidebar-icon" />
             </Button>
-          </>
-        ) : (
-          <>
-            <Button
-              variant={activeTab === 'files' ? 'secondary' : 'ghost'}
-              size="icon"
-              title={t('tabs.files')}
-              onClick={() => handleTabChange('files')}
-              className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-              data-tour-id="tour-files"
-            >
-              <Files className="sidebar-icon" />
-            </Button>
-            <Button
-              variant={activeTab === 'search' ? 'secondary' : 'ghost'}
-              size="icon"
-              title={t('tabs.search')}
-              onClick={() => handleTabChange('search')}
-              className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-              data-tour-id="tour-search"
-            >
-              <Search className="sidebar-icon" />
-            </Button>
-            <Button
-              variant={activeTab === 'prompts' ? 'secondary' : 'ghost'}
-              size="icon"
-              title={t('tabs.prompts')}
-              onClick={() => handleTabChange('prompts')}
-              className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-              data-tour-id="tour-prompts"
-            >
-              <Sparkles className="sidebar-icon" />
-            </Button>
-            {shortcuts?.favorites && (
-              <Button
-                variant={activeTab === 'favorites' ? 'secondary' : 'ghost'}
-                size="icon"
-                title={t('tabs.favorites')}
-                onClick={() => handleTabChange('favorites')}
-                className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-                data-tour-id="tour-favorites"
-              >
-                <Star className="sidebar-icon" />
-              </Button>
-            )}
-            <Button
-              variant={activeTab === 'tags' ? 'secondary' : 'ghost'}
-              size="icon"
-              title={t('tabs.tags')}
-              onClick={() => handleTabChange('tags')}
-              className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-              data-tour-id="tour-tags"
-            >
-              <Tag className="sidebar-icon" />
-            </Button>
+          )}
+          <Button
+            variant={activeTab === 'tags' ? 'secondary' : 'ghost'}
+            size="icon"
+            title={t('tabs.tags')}
+            onClick={() => handleTabChange('tags')}
+            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+            data-tour-id="tour-tags"
+          >
+            <Tag className="sidebar-icon" />
+          </Button>
 
-            {((shortcuts?.myStuff ?? true) || (shortcuts?.gems ?? true)) && (
-              <Separator className="w-8 my-1" />
-            )}
+          {((shortcuts?.myStuff ?? true) || (shortcuts?.gems ?? true)) && (
+            <Separator className="w-8 my-1" />
+          )}
 
-            {(shortcuts?.myStuff ?? true) && (
-              <Button
-                variant="ghost"
-                size="icon"
-                title={t('shortcuts.myStuff')}
-                onClick={() => navigate('https://gemini.google.com/mystuff')}
-                className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-                data-tour-id="tour-mystuff"
-              >
-                <Library className="sidebar-icon" />
-              </Button>
-            )}
-
-            {(shortcuts?.gems ?? true) && (
-              <Button
-                variant="ghost"
-                size="icon"
-                title={t('shortcuts.gems')}
-                onClick={() => navigate('https://gemini.google.com/gems/view')}
-                className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-                data-tour-id="tour-gems"
-              >
-                <Gem className="sidebar-icon" />
-              </Button>
-            )}
-
-            <div className="flex-1" />
-
-            {shortcuts?.originalUI && (
-              <Button
-                variant="ghost"
-                size="icon"
-                title={t('shortcuts.originalUI')}
-                onClick={() => setIsFeatureEnabled(false)}
-                className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-                data-tour-id="tour-original-ui"
-              >
-                <LogOut className="sidebar-icon" />
-              </Button>
-            )}
-
+          {(shortcuts?.myStuff ?? true) && (
             <Button
-              variant={activeTab === 'feedback' ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="icon"
-              title={t('tabs.feedback')}
-              onClick={() => handleTabChange('feedback')}
+              title={t('shortcuts.myStuff')}
+              onClick={() => navigate('https://gemini.google.com/mystuff')}
               className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-              data-tour-id="tour-feedback"
+              data-tour-id="tour-mystuff"
             >
-              <MessageSquare className="sidebar-icon" />
+              <Library className="sidebar-icon" />
             </Button>
+          )}
+
+          {(shortcuts?.gems ?? true) && (
             <Button
-              variant={isSettingsOpen ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="icon"
-              title={t('tabs.settings')}
-              onClick={() => handleTabChange('settings')}
+              title={t('shortcuts.gems')}
+              onClick={() => navigate('https://gemini.google.com/gems/view')}
               className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-              data-tour-id="tour-settings"
+              data-tour-id="tour-gems"
             >
-              <Settings className="sidebar-icon" />
+              <Gem className="sidebar-icon" />
             </Button>
-          </>
-        )}
+          )}
+
+          <div className="flex-1" />
+
+          {shortcuts?.originalUI && (
+            <Button
+              variant="ghost"
+              size="icon"
+              title={t('shortcuts.originalUI')}
+              onClick={() => setIsFeatureEnabled(false)}
+              className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+              data-tour-id="tour-original-ui"
+            >
+              <LogOut className="sidebar-icon" />
+            </Button>
+          )}
+
+          <Button
+            variant={activeTab === 'feedback' ? 'secondary' : 'ghost'}
+            size="icon"
+            title={t('tabs.feedback')}
+            onClick={() => handleTabChange('feedback')}
+            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+            data-tour-id="tour-feedback"
+          >
+            <MessageSquare className="sidebar-icon" />
+          </Button>
+          <Button
+            variant={isSettingsOpen ? 'secondary' : 'ghost'}
+            size="icon"
+            title={t('tabs.settings')}
+            onClick={() => handleTabChange('settings')}
+            className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
+            data-tour-id="tour-settings"
+          >
+            <Settings className="sidebar-icon" />
+          </Button>
+        </div>
       </div>
 
       {/* Main Content Area */}
       <div
-        className={`flex flex-col min-w-0 transition-opacity duration-300 ease-in-out ${
-          localIsVisible
-            ? 'flex-1 opacity-100'
-            : 'w-0 opacity-0 overflow-hidden'
+        className={`flex flex-col transition-opacity duration-300 ease-in-out ${
+          isSidebarExpanded
+            ? 'opacity-100 pointer-events-auto'
+            : 'opacity-0 pointer-events-none'
         }`}
+        style={{
+          width: 'calc(var(--bard-sidenav-open-width, 360px) - var(--bard-sidenav-closed-width, 64px))',
+          flexShrink: 0
+        }}
       >
         {activeTab === 'files' ? (
           <ExplorerTab
