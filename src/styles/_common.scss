@@ -30,7 +30,7 @@
     @apply bg-background text-foreground;
   }
   .shadow-body {
-    @apply bg-background text-foreground antialiased;
+    // @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
     font-size: 14px;
     line-height: 20px;

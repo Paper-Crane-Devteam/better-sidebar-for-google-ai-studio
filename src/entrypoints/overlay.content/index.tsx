@@ -3,6 +3,8 @@
 import mainStyles from '@/index.scss?inline';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 import { isPlatformEnabled } from '@/shared/lib/platform-enabled-store';
+import { initPegasusTransport } from '@webext-pegasus/transport/content-script';
+import { getPegasusStoreReady } from '@/shared/lib/pegasus-store';
 import '@/locale/i18n';
 
 export default defineContentScript({
@@ -13,6 +15,8 @@ export default defineContentScript({
   ],
   cssInjectionMode: 'ui',
   async main() {
+    initPegasusTransport({ allowWindowMessagingForNamespace: 'better-sidebar' });
+    await getPegasusStoreReady();
     const platform = detectPlatform();
     console.log(
       `Better Sidebar: Overlay Content Script Initialized (Platform: ${platform})`,

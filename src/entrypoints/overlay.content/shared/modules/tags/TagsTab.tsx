@@ -6,6 +6,8 @@ import { Plus } from 'lucide-react';
 import { TagItem } from './TagItem';
 import { SidePanelMenu } from '../../components/menu/SidePanelMenu';
 import { useI18n } from '@/shared/hooks/useI18n';
+import { modal } from '@/shared/lib/modal';
+import { TagColorDialog } from './TagColorDialog';
 
 interface TagsTabProps {
   menuActions?: {
@@ -24,10 +26,29 @@ export const TagsTab = ({ menuActions }: TagsTabProps) => {
 
     const handleCreateTag = async () => {
         if (!newTagName.trim()) return;
-        setIsCreating(true);
-        await createTag(newTagName.trim());
-        setNewTagName('');
-        setIsCreating(false);
+
+        // Open color picker modal
+        let selectedColor: string | null = null;
+        const confirmed = await modal.confirm({
+            title: t('tags.selectColor'),
+            content: (
+                <TagColorDialog
+                    initialColor={null}
+                    onColorChange={(color: string) => {
+                        selectedColor = color;
+                    }}
+                />
+            ),
+            confirmText: t('common.confirm'),
+            cancelText: t('common.cancel'),
+        });
+
+        if (confirmed) {
+            setIsCreating(true);
+            await createTag(newTagName.trim(), selectedColor ?? undefined);
+            setNewTagName('');
+            setIsCreating(false);
+        }
     };
 
     return (

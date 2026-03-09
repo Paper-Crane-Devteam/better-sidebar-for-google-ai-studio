@@ -8,8 +8,14 @@ import { detectPlatform, Platform } from '@/shared/types/platform';
 import { initAiStudioInterceptors } from './aistudio';
 import { initGeminiInterceptors } from './gemini';
 import { initChatGPTInterceptors } from './chatgpt';
+import { initPegasusTransport } from '@webext-pegasus/transport/window';
+import { getPegasusStoreReady } from '@/shared/lib/pegasus-store';
 
-export default defineUnlistedScript(() => {
+export default defineUnlistedScript(async () => {
+  // async init, don't block api interception
+  initPegasusTransport({ namespace: 'better-sidebar' });
+  getPegasusStoreReady();
+
   const platform = detectPlatform();
   console.log(`Better Sidebar: Main World Script Initialized (Platform: ${platform})`);
 

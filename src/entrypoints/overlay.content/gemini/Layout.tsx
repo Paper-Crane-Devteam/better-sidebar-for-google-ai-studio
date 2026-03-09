@@ -5,6 +5,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { OverlayPanel } from './OverlayPanel';
+import { mountEnhancedFeatures } from './enhanced-features/mount';
 import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
 import {
@@ -87,14 +88,15 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
       const resizeObserver = new ResizeObserver((entries) => {
         for (const entry of entries) {
           const width = entry.contentRect.width;
-          const closedWidthStr = getComputedStyle(
-            bardSidenavEl,
-          ).getPropertyValue('--bard-sidenav-closed-width');
-          const closedWidth = parseInt(closedWidthStr, 10) || 64;
+          const density = useSettingsStore.getState().layoutDensity;
+          const closedWidth = density === 'compact' ? 56 : 64;
           // If current width is greater than closed width + margin, sidebar is open
           const isSidebarExpanded = width > closedWidth + 10;
 
-          useAppStore.getState().setSidebarExpanded(isSidebarExpanded);
+          const currentExpanded = useAppStore.getState().ui.overlay.isSidebarExpanded;
+          if (currentExpanded !== isSidebarExpanded) {
+            useAppStore.getState().setSidebarExpanded(isSidebarExpanded);
+          }
         }
       });
       resizeObserver.observe(bardSidenavEl);
@@ -118,9 +120,9 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
     const elements = {
       wrapper: null as HTMLElement | null,
       sideNavMenuBtn: null as HTMLElement | null,
-      bardModeSwitcher: null as HTMLElement | null,
+      // bardModeSwitcher: null as HTMLElement | null,
       searchNavBtn: null as HTMLElement | null,
-      topBarActions: null as HTMLElement | null,
+      // topBarActions: null as HTMLElement | null,
     };
 
     // Start looking for external elements
@@ -135,18 +137,18 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
       }
     });
 
-    waitForElement('bard-mode-switcher').then((el) => {
-      elements.bardModeSwitcher = el as HTMLElement;
-      const enabled = useAppStore.getState().ui.overlay.isOpen;
-      if (enabled) {
-        const density = useSettingsStore.getState().layoutDensity;
-        const width = density === 'compact' ? '281px' : '296px';
-        (el as HTMLElement).style.setProperty(
-          '--bard-sidenav-open-closed-width-diff',
-          width,
-        );
-      }
-    });
+    // waitForElement('bard-mode-switcher').then((el) => {
+    //   elements.bardModeSwitcher = el as HTMLElement;
+    //   const enabled = useAppStore.getState().ui.overlay.isOpen;
+    //   if (enabled) {
+    //     const density = useSettingsStore.getState().layoutDensity;
+    //     const width = density === 'compact' ? '281px' : '296px';
+    //     (el as HTMLElement).style.setProperty(
+    //       '--bard-sidenav-open-closed-width-diff',
+    //       width,
+    //     );
+    //   }
+    // });
 
     waitForElement('search-nav-button').then((el) => {
       elements.searchNavBtn = el as HTMLElement;
@@ -156,13 +158,13 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
       }
     });
 
-    waitForElement('top-bar-actions').then((el) => {
-      elements.topBarActions = el as HTMLElement;
-      const enabled = useAppStore.getState().ui.overlay.isOpen;
-      if (enabled) {
-        (el as HTMLElement).style.left = '361px';
-      }
-    });
+    // waitForElement('top-bar-actions').then((el) => {
+    //   elements.topBarActions = el as HTMLElement;
+    //   const enabled = useAppStore.getState().ui.overlay.isOpen;
+    //   if (enabled) {
+    //     (el as HTMLElement).style.left = '361px';
+    //   }
+    // });
 
     // Function to update visibility/state based on enabled status
     const updateState = (enabled: boolean) => {
@@ -178,7 +180,7 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
           wrapper.id = wrapperId;
           wrapper.style.height = '100%';
           wrapper.style.width = '100%';
-          wrapper.style.overflow = 'auto';
+          wrapper.style.overflow = 'hidden';
 
           container.appendChild(wrapper);
           elements.wrapper = wrapper;
@@ -193,16 +195,26 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
 
           // Theme sync
           const syncTheme = () => {
-            const isDark =
-              document.body.classList.contains('dark-theme') ||
-              document.body.classList.contains('dark') ||
-              document.body.getAttribute('data-theme') === 'dark';
+            const themeValue = localStorage.getItem('Bard-Color-Theme');
+            let isDark = false;
+            if (!themeValue) {
+              isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            } else {
+              isDark = themeValue === 'Bard-Dark-Theme';
+            }
 
             TooltipHelper.getInstance().setTheme(isDark);
             if (isDark) rootContainer.classList.add('dark');
             else rootContainer.classList.remove('dark');
           };
           syncTheme();
+
+          window.addEventListener('storage', (e) => {
+            if (e.key === 'Bard-Color-Theme') {
+              syncTheme();
+            }
+          });
+          window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncTheme);
 
           const observer = new MutationObserver(syncTheme);
           observer.observe(document.body, {
@@ -259,13 +271,13 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
         }
       }
 
-      if (elements.bardModeSwitcher) {
-        if (!enabled) {
-          elements.bardModeSwitcher.style.removeProperty(
-            '--bard-sidenav-open-closed-width-diff',
-          );
-        }
-      }
+      // if (elements.bardModeSwitcher) {
+      //   if (!enabled) {
+      //     elements.bardModeSwitcher.style.removeProperty(
+      //       '--bard-sidenav-open-closed-width-diff',
+      //     );
+      //   }
+      // }
 
       if (elements.searchNavBtn) {
         if (enabled) {
@@ -275,11 +287,11 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
         }
       }
 
-      if (elements.topBarActions) {
-        if (!enabled) {
-          elements.topBarActions.style.left = '';
-        }
-      }
+      // if (elements.topBarActions) {
+      //   if (!enabled) {
+      //     elements.topBarActions.style.left = '';
+      //   }
+      // }
     };
 
     // Initial state check
@@ -294,4 +306,7 @@ export async function initGeminiOverlay(mainStyles: string): Promise<void> {
   } catch (e) {
     console.error('Better Sidebar: Gemini overlay initialization failed', e);
   }
+
+  // Mount Enhanced Features independently from OverlayPanel
+  mountEnhancedFeatures(mainStyles);
 }

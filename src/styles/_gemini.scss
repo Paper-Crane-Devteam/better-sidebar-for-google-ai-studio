@@ -145,4 +145,56 @@
     color: var(--gem-sys-color--on-primary-container);
     font-weight: 500;
   }
+
+  /* Custom Slider Styles */
+  .theme-gemini .ui-slider,
+  :host(.theme-gemini) .ui-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: rgb(var(--muted));
+    outline: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgb(var(--primary));
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    &::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    &::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgb(var(--primary));
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    &::-moz-range-track {
+      height: 4px;
+      border-radius: 2px;
+      background: rgb(var(--muted));
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgb(var(--ring));
+      outline-offset: 2px;
+    }
+  }
 }

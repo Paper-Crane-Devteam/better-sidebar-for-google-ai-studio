@@ -321,6 +321,20 @@
     "lavender": "Lavender",
     "rose": "Rose"
   },
+  "presetColor": {
+    "indigo": "Indigo",
+    "violet": "Violet",
+    "pink": "Pink",
+    "red": "Red",
+    "orange": "Orange",
+    "yellow": "Yellow",
+    "green": "Green",
+    "teal": "Teal",
+    "cyan": "Cyan",
+    "blue": "Blue",
+    "lavender": "Lavender",
+    "rose": "Rose"
+  },
   "export": {
     "roleUser": "User",
     "roleModel": "Model",
@@ -344,7 +358,9 @@
     "noTagsYet": "No tags yet. Create one above.",
     "deleteTag": "Delete Tag",
     "deleteTagConfirm": "Are you sure you want to delete this tag?",
-    "rename": "Rename"
+    "rename": "Rename",
+    "changeColor": "Change Color",
+    "selectColor": "Select Color"
   },
   "moveItemsDialog": {
     "rootLevel": "Root (Top Level)"

@@ -1,11 +1,16 @@
 import type { ExtensionMessage } from '@/shared/types/messages';
 import { handleMessage } from './message-handler';
+import { initPegasusTransport } from '@webext-pegasus/transport/background';
+import { initPegasusBackendStore } from '@/shared/lib/pegasus-store';
 
 console.log(
   'Better Sidebar for Gemini & AI Studio: Background Service Worker Starting...',
 );
 
 export default defineBackground(() => {
+  initPegasusTransport();
+  initPegasusBackendStore();
+
   const setupUninstallUrl = async () => {
     try {
       const manifest = browser.runtime.getManifest();

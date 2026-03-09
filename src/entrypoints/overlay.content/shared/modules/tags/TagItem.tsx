@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Tag } from '@/shared/types/db';
 import { useAppStore } from '@/shared/lib/store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
-import { Tag as TagIcon, MoreVertical, Trash2, Edit2 } from 'lucide-react';
+import { Tag as TagIcon, MoreVertical, Trash2, Edit2, Palette } from 'lucide-react';
 import { Button } from '@/entrypoints/overlay.content/shared/components/ui/button';
 import { Input } from '@/entrypoints/overlay.content/shared/components/ui/input';
 import { cn } from '@/shared/lib/utils/utils';
@@ -11,15 +11,24 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuSeparator,
 } from '@/shared/components/ui/dropdown-menu';
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
+  ContextMenuSub,
+  ContextMenuSubTrigger,
+  ContextMenuSubContent,
+  ContextMenuSeparator,
 } from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
 import { modal } from '@/shared/lib/modal';
 import { useI18n } from '@/shared/hooks/useI18n';
+import { ColorPickerGrid } from '../../components/ColorPickerGrid';
 
 interface TagItemProps {
   tag: Tag;
@@ -67,6 +76,10 @@ export const TagItem = ({ tag }: TagItemProps) => {
     }
   };
 
+  const handleColorChange = async (color: string | null) => {
+    await updateTag(tag.id, { color });
+  };
+
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleRename();
@@ -94,6 +107,14 @@ export const TagItem = ({ tag }: TagItemProps) => {
 
   const isActive = isContextMenuOpen || isDropdownOpen;
 
+  // Color picker grid for dropdown and context menus
+  const colorPickerContent = (
+    <ColorPickerGrid
+      selectedColor={tag.color}
+      onColorChange={handleColorChange}
+    />
+  );
+
   return (
     <ContextMenu onOpenChange={setIsContextMenuOpen}>
       <ContextMenuTrigger>
@@ -105,9 +126,12 @@ export const TagItem = ({ tag }: TagItemProps) => {
                 ? 'bg-accent/50'
                 : 'hover:bg-accent/50'
             )}
+           
           >
-            <div className="flex items-center gap-2 overflow-hidden">
-              <TagIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+            <div className="flex items-center gap-2 overflow-hidden" style={tag.color ? { color: tag.color } : undefined}>
+              <TagIcon
+                className="h-4 w-4 shrink-0"
+              />
               <span className="truncate font-medium">{tag.name}</span>
             </div>
             <div
@@ -127,6 +151,16 @@ export const TagItem = ({ tag }: TagItemProps) => {
                     <Edit2 className="mr-2 h-4 w-4" />
                     {t('tags.rename')}
                   </DropdownMenuItem>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Palette className="mr-2 h-4 w-4" />
+                      {t('tags.changeColor')}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-auto p-2">
+                      {colorPickerContent}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleDelete}
                     className="text-destructive focus:text-destructive"
@@ -145,6 +179,16 @@ export const TagItem = ({ tag }: TagItemProps) => {
           <Edit2 className="mr-2 h-4 w-4" />
           {t('tags.rename')}
         </ContextMenuItem>
+        <ContextMenuSub>
+          <ContextMenuSubTrigger>
+            <Palette className="mr-2 h-4 w-4" />
+            {t('tags.changeColor')}
+          </ContextMenuSubTrigger>
+          <ContextMenuSubContent className="w-auto p-2">
+            {colorPickerContent}
+          </ContextMenuSubContent>
+        </ContextMenuSub>
+        <ContextMenuSeparator />
         <ContextMenuItem
           onClick={handleDelete}
           className="text-destructive focus:text-destructive"

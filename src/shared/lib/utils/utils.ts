@@ -175,106 +175,55 @@ export function htmlToMarkdown(container: HTMLElement): string {
     .replace(/\n{3,}/g, '\n\n');
 }
 
-const CDK_OVERLAY_STYLE_ID = 'better-sidebar-cdk-overlay-style';
-
-function addCdkOverlayHideStyle(): HTMLStyleElement {
-  let el = document.getElementById(CDK_OVERLAY_STYLE_ID) as HTMLStyleElement | null;
-  if (!el) {
-    el = document.createElement('style');
-    el.id = CDK_OVERLAY_STYLE_ID;
-    el.textContent = `
-      .cdk-overlay-container {
-        position: absolute !important;
-        top: -9999px !important;
-        left: -9999px !important;
-      }
-    `;
-    document.head.appendChild(el);
-  }
-  return el;
-}
-
-function removeCdkOverlayHideStyle(): void {
-  const el = document.getElementById(CDK_OVERLAY_STYLE_ID);
-  if (el?.parentNode) el.parentNode.removeChild(el);
-}
-
 export async function syncGeminiTheme(theme: 'light' | 'dark' | 'system') {
   if (typeof document === 'undefined') return;
-  const settingsButton = document.querySelector(
-    'button[aria-label="Settings & help"]',
-  ) as HTMLElement;
-  if (!settingsButton) return;
-
-  addCdkOverlayHideStyle();
-  await new Promise((resolve) => setTimeout(resolve, 80));
 
   try {
-    settingsButton.click();
-
-    // Wait for menu to open
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    const themeButton = document.querySelector(
-      'button[data-test-id="desktop-theme-menu-button"]',
-    ) as HTMLElement;
-    if (!themeButton) return;
-
-    themeButton.click();
-
-    // Wait for theme options to appear
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // Find the menu content that contains buttons with role="menuitemradio"
-    const menuContents = document.querySelectorAll('.mat-mdc-menu-content');
-    let menuContent: Element | null = null;
-    for (const content of menuContents) {
-      const hasMenuItemRadio = content.querySelector('button[role="menuitemradio"]');
-      if (hasMenuItemRadio) {
-        menuContent = content;
-        break;
-      }
-    }
-    if (!menuContent) return;
-
-    const buttons = Array.from(
-      menuContent.querySelectorAll('button[role="menuitemradio"]'),
-    ) as HTMLElement[];
-    if (buttons.length < 3) return;
-
-    const themeMap = {
-      system: 0,
-      light: 1,
-      dark: 2,
-    };
-
-    const buttonIndex = themeMap[theme];
-    if (buttons[buttonIndex]) {
-      buttons[buttonIndex].click();
-
-      // Wait a bit for the selection to register
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Click on empty space to close the menu
-      const backdrop = document.querySelector('.cdk-overlay-backdrop');
-      if (backdrop) {
-        (backdrop as HTMLElement).click();
+    if (theme === 'system') {
+      localStorage.removeItem('Bard-Color-Theme');
+      
+      const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (isSystemDark) {
+        document.body.classList.add('dark-theme');
+        document.body.classList.remove('light-theme');
+        document.body.style.colorScheme = 'dark';
       } else {
-        document.body.dispatchEvent(
-          new KeyboardEvent('keydown', {
-            key: 'Escape',
-            code: 'Escape',
-            keyCode: 27,
-            bubbles: true,
-            cancelable: true,
-          }),
-        );
+        document.body.classList.remove('dark-theme');
+        document.body.classList.add('light-theme');
+        document.body.style.colorScheme = 'light';
       }
+
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: 'Bard-Color-Theme',
+          newValue: null,
+          storageArea: localStorage,
+        }),
+      );
+    } else {
+      const themeValue = theme === 'dark' ? 'Bard-Dark-Theme' : 'Bard-Light-Theme';
+      localStorage.setItem('Bard-Color-Theme', themeValue);
+
+      if (theme === 'dark') {
+        document.body.classList.add('dark-theme');
+        document.body.classList.remove('light-theme');
+      } else {
+        document.body.classList.remove('dark-theme');
+        document.body.classList.add('light-theme');
+      }
+
+      document.body.style.colorScheme = theme;
+
+      window.dispatchEvent(
+        new StorageEvent('storage', {
+          key: 'Bard-Color-Theme',
+          newValue: themeValue,
+          storageArea: localStorage,
+        }),
+      );
     }
-  } finally {
-    setTimeout(() => {
-      removeCdkOverlayHideStyle();
-    }, 500);
+  } catch (error) {
+    console.error('Better Sidebar: syncGeminiTheme error:', error);
   }
 }
 
