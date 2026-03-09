@@ -17,7 +17,9 @@ export default defineUnlistedScript(async () => {
   getPegasusStoreReady();
 
   const platform = detectPlatform();
-  console.log(`Better Sidebar: Main World Script Initialized (Platform: ${platform})`);
+  console.log(
+    `Better Sidebar: Main World Script Initialized (Platform: ${platform})`,
+  );
 
   switch (platform) {
     case Platform.AI_STUDIO: {
@@ -33,6 +35,8 @@ export default defineUnlistedScript(async () => {
       break;
     }
     default:
-      console.warn(`Better Sidebar: Unknown platform (${platform}), no main-world interceptors loaded`);
+      console.warn(
+        `Better Sidebar: Unknown platform (${platform}), no main-world interceptors loaded`,
+      );
   }
 });

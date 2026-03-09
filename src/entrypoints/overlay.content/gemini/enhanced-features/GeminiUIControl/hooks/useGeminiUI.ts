@@ -6,11 +6,15 @@ import { useAppStore } from '@/shared/lib/store';
 import { waitForElement } from '@/shared/lib/utils';
 
 export const useGeminiUI = () => {
-  const geminiSettings = useSettingsStore(s => s.enhancedFeatures.gemini);
-  const setGeminiFeature = useSettingsStore(s => s.setGeminiFeature);
-  
-  const pegasusGeminiFeatures = usePegasusStore(s => s.enhancedFeatures.gemini);
-  const setPegasusGeminiFeature = usePegasusStore(s => s.setGeminiEnhancedFeature);
+  const geminiSettings = useSettingsStore((s) => s.enhancedFeatures.gemini);
+  const setGeminiFeature = useSettingsStore((s) => s.setGeminiFeature);
+
+  const pegasusGeminiFeatures = usePegasusStore(
+    (s) => s.enhancedFeatures.gemini,
+  );
+  const setPegasusGeminiFeature = usePegasusStore(
+    (s) => s.setGeminiEnhancedFeature,
+  );
 
   const {
     sidebarWidth: storeSidebarWidth,
@@ -21,7 +25,7 @@ export const useGeminiUI = () => {
     hideUpgrade,
     zenMode,
   } = geminiSettings;
-  const isSidebarExpanded = useAppStore(s => s.ui.overlay.isSidebarExpanded);
+  const isSidebarExpanded = useAppStore((s) => s.ui.overlay.isSidebarExpanded);
 
   const [showUpgradeOption, setShowUpgradeOption] = useState(false);
 
@@ -51,12 +55,18 @@ export const useGeminiUI = () => {
       const chatHistory = document.getElementById('chat-history');
       if (chatHistory) {
         setContainerWidth(chatHistory.getBoundingClientRect().width);
-        
-        const chatContent = chatHistory.querySelector('.conversation-container');
-        if (chatContent) setMeasuredChatWidth(chatContent.getBoundingClientRect().width);
 
-        const inputField = chatHistory.querySelector('input-container > fieldset');
-        if (inputField) setMeasuredInputWidth(inputField.getBoundingClientRect().width);
+        const chatContent = chatHistory.querySelector(
+          '.conversation-container',
+        );
+        if (chatContent)
+          setMeasuredChatWidth(chatContent.getBoundingClientRect().width);
+
+        const inputField = chatHistory.querySelector(
+          'input-container > fieldset',
+        );
+        if (inputField)
+          setMeasuredInputWidth(inputField.getBoundingClientRect().width);
       }
     }, 100);
 
@@ -86,17 +96,17 @@ export const useGeminiUI = () => {
   // Debounced update to the store
   const debouncedSetSidebarWidth = useMemo(
     () => debounce((v: number) => setGeminiFeature('sidebarWidth', v), 300),
-    [setGeminiFeature]
+    [setGeminiFeature],
   );
-  
+
   const debouncedSetChatWidth = useMemo(
     () => debounce((v: number) => setGeminiFeature('chatWidth', v), 300),
-    [setGeminiFeature]
+    [setGeminiFeature],
   );
-  
+
   const debouncedSetInputWidth = useMemo(
     () => debounce((v: number) => setGeminiFeature('inputWidth', v), 300),
-    [setGeminiFeature]
+    [setGeminiFeature],
   );
   // Apply CSS for all UI tweaks
   useEffect(() => {
@@ -138,8 +148,7 @@ export const useGeminiUI = () => {
         max-width: none !important;
       }
       /* Input Box Control */
-      input-container > fieldset,
-      input-area-v2 {
+      input-container > fieldset {
         max-width: ${storeInputWidth}% !important;
         width: 100% !important;
         margin-left: auto !important;
@@ -163,7 +172,16 @@ export const useGeminiUI = () => {
     }
 
     styleEl.textContent = css;
-  }, [hideBrand, hideDisclaimer, hideUpgrade, storeSidebarWidth, storeChatWidth, storeInputWidth, geminiSettings.showTopBarTag, zenMode]);
+  }, [
+    hideBrand,
+    hideDisclaimer,
+    hideUpgrade,
+    storeSidebarWidth,
+    storeChatWidth,
+    storeInputWidth,
+    geminiSettings.showTopBarTag,
+    zenMode,
+  ]);
 
   // Handle elements that need to react to sidebar expanded/collapsed state separately
   useEffect(() => {
@@ -185,15 +203,19 @@ export const useGeminiUI = () => {
   // This element's width is calculated as current closed width + this diff.
   useEffect(() => {
     const updateBardModeSwitcher = (el?: HTMLElement) => {
-      const bardModeSwitcher = el || document.querySelector('bard-mode-switcher') as HTMLElement;
+      const bardModeSwitcher =
+        el || (document.querySelector('bard-mode-switcher') as HTMLElement);
       if (bardModeSwitcher) {
         const density = useSettingsStore.getState().layoutDensity;
         const closedWidth = density === 'compact' ? 56 : 64;
         const diffWidth = storeSidebarWidth - closedWidth;
-        bardModeSwitcher.style.setProperty('--bard-sidenav-open-closed-width-diff', `${diffWidth}px`);
+        bardModeSwitcher.style.setProperty(
+          '--bard-sidenav-open-closed-width-diff',
+          `${diffWidth}px`,
+        );
       }
     };
-    
+
     waitForElement('bard-mode-switcher').then((el) => {
       updateBardModeSwitcher(el as HTMLElement);
     });
@@ -230,6 +252,7 @@ export const useGeminiUI = () => {
     setHideUpgrade: (v: boolean) => setGeminiFeature('hideUpgrade', v),
     setShowTopBarTag: (v: boolean) => setGeminiFeature('showTopBarTag', v),
     setZenMode: (v: boolean) => setGeminiFeature('zenMode', v),
-    setRemoveWatermark: (v: boolean) => setPegasusGeminiFeature('removeWatermark', v),
+    setRemoveWatermark: (v: boolean) =>
+      setPegasusGeminiFeature('removeWatermark', v),
   };
 };

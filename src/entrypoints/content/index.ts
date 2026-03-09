@@ -2,6 +2,9 @@
 
 import { detectPlatform, Platform } from '@/shared/types/platform';
 import { isPlatformEnabled } from '@/shared/lib/platform-enabled-store';
+import { initPegasusTransport } from '@webext-pegasus/transport/content-script';
+import { getPegasusStoreReady } from '@/shared/lib/pegasus-store';
+
 import { initAiStudio } from './aistudio';
 import { initGemini } from './gemini';
 import { initChatGPT } from './chatgpt';
@@ -27,6 +30,11 @@ export default defineContentScript({
       );
       return;
     }
+
+    initPegasusTransport({
+      allowWindowMessagingForNamespace: 'better-sidebar',
+    });
+    getPegasusStoreReady();
 
     switch (platform) {
       case Platform.AI_STUDIO: {

@@ -6,28 +6,56 @@ import { useAppStore } from '@/shared/lib/store';
 import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
 import { applyShadowStyles } from '@/shared/lib/utils';
 import { Tag as TagIcon, Plus, X, Pencil, Check } from 'lucide-react';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuLabel,
-  DropdownMenuSeparator
+  DropdownMenuSeparator,
 } from '@/shared/components/ui/dropdown-menu';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import mainStyles from '@/index.scss?inline';
 
 const TopBarTagUI = ({ container }: { container: Element }) => {
   const currentConversationId = useCurrentConversationId();
-  const { tags, conversationTags, addTagToConversation, removeTagFromConversation } = useAppStore();
-  
+  const {
+    tags,
+    conversationTags,
+    addTagToConversation,
+    removeTagFromConversation,
+  } = useAppStore();
+
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [editingTagIds, setEditingTagIds] = useState<string[]>([]);
 
+  useEffect(() => {
+    const centerSection = (container.getRootNode() as ShadowRoot)?.host
+      ?.parentElement;
+    if (centerSection) {
+      const handleEnter = () => setIsHovered(true);
+      const handleLeave = () => setIsHovered(false);
+
+      // Check initial state
+      if (centerSection.matches(':hover')) {
+        setIsHovered(true);
+      }
+
+      centerSection.addEventListener('mouseenter', handleEnter);
+      centerSection.addEventListener('mouseleave', handleLeave);
+      return () => {
+        centerSection.removeEventListener('mouseenter', handleEnter);
+        centerSection.removeEventListener('mouseleave', handleLeave);
+      };
+    }
+  }, [container]);
+
   // Stop propagation so clicking the dropdown doesn't trigger parent events
-  const stopPropagation = (e: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
+  const stopPropagation = (
+    e: React.MouseEvent | React.TouchEvent | React.PointerEvent,
+  ) => {
     e.stopPropagation();
     if (e.nativeEvent) {
       e.nativeEvent.stopImmediatePropagation();
@@ -36,41 +64,47 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
 
   const activeTags = React.useMemo(() => {
     if (!currentConversationId) return [];
-    const tagIds = conversationTags.filter(ct => ct.conversation_id === currentConversationId).map(ct => ct.tag_id);
-    return tags.filter(t => tagIds.includes(t.id));
+    const tagIds = conversationTags
+      .filter((ct) => ct.conversation_id === currentConversationId)
+      .map((ct) => ct.tag_id);
+    return tags.filter((t) => tagIds.includes(t.id));
   }, [currentConversationId, conversationTags, tags]);
 
   const displayTags = React.useMemo(() => {
     if (isEditing) {
-      return tags.filter(t => editingTagIds.includes(t.id));
+      return tags.filter((t) => editingTagIds.includes(t.id));
     }
     return activeTags;
   }, [isEditing, editingTagIds, activeTags, tags]);
 
   const availableTags = React.useMemo(() => {
-    return tags.filter(t => !displayTags.find(active => active.id === t.id));
+    return tags.filter(
+      (t) => !displayTags.find((active) => active.id === t.id),
+    );
   }, [tags, displayTags]);
 
   const handleStartEdit = () => {
-    setEditingTagIds(activeTags.map(t => t.id));
+    setEditingTagIds(activeTags.map((t) => t.id));
     setIsEditing(true);
   };
 
   const handleAddExistingTag = (tagId: string) => {
-    setEditingTagIds(prev => [...prev, tagId]);
+    setEditingTagIds((prev) => [...prev, tagId]);
     setIsOpen(false);
   };
 
   const handleRemoveEditingTag = (tagId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    setEditingTagIds(prev => prev.filter(id => id !== tagId));
+    setEditingTagIds((prev) => prev.filter((id) => id !== tagId));
   };
 
   const handleConfirm = async () => {
-    const currentTagIds = activeTags.map(t => t.id);
-    const tagsToAdd = editingTagIds.filter(id => !currentTagIds.includes(id));
-    const tagsToRemove = currentTagIds.filter(id => !editingTagIds.includes(id));
+    const currentTagIds = activeTags.map((t) => t.id);
+    const tagsToAdd = editingTagIds.filter((id) => !currentTagIds.includes(id));
+    const tagsToRemove = currentTagIds.filter(
+      (id) => !editingTagIds.includes(id),
+    );
 
     if (currentConversationId) {
       for (const id of tagsToAdd) {
@@ -89,30 +123,28 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
     setIsHovered(false);
   };
 
-  if(!currentConversationId) return null;
+  if (!currentConversationId) return null;
 
   return ReactDOM.createPortal(
-    <div 
+    <div
       className="flex items-center gap-1.5 mx-2 h-full min-w-[24px] transition-all"
-      onClick={stopPropagation} 
+      onClick={stopPropagation}
       onMouseDown={stopPropagation}
       onPointerDown={stopPropagation}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
-      {displayTags.map(tag => (
+      {displayTags.map((tag) => (
         <SimpleTooltip key={tag.id} content={tag.name}>
-          <span 
+          <span
             className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md transition-colors"
-            style={{ 
+            style={{
               backgroundColor: 'transparent',
               color: tag.color || 'rgb(var(--foreground))',
-              border: `1px solid ${tag.color || 'rgb(var(--border))'}`
+              border: `1px solid ${tag.color || 'rgb(var(--border))'}`,
             }}
           >
             <span className="truncate max-w-[120px]">{tag.name}</span>
             {isEditing && (
-              <div 
+              <div
                 className="flex items-center justify-center rounded-sm hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer p-0.5 -mr-1 shrink-0 ml-1"
                 onClick={(e) => handleRemoveEditingTag(tag.id, e)}
                 title="Remove tag"
@@ -128,7 +160,7 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
         <button
           onClick={handleStartEdit}
           className={`flex items-center justify-center w-6 h-6 rounded-md hover:bg-accent hover:text-accent-foreground text-muted-foreground transition-all outline-none shrink-0 ${
-            (isHovered || displayTags.length === 0) ? 'opacity-100 visible' : 'opacity-0 invisible'
+            isHovered ? 'opacity-100 visible' : 'opacity-0 invisible'
           }`}
           title="Edit tags"
         >
@@ -140,19 +172,29 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
         <div className="flex items-center gap-1 ml-1">
           <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger asChild>
-              <button 
+              <button
                 className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-accent hover:text-accent-foreground text-muted-foreground transition-colors outline-none shrink-0 border border-dashed border-border"
                 title="Add tag"
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent container={container as HTMLElement} align="start" className="w-[180px] p-2 z-[9999]">
-              <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">Select Tags</DropdownMenuLabel>
+            <DropdownMenuContent
+              container={container as HTMLElement}
+              align="start"
+              className="w-[180px] p-2 z-[9999]"
+            >
+              <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">
+                Select Tags
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="max-h-[200px] overflow-y-auto w-full flex flex-col gap-1 pr-1">
-                {availableTags.length === 0 && <span className="text-xs text-muted-foreground px-2 py-1">No tags available.</span>}
-                {availableTags.map(tag => (
+                {availableTags.length === 0 && (
+                  <span className="text-xs text-muted-foreground px-2 py-1">
+                    No tags available.
+                  </span>
+                )}
+                {availableTags.map((tag) => (
                   <DropdownMenuItem
                     key={tag.id}
                     onClick={(e) => {
@@ -161,7 +203,10 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
                     }}
                     className="flex items-center gap-2 cursor-pointer text-xs focus:bg-accent rounded-sm px-2 py-1.5"
                   >
-                    <TagIcon className="w-3.5 h-3.5" style={{ color: tag.color || 'inherit' }} />
+                    <TagIcon
+                      className="w-3.5 h-3.5"
+                      style={{ color: tag.color || 'inherit' }}
+                    />
                     <span className="truncate flex-1">{tag.name}</span>
                   </DropdownMenuItem>
                 ))}
@@ -171,15 +216,15 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
 
           <div className="w-px h-4 bg-border mx-0.5" />
 
-          <button 
+          <button
             onClick={handleConfirm}
             className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-green-100 hover:text-green-600 dark:hover:bg-green-900/30 dark:hover:text-green-400 text-muted-foreground transition-colors outline-none shrink-0"
             title="Save changes"
           >
             <Check className="w-3.5 h-3.5" />
           </button>
-          
-          <button 
+
+          <button
             onClick={handleCancel}
             className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-muted-foreground transition-colors outline-none shrink-0"
             title="Cancel"
@@ -189,12 +234,14 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
         </div>
       )}
     </div>,
-    container
+    container,
   );
 };
 
 export const TopBarTagFeature = () => {
-  const showTopBarTag = useSettingsStore(state => state.enhancedFeatures.gemini.showTopBarTag);
+  const showTopBarTag = useSettingsStore(
+    (state) => state.enhancedFeatures.gemini.showTopBarTag,
+  );
   const { url } = useUrl();
   const [portalTarget, setPortalTarget] = useState<Element | null>(null);
 
@@ -209,26 +256,30 @@ export const TopBarTagFeature = () => {
     const checkForContainer = () => {
       const parent = document.querySelector('top-bar-actions .center-section');
       if (parent) {
-        let existingContainer = parent.querySelector('#better-sidebar-top-bar-tag-container') as HTMLElement | null;
+        let existingContainer = parent.querySelector(
+          '#better-sidebar-top-bar-tag-container',
+        ) as HTMLElement | null;
         if (existingContainer) {
           existingContainer.style.height = '100%';
           existingContainer.style.alignSelf = 'center';
-          
+
           const shadow = existingContainer.shadowRoot;
           if (shadow) {
-            const b = shadow.querySelector('.shadow-body') as HTMLElement | null;
+            const b = shadow.querySelector(
+              '.shadow-body',
+            ) as HTMLElement | null;
             if (b) {
-               b.style.display = 'flex';
-               b.style.alignItems = 'center';
-               b.style.height = '100%';
-               setPortalTarget(b);
-               return;
+              b.style.display = 'flex';
+              b.style.alignItems = 'center';
+              b.style.height = '100%';
+              setPortalTarget(b);
+              return;
             }
           }
         } else {
           const rootNode = document.createElement('div');
           rootNode.id = 'better-sidebar-top-bar-tag-container';
-          
+
           rootNode.style.display = 'flex';
           rootNode.style.alignItems = 'center';
           rootNode.style.height = '100%';
@@ -239,17 +290,20 @@ export const TopBarTagFeature = () => {
 
           const shadow = rootNode.attachShadow({ mode: 'open' });
           applyShadowStyles(shadow, mainStyles);
-          
+
           const shadowBody = document.createElement('div');
           shadowBody.classList.add('shadow-body', 'theme-gemini');
           shadowBody.style.display = 'flex';
           shadowBody.style.alignItems = 'center';
           shadowBody.style.height = '100%';
           // Add standard theme classes
-          if (document.body.classList.contains('dark-theme') || document.body.getAttribute('data-theme') === 'dark') {
+          if (
+            document.body.classList.contains('dark-theme') ||
+            document.body.getAttribute('data-theme') === 'dark'
+          ) {
             shadowBody.classList.add('dark');
           }
-          
+
           shadow.appendChild(shadowBody);
           setPortalTarget(shadowBody);
         }

@@ -10,6 +10,7 @@ export default defineConfig({
     name: '__MSG_extensionName__',
     description: '__MSG_extensionDescription__',
     default_locale: 'en',
+    key: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAslGk7j3hhuEYll5z4H5ccdnAdYQLjd1PCDAEM2I4EBeCzuIjW6MV9hJLbo45B9dthDBZO+vYVS6tqFSv1TYu1Kt03POt0YK6O7vq2MOT87HxoC/NIGUF9ovbWG6wVByNk+YeOGF0EUmMYB7fklq+AHvdVvg5hFUTIdMEYf44SeJpELm+hN2AY1TLJG+g+ZmmB1u2zmEvnnH7QsVpRKSDVFMoxKpYQgGgNpdb+YUj6e+WnWHHxv4ErpJR5O3E8PlCiynigPG6V+QrkyRxf7V657n1yR8+GnrSWn3DhZXmR1tdYbfcYfqj3Sb4m1Bwq/wrftv3+TxSSEYOJkleDe2UhQIDAQAB',
     icons: {
       '16': 'icons/icon16.png',
       '48': 'icons/icon48.png',

@@ -49,8 +49,8 @@ export const ControlPanel = () => {
         <DropdownMenuTrigger asChild>
           <button
             className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-xl border border-border/50 bg-background/60 backdrop-blur-md transition-all hover:bg-accent",
-              isOpen && "bg-accent shadow-sm ring-2 ring-ring/20"
+              'flex h-9 w-9 items-center justify-center rounded-xl border border-border/50 bg-background/60 backdrop-blur-md transition-all hover:bg-accent',
+              isOpen && 'bg-accent shadow-sm ring-2 ring-ring/20',
             )}
           >
             {isOpen ? (
@@ -63,181 +63,247 @@ export const ControlPanel = () => {
         <DropdownMenuContent
           align="end"
           sideOffset={8}
-          className="w-[340px] rounded-2xl border border-border bg-popover/95 p-5 backdrop-blur-xl shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+          className="w-[340px] max-h-[85vh] flex flex-col rounded-2xl border border-border bg-popover/95 p-0 backdrop-blur-xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
         >
           {/* Header */}
-          <div className="flex items-center gap-2.5 mb-6">
+          <div className="flex items-center gap-2.5 p-5 pb-4 border-b border-border/40 bg-popover/50 backdrop-blur-sm z-10">
             <div className="p-1.5 rounded-lg bg-primary/10">
               <SlidersHorizontal className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <h3 className="text-sm font-bold tracking-tight">Gemini UI Controls</h3>
-              <p className="text-[11px] text-muted-foreground">Adjust layout, visibility and extra features</p>
+              <h3 className="text-sm font-bold tracking-tight">
+                Gemini UI Controls
+              </h3>
+              <p className="text-[11px] text-muted-foreground">
+                Adjust layout, visibility and features
+              </p>
             </div>
           </div>
 
-          {/* Section 1: Layout Dimensions */}
-          <div className="space-y-5 mb-6">
-            <div className="flex items-center gap-2">
-              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Layout Dimensions</h4>
-              <div className="h-px flex-1 bg-border/40" />
-            </div>
-            
-            <div className="space-y-4">
-              {/* Sidebar Width */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold">Sidebar Width</Label>
-                  <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">{sidebarWidth}px</span>
-                </div>
-                <input
-                  type="range"
-                  min={300}
-                  max={550}
-                  step={1}
-                  value={sidebarWidth}
-                  onChange={(e) => setSidebarWidth(Number(e.target.value))}
-                  className="ui-slider"
-                />
+          <div className="flex-1 overflow-y-auto p-5 pt-4 custom-scrollbar">
+            {/* Section 1: Layout Dimensions */}
+            <div className="space-y-5 mb-6">
+              <div className="flex items-center gap-2">
+                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  Layout Dimensions
+                </h4>
+                <div className="h-px flex-1 bg-border/40" />
               </div>
 
-              {/* Chat Width */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold">Chat Content Width</Label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">{chatWidth}%</span>
+              <div className="space-y-4">
+                {/* Sidebar Width */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold">
+                      Sidebar Width
+                    </Label>
+                    <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                      {sidebarWidth}px
+                    </span>
                   </div>
-                </div>
-                <input
-                  type="range"
-                  min={40}
-                  max={100}
-                  step={1}
-                  value={chatWidth}
-                  onChange={(e) => setChatWidth(Number(e.target.value))}
-                  className="ui-slider"
-                />
-              </div>
-
-              {/* Input Box Width */}
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold">Input Box Width</Label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">{inputWidth}%</span>
-                  </div>
-                </div>
-                <input
-                  type="range"
-                  min={40}
-                  max={100}
-                  step={1}
-                  value={inputWidth}
-                  onChange={(e) => setInputWidth(Number(e.target.value))}
-                  className="ui-slider"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Section 2: Element Visibility */}
-          <div className="space-y-5 mb-6">
-            <div className="flex items-center gap-2">
-              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Element Visibility</h4>
-              <div className="h-px flex-1 bg-border/40" />
-            </div>
-
-            <div className="space-y-4">
-              {/* Gemini Brand */}
-              <div className="flex items-center justify-between group">
-                <div className="space-y-0.5">
-                  <Label className="text-xs font-semibold cursor-pointer" onClick={() => setHideBrand(!hideBrand)}>Gemini Logo</Label>
-                  <p className="text-[10px] text-muted-foreground">Toggle Gemini logo visibility</p>
-                </div>
-                <Switch
-                  checked={!hideBrand}
-                  onCheckedChange={(c) => setHideBrand(!c)}
-                />
-              </div>
-
-              {/* AI Disclaimer */}
-              <div className="flex items-center justify-between group">
-                <div className="space-y-0.5">
-                  <Label className="text-xs font-semibold cursor-pointer" onClick={() => setHideDisclaimer(!hideDisclaimer)}>AI Disclaimer</Label>
-                  <p className="text-[10px] text-muted-foreground">Error warning message</p>
-                </div>
-                <Switch
-                  checked={!hideDisclaimer}
-                  onCheckedChange={(c) => setHideDisclaimer(!c)}
-                />
-              </div>
-
-              {/* Upgrade Plan (Conditional) */}
-              {showUpgradeOption && (
-                <div className="flex items-center justify-between group">
-                  <div className="space-y-0.5">
-                    <Label className="text-xs font-semibold cursor-pointer" onClick={() => setHideUpgrade(!hideUpgrade)}>Upgrade Button</Label>
-                    <p className="text-[10px] text-muted-foreground">Hide "Upgrade Plan" button</p>
-                  </div>
-                  <Switch
-                    checked={!hideUpgrade}
-                    onCheckedChange={(c) => setHideUpgrade(!c)}
+                  <input
+                    type="range"
+                    min={300}
+                    max={550}
+                    step={1}
+                    value={sidebarWidth}
+                    onChange={(e) => setSidebarWidth(Number(e.target.value))}
+                    className="ui-slider"
                   />
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* Section 3: Additional Features (额外功能) */}
-          <div className="space-y-5">
-            <div className="flex items-center gap-2">
-              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">额外功能 (Extra Features)</h4>
-              <div className="h-px flex-1 bg-border/40" />
-            </div>
-
-            <div className="space-y-4">
-              {/* Top Bar Conversation Tag */}
-              <div className="flex items-center justify-between group">
-                <div className="space-y-0.5">
-                  <Label className="text-xs font-semibold cursor-pointer" onClick={() => setShowTopBarTag(!showTopBarTag)}>Show Conversation Tag</Label>
-                  <p className="text-[10px] text-muted-foreground">Display tags in the top bar</p>
+                {/* Chat Width */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold">
+                      Chat Content Width
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                        {chatWidth}%
+                      </span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min={40}
+                    max={100}
+                    step={1}
+                    value={chatWidth}
+                    onChange={(e) => setChatWidth(Number(e.target.value))}
+                    className="ui-slider"
+                  />
                 </div>
-                <Switch
-                  checked={showTopBarTag}
-                  onCheckedChange={(c) => setShowTopBarTag(c)}
-                />
+
+                {/* Input Box Width */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold">
+                      Input Box Width
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                        {inputWidth}%
+                      </span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min={40}
+                    max={100}
+                    step={1}
+                    value={inputWidth}
+                    onChange={(e) => setInputWidth(Number(e.target.value))}
+                    className="ui-slider"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Element Visibility */}
+            <div className="space-y-5 mb-6">
+              <div className="flex items-center gap-2">
+                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  Element Visibility
+                </h4>
+                <div className="h-px flex-1 bg-border/40" />
               </div>
 
-              {/* Remove AI Sparkle Image Watermark */}
-              <div className="flex items-center justify-between group">
-                <div className="space-y-0.5">
-                  <Label className="text-xs font-semibold cursor-pointer" onClick={() => setRemoveWatermark(!removeWatermark)}>Remove Auto Watermark</Label>
-                  <p className="text-[10px] text-muted-foreground">Downloads: remove image sparkle</p>
+              <div className="space-y-4">
+                {/* Gemini Brand */}
+                <div className="flex items-center justify-between group">
+                  <div className="space-y-0.5">
+                    <Label
+                      className="text-xs font-semibold cursor-pointer"
+                      onClick={() => setHideBrand(!hideBrand)}
+                    >
+                      Gemini Logo
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground">
+                      Toggle Gemini logo visibility
+                    </p>
+                  </div>
+                  <Switch
+                    checked={!hideBrand}
+                    onCheckedChange={(c) => setHideBrand(!c)}
+                  />
                 </div>
-                <Switch
-                  checked={removeWatermark}
-                  onCheckedChange={(c) => setRemoveWatermark(c)}
-                />
-              </div>
 
-              {/* Zen Mode */}
-              <div className="flex items-center justify-between group">
-                <div className="space-y-0.5">
-                  <Label className="text-xs font-semibold cursor-pointer" onClick={() => setZenMode(!zenMode)}>Zen Mode</Label>
-                  <p className="text-[10px] text-muted-foreground">Hide extra UI for focus</p>
+                {/* AI Disclaimer */}
+                <div className="flex items-center justify-between group">
+                  <div className="space-y-0.5">
+                    <Label
+                      className="text-xs font-semibold cursor-pointer"
+                      onClick={() => setHideDisclaimer(!hideDisclaimer)}
+                    >
+                      AI Disclaimer
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground">
+                      Error warning message
+                    </p>
+                  </div>
+                  <Switch
+                    checked={!hideDisclaimer}
+                    onCheckedChange={(c) => setHideDisclaimer(!c)}
+                  />
                 </div>
-                <Switch
-                  checked={zenMode}
-                  onCheckedChange={(c) => setZenMode(c)}
-                />
+
+                {/* Upgrade Plan (Conditional) */}
+                {showUpgradeOption && (
+                  <div className="flex items-center justify-between group">
+                    <div className="space-y-0.5">
+                      <Label
+                        className="text-xs font-semibold cursor-pointer"
+                        onClick={() => setHideUpgrade(!hideUpgrade)}
+                      >
+                        Upgrade Button
+                      </Label>
+                      <p className="text-[10px] text-muted-foreground">
+                        Hide "Upgrade Plan" button
+                      </p>
+                    </div>
+                    <Switch
+                      checked={!hideUpgrade}
+                      onCheckedChange={(c) => setHideUpgrade(!c)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
-          </div>
 
-          {/* Footer Decoration */}
-          <div className="mt-6 flex justify-center">
-            <div className="h-1 w-12 rounded-full bg-border/40" />
+            {/* Section 3: Additional Features (额外功能) */}
+            <div className="space-y-5">
+              <div className="flex items-center gap-2">
+                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  额外功能 (Extra Features)
+                </h4>
+                <div className="h-px flex-1 bg-border/40" />
+              </div>
+
+              <div className="space-y-4">
+                {/* Top Bar Conversation Tag */}
+                <div className="flex items-center justify-between group">
+                  <div className="space-y-0.5">
+                    <Label
+                      className="text-xs font-semibold cursor-pointer"
+                      onClick={() => setShowTopBarTag(!showTopBarTag)}
+                    >
+                      Show Conversation Tag
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground">
+                      Display tags in the top bar
+                    </p>
+                  </div>
+                  <Switch
+                    checked={showTopBarTag}
+                    onCheckedChange={(c) => setShowTopBarTag(c)}
+                  />
+                </div>
+
+                {/* Remove AI Sparkle Image Watermark */}
+                <div className="flex items-center justify-between group">
+                  <div className="space-y-0.5">
+                    <Label
+                      className="text-xs font-semibold cursor-pointer"
+                      onClick={() => setRemoveWatermark(!removeWatermark)}
+                    >
+                      Remove Auto Watermark
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground">
+                      Downloads: remove image sparkle
+                    </p>
+                  </div>
+                  <Switch
+                    checked={removeWatermark}
+                    onCheckedChange={(c) => setRemoveWatermark(c)}
+                  />
+                </div>
+
+                {/* Zen Mode */}
+                <div className="flex items-center justify-between group">
+                  <div className="space-y-0.5">
+                    <Label
+                      className="text-xs font-semibold cursor-pointer"
+                      onClick={() => setZenMode(!zenMode)}
+                    >
+                      Zen Mode
+                    </Label>
+                    <p className="text-[10px] text-muted-foreground">
+                      Hide extra UI for focus
+                    </p>
+                  </div>
+                  <Switch
+                    checked={zenMode}
+                    onCheckedChange={(c) => setZenMode(c)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Decoration */}
+            <div className="mt-6 flex justify-center pb-2">
+              <div className="h-1 w-12 rounded-full bg-border/40" />
+            </div>
           </div>
         </DropdownMenuContent>
       </DropdownMenu>

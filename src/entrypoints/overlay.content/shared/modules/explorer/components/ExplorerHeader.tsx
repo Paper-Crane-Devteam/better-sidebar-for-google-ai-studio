@@ -3,8 +3,18 @@ import { useAppStore } from '@/shared/lib/store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Button } from '@/shared/components/ui/button';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
-import { MessageSquarePlus, FolderPlus, ListCollapse, ArrowDownAZ, Clock, ListChecks } from 'lucide-react';
+import {
+  MessageSquarePlus,
+  FolderPlus,
+  ListCollapse,
+  ArrowDownAZ,
+  Clock,
+  ListChecks,
+  Cloud,
+} from 'lucide-react';
 import { SidePanelMenu } from '@/entrypoints/overlay.content/shared/components/menu/SidePanelMenu';
+import { useModalStore } from '@/shared/lib/modal';
+import { GDriveSyncSection } from '@/entrypoints/overlay.content/shared/components/GDriveSyncSection';
 import { FilterActions } from '../../../components/FilterActions';
 import type { FilterState, ExplorerTypeFilter } from '../../../types/filter';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -38,7 +48,12 @@ export const ExplorerHeader = ({
   menuActions,
 }: ExplorerHeaderProps) => {
   const { t } = useI18n();
-  const { ui, setExplorerSortOrder, setExplorerViewMode, setExplorerBatchMode } = useAppStore();
+  const {
+    ui,
+    setExplorerSortOrder,
+    setExplorerViewMode,
+    setExplorerBatchMode,
+  } = useAppStore();
 
   const { sortOrder, viewMode } = ui.explorer;
   const { isBatchMode } = ui.explorer.batch;
@@ -65,6 +80,30 @@ export const ExplorerHeader = ({
             <BatchToolbar onSelectAll={onSelectAll} />
           ) : (
             <>
+              <SimpleTooltip content={t('data.gdriveSync')}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    useModalStore.getState().open({
+                      type: 'info',
+                      title: t('data.gdriveSync'),
+                      content: (
+                        <div className="py-2">
+                          <GDriveSyncSection hideTitle={true} />
+                        </div>
+                      ),
+                      modalClassName: 'max-w-md',
+                    });
+                  }}
+                >
+                  <Cloud className="h-4 w-4" />
+                </Button>
+              </SimpleTooltip>
+
+              <div className="h-4 w-[1px] bg-border mx-1" />
+
               <SimpleTooltip content={t('menu.collapseAll')}>
                 <Button
                   variant="ghost"
@@ -120,7 +159,11 @@ export const ExplorerHeader = ({
 
       <div className="px-3 pb-2 pt-1 flex items-center justify-between">
         <div className="flex-1 mr-2">
-          <FilterActions filter={filter} availableTypes={filterTypes} visibleFilters={visibleFilters} />
+          <FilterActions
+            filter={filter}
+            availableTypes={filterTypes}
+            visibleFilters={visibleFilters}
+          />
         </div>
         <div className="flex items-center gap-1">
           {viewMode !== 'timeline' && (

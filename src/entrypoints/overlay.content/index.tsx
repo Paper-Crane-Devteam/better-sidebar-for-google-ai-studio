@@ -15,7 +15,9 @@ export default defineContentScript({
   ],
   cssInjectionMode: 'ui',
   async main() {
-    initPegasusTransport({ allowWindowMessagingForNamespace: 'better-sidebar' });
+    initPegasusTransport({
+      allowWindowMessagingForNamespace: 'better-sidebar',
+    });
     await getPegasusStoreReady();
     const platform = detectPlatform();
     console.log(

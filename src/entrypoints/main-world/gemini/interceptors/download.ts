@@ -1,80 +1,46 @@
-import { parseStreamingResponse, extractWrbFrPayloads } from '../lib/response-parser';
-import { WatermarkEngine } from '../watermark-engine';
+import { WatermarkEngine } from '@/shared/lib/utils/watermark-remover';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 
 let watermarkEngineInstance: WatermarkEngine | null = null;
 
-export async function handleDownloadResponse(response: any, url: string) {
-  if (response.status === 200) {
-    const shouldRemoveWatermark = usePegasusStore.getState().enhancedFeatures.gemini.removeWatermark;
-    if (!shouldRemoveWatermark) {
-      return; 
-    }
+export async function handleDownloadResponse(
+  url: string,
+  originalFetch: typeof window.fetch,
+): Promise<Response> {
+  const upscaledUrl = url.replace(/=s\d+/, '=s0');
+  console.log('Better Sidebar (Gemini): Intercepted image download', url, '->', upscaledUrl);
 
-    let responseBody = response.response;
-    if (typeof responseBody !== 'string') {
-       try {
-         responseBody = JSON.stringify(responseBody);
-       } catch (e) {
-         console.warn('Better Sidebar (Gemini): Could not stringify download body', e);
-         return;
-       }
-    }
+  const shouldRemoveWatermark = usePegasusStore.getState().enhancedFeatures.gemini.removeWatermark;
 
-    try {
-      const retChunks = parseStreamingResponse(responseBody);
-      const chunks = retChunks.map(chunk => chunk[0]);
-      
-      if (chunks.length > 0) {
-        const payloads = extractWrbFrPayloads(chunks);
-        
-        // c8o8Fe rpcid payload
-        // payloads[0] is array of URL
-        const imageUrl = payloads?.[0];
-        
-        if (typeof imageUrl === 'string') {
-          console.log('Better Sidebar (Gemini): Intercepted download request:', imageUrl);
+  try {
+    const res = await originalFetch(upscaledUrl);
+    const blob = await res.blob();
 
-          // Clear response to prevent web app from downloading the original
-          response.response = '';
-          
-          try {
-            // Lazy load the engine
-            if (!watermarkEngineInstance) {
-              watermarkEngineInstance = await WatermarkEngine.create();
-            }
+    let finalBlob = blob;
 
-            const res = await fetch(imageUrl);
-            const blob = await res.blob();
-            const blobUrl = URL.createObjectURL(blob);
-            
-            const processedBlob = await watermarkEngineInstance.process(blobUrl);
-
-            // Trigger download of processed file
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(processedBlob);
-            a.download = `Gemini_Image_${Date.now()}.png`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-
-            URL.revokeObjectURL(a.href);
-            URL.revokeObjectURL(blobUrl);
-
-          } catch (processErr) {
-            console.error('Better Sidebar (Gemini): Error processing watermark:', processErr);
-            // Fallback: download original
-            const a = document.createElement('a');
-            a.href = imageUrl;
-            a.download = `Gemini_Image_${Date.now()}.jpg`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-          }
+    if (shouldRemoveWatermark) {
+      try {
+        if (!watermarkEngineInstance) {
+          watermarkEngineInstance = await WatermarkEngine.create();
         }
+        const blobUrl = URL.createObjectURL(blob);
+        finalBlob = await watermarkEngineInstance.process(blobUrl);
+        URL.revokeObjectURL(blobUrl);
+      } catch (e) {
+        console.error('Better Sidebar (Gemini): Watermark removal failed, using original', e);
       }
-    } catch (e) {
-      console.error('Better Sidebar (Gemini): Error handling download response', e);
     }
+
+    // Return the processed blob as the fetch response so the browser's
+    // native download handler receives the modified image instead of
+    // triggering a second download.
+    return new Response(finalBlob, {
+      status: res.status,
+      headers: { 'Content-Type': finalBlob.type || 'image/png' },
+    });
+  } catch (e) {
+    console.error('Better Sidebar (Gemini): Error processing image download', e);
+    // Fall through to the original fetch on error
+    return originalFetch(url);
   }
 }

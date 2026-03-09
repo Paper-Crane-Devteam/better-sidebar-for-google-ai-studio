@@ -210,6 +210,7 @@
     "gdriveRestoreSuccess": "从 Google Drive 恢复成功",
     "gdriveRestoreFailed": "恢复失败",
     "gdriveNoBackupFound": "Google Drive 上未找到此 Profile 的备份",
+    "gdriveBackupConfirm": "确定要备份到 Google Drive 吗？这会覆盖云端当前的备份数据。",
     "gdriveRestoreConfirm": "确定要从 Google Drive 恢复吗？这将覆盖本地数据（对话消息不受影响）。",
     "gdriveUnsupported": "当前浏览器不支持 Google Drive 同步"
   },

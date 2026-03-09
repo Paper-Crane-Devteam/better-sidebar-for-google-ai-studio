@@ -8,6 +8,22 @@ import { handleDownloadResponse } from './interceptors/download';
 export function initGeminiInterceptors() {
   console.log('Better Sidebar: Main World Script (Gemini) Initialized');
 
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = function (input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    const url =
+      typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.href
+          : (input as Request).url;
+
+    if (/lh3\.googleusercontent\.com\/rd-gg(?:-dl)?\//.test(url)) {
+      return handleDownloadResponse(url, originalFetch);
+    }
+
+    return originalFetch(input, init);
+  };
+
   proxy({
     onRequest: (config, handler) => {
       handler.next(config);
@@ -23,18 +39,13 @@ export function initGeminiInterceptors() {
         if (url.includes('StreamGenerate')) {
           handleGenerateResponse(response, url);
         } else if (url.includes('batchexecute')) {
-            // Check specific rpcids for chat content and list chat
-            // chat content rpcid: hNvQHb
-            // list chat rpcid: MaZiqc
-            if (url.includes('rpcids=hNvQHb')) {
-                handleChatContentResponse(response, url);
-            } else if (url.includes('rpcids=MaZiqc')) {
-                handleListChatResponse(response, url);
-            } else if (url.includes('rpcids=GzXR5e')) {
-                handleDeleteResponse(response, url);
-            } else if (url.includes('rpcids=c8o8Fe')) {
-                handleDownloadResponse(response, url);
-            }
+          if (url.includes('rpcids=hNvQHb')) {
+            handleChatContentResponse(response, url);
+          } else if (url.includes('rpcids=MaZiqc')) {
+            handleListChatResponse(response, url);
+          } else if (url.includes('rpcids=GzXR5e')) {
+            handleDeleteResponse(response, url);
+          }
         }
       } catch (e) {
         console.error('Better Sidebar: Error in Gemini interception handler', e);

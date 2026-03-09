@@ -8,6 +8,7 @@ import { apiScanner } from './tasks/scan-api';
 import { chatContentScanner } from './tasks/scan-chat-content';
 
 import { syncConversations } from './tasks/sync-conversations';
+import { initImageProcessor } from './tasks/process-images';
 import { detectAccount } from '../shared/detect-account';
 
 /**
@@ -56,6 +57,11 @@ export async function initGemini() {
   // Start API Scanner immediately to catch early requests (no DB dependency)
   apiScanner.start();
   chatContentScanner.start();
+
+  // Start image watermark processor (MutationObserver on img tags)
+  // initImageProcessor().catch((e) => {
+  //   console.error('Better Sidebar: Image processor init failed', e);
+  // });
 
   // Inject Main World Script
   const script = document.createElement('script');

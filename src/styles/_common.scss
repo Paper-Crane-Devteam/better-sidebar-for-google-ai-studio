@@ -44,4 +44,21 @@
   .node-item-selected {
     @apply bg-accent;
   }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar {
+    &::-webkit-scrollbar {
+      width: 5px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: hsl(var(--border));
+      border-radius: 10px;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--muted-foreground) / 0.4);
+    }
+  }
 }
