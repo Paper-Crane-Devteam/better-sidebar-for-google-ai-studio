@@ -160,7 +160,7 @@ const Onboarding = () => {
 
           <div className="mt-12 opacity-60">
             <p className="text-sm text-muted-foreground font-medium tracking-wide">
-              Better Sidebar • Made with ♥️ by Paper Crane Dev
+              {t('footer.madeWith')}
             </p>
           </div>
         </div>

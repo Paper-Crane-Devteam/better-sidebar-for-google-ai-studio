@@ -5,6 +5,7 @@ import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { Moon, Sun, Monitor, ChevronDown } from 'lucide-react';
 import { Switch } from '@/shared/components/ui/switch';
 import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { detectPlatform, Platform } from '@/shared/types/platform';
@@ -25,11 +26,11 @@ export const GeneralSettings = () => {
     setOverlayPosition,
     newChatBehavior,
     setNewChatBehavior,
-    language,
-    setLanguage,
     shortcuts,
     setShortcutVisible,
   } = useSettingsStore();
+
+  const { language, setLanguage } = usePegasusStore();
 
   const { theme, setTheme } = useTheme();
   const platform = detectPlatform();
@@ -213,8 +214,6 @@ export const GeneralSettings = () => {
               </Button>
             </div>
           </div>
-
-
         </div>
       </div>
 

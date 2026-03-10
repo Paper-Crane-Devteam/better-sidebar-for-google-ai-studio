@@ -224,7 +224,7 @@ const Options = () => {
         {/* Footer info */}
         <div className="text-center pt-2 pb-2">
           <p className="text-[11px] text-muted-foreground/60 font-medium tracking-wide">
-            Better Sidebar • Made with ♥️ by Paper Crane Dev
+            {t('footer.madeWith')}
           </p>
         </div>
       </div>

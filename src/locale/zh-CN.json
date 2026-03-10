@@ -143,7 +143,8 @@
     "contentPlaceholder": "输入 prompt 内容...",
     "createPrompt": "创建 Prompt",
     "editPrompt": "编辑 Prompt",
-    "noPrompts": "暂无 Prompt"
+    "noPrompts": "暂无 Prompt",
+    "selectAnOption": "请选择"
   },
   "menu": {
     "newFolder": "新建文件夹",
@@ -546,6 +547,67 @@
         "description": "自定义主题、布局、语言、快捷方式等，让工具适配你的工作方式。"
       }
     }
+  },
+  "errors": {
+    "profileNotFound": "未找到 Profile {{profileId}}"
+  },
+  "profile": {
+    "selectProfile": "选择 Profile",
+    "newAccountDetected": "在 {{platform}} 上检测到新账号：",
+    "chooseProfile": "选择一个 Profile 绑定此账号，或创建新的 Profile。",
+    "noAccountsBound": "尚未绑定账号",
+    "alreadyHasDifferent": "已绑定其他 {{platform}} 账号",
+    "createNewProfile": "+ 创建新 Profile",
+    "profileNamePlaceholder": "Profile 名称...",
+    "profileCreated": "Profile \"{{name}}\" 已创建",
+    "switchedTo": "已切换到 \"{{name}}\"",
+    "deleteProfileTitle": "删除 \"{{name}}\"？",
+    "deleteProfileContent": "这将移除该 Profile 及其数据库（{{dbName}}）。此操作无法撤销。",
+    "profileDeleted": "Profile \"{{name}}\" 已删除",
+    "deleteFailed": "删除失败",
+    "switchProfile": "切换",
+    "newProfile": "新建 Profile"
+  },
+  "geminiUI": {
+    "title": "Gemini 界面控制",
+    "subtitle": "调整布局、可见性和功能",
+    "layoutDimensions": "布局尺寸",
+    "sidebarWidth": "侧边栏宽度",
+    "chatContentWidth": "聊天内容宽度",
+    "inputBoxWidth": "输入框宽度",
+    "elementVisibility": "元素可见性",
+    "geminiLogo": "Gemini Logo",
+    "geminiLogoDesc": "切换左上角 Gemini Logo 的显示",
+    "aiDisclaimer": "AI 免责声明",
+    "aiDisclaimerDesc": "切换底部居中 AI 免责声明的显示",
+    "upgradeButton": "升级按钮",
+    "upgradeButtonDesc": "切换右上角「升级计划」按钮的显示",
+    "additionalFeatures": "额外功能",
+    "showConversationTag": "显示对话标签",
+    "showConversationTagDesc": "在对话标题旁显示标签",
+    "removeAutoWatermark": "移除自动水印",
+    "removeAutoWatermarkDesc": "下载时移除图片闪光水印",
+    "zenMode": "专注模式",
+    "zenModeDesc": "隐藏多余 UI 以专注",
+    "exitZenMode": "退出专注模式",
+    "defaultModel": "默认模型：",
+    "defaultModelSelect": "选择",
+    "defaultModelNone": "默认（无）"
+  },
+  "topBarTag": {
+    "removeTag": "移除标签",
+    "editTags": "编辑标签",
+    "addTag": "添加标签",
+    "selectTags": "选择标签",
+    "noTagsAvailable": "没有可用的标签。",
+    "saveChanges": "保存更改",
+    "cancel": "取消"
+  },
+  "filterBar": {
+    "all": "全部"
+  },
+  "footer": {
+    "madeWith": "Better Sidebar • 由 Paper Crane Dev 用 ♥️ 打造"
   },
   "whatsNew": {
     "title": "v{{version}} 更新内容",

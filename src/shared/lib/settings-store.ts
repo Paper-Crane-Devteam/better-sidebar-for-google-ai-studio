@@ -25,7 +25,6 @@ interface SettingsState {
   newChatBehavior: 'current-tab' | 'new-tab';
   autoScanLibrary: boolean;
   overlayPosition: 'bottom-left' | 'bottom-right';
-  language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru';
   explorer: {
     viewMode: 'tree' | 'timeline';
     sortOrder: 'alpha' | 'date';
@@ -54,9 +53,6 @@ interface SettingsState {
   setNewChatBehavior: (behavior: 'current-tab' | 'new-tab') => void;
   setAutoScanLibrary: (enabled: boolean) => void;
   setOverlayPosition: (position: 'bottom-left' | 'bottom-right') => void;
-  setLanguage: (
-    language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru',
-  ) => void;
   setExplorerViewMode: (mode: 'tree' | 'timeline') => void;
   setExplorerSortOrder: (order: 'alpha' | 'date') => void;
   setExplorerIgnoredFolders: (folders: string[]) => void;
@@ -97,37 +93,6 @@ const storage: StateStorage = {
   },
 };
 
-// Get default language from browser
-const getDefaultLanguage = ():
-  | 'zh-CN'
-  | 'zh-TW'
-  | 'en'
-  | 'ja'
-  | 'pt'
-  | 'es'
-  | 'ru' => {
-  const browserLang = navigator.language || navigator.languages?.[0] || 'en';
-  if (browserLang.startsWith('zh-TW') || browserLang.startsWith('zh-Hant')) {
-    return 'zh-TW';
-  }
-  if (browserLang.startsWith('zh')) {
-    return 'zh-CN';
-  }
-  if (browserLang.startsWith('ja')) {
-    return 'ja';
-  }
-  if (browserLang.startsWith('pt')) {
-    return 'pt';
-  }
-  if (browserLang.startsWith('es')) {
-    return 'es';
-  }
-  if (browserLang.startsWith('ru')) {
-    return 'ru';
-  }
-  return 'en';
-};
-
 const platform = detectPlatform();
 
 // Determine storage key
@@ -155,7 +120,6 @@ export const useSettingsStore = create<SettingsState>()(
       newChatBehavior: 'current-tab',
       autoScanLibrary: false,
       overlayPosition: 'bottom-left',
-      language: getDefaultLanguage(),
       explorer: {
         viewMode: 'tree',
         sortOrder: 'date',
@@ -207,7 +171,6 @@ export const useSettingsStore = create<SettingsState>()(
       setNewChatBehavior: (newChatBehavior) => set({ newChatBehavior }),
       setAutoScanLibrary: (autoScanLibrary) => set({ autoScanLibrary }),
       setOverlayPosition: (overlayPosition) => set({ overlayPosition }),
-      setLanguage: (language) => set({ language }),
       setExplorerViewMode: (viewMode) =>
         set((state) => ({ explorer: { ...state.explorer, viewMode } })),
       setExplorerSortOrder: (sortOrder) =>

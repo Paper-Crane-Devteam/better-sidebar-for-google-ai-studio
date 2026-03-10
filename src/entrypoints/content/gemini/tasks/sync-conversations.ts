@@ -1,5 +1,6 @@
 import { Platform } from '@/shared/types/platform';
 import { apiScanner } from './scan-api';
+import i18n from '@/locale/i18n';
 
 function waitForElement(selector: string, timeout = 10000): Promise<Element | null> {
   return new Promise((resolve) => {
@@ -85,7 +86,7 @@ async function processAndSendItems() {
     // Transform to Conversation format
     const payloadItems = Array.from(uniqueItems.values()).map((item) => ({
         id: item.id,
-        title: item.title || 'Untitled',
+        title: item.title || i18n.t('common.untitled'),
         external_id: item.id,
         external_url: `https://gemini.google.com/app/${item.id}`,
         updated_at: item.created_at ?? Math.floor(Date.now() / 1000),

@@ -141,7 +141,8 @@
     "contentPlaceholder": "Digite o conteúdo do prompt...",
     "createPrompt": "Criar Prompt",
     "editPrompt": "Editar Prompt",
-    "noPrompts": "Nenhum prompt ainda."
+    "noPrompts": "Nenhum prompt ainda.",
+    "selectAnOption": "Selecione uma opção"
   },
   "menu": {
     "newFolder": "Nova Pasta",
@@ -511,6 +512,67 @@
         "description": "Personalize tema, layout, idioma, atalhos e mais para se adequar ao seu fluxo de trabalho."
       }
     }
+  },
+  "errors": {
+    "profileNotFound": "Perfil {{profileId}} não encontrado"
+  },
+  "profile": {
+    "selectProfile": "Selecionar Perfil",
+    "newAccountDetected": "Nova conta detectada em {{platform}}:",
+    "chooseProfile": "Escolha um perfil para vincular esta conta ou crie um novo.",
+    "noAccountsBound": "Nenhuma conta vinculada ainda",
+    "alreadyHasDifferent": "Já possui uma conta {{platform}} diferente",
+    "createNewProfile": "+ Criar Novo Perfil",
+    "profileNamePlaceholder": "Nome do perfil...",
+    "profileCreated": "Perfil \"{{name}}\" criado",
+    "switchedTo": "Alternado para \"{{name}}\"",
+    "deleteProfileTitle": "Excluir \"{{name}}\"?",
+    "deleteProfileContent": "Isso removerá o perfil e seu banco de dados ({{dbName}}). Esta ação não pode ser desfeita.",
+    "profileDeleted": "Perfil \"{{name}}\" excluído",
+    "deleteFailed": "Falha ao excluir",
+    "switchProfile": "Alternar",
+    "newProfile": "Novo Perfil"
+  },
+  "geminiUI": {
+    "title": "Controles de Interface Gemini",
+    "subtitle": "Ajustar layout, visibilidade e recursos",
+    "layoutDimensions": "Dimensões do Layout",
+    "sidebarWidth": "Largura da Barra Lateral",
+    "chatContentWidth": "Largura do Conteúdo do Chat",
+    "inputBoxWidth": "Largura da Caixa de Entrada",
+    "elementVisibility": "Visibilidade dos Elementos",
+    "geminiLogo": "Logo do Gemini",
+    "geminiLogoDesc": "Alternar visibilidade do logo do Gemini no canto superior esquerdo",
+    "aiDisclaimer": "Aviso de IA",
+    "aiDisclaimerDesc": "Alternar visibilidade do aviso de IA na parte inferior central",
+    "upgradeButton": "Botão de Upgrade",
+    "upgradeButtonDesc": "Alternar visibilidade do botão \"Upgrade de Plano\" no canto superior direito",
+    "additionalFeatures": "Recursos Adicionais",
+    "showConversationTag": "Mostrar Tag da Conversa",
+    "showConversationTagDesc": "Exibir tags ao lado do título da conversa",
+    "removeAutoWatermark": "Remover Marca d'Água Automática",
+    "removeAutoWatermarkDesc": "Downloads: remover brilho da imagem",
+    "zenMode": "Modo Zen",
+    "zenModeDesc": "Ocultar interface extra para foco",
+    "exitZenMode": "Sair do Modo Zen",
+    "defaultModel": "Modelo Padrão:",
+    "defaultModelSelect": "Selecionar",
+    "defaultModelNone": "Padrão (Nenhum)"
+  },
+  "topBarTag": {
+    "removeTag": "Remover tag",
+    "editTags": "Editar tags",
+    "addTag": "Adicionar tag",
+    "selectTags": "Selecionar Tags",
+    "noTagsAvailable": "Nenhuma tag disponível.",
+    "saveChanges": "Salvar alterações",
+    "cancel": "Cancelar"
+  },
+  "filterBar": {
+    "all": "Todos"
+  },
+  "footer": {
+    "madeWith": "Better Sidebar • Feito com ♥️ por Paper Crane Dev"
   },
   "whatsNew": {
     "title": "Novidades na v{{version}}",

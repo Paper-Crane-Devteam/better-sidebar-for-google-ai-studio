@@ -9,8 +9,10 @@ import {
 } from '@/shared/components/ui/dropdown-menu';
 import { cn } from '@/shared/lib/utils/utils';
 import { useGeminiUI } from '../hooks/useGeminiUI';
+import { useI18n } from '@/shared/hooks/useI18n';
 
 export const ControlPanel = () => {
+  const { t } = useI18n();
   const [isOpen, setIsOpen] = React.useState(false);
   const {
     sidebarWidth,
@@ -44,7 +46,7 @@ export const ControlPanel = () => {
   };
 
   return (
-    <div className="fixed top-14 right-4 z-[999999]">
+    <div className="fixed top-16 right-4 z-[999999]">
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
           <button
@@ -72,10 +74,10 @@ export const ControlPanel = () => {
             </div>
             <div>
               <h3 className="text-sm font-bold tracking-tight">
-                Gemini UI Controls
+                {t('geminiUI.title')}
               </h3>
               <p className="text-[11px] text-muted-foreground">
-                Adjust layout, visibility and features
+                {t('geminiUI.subtitle')}
               </p>
             </div>
           </div>
@@ -85,7 +87,7 @@ export const ControlPanel = () => {
             <div className="space-y-5 mb-6">
               <div className="flex items-center gap-2">
                 <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  Layout Dimensions
+                  {t('geminiUI.layoutDimensions')}
                 </h4>
                 <div className="h-px flex-1 bg-border/40" />
               </div>
@@ -95,7 +97,7 @@ export const ControlPanel = () => {
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs font-semibold">
-                      Sidebar Width
+                      {t('geminiUI.sidebarWidth')}
                     </Label>
                     <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">
                       {sidebarWidth}px
@@ -116,7 +118,7 @@ export const ControlPanel = () => {
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs font-semibold">
-                      Chat Content Width
+                      {t('geminiUI.chatContentWidth')}
                     </Label>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">
@@ -139,7 +141,7 @@ export const ControlPanel = () => {
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs font-semibold">
-                      Input Box Width
+                      {t('geminiUI.inputBoxWidth')}
                     </Label>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">
@@ -164,7 +166,7 @@ export const ControlPanel = () => {
             <div className="space-y-5 mb-6">
               <div className="flex items-center gap-2">
                 <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  Element Visibility
+                  {t('geminiUI.elementVisibility')}
                 </h4>
                 <div className="h-px flex-1 bg-border/40" />
               </div>
@@ -177,10 +179,10 @@ export const ControlPanel = () => {
                       className="text-xs font-semibold cursor-pointer"
                       onClick={() => setHideBrand(!hideBrand)}
                     >
-                      Gemini Logo
+                      {t('geminiUI.geminiLogo')}
                     </Label>
                     <p className="text-[10px] text-muted-foreground">
-                      Toggle Gemini logo visibility
+                      {t('geminiUI.geminiLogoDesc')}
                     </p>
                   </div>
                   <Switch
@@ -196,10 +198,10 @@ export const ControlPanel = () => {
                       className="text-xs font-semibold cursor-pointer"
                       onClick={() => setHideDisclaimer(!hideDisclaimer)}
                     >
-                      AI Disclaimer
+                      {t('geminiUI.aiDisclaimer')}
                     </Label>
                     <p className="text-[10px] text-muted-foreground">
-                      Error warning message
+                      {t('geminiUI.aiDisclaimerDesc')}
                     </p>
                   </div>
                   <Switch
@@ -216,10 +218,10 @@ export const ControlPanel = () => {
                         className="text-xs font-semibold cursor-pointer"
                         onClick={() => setHideUpgrade(!hideUpgrade)}
                       >
-                        Upgrade Button
+                        {t('geminiUI.upgradeButton')}
                       </Label>
                       <p className="text-[10px] text-muted-foreground">
-                        Hide "Upgrade Plan" button
+                        {t('geminiUI.upgradeButtonDesc')}
                       </p>
                     </div>
                     <Switch
@@ -231,11 +233,11 @@ export const ControlPanel = () => {
               </div>
             </div>
 
-            {/* Section 3: Additional Features (额外功能) */}
+            {/* Section 3: Additional Features */}
             <div className="space-y-5">
               <div className="flex items-center gap-2">
                 <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  额外功能 (Extra Features)
+                  {t('geminiUI.additionalFeatures')}
                 </h4>
                 <div className="h-px flex-1 bg-border/40" />
               </div>
@@ -248,10 +250,10 @@ export const ControlPanel = () => {
                       className="text-xs font-semibold cursor-pointer"
                       onClick={() => setShowTopBarTag(!showTopBarTag)}
                     >
-                      Show Conversation Tag
+                      {t('geminiUI.showConversationTag')}
                     </Label>
                     <p className="text-[10px] text-muted-foreground">
-                      Display tags in the top bar
+                      {t('geminiUI.showConversationTagDesc')}
                     </p>
                   </div>
                   <Switch
@@ -267,10 +269,10 @@ export const ControlPanel = () => {
                       className="text-xs font-semibold cursor-pointer"
                       onClick={() => setRemoveWatermark(!removeWatermark)}
                     >
-                      Remove Auto Watermark
+                      {t('geminiUI.removeAutoWatermark')}
                     </Label>
                     <p className="text-[10px] text-muted-foreground">
-                      Downloads: remove image sparkle
+                      {t('geminiUI.removeAutoWatermarkDesc')}
                     </p>
                   </div>
                   <Switch
@@ -286,10 +288,10 @@ export const ControlPanel = () => {
                       className="text-xs font-semibold cursor-pointer"
                       onClick={() => setZenMode(!zenMode)}
                     >
-                      Zen Mode
+                      {t('geminiUI.zenMode')}
                     </Label>
                     <p className="text-[10px] text-muted-foreground">
-                      Hide extra UI for focus
+                      {t('geminiUI.zenModeDesc')}
                     </p>
                   </div>
                   <Switch

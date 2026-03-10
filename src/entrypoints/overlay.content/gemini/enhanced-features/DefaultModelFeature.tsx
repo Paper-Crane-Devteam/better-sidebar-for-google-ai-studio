@@ -4,6 +4,7 @@ import { useUrl } from '@/shared/hooks/useUrl';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { waitForElement, applyShadowStyles } from '@/shared/lib/utils';
+import { useI18n } from '@/shared/hooks/useI18n';
 import mainStyles from '@/index.scss?inline';
 
 const MODEL_MAPPING: Record<string, string> = {
@@ -13,6 +14,7 @@ const MODEL_MAPPING: Record<string, string> = {
 };
 
 const DefaultModelUI = ({ container }: { container: Element }) => {
+  const { t } = useI18n();
   const defaultModel = useSettingsStore(state => state.enhancedFeatures.gemini.defaultModel);
   const setGeminiFeature = useSettingsStore(state => state.setGeminiFeature);
   
@@ -32,13 +34,13 @@ const DefaultModelUI = ({ container }: { container: Element }) => {
       onMouseDown={stopPropagation}
       onPointerDown={stopPropagation}
     >
-      <span className="text-xs text-muted-foreground whitespace-nowrap">Default Model:</span>
+      <span className="text-xs text-muted-foreground whitespace-nowrap">{t('geminiUI.defaultModel')}</span>
       <Select value={defaultModel} onValueChange={(val: any) => setGeminiFeature('defaultModel', val)}>
         <SelectTrigger className="h-7 text-xs w-[110px] bg-background border-border">
-          <SelectValue placeholder="Select" />
+          <SelectValue placeholder={t('geminiUI.defaultModelSelect')} />
         </SelectTrigger>
         <SelectContent container={container as HTMLElement}>
-          <SelectItem value="default" className="text-xs">默认 (None)</SelectItem>
+          <SelectItem value="default" className="text-xs">{t('geminiUI.defaultModelNone')}</SelectItem>
           <SelectItem value="fast" className="text-xs">Fast</SelectItem>
           <SelectItem value="thinking" className="text-xs">Thinking</SelectItem>
           <SelectItem value="pro" className="text-xs">Pro</SelectItem>

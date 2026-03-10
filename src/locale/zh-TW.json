@@ -143,7 +143,8 @@
     "contentPlaceholder": "輸入 prompt 內容...",
     "createPrompt": "建立 Prompt",
     "editPrompt": "編輯 Prompt",
-    "noPrompts": "尚無 Prompt"
+    "noPrompts": "尚無 Prompt",
+    "selectAnOption": "請選擇"
   },
   "menu": {
     "newFolder": "新增資料夾",
@@ -513,6 +514,67 @@
     "githubIssue": "提交 GitHub Issue",
     "googleForm": "填寫回饋表單",
     "skip": "跳過"
+  },
+  "errors": {
+    "profileNotFound": "找不到 Profile {{profileId}}"
+  },
+  "profile": {
+    "selectProfile": "選擇設定檔",
+    "newAccountDetected": "在 {{platform}} 上偵測到新帳號：",
+    "chooseProfile": "選擇一個設定檔來綁定此帳號，或建立新的設定檔。",
+    "noAccountsBound": "尚未綁定帳號",
+    "alreadyHasDifferent": "已綁定其他 {{platform}} 帳號",
+    "createNewProfile": "+ 建立新設定檔",
+    "profileNamePlaceholder": "設定檔名稱...",
+    "profileCreated": "設定檔 \"{{name}}\" 已建立",
+    "switchedTo": "已切換到 \"{{name}}\"",
+    "deleteProfileTitle": "刪除 \"{{name}}\"？",
+    "deleteProfileContent": "這將移除該設定檔及其資料庫（{{dbName}}）。此操作無法復原。",
+    "profileDeleted": "設定檔 \"{{name}}\" 已刪除",
+    "deleteFailed": "刪除失敗",
+    "switchProfile": "切換",
+    "newProfile": "新增設定檔"
+  },
+  "geminiUI": {
+    "title": "Gemini 介面控制",
+    "subtitle": "調整版面、可見性與功能",
+    "layoutDimensions": "版面尺寸",
+    "sidebarWidth": "側邊欄寬度",
+    "chatContentWidth": "聊天內容寬度",
+    "inputBoxWidth": "輸入框寬度",
+    "elementVisibility": "元素可見性",
+    "geminiLogo": "Gemini Logo",
+    "geminiLogoDesc": "切換左上角 Gemini Logo 的顯示",
+    "aiDisclaimer": "AI 免責聲明",
+    "aiDisclaimerDesc": "切換底部置中 AI 免責聲明的顯示",
+    "upgradeButton": "升級按鈕",
+    "upgradeButtonDesc": "切換右上角「升級方案」按鈕的顯示",
+    "additionalFeatures": "額外功能",
+    "showConversationTag": "顯示對話標籤",
+    "showConversationTagDesc": "在對話標題旁顯示標籤",
+    "removeAutoWatermark": "移除自動浮水印",
+    "removeAutoWatermarkDesc": "下載時移除圖片閃光浮水印",
+    "zenMode": "專注模式",
+    "zenModeDesc": "隱藏多餘 UI 以專注",
+    "exitZenMode": "離開專注模式",
+    "defaultModel": "預設模型：",
+    "defaultModelSelect": "選擇",
+    "defaultModelNone": "預設（無）"
+  },
+  "topBarTag": {
+    "removeTag": "移除標籤",
+    "editTags": "編輯標籤",
+    "addTag": "新增標籤",
+    "selectTags": "選擇標籤",
+    "noTagsAvailable": "沒有可用的標籤。",
+    "saveChanges": "儲存變更",
+    "cancel": "取消"
+  },
+  "filterBar": {
+    "all": "全部"
+  },
+  "footer": {
+    "madeWith": "Better Sidebar • 由 Paper Crane Dev 用 ♥️ 打造"
   },
   "whatsNew": {
     "title": "v{{version}} 更新內容",

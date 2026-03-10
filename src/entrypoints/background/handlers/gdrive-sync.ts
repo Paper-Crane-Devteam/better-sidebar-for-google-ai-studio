@@ -20,6 +20,7 @@ import {
   exportSyncData,
   importSyncData,
 } from '@/shared/lib/gdrive';
+import i18n from '@/locale/i18n';
 import { notifyDataUpdated } from '../notify';
 import { getCurrentDbName } from '../tab-profile-map';
 
@@ -115,7 +116,7 @@ export async function handleGdriveSync(
         if (!file) {
           return {
             success: false,
-            error: 'No backup found on Google Drive for this profile',
+            error: i18n.t('data.gdriveNoBackupFound'),
           };
         }
 

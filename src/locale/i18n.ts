@@ -16,19 +16,20 @@ import pt from './pt.json';
 import es from './es.json';
 import ru from './ru.json';
 import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 
 // Get language from settings store or browser language
 const getInitialLanguage = (): string => {
   // Try to get from settings store synchronously
   try {
-    const state = useSettingsStore.getState();
+    const state = usePegasusStore.getState();
     if (state.language) {
       return state.language;
     }
   } catch {
     // Settings store might not be initialized yet, ignore
   }
-  
+
   // Fallback to browser language
   const browserLang = navigator.language || navigator.languages?.[0] || 'en';
   if (browserLang.startsWith('zh-TW') || browserLang.startsWith('zh-Hant')) {
@@ -55,64 +56,80 @@ const getInitialLanguage = (): string => {
 // Map i18next language codes to dayjs locale codes
 const mapLanguageToDayjs = (lang: string): string => {
   switch (lang) {
-    case 'zh-CN': return 'zh-cn';
-    case 'zh-TW': return 'zh-tw';
-    case 'ja': return 'ja';
-    case 'pt': return 'pt';
-    case 'es': return 'es';
-    case 'ru': return 'ru';
-    default: return 'en';
+    case 'zh-CN':
+      return 'zh-cn';
+    case 'zh-TW':
+      return 'zh-tw';
+    case 'ja':
+      return 'ja';
+    case 'pt':
+      return 'pt';
+    case 'es':
+      return 'es';
+    case 'ru':
+      return 'ru';
+    default:
+      return 'en';
   }
 };
 
 // Initialize i18n
 const initI18n = () => {
   const lng = getInitialLanguage();
-  
+
   // Initialize dayjs
   dayjs.extend(localizedFormat);
   dayjs.locale(mapLanguageToDayjs(lng));
-  
-  i18n
-    .use(initReactI18next)
-    .init({
-      resources: {
-        'zh-CN': {
-          translation: zhCN,
-        },
-        'zh-TW': {
-          translation: zhTW,
-        },
-        en: {
-          translation: en,
-        },
-        ja: {
-          translation: ja,
-        },
-        pt: {
-          translation: pt,
-        },
-        es: {
-          translation: es,
-        },
-        ru: {
-          translation: ru,
-        },
+
+  i18n.use(initReactI18next).init({
+    resources: {
+      'zh-CN': {
+        translation: zhCN,
       },
-      lng,
-      fallbackLng: 'en',
-      interpolation: {
-        escapeValue: false, // React already escapes values
+      'zh-TW': {
+        translation: zhTW,
       },
-    });
+      en: {
+        translation: en,
+      },
+      ja: {
+        translation: ja,
+      },
+      pt: {
+        translation: pt,
+      },
+      es: {
+        translation: es,
+      },
+      ru: {
+        translation: ru,
+      },
+    },
+    lng,
+    fallbackLng: 'en',
+    interpolation: {
+      escapeValue: false, // React already escapes values
+    },
+  });
 
   // Subscribe to language changes from settings store
   if (globalThis.window !== undefined) {
-    let previousLanguage = useSettingsStore.getState().language;
-    useSettingsStore.subscribe((state) => {
+    let previousLanguage = usePegasusStore.getState().language;
+    usePegasusStore.subscribe((state) => {
       const currentLanguage = state.language;
-      const supportedLanguages = ['zh-CN', 'zh-TW', 'en', 'ja', 'pt', 'es', 'ru'];
-      if (currentLanguage !== previousLanguage && supportedLanguages.includes(currentLanguage)) {
+      const supportedLanguages = [
+        'zh-CN',
+        'zh-TW',
+        'en',
+        'ja',
+        'pt',
+        'es',
+        'ru',
+      ];
+      if (
+        currentLanguage !== previousLanguage &&
+        supportedLanguages.includes(currentLanguage)
+      ) {
         i18n.changeLanguage(currentLanguage);
         dayjs.locale(mapLanguageToDayjs(currentLanguage));
         previousLanguage = currentLanguage;

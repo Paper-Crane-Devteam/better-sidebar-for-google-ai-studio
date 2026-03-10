@@ -1,9 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 
 export const useI18n = () => {
   const { t, i18n } = useTranslation();
-  const setLanguage = useSettingsStore((state) => state.setLanguage);
+  const setLanguage = usePegasusStore((state) => state.setLanguage);
 
   const changeLanguage = async (lng: 'zh-CN' | 'en') => {
     await i18n.changeLanguage(lng);

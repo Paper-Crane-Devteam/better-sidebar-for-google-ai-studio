@@ -16,8 +16,10 @@ import {
 } from '@/shared/components/ui/dropdown-menu';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import mainStyles from '@/index.scss?inline';
+import { useI18n } from '@/shared/hooks/useI18n';
 
 const TopBarTagUI = ({ container }: { container: Element }) => {
+  const { t } = useI18n();
   const currentConversationId = useCurrentConversationId();
   const {
     tags,
@@ -147,7 +149,7 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
               <div
                 className="flex items-center justify-center rounded-sm hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer p-0.5 -mr-1 shrink-0 ml-1"
                 onClick={(e) => handleRemoveEditingTag(tag.id, e)}
-                title="Remove tag"
+                title={t('topBarTag.removeTag')}
               >
                 <X className="w-2.5 h-2.5 opacity-70 hover:opacity-100" />
               </div>
@@ -162,7 +164,7 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
           className={`flex items-center justify-center w-6 h-6 rounded-md hover:bg-accent hover:text-accent-foreground text-muted-foreground transition-all outline-none shrink-0 ${
             isHovered ? 'opacity-100 visible' : 'opacity-0 invisible'
           }`}
-          title="Edit tags"
+          title={t('topBarTag.editTags')}
         >
           <Pencil className="w-3.5 h-3.5" />
         </button>
@@ -174,7 +176,7 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
             <DropdownMenuTrigger asChild>
               <button
                 className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-accent hover:text-accent-foreground text-muted-foreground transition-colors outline-none shrink-0 border border-dashed border-border"
-                title="Add tag"
+                title={t('topBarTag.addTag')}
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -185,13 +187,13 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
               className="w-[180px] p-2 z-[9999]"
             >
               <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground">
-                Select Tags
+                {t('topBarTag.selectTags')}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="max-h-[200px] overflow-y-auto w-full flex flex-col gap-1 pr-1">
                 {availableTags.length === 0 && (
                   <span className="text-xs text-muted-foreground px-2 py-1">
-                    No tags available.
+                    {t('topBarTag.noTagsAvailable')}
                   </span>
                 )}
                 {availableTags.map((tag) => (
@@ -219,7 +221,7 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
           <button
             onClick={handleConfirm}
             className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-green-100 hover:text-green-600 dark:hover:bg-green-900/30 dark:hover:text-green-400 text-muted-foreground transition-colors outline-none shrink-0"
-            title="Save changes"
+            title={t('topBarTag.saveChanges')}
           >
             <Check className="w-3.5 h-3.5" />
           </button>
@@ -227,7 +229,7 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
           <button
             onClick={handleCancel}
             className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-muted-foreground transition-colors outline-none shrink-0"
-            title="Cancel"
+            title={t('topBarTag.cancel')}
           >
             <X className="w-3.5 h-3.5" />
           </button>

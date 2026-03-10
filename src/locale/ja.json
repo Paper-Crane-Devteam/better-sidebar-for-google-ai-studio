@@ -141,7 +141,8 @@
     "contentPlaceholder": "プロンプト内容を入力...",
     "createPrompt": "プロンプトを作成",
     "editPrompt": "プロンプトを編集",
-    "noPrompts": "プロンプトがありません"
+    "noPrompts": "プロンプトがありません",
+    "selectAnOption": "選択してください"
   },
   "menu": {
     "newFolder": "新しいフォルダ",
@@ -511,6 +512,128 @@
         "description": "テーマ、レイアウト、言語、ショートカットなどをワークフローに合わせてカスタマイズ。"
       }
     }
+  },
+  "errors": {
+    "profileNotFound": "プロファイル {{profileId}} が見つかりません"
+  },
+  "errors": {
+    "profileNotFound": "プロファイル {{profileId}} が見つかりません"
+  },
+  "profile": {
+    "selectProfile": "プロファイルを選択",
+    "newAccountDetected": "{{platform}} で新しいアカウントが検出されました：",
+    "chooseProfile": "このアカウントを紐付けるプロファイルを選択するか、新しく作成してください。",
+    "noAccountsBound": "まだアカウントが紐付けられていません",
+    "alreadyHasDifferent": "すでに別の {{platform}} アカウントが紐付けられています",
+    "createNewProfile": "+ 新しいプロファイルを作成",
+    "profileNamePlaceholder": "プロファイル名...",
+    "profileCreated": "プロファイル「{{name}}」を作成しました",
+    "switchedTo": "「{{name}}」に切り替えました",
+    "deleteProfileTitle": "「{{name}}」を削除しますか？",
+    "deleteProfileContent": "プロファイルとそのデータベース（{{dbName}}）が削除されます。この操作は元に戻せません。",
+    "profileDeleted": "プロファイル「{{name}}」を削除しました",
+    "deleteFailed": "削除に失敗しました",
+    "switchProfile": "切り替え",
+    "newProfile": "新しいプロファイル"
+  },
+  "geminiUI": {
+    "title": "Gemini UI コントロール",
+    "subtitle": "レイアウト、表示、機能を調整",
+    "layoutDimensions": "レイアウトサイズ",
+    "sidebarWidth": "サイドバーの幅",
+    "chatContentWidth": "チャットコンテンツの幅",
+    "inputBoxWidth": "入力ボックスの幅",
+    "elementVisibility": "要素の表示",
+    "geminiLogo": "Gemini ロゴ",
+    "geminiLogoDesc": "左上の Gemini ロゴの表示を切り替え",
+    "aiDisclaimer": "AI 免責事項",
+    "aiDisclaimerDesc": "下部中央の AI 免責事項の表示を切り替え",
+    "upgradeButton": "アップグレードボタン",
+    "upgradeButtonDesc": "右上の「プランをアップグレード」ボタンの表示を切り替え",
+    "additionalFeatures": "追加機能",
+    "showConversationTag": "会話タグを表示",
+    "showConversationTagDesc": "会話タイトルの横にタグを表示",
+    "removeAutoWatermark": "自動透かしを削除",
+    "removeAutoWatermarkDesc": "ダウンロード時：画像のスパークルを削除",
+    "zenMode": "Zen モード",
+    "zenModeDesc": "集中のために余分な UI を非表示",
+    "exitZenMode": "Zen モードを終了",
+    "defaultModel": "デフォルトモデル：",
+    "defaultModelSelect": "選択",
+    "defaultModelNone": "デフォルト（なし）"
+  },
+  "topBarTag": {
+    "removeTag": "タグを削除",
+    "editTags": "タグを編集",
+    "addTag": "タグを追加",
+    "selectTags": "タグを選択",
+    "noTagsAvailable": "利用可能なタグがありません。",
+    "saveChanges": "変更を保存",
+    "cancel": "キャンセル"
+  },
+  "filterBar": {
+    "all": "すべて"
+  },
+  "footer": {
+    "madeWith": "Better Sidebar • Paper Crane Dev が ♥️ を込めて制作"
+  },
+  "profile": {
+    "selectProfile": "プロファイルを選択",
+    "newAccountDetected": "{{platform}} で新しいアカウントを検出：",
+    "chooseProfile": "このアカウントをバインドするプロファイルを選択するか、新しいプロファイルを作成してください。",
+    "noAccountsBound": "アカウント未バインド",
+    "alreadyHasDifferent": "別の {{platform}} アカウントがバインド済み",
+    "createNewProfile": "+ 新しいプロファイルを作成",
+    "profileNamePlaceholder": "プロファイル名...",
+    "profileCreated": "プロファイル \"{{name}}\" を作成しました",
+    "switchedTo": "\"{{name}}\" に切り替えました",
+    "deleteProfileTitle": "\"{{name}}\" を削除しますか？",
+    "deleteProfileContent": "このプロファイルとそのデータベース（{{dbName}}）が削除されます。この操作は元に戻せません。",
+    "profileDeleted": "プロファイル \"{{name}}\" を削除しました",
+    "deleteFailed": "削除に失敗しました",
+    "switchProfile": "切替",
+    "newProfile": "新しいプロファイル"
+  },
+  "geminiUI": {
+    "title": "Gemini UI コントロール",
+    "subtitle": "レイアウト、表示、機能を調整",
+    "layoutDimensions": "レイアウトサイズ",
+    "sidebarWidth": "サイドバー幅",
+    "chatContentWidth": "チャットコンテンツ幅",
+    "inputBoxWidth": "入力ボックス幅",
+    "elementVisibility": "要素の表示",
+    "geminiLogo": "Gemini ロゴ",
+    "geminiLogoDesc": "左上の Gemini ロゴの表示を切り替え",
+    "aiDisclaimer": "AI 免責事項",
+    "aiDisclaimerDesc": "下部中央の AI 免責事項の表示を切り替え",
+    "upgradeButton": "アップグレードボタン",
+    "upgradeButtonDesc": "右上の「プランをアップグレード」ボタンの表示を切り替え",
+    "additionalFeatures": "追加機能",
+    "showConversationTag": "会話タグを表示",
+    "showConversationTagDesc": "会話タイトルの横にタグを表示",
+    "removeAutoWatermark": "自動透かしを削除",
+    "removeAutoWatermarkDesc": "ダウンロード時に画像のスパークルを削除",
+    "zenMode": "集中モード",
+    "zenModeDesc": "余分な UI を非表示にして集中",
+    "exitZenMode": "集中モードを終了",
+    "defaultModel": "デフォルトモデル：",
+    "defaultModelSelect": "選択",
+    "defaultModelNone": "デフォルト（なし）"
+  },
+  "topBarTag": {
+    "removeTag": "タグを削除",
+    "editTags": "タグを編集",
+    "addTag": "タグを追加",
+    "selectTags": "タグを選択",
+    "noTagsAvailable": "利用可能なタグがありません。",
+    "saveChanges": "変更を保存",
+    "cancel": "キャンセル"
+  },
+  "filterBar": {
+    "all": "すべて"
+  },
+  "footer": {
+    "madeWith": "Better Sidebar • Made with ♥️ by Paper Crane Dev"
   },
   "whatsNew": {
     "title": "v{{version}} の新機能",

@@ -102,7 +102,7 @@ export const DataSettings = () => {
         payload: { name },
       });
       if (res?.success) {
-        toast.success(`Profile "${name}" created`);
+        toast.success(t('profile.profileCreated', { name }));
         setNewProfileName('');
         setCreatingProfile(false);
         await fetchProfiles();
@@ -123,7 +123,7 @@ export const DataSettings = () => {
         payload: { profileId },
       });
       if (res?.success) {
-        toast.success(`Switched to "${res.data.profileName}"`);
+        toast.success(t('profile.switchedTo', { name: res.data.profileName }));
         await fetchProfiles();
       }
     } catch (e) {
@@ -137,8 +137,8 @@ export const DataSettings = () => {
     if (profile.id === activeProfileId) return;
 
     const confirmed = await modal.confirm({
-      title: `Delete "${profile.name}"?`,
-      content: `This will remove the profile and its database (${profile.dbName}). This cannot be undone.`,
+      title: t('profile.deleteProfileTitle', { name: profile.name }),
+      content: t('profile.deleteProfileContent', { dbName: profile.dbName }),
       confirmText: t('common.delete'),
       cancelText: t('common.cancel'),
     });
@@ -151,10 +151,10 @@ export const DataSettings = () => {
         payload: { profileId: profile.id },
       });
       if (res?.success) {
-        toast.success(`Profile "${profile.name}" deleted`);
+        toast.success(t('profile.profileDeleted', { name: profile.name }));
         await fetchProfiles();
       } else {
-        toast.error(res?.error || 'Delete failed');
+        toast.error(res?.error || t('profile.deleteFailed'));
       }
     } catch (e) {
       console.error('Failed to delete profile:', e);
@@ -284,7 +284,7 @@ export const DataSettings = () => {
               </div>
             ) : (
               <p className="text-xs text-muted-foreground">
-                No accounts bound yet
+                {t('profile.noAccountsBound')}
               </p>
             )}
 
@@ -453,7 +453,7 @@ export const DataSettings = () => {
                           onClick={() => handleSwitchProfile(profile.id)}
                           disabled={profileLoading}
                         >
-                          Switch
+                          {t('profile.switchProfile')}
                         </Button>
                         <Button
                           variant="ghost"
@@ -493,14 +493,14 @@ export const DataSettings = () => {
               disabled={profileLoading}
             >
               <Plus className="h-4 w-4" />
-              New Profile
+              {t('profile.newProfile')}
             </Button>
           ) : (
             <div className="flex items-center gap-2">
               <Input
                 value={newProfileName}
                 onChange={(e) => setNewProfileName(e.target.value)}
-                placeholder="Profile name..."
+                placeholder={t('profile.profileNamePlaceholder')}
                 className="flex-1 h-8"
                 autoFocus
                 onKeyDown={(e) => {

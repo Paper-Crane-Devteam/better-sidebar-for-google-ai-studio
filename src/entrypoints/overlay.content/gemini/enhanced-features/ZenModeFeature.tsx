@@ -2,8 +2,10 @@ import React from 'react';
 import { Maximize, Minimize } from 'lucide-react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { cn } from '@/shared/lib/utils/utils';
+import { useI18n } from '@/shared/hooks/useI18n';
 
 export const ZenModeFeature = () => {
+  const { t } = useI18n();
   const zenMode = useSettingsStore((s) => s.enhancedFeatures.gemini.zenMode);
   const setGeminiFeature = useSettingsStore((s) => s.setGeminiFeature);
 
@@ -16,10 +18,10 @@ export const ZenModeFeature = () => {
         className={cn(
           "flex h-9 items-center justify-center gap-2 rounded-xl border border-border/50 bg-background/60 px-3 backdrop-blur-md transition-all hover:bg-accent hover:shadow-sm"
         )}
-        title="Exit Zen Mode"
+        title={t('geminiUI.exitZenMode')}
       >
         <Minimize className="h-4 w-4 text-foreground" />
-        <span className="text-xs font-semibold text-foreground">Exit Zen Mode</span>
+        <span className="text-xs font-semibold text-foreground">{t('geminiUI.exitZenMode')}</span>
       </button>
     </div>
   );

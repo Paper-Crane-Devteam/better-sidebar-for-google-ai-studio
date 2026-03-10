@@ -11,10 +11,12 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import { PLATFORM_CONFIG, Platform } from '@/shared/types/platform';
+import { useI18n } from '@/shared/hooks/useI18n';
 
 export const ProfilePickerDialog: React.FC = () => {
   const { pickerOpen, pickerData, closePicker, setLoading, loading } =
     useProfileStore();
+  const { t } = useI18n();
   const [creatingNew, setCreatingNew] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
 
@@ -136,16 +138,16 @@ export const ProfilePickerDialog: React.FC = () => {
         {/* Header */}
         <div className="shrink-0 px-6 pt-6 pb-4 border-b">
           <h2 className="text-lg font-semibold leading-tight tracking-tight">
-            Select Profile
+            {t('profile.selectProfile')}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            New account detected on <strong>{platformName}</strong>:{' '}
+            {t('profile.newAccountDetected', { platform: platformName })}{' '}
             <span className="font-mono text-foreground">
               {pickerData.username}
             </span>
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            Choose a profile to bind this account to, or create a new one.
+            {t('profile.chooseProfile')}
           </p>
         </div>
 
@@ -188,12 +190,12 @@ export const ProfilePickerDialog: React.FC = () => {
                     </div>
                   ) : (
                     <div className="text-xs text-muted-foreground mt-1">
-                      No accounts bound yet
+                      {t('profile.noAccountsBound')}
                     </div>
                   )}
                   {disabled && (
                     <div className="text-xs text-destructive mt-1">
-                      Already has a different {platformName} account
+                      {t('profile.alreadyHasDifferent', { platform: platformName })}
                     </div>
                   )}
                 </button>
@@ -211,14 +213,14 @@ export const ProfilePickerDialog: React.FC = () => {
               onClick={() => setCreatingNew(true)}
               disabled={loading}
             >
-              + Create New Profile
+              + {t('profile.createNewProfile').substring(2)}
             </Button>
           ) : (
             <div className="flex gap-2">
               <Input
                 value={newProfileName}
                 onChange={(e) => setNewProfileName(e.target.value)}
-                placeholder="Profile name..."
+                placeholder={t('profile.profileNamePlaceholder')}
                 className="flex-1"
                 autoFocus
                 onKeyDown={(e) => {
@@ -234,7 +236,7 @@ export const ProfilePickerDialog: React.FC = () => {
                 onClick={handleCreateProfile}
                 disabled={!newProfileName.trim() || loading}
               >
-                Create
+                {t('common.create')}
               </Button>
             </div>
           )}

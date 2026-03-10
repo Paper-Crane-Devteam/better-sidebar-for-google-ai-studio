@@ -143,7 +143,8 @@
     "contentPlaceholder": "Enter prompt content...",
     "createPrompt": "Create Prompt",
     "editPrompt": "Edit Prompt",
-    "noPrompts": "No prompts yet."
+    "noPrompts": "No prompts yet.",
+    "selectAnOption": "Select an option"
   },
   "menu": {
     "newFolder": "New Folder",
@@ -546,6 +547,67 @@
         "description": "Customize theme, layout, language, shortcuts, and more to fit your workflow."
       }
     }
+  },
+  "errors": {
+    "profileNotFound": "Profile {{profileId}} not found"
+  },
+  "profile": {
+    "selectProfile": "Select Profile",
+    "newAccountDetected": "New account detected on {{platform}}:",
+    "chooseProfile": "Choose a profile to bind this account to, or create a new one.",
+    "noAccountsBound": "No accounts bound yet",
+    "alreadyHasDifferent": "Already has a different {{platform}} account",
+    "createNewProfile": "+ Create New Profile",
+    "profileNamePlaceholder": "Profile name...",
+    "profileCreated": "Profile \"{{name}}\" created",
+    "switchedTo": "Switched to \"{{name}}\"",
+    "deleteProfileTitle": "Delete \"{{name}}\"?",
+    "deleteProfileContent": "This will remove the profile and its database ({{dbName}}). This cannot be undone.",
+    "profileDeleted": "Profile \"{{name}}\" deleted",
+    "deleteFailed": "Delete failed",
+    "switchProfile": "Switch",
+    "newProfile": "New Profile"
+  },
+  "geminiUI": {
+    "title": "Gemini UI Controls",
+    "subtitle": "Adjust layout, visibility and features",
+    "layoutDimensions": "Layout Dimensions",
+    "sidebarWidth": "Sidebar Width",
+    "chatContentWidth": "Chat Content Width",
+    "inputBoxWidth": "Input Box Width",
+    "elementVisibility": "Element Visibility",
+    "geminiLogo": "Gemini Logo",
+    "geminiLogoDesc": "Toggle Top Left Gemini logo visibility",
+    "aiDisclaimer": "AI Disclaimer",
+    "aiDisclaimerDesc": "Toggle center bottom AI Disclaimer visibility",
+    "upgradeButton": "Upgrade Button",
+    "upgradeButtonDesc": "Toggle Top right \"Upgrade Plan\" button visibility",
+    "additionalFeatures": "Additional Features",
+    "showConversationTag": "Show Conversation Tag",
+    "showConversationTagDesc": "Display tags beside conversation title",
+    "removeAutoWatermark": "Remove Auto Watermark",
+    "removeAutoWatermarkDesc": "Downloads: remove image sparkle",
+    "zenMode": "Zen Mode",
+    "zenModeDesc": "Hide extra UI for focus",
+    "exitZenMode": "Exit Zen Mode",
+    "defaultModel": "Default Model:",
+    "defaultModelSelect": "Select",
+    "defaultModelNone": "Default (None)"
+  },
+  "topBarTag": {
+    "removeTag": "Remove tag",
+    "editTags": "Edit tags",
+    "addTag": "Add tag",
+    "selectTags": "Select Tags",
+    "noTagsAvailable": "No tags available.",
+    "saveChanges": "Save changes",
+    "cancel": "Cancel"
+  },
+  "filterBar": {
+    "all": "All"
+  },
+  "footer": {
+    "madeWith": "Better Sidebar • Made with ♥️ by Paper Crane Dev"
   },
   "whatsNew": {
     "title": "What's New in v{{version}}",

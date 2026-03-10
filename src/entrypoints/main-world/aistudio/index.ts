@@ -46,7 +46,7 @@ const showUpdateToast = throttle(
     }, 5000);
   },
   10000,
-  { trailing: false }
+  { trailing: false },
 );
 
 export function initAiStudioInterceptors() {
@@ -62,7 +62,6 @@ export function initAiStudioInterceptors() {
     },
     onResponse: (response, handler) => {
       const url = response.config.url;
-
       try {
         if (url.includes('ResolveDriveResource')) {
           handleChatResponse(response, url);

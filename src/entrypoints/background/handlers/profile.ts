@@ -4,6 +4,7 @@ import type {
 } from '@/shared/types/messages';
 import type { MessageSender } from '../types';
 import { Platform } from '@/shared/types/platform';
+import i18n from '@/locale/i18n';
 import { switchDB } from '@/shared/db';
 import {
   getActiveProfile,
@@ -159,7 +160,7 @@ export async function handleProfile(
         const registry = await getRegistry();
         const profile = registry.profiles[profileId];
         if (!profile) {
-          return { success: false, error: `Profile ${profileId} not found` };
+          return { success: false, error: i18n.t('errors.profileNotFound', { profileId }) };
         }
         await setActiveProfile(profileId);
         await switchDB(profile.dbName);

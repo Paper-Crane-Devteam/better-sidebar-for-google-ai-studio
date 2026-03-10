@@ -1,5 +1,6 @@
 import { Platform } from '@/shared/types/platform';
 import { apiScanner } from './scan-api';
+import i18n from '@/locale/i18n';
 
 async function processAndSendItems() {
   const items = apiScanner.getItems();
@@ -18,7 +19,7 @@ async function processAndSendItems() {
   // Transform to Conversation format
   const payloadItems = Array.from(uniqueItems.values()).map((item) => ({
     id: item.id,
-    title: item.title || 'Untitled',
+    title: item.title || i18n.t('common.untitled'),
     external_id: item.id,
     external_url: `https://chatgpt.com/c/${item.id}`,
     updated_at: item.updated_at ?? item.created_at ?? Math.floor(Date.now() / 1000),

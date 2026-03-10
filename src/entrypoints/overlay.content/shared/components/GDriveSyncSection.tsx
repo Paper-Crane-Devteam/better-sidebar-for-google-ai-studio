@@ -64,7 +64,7 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
           t('data.gdriveConnectedAs', { email: res.data?.userEmail || '' }),
         );
       } else {
-        toast.error(res?.error || 'Connection failed');
+        toast.error(res?.error || t('data.gdriveBackupFailed'));
       }
     } catch (e) {
       console.error('GDrive connect error:', e);

@@ -63,7 +63,7 @@ export const VariableFillForm = forwardRef<VariableFillFormRef, VariableFillForm
                   }
                 >
                   <SelectTrigger id={`var-${variable.name}`}>
-                    <SelectValue placeholder="Select an option" />
+                    <SelectValue placeholder={t('prompts.selectAnOption')} />
                   </SelectTrigger>
                   <SelectContent>
                     {variable.options.map((opt) => (

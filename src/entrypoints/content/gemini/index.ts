@@ -8,7 +8,7 @@ import { apiScanner } from './tasks/scan-api';
 import { chatContentScanner } from './tasks/scan-chat-content';
 
 import { syncConversations } from './tasks/sync-conversations';
-import { initImageProcessor } from './tasks/process-images';
+// import { initImageProcessor } from './tasks/process-images';
 import { detectAccount } from '../shared/detect-account';
 
 /**

@@ -4,7 +4,39 @@ import {
   pegasusZustandStoreReady,
 } from '@webext-pegasus/store-zustand';
 
+// Get default language from browser
+const getDefaultLanguage = ():
+  | 'zh-CN'
+  | 'zh-TW'
+  | 'en'
+  | 'ja'
+  | 'pt'
+  | 'es'
+  | 'ru' => {
+  const browserLang = navigator.language || navigator.languages?.[0] || 'en';
+  if (browserLang.startsWith('zh-TW') || browserLang.startsWith('zh-Hant')) {
+    return 'zh-TW';
+  }
+  if (browserLang.startsWith('zh')) {
+    return 'zh-CN';
+  }
+  if (browserLang.startsWith('ja')) {
+    return 'ja';
+  }
+  if (browserLang.startsWith('pt')) {
+    return 'pt';
+  }
+  if (browserLang.startsWith('es')) {
+    return 'es';
+  }
+  if (browserLang.startsWith('ru')) {
+    return 'ru';
+  }
+  return 'en';
+};
+
 interface PegasusState {
+  language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru';
   enhancedFeatures: {
     gemini: {
       removeWatermark: boolean;
@@ -14,9 +46,13 @@ interface PegasusState {
     key: keyof PegasusState['enhancedFeatures']['gemini'],
     value: boolean,
   ) => void;
+  setLanguage: (
+    language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru',
+  ) => void;
 }
 
 export const usePegasusStore = create<PegasusState>()((set) => ({
+  language: getDefaultLanguage(),
   enhancedFeatures: {
     gemini: {
       removeWatermark: false,
@@ -33,6 +69,7 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
         },
       },
     })),
+  setLanguage: (language) => set({ language }),
 }));
 
 export const STORE_NAME = 'pegasusGlobalStore';

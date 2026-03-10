@@ -59,7 +59,7 @@ export const PromptsTab = ({ menuActions }: PromptsTabProps) => {
       ),
       content: <PromptPreviewContent prompt={prompt} />,
       confirmText: t('common.close'),
-      cancelText: t('prompts.editPrompt', 'Edit'),
+      cancelText: t('prompts.editPrompt'),
       onConfirm: () => useModalStore.getState().close(),
       onCancel: () => {
         useModalStore.getState().close();
@@ -83,7 +83,7 @@ export const PromptsTab = ({ menuActions }: PromptsTabProps) => {
     };
     useModalStore.getState().open({
       type: 'confirm',
-      title: t('prompts.editPrompt', 'Edit Prompt'),
+      title: t('prompts.editPrompt'),
       content: (
         <CreatePromptForm
           formRef={editFormRef}
@@ -95,7 +95,7 @@ export const PromptsTab = ({ menuActions }: PromptsTabProps) => {
           }}
         />
       ),
-      confirmText: t('common.save', 'Save'),
+      confirmText: t('common.save'),
       cancelText: t('common.cancel'),
       onConfirm: () => editFormRef.current?.requestSubmit(),
       onCancel: () => useModalStore.getState().close(),
@@ -104,7 +104,6 @@ export const PromptsTab = ({ menuActions }: PromptsTabProps) => {
   };
 
   const treeRef = useRef<ArboristTreeHandle>(null);
-
 
   // Clear stale selection
   useEffect(() => {
@@ -279,4 +278,4 @@ export const PromptsTab = ({ menuActions }: PromptsTabProps) => {
       </ContextMenu>
     </div>
   );
-};;
+};

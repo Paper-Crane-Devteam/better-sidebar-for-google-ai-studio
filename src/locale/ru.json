@@ -141,7 +141,8 @@
     "contentPlaceholder": "Введите содержимое промпта...",
     "createPrompt": "Создать промпт",
     "editPrompt": "Редактировать промпт",
-    "noPrompts": "Промптов пока нет."
+    "noPrompts": "Промптов пока нет.",
+    "selectAnOption": "Выберите вариант"
   },
   "menu": {
     "newFolder": "Новая папка",
@@ -511,6 +512,67 @@
         "description": "Настройте тему, макет, язык, сочетания клавиш и другое под свой рабочий процесс."
       }
     }
+  },
+  "errors": {
+    "profileNotFound": "Профиль {{profileId}} не найден"
+  },
+  "profile": {
+    "selectProfile": "Выбрать профиль",
+    "newAccountDetected": "Обнаружен новый аккаунт на {{platform}}:",
+    "chooseProfile": "Выберите профиль для привязки этого аккаунта или создайте новый.",
+    "noAccountsBound": "Аккаунты ещё не привязаны",
+    "alreadyHasDifferent": "Уже привязан другой аккаунт {{platform}}",
+    "createNewProfile": "+ Создать новый профиль",
+    "profileNamePlaceholder": "Имя профиля...",
+    "profileCreated": "Профиль \"{{name}}\" создан",
+    "switchedTo": "Переключено на \"{{name}}\"",
+    "deleteProfileTitle": "Удалить \"{{name}}\"?",
+    "deleteProfileContent": "Это удалит профиль и его базу данных ({{dbName}}). Это действие нельзя отменить.",
+    "profileDeleted": "Профиль \"{{name}}\" удалён",
+    "deleteFailed": "Ошибка удаления",
+    "switchProfile": "Переключить",
+    "newProfile": "Новый профиль"
+  },
+  "geminiUI": {
+    "title": "Управление интерфейсом Gemini",
+    "subtitle": "Настройка макета, видимости и функций",
+    "layoutDimensions": "Размеры макета",
+    "sidebarWidth": "Ширина боковой панели",
+    "chatContentWidth": "Ширина содержимого чата",
+    "inputBoxWidth": "Ширина поля ввода",
+    "elementVisibility": "Видимость элементов",
+    "geminiLogo": "Логотип Gemini",
+    "geminiLogoDesc": "Переключить видимость логотипа Gemini в левом верхнем углу",
+    "aiDisclaimer": "Отказ от ответственности ИИ",
+    "aiDisclaimerDesc": "Переключить видимость отказа от ответственности ИИ внизу по центру",
+    "upgradeButton": "Кнопка обновления",
+    "upgradeButtonDesc": "Переключить видимость кнопки «Обновить план» в правом верхнем углу",
+    "additionalFeatures": "Дополнительные функции",
+    "showConversationTag": "Показать тег диалога",
+    "showConversationTagDesc": "Отображать теги рядом с заголовком диалога",
+    "removeAutoWatermark": "Удалить автоматический водяной знак",
+    "removeAutoWatermarkDesc": "Загрузки: удалить блеск с изображения",
+    "zenMode": "Режим Zen",
+    "zenModeDesc": "Скрыть лишний интерфейс для концентрации",
+    "exitZenMode": "Выйти из режима Zen",
+    "defaultModel": "Модель по умолчанию:",
+    "defaultModelSelect": "Выбрать",
+    "defaultModelNone": "По умолчанию (нет)"
+  },
+  "topBarTag": {
+    "removeTag": "Удалить тег",
+    "editTags": "Редактировать теги",
+    "addTag": "Добавить тег",
+    "selectTags": "Выбрать теги",
+    "noTagsAvailable": "Нет доступных тегов.",
+    "saveChanges": "Сохранить изменения",
+    "cancel": "Отмена"
+  },
+  "filterBar": {
+    "all": "Все"
+  },
+  "footer": {
+    "madeWith": "Better Sidebar • Сделано с ♥️ от Paper Crane Dev"
   },
   "whatsNew": {
     "title": "Что нового в v{{version}}",

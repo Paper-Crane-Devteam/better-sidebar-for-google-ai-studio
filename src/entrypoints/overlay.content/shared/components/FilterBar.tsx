@@ -97,7 +97,7 @@ export const FilterBar = ({ filter, allTags }: FilterBarProps) => {
               className="h-6 text-xs whitespace-nowrap"
               onClick={() => tags.setSelected([])}
             >
-              All
+              {t('filterBar.all')}
             </Button>
             {allTags.map(tag => {
               const isSelected = tags.selected.includes(tag.id);

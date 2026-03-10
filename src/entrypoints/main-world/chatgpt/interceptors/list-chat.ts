@@ -1,3 +1,5 @@
+import i18n from '@/locale/i18n';
+
 export function handleListChatResponse(response: any, url: string) {
   if (response.status === 200) {
     try {
@@ -40,7 +42,7 @@ export function handleListChatResponse(response: any, url: string) {
 
           return {
             id: item.id,
-            title: item.title || 'Untitled',
+            title: item.title || i18n.t('common.untitled'),
             created_at: createdAt,
             updated_at: updatedAt,
           };

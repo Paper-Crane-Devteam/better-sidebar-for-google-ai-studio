@@ -181,8 +181,10 @@ export async function syncGeminiTheme(theme: 'light' | 'dark' | 'system') {
   try {
     if (theme === 'system') {
       localStorage.removeItem('Bard-Color-Theme');
-      
-      const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      const isSystemDark = window.matchMedia(
+        '(prefers-color-scheme: dark)',
+      ).matches;
       if (isSystemDark) {
         document.body.classList.add('dark-theme');
         document.body.classList.remove('light-theme');
@@ -201,7 +203,8 @@ export async function syncGeminiTheme(theme: 'light' | 'dark' | 'system') {
         }),
       );
     } else {
-      const themeValue = theme === 'dark' ? 'Bard-Dark-Theme' : 'Bard-Light-Theme';
+      const themeValue =
+        theme === 'dark' ? 'Bard-Dark-Theme' : 'Bard-Light-Theme';
       localStorage.setItem('Bard-Color-Theme', themeValue);
 
       if (theme === 'dark') {
