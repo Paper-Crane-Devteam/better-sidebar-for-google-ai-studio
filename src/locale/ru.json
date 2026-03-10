@@ -77,7 +77,9 @@
     "japanese": "日本語",
     "portuguese": "Português",
     "spanish": "Español",
-    "russian": "Русский"
+    "russian": "Русский",
+    "resizableSidebar": "Изменяемая ширина боковой панели",
+    "resizableSidebarDescription": "Разрешить изменение ширины боковой панели перетаскиванием"
   },
   "modal": {
     "resetDatabase": "Сбросить базу данных",
@@ -193,7 +195,25 @@
     "export": "Экспорт",
     "importData": "Импортировать данные",
     "importDataDescription": "Восстановить из файла резервной копии (SQL)",
-    "import": "Импорт"
+    "import": "Импорт",
+    "gdriveSync": "Синхронизация с Google Диском",
+    "gdriveNotConnected": "Не подключено",
+    "gdriveConnectedAs": "Подключено как {{email}}",
+    "gdriveConnect": "Подключить Google Диск",
+    "gdriveDisconnect": "Отключить",
+    "gdriveBackup": "Резервная копия на Диск",
+    "gdriveRestore": "Восстановить с Диска",
+    "gdriveLastSync": "Последняя синхронизация",
+    "gdriveNeverSynced": "Никогда",
+    "gdriveRestoreWarning": "Восстановление перезапишет локальные данные текущего профиля. Сообщения не синхронизируются.",
+    "gdriveBackupSuccess": "Резервное копирование на Google Диск выполнено успешно",
+    "gdriveBackupFailed": "Ошибка резервного копирования",
+    "gdriveRestoreSuccess": "Восстановление с Google Диска выполнено успешно",
+    "gdriveRestoreFailed": "Ошибка восстановления",
+    "gdriveNoBackupFound": "Резервная копия для этого профиля не найдена на Google Диске",
+    "gdriveBackupConfirm": "Вы уверены, что хотите создать резервную копию на Google Диске? Это перезапишет существующую облачную копию для этого профиля.",
+    "gdriveRestoreConfirm": "Вы уверены, что хотите восстановить с Google Диска? Это перезапишет ваши локальные данные (сообщения не затрагиваются).",
+    "gdriveUnsupported": "Синхронизация с Google Диском недоступна в этом браузере"
   },
   "explorerSettings": {
     "viewOptions": "Параметры просмотра",
@@ -249,7 +269,8 @@
     "dashboard": "Панель управления",
     "documentation": "Документация",
     "switchToOriginalUI": "Переключиться на оригинальный интерфейс",
-    "temporaryChat": "Временный чат"
+    "temporaryChat": "Временный чат",
+    "toggleMenu": "Переключить меню"
   },
   "favorites": {
     "noFavoritesFound": "Не найдено избранного, соответствующего вашим фильтрам.",
@@ -303,6 +324,20 @@
     "lavender": "Лавандовый",
     "rose": "Розовый"
   },
+  "presetColor": {
+    "indigo": "Индиго",
+    "violet": "Фиолетовый",
+    "pink": "Розовый",
+    "red": "Красный",
+    "orange": "Оранжевый",
+    "yellow": "Жёлтый",
+    "green": "Зелёный",
+    "teal": "Бирюзовый",
+    "cyan": "Голубой",
+    "blue": "Синий",
+    "lavender": "Лавандовый",
+    "rose": "Розовый"
+  },
   "export": {
     "roleUser": "Пользователь",
     "roleModel": "Модель",
@@ -326,7 +361,9 @@
     "noTagsYet": "Пока нет тегов. Создайте один выше.",
     "deleteTag": "Удалить тег",
     "deleteTagConfirm": "Вы уверены, что хотите удалить этот тег?",
-    "rename": "Переименовать"
+    "rename": "Переименовать",
+    "changeColor": "Изменить цвет",
+    "selectColor": "Выбрать цвет"
   },
   "moveItemsDialog": {
     "rootLevel": "Корень (верхний уровень)"

@@ -77,7 +77,9 @@
     "japanese": "日本語",
     "portuguese": "Português",
     "spanish": "Español",
-    "russian": "Русский"
+    "russian": "Русский",
+    "resizableSidebar": "Barra lateral redimensionável",
+    "resizableSidebarDescription": "Permitir modificar a largura da barra lateral arrastando"
   },
   "modal": {
     "resetDatabase": "Redefinir Banco de Dados",
@@ -102,17 +104,17 @@
     "feedbackFailed": "Falha ao enviar feedback. Tente novamente mais tarde.",
     "feedbackRateLimit": "Aguarde um momento antes de enviar outro feedback.",
     "interfaceUpdated": "A interface do Google AI Studio foi atualizada. Por favor, atualize a extensão ou aguarde uma correção.",
-    "copiedToClipboard": "Copied to clipboard",
-    "noContentToExport": "No content found. Please open the conversation in {{platform}} so the extension can record it, then try again.",
-    "importAiStudioSystemSuccess": "Imported {{count}} system instruction(s) from AI Studio",
-    "importAiStudioSystemNoData": "No AI Studio system instructions found on this page",
-    "importAiStudioSystemInvalid": "Invalid AI Studio system instructions data",
-    "importAiStudioSystemFailed": "Failed to import AI Studio system instructions"
+    "copiedToClipboard": "Copiado para a área de transferência",
+    "noContentToExport": "Nenhum conteúdo encontrado. Abra a conversa em {{platform}} para que a extensão possa registrá-la e tente novamente.",
+    "importAiStudioSystemSuccess": "Importadas {{count}} instrução(ões) de sistema do AI Studio",
+    "importAiStudioSystemNoData": "Nenhuma instrução de sistema do AI Studio encontrada nesta página",
+    "importAiStudioSystemInvalid": "Dados de instruções de sistema do AI Studio inválidos",
+    "importAiStudioSystemFailed": "Falha ao importar instruções de sistema do AI Studio"
   },
   "prompts": {
-    "importAiStudioSystem": "Import AI Studio System Instructions",
-    "untitledSystem": "Untitled System",
-    "aiStudioSystemFolderName": "AI Studio System",
+    "importAiStudioSystem": "Importar instruções de sistema do AI Studio",
+    "untitledSystem": "Sistema sem título",
+    "aiStudioSystemFolderName": "Sistema AI Studio",
     "variablePromptHint": "Quer usar prompts com variáveis?",
     "variablePromptModalTitle": "Prompts com variáveis",
     "variablePromptModalIntro": "Você pode usar variáveis no conteúdo com chaves duplas. Ao copiar um prompt com variáveis, será solicitado preencher os valores.",
@@ -193,7 +195,25 @@
     "export": "Exportar",
     "importData": "Importar Dados",
     "importDataDescription": "Restaurar de um arquivo de backup (SQL)",
-    "import": "Importar"
+    "import": "Importar",
+    "gdriveSync": "Sincronização com Google Drive",
+    "gdriveNotConnected": "Não conectado",
+    "gdriveConnectedAs": "Conectado como {{email}}",
+    "gdriveConnect": "Conectar Google Drive",
+    "gdriveDisconnect": "Desconectar",
+    "gdriveBackup": "Backup no Drive",
+    "gdriveRestore": "Restaurar do Drive",
+    "gdriveLastSync": "Última sincronização",
+    "gdriveNeverSynced": "Nunca",
+    "gdriveRestoreWarning": "A restauração substituirá os dados locais do perfil atual. As mensagens não são sincronizadas.",
+    "gdriveBackupSuccess": "Backup no Google Drive realizado com sucesso",
+    "gdriveBackupFailed": "Falha no backup",
+    "gdriveRestoreSuccess": "Restauração do Google Drive realizada com sucesso",
+    "gdriveRestoreFailed": "Falha na restauração",
+    "gdriveNoBackupFound": "Nenhum backup encontrado no Google Drive para este perfil",
+    "gdriveBackupConfirm": "Tem certeza de que deseja fazer backup no Google Drive? Isso substituirá seu backup existente na nuvem para este perfil.",
+    "gdriveRestoreConfirm": "Tem certeza de que deseja restaurar do Google Drive? Isso substituirá seus dados locais (as mensagens não são afetadas).",
+    "gdriveUnsupported": "A sincronização com Google Drive não está disponível neste navegador"
   },
   "explorerSettings": {
     "viewOptions": "Opções de Visualização",
@@ -249,7 +269,8 @@
     "dashboard": "Painel",
     "documentation": "Documentação",
     "switchToOriginalUI": "Alternar para Interface Original",
-    "temporaryChat": "Chat temporário"
+    "temporaryChat": "Chat temporário",
+    "toggleMenu": "Alternar menu"
   },
   "favorites": {
     "noFavoritesFound": "Nenhum favorito encontrado correspondendo aos seus filtros.",
@@ -303,6 +324,20 @@
     "lavender": "Lavanda",
     "rose": "Rosa"
   },
+  "presetColor": {
+    "indigo": "Índigo",
+    "violet": "Violeta",
+    "pink": "Rosa",
+    "red": "Vermelho",
+    "orange": "Laranja",
+    "yellow": "Amarelo",
+    "green": "Verde",
+    "teal": "Cerceta",
+    "cyan": "Ciano",
+    "blue": "Azul",
+    "lavender": "Lavanda",
+    "rose": "Rosa"
+  },
   "export": {
     "roleUser": "Usuário",
     "roleModel": "Modelo",
@@ -326,7 +361,9 @@
     "noTagsYet": "Ainda não há tags. Crie uma acima.",
     "deleteTag": "Excluir Tag",
     "deleteTagConfirm": "Tem certeza de que deseja excluir esta tag?",
-    "rename": "Renomear"
+    "rename": "Renomear",
+    "changeColor": "Alterar Cor",
+    "selectColor": "Selecionar Cor"
   },
   "moveItemsDialog": {
     "rootLevel": "Raiz (Nível Superior)"

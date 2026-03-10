@@ -77,7 +77,9 @@
     "japanese": "日本語",
     "portuguese": "Português",
     "spanish": "Español",
-    "russian": "Русский"
+    "russian": "Русский",
+    "resizableSidebar": "Barra lateral redimensionable",
+    "resizableSidebarDescription": "Permitir modificar el ancho de la barra lateral arrastrando"
   },
   "modal": {
     "resetDatabase": "Restablecer Base de Datos",
@@ -193,7 +195,25 @@
     "export": "Exportar",
     "importData": "Importar Datos",
     "importDataDescription": "Restaurar desde un archivo de respaldo (SQL)",
-    "import": "Importar"
+    "import": "Importar",
+    "gdriveSync": "Sincronización con Google Drive",
+    "gdriveNotConnected": "No conectado",
+    "gdriveConnectedAs": "Conectado como {{email}}",
+    "gdriveConnect": "Conectar Google Drive",
+    "gdriveDisconnect": "Desconectar",
+    "gdriveBackup": "Copia de seguridad en Drive",
+    "gdriveRestore": "Restaurar desde Drive",
+    "gdriveLastSync": "Última sincronización",
+    "gdriveNeverSynced": "Nunca",
+    "gdriveRestoreWarning": "La restauración sobrescribirá los datos locales del perfil actual. Los mensajes no se sincronizan.",
+    "gdriveBackupSuccess": "Copia de seguridad en Google Drive exitosa",
+    "gdriveBackupFailed": "Error en la copia de seguridad",
+    "gdriveRestoreSuccess": "Restauración desde Google Drive exitosa",
+    "gdriveRestoreFailed": "Error en la restauración",
+    "gdriveNoBackupFound": "No se encontró copia de seguridad en Google Drive para este perfil",
+    "gdriveBackupConfirm": "¿Estás seguro de que deseas hacer una copia de seguridad en Google Drive? Esto sobrescribirá tu copia de seguridad existente en la nube para este perfil.",
+    "gdriveRestoreConfirm": "¿Estás seguro de que deseas restaurar desde Google Drive? Esto sobrescribirá tus datos locales (los mensajes no se ven afectados).",
+    "gdriveUnsupported": "La sincronización con Google Drive no está disponible en este navegador"
   },
   "explorerSettings": {
     "viewOptions": "Opciones de Vista",
@@ -249,7 +269,8 @@
     "dashboard": "Panel",
     "documentation": "Documentación",
     "switchToOriginalUI": "Cambiar a Interfaz Original",
-    "temporaryChat": "Chat temporal"
+    "temporaryChat": "Chat temporal",
+    "toggleMenu": "Alternar menú"
   },
   "favorites": {
     "noFavoritesFound": "No se encontraron favoritos que coincidan con tus filtros.",
@@ -303,6 +324,20 @@
     "lavender": "Lavanda",
     "rose": "Rosa"
   },
+  "presetColor": {
+    "indigo": "Índigo",
+    "violet": "Violeta",
+    "pink": "Rosa",
+    "red": "Rojo",
+    "orange": "Naranja",
+    "yellow": "Amarillo",
+    "green": "Verde",
+    "teal": "Verde azulado",
+    "cyan": "Cian",
+    "blue": "Azul",
+    "lavender": "Lavanda",
+    "rose": "Rosa"
+  },
   "export": {
     "roleUser": "Usuario",
     "roleModel": "Modelo",
@@ -326,7 +361,9 @@
     "noTagsYet": "Aún no hay etiquetas. Crea una arriba.",
     "deleteTag": "Eliminar Etiqueta",
     "deleteTagConfirm": "¿Estás seguro de que deseas eliminar esta etiqueta?",
-    "rename": "Renombrar"
+    "rename": "Renombrar",
+    "changeColor": "Cambiar Color",
+    "selectColor": "Seleccionar Color"
   },
   "moveItemsDialog": {
     "rootLevel": "Raíz (Nivel Superior)"

@@ -269,7 +269,8 @@
     "dashboard": "仪表盘",
     "documentation": "文档",
     "switchToOriginalUI": "切换到原始界面",
-    "temporaryChat": "临时对话"
+    "temporaryChat": "临时对话",
+    "toggleMenu": "切换菜单"
   },
   "favorites": {
     "noFavoritesFound": "未找到匹配筛选条件的收藏",

@@ -172,7 +172,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     }
   };
 
-
   if (!isFeatureEnabled) {
     return <OverlayToggle onToggle={() => setIsFeatureEnabled(true)} />;
   }
@@ -191,7 +190,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
         <Button
           variant="ghost"
           size="icon"
-          title="Toggle Menu"
+          title={t('tooltip.toggleMenu')}
           onClick={handleMainMenuClick}
           className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
         >
@@ -199,7 +198,13 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
         </Button>
         <Separator className="w-8 my-1" />
 
-        <div className={!isSidebarExpanded ? "flex flex-col flex-1 h-full items-center w-full gap-2 pb-2" : "hidden"}>
+        <div
+          className={
+            !isSidebarExpanded
+              ? 'flex flex-col flex-1 h-full items-center w-full gap-2 pb-2'
+              : 'hidden'
+          }
+        >
           <Button
             variant="ghost"
             size="icon"
@@ -233,7 +238,13 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           </Button>
         </div>
 
-        <div className={isSidebarExpanded ? "flex flex-col flex-1 h-full items-center w-full gap-2 pb-2" : "hidden"}>
+        <div
+          className={
+            isSidebarExpanded
+              ? 'flex flex-col flex-1 h-full items-center w-full gap-2 pb-2'
+              : 'hidden'
+          }
+        >
           <Button
             variant={activeTab === 'files' ? 'secondary' : 'ghost'}
             size="icon"
@@ -363,8 +374,9 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             : 'opacity-0 pointer-events-none'
         }`}
         style={{
-          width: 'calc(var(--bard-sidenav-open-width, 360px) - var(--bard-sidenav-closed-width, 64px))',
-          flexShrink: 0
+          width:
+            'calc(var(--bard-sidenav-open-width, 360px) - var(--bard-sidenav-closed-width, 64px))',
+          flexShrink: 0,
         }}
       >
         {activeTab === 'files' ? (

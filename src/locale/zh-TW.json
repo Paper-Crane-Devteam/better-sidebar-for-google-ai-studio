@@ -195,7 +195,25 @@
     "export": "匯出",
     "importData": "匯入資料",
     "importDataDescription": "從備份檔案（SQL）還原",
-    "import": "匯入"
+    "import": "匯入",
+    "gdriveSync": "Google 雲端硬碟同步",
+    "gdriveNotConnected": "未連線",
+    "gdriveConnectedAs": "已連線：{{email}}",
+    "gdriveConnect": "連接 Google 雲端硬碟",
+    "gdriveDisconnect": "中斷連線",
+    "gdriveBackup": "備份到雲端硬碟",
+    "gdriveRestore": "從雲端硬碟還原",
+    "gdriveLastSync": "上次同步",
+    "gdriveNeverSynced": "從未同步",
+    "gdriveRestoreWarning": "還原將覆蓋目前設定檔的本機資料。對話訊息內容不參與同步。",
+    "gdriveBackupSuccess": "備份到 Google 雲端硬碟成功",
+    "gdriveBackupFailed": "備份失敗",
+    "gdriveRestoreSuccess": "從 Google 雲端硬碟還原成功",
+    "gdriveRestoreFailed": "還原失敗",
+    "gdriveNoBackupFound": "Google 雲端硬碟上未找到此設定檔的備份",
+    "gdriveBackupConfirm": "確定要備份到 Google 雲端硬碟嗎？這會覆蓋雲端目前的備份資料。",
+    "gdriveRestoreConfirm": "確定要從 Google 雲端硬碟還原嗎？這將覆蓋本機資料（對話訊息不受影響）。",
+    "gdriveUnsupported": "目前瀏覽器不支援 Google 雲端硬碟同步"
   },
   "explorerSettings": {
     "viewOptions": "檢視選項",
@@ -251,7 +269,8 @@
     "dashboard": "儀表板",
     "documentation": "文件",
     "switchToOriginalUI": "切換到原始介面",
-    "temporaryChat": "臨時對話"
+    "temporaryChat": "臨時對話",
+    "toggleMenu": "切換選單"
   },
   "favorites": {
     "noFavoritesFound": "找不到符合篩選條件的收藏",
@@ -305,6 +324,20 @@
     "lavender": "薰衣草",
     "rose": "玫瑰"
   },
+  "presetColor": {
+    "indigo": "靛藍",
+    "violet": "紫羅蘭",
+    "pink": "粉紅",
+    "red": "紅色",
+    "orange": "橘色",
+    "yellow": "黃色",
+    "green": "綠色",
+    "teal": "青色",
+    "cyan": "藍綠",
+    "blue": "藍色",
+    "lavender": "薰衣草",
+    "rose": "玫瑰"
+  },
   "export": {
     "roleUser": "用戶",
     "roleModel": "模型",
@@ -328,7 +361,9 @@
     "noTagsYet": "還沒有標籤。請在上方建立一個。",
     "deleteTag": "刪除標籤",
     "deleteTagConfirm": "您確定要刪除此標籤嗎？",
-    "rename": "重新命名"
+    "rename": "重新命名",
+    "changeColor": "更改顏色",
+    "selectColor": "選擇顏色"
   },
   "moveItemsDialog": {
     "rootLevel": "根目錄（頂層）"

@@ -269,7 +269,8 @@
     "dashboard": "Dashboard",
     "documentation": "Documentation",
     "switchToOriginalUI": "Switch to Original UI",
-    "temporaryChat": "Temporary chat"
+    "temporaryChat": "Temporary chat",
+    "toggleMenu": "Toggle Menu"
   },
   "favorites": {
     "noFavoritesFound": "No favorites found matching your filters.",
