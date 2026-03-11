@@ -198,7 +198,7 @@
     "import": "Импорт",
     "gdriveSync": "Синхронизация с Google Диском",
     "gdriveNotConnected": "Не подключено",
-    "gdriveConnectedAs": "Подключено как {{email}}",
+    "gdriveConnected": "Подключено",
     "gdriveConnect": "Подключить Google Диск",
     "gdriveDisconnect": "Отключить",
     "gdriveBackup": "Резервная копия на Диск",

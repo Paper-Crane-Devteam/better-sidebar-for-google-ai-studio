@@ -21,7 +21,6 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
   const [gdriveSupported, setGdriveSupported] = useState(false);
   const [gdriveStatus, setGdriveStatus] = useState<{
     isAuthenticated: boolean;
-    userEmail?: string;
     lastSyncTime?: number | null;
   }>({ isAuthenticated: false });
   const [gdriveSyncing, setGdriveSyncing] = useState<'up' | 'down' | null>(
@@ -60,9 +59,7 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
       const res = await browser.runtime.sendMessage({ type: 'GDRIVE_AUTH' });
       if (res?.success) {
         await fetchGdriveStatus();
-        toast.success(
-          t('data.gdriveConnectedAs', { email: res.data?.userEmail || '' }),
-        );
+        toast.success(t('data.gdriveConnected'));
       } else {
         toast.error(res?.error || t('data.gdriveBackupFailed'));
       }
@@ -161,9 +158,7 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
           <div className="space-y-0.5">
             <span className="text-sm font-medium">
               {gdriveStatus.isAuthenticated
-                ? t('data.gdriveConnectedAs', {
-                    email: gdriveStatus.userEmail || '',
-                  })
+                ? t('data.gdriveConnected')
                 : t('data.gdriveNotConnected')}
             </span>
             {gdriveStatus.lastSyncTime && (

@@ -198,7 +198,7 @@
     "import": "Importar",
     "gdriveSync": "Sincronización con Google Drive",
     "gdriveNotConnected": "No conectado",
-    "gdriveConnectedAs": "Conectado como {{email}}",
+    "gdriveConnected": "Conectado",
     "gdriveConnect": "Conectar Google Drive",
     "gdriveDisconnect": "Desconectar",
     "gdriveBackup": "Copia de seguridad en Drive",

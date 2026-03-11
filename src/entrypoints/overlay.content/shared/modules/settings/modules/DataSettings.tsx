@@ -38,18 +38,6 @@ export const DataSettings = () => {
     useDataManagement();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Google Drive sync state
-  const [gdriveSupported, setGdriveSupported] = useState(false);
-  const [gdriveStatus, setGdriveStatus] = useState<{
-    isAuthenticated: boolean;
-    userEmail?: string;
-    lastSyncTime?: number | null;
-  }>({ isAuthenticated: false });
-  const [gdriveSyncing, setGdriveSyncing] = useState<'up' | 'down' | null>(
-    null,
-  );
-  const [gdriveConnecting, setGdriveConnecting] = useState(false);
-
   // Profile management state
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);

@@ -198,7 +198,7 @@
     "import": "匯入",
     "gdriveSync": "Google 雲端硬碟同步",
     "gdriveNotConnected": "未連線",
-    "gdriveConnectedAs": "已連線：{{email}}",
+    "gdriveConnected": "已連線",
     "gdriveConnect": "連接 Google 雲端硬碟",
     "gdriveDisconnect": "中斷連線",
     "gdriveBackup": "備份到雲端硬碟",
