@@ -222,7 +222,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
               title={t('shortcuts.originalUI')}
               onClick={() => setIsFeatureEnabled(false)}
               className="sidebar-btn rounded-xl transition-all hover:rounded-xl"
-              data-tour-id="tour-original-ui"
             >
               <LogOut className="sidebar-icon" />
             </Button>

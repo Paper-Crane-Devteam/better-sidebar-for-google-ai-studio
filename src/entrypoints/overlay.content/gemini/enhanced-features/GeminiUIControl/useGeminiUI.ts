@@ -138,6 +138,9 @@ export const useGeminiUI = () => {
         --bard-sidenav-open-width: ${storeSidebarWidth}px !important; 
       }
 
+      ${
+        storeChatWidth > 0
+          ? `
       /* Chat Content Control */
       #chat-history .conversation-container {
         max-width: ${storeChatWidth}% !important;
@@ -147,13 +150,20 @@ export const useGeminiUI = () => {
       }
       #chat-history .conversation-container user-query {
         max-width: none !important;
+      }`
+          : ''
       }
+      ${
+        storeInputWidth > 0
+          ? `
       /* Input Box Control */
       input-container > fieldset {
         max-width: ${storeInputWidth}% !important;
         width: 100% !important;
         margin-left: auto !important;
         margin-right: auto !important;
+      }`
+          : ''
       }
     `;
 

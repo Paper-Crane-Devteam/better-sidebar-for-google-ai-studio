@@ -124,7 +124,9 @@ export const GeminiUIControl = () => {
                     </Label>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">
-                        {chatWidth}%
+                        {chatWidth < 0
+                          ? `${getMeasuredPercent(measuredChatWidth) ?? '-'}%`
+                          : `${chatWidth}%`}
                       </span>
                     </div>
                   </div>
@@ -133,7 +135,11 @@ export const GeminiUIControl = () => {
                     min={40}
                     max={100}
                     step={1}
-                    value={chatWidth}
+                    value={
+                      chatWidth < 0
+                        ? (getMeasuredPercent(measuredChatWidth) ?? 50)
+                        : chatWidth
+                    }
                     onChange={(e) => setChatWidth(Number(e.target.value))}
                     className="ui-slider"
                   />
@@ -147,7 +153,9 @@ export const GeminiUIControl = () => {
                     </Label>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">
-                        {inputWidth}%
+                        {inputWidth < 0
+                          ? `${getMeasuredPercent(measuredInputWidth) ?? '-'}%`
+                          : `${inputWidth}%`}
                       </span>
                     </div>
                   </div>
@@ -156,7 +164,11 @@ export const GeminiUIControl = () => {
                     min={40}
                     max={100}
                     step={1}
-                    value={inputWidth}
+                    value={
+                      inputWidth < 0
+                        ? (getMeasuredPercent(measuredInputWidth) ?? 50)
+                        : inputWidth
+                    }
                     onChange={(e) => setInputWidth(Number(e.target.value))}
                     className="ui-slider"
                   />
