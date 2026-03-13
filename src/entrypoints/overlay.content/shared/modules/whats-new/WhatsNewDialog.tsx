@@ -2,11 +2,21 @@ import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWhatsNew } from './useWhatsNew';
 import { getChangelog, CURRENT_VERSION, type ChangeLogItem } from './changelog';
-import { Sparkles, CheckCircle2, Wrench, Github, Star } from 'lucide-react';
+import {
+  Sparkles,
+  CheckCircle2,
+  Wrench,
+  Github,
+  Star,
+  Coffee,
+  ThumbsUp,
+} from 'lucide-react';
 import { useModalStore } from '@/shared/lib/modal';
+import { useI18n } from '@/shared/hooks/useI18n';
 
 export const WhatsNewDialog = () => {
   const { t, i18n } = useTranslation();
+  const { currentLanguage } = useI18n();
   const { isOpen, markAsSeen } = useWhatsNew();
   const open = useModalStore((state) => state.open);
   const close = useModalStore((state) => state.close);
@@ -80,25 +90,43 @@ export const WhatsNewDialog = () => {
                   </div>
                 )}
 
-                {/* Open Source Section */}
-                {/* <div className="bg-muted/30 p-4 rounded-lg border border-border/50">
-                  <h4 className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
-                    <Github className="w-4 h-4" /> Open Source
-                  </h4>
-                  <p className="text-sm text-foreground/90 mb-3">
-                    This project is now open source! If you find it useful,
-                    please consider giving us a star on GitHub. It helps a lot!
-                  </p>
+                {/* Support Buttons */}
+                <div className="flex items-center justify-center gap-2 pt-2 border-t border-border/50">
+                  <span className="text-xs text-muted-foreground mr-1">
+                    {t('whatsNew.enjoyingIt')}
+                  </span>
+                  <a
+                    href="https://chromewebstore.google.com/detail/cjeoaidogoaekodkbhijgljhenknkenj"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
+                  >
+                    <ThumbsUp className="w-3.5 h-3.5" />
+                    {t('whatsNew.rateUs')}
+                  </a>
                   <a
                     href="https://github.com/Paper-Crane-Devteam/better-sidebar-for-google-ai-studio"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 rounded-md w-full transition-colors"
+                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
                   >
-                    <Star className="w-4 h-4 fill-current" />
-                    Star on GitHub
+                    <Star className="w-3.5 h-3.5" />
+                    {t('whatsNew.starOnGithub')}
                   </a>
-                </div> */}
+                  <a
+                    href={
+                      currentLanguage === 'zh-CN'
+                        ? 'https://afdian.com/a/papercranedev'
+                        : 'https://ko-fi.com/papercranedev57397'
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
+                  >
+                    <Coffee className="w-3.5 h-3.5" />
+                    {t('whatsNew.buyMeACoffee')}
+                  </a>
+                </div>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">

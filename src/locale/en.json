@@ -153,7 +153,7 @@
     "sortAlphabetically": "Sort Alphabetically",
     "switchToTimelineView": "Switch to Timeline View",
     "switchToFolderView": "Switch to Folder View",
-    "switchToOriginalUI": "Switch to Original UI",
+    "switchToOriginalUI": "Switch to Original Sidebar",
     "viewHistory": "View History",
     "importHistory": "Import History",
     "scanChatList": "Scan Chat List",
@@ -246,7 +246,7 @@
     "codex": "Codex",
     "myStuff": "My Stuff",
     "gems": "Gems",
-    "originalUI": "Switch to Original UI"
+    "originalUI": "Switch to Original Sidebar"
   },
   "overlay": {
     "settingsPageComingSoon": "Settings Page Coming Soon",
@@ -268,7 +268,7 @@
     "build": "Build",
     "dashboard": "Dashboard",
     "documentation": "Documentation",
-    "switchToOriginalUI": "Switch to Original UI",
+    "switchToOriginalUI": "Switch to Original Sidebar",
     "temporaryChat": "Temporary chat",
     "toggleMenu": "Toggle Menu"
   },
@@ -536,8 +536,8 @@
         "description": "Access Gemini Gems — customized AI experts for specific tasks."
       },
       "originalUI": {
-        "title": "Switch to Original UI",
-        "description": "Toggle back to Gemini's built-in sidebar anytime. Your data is always preserved."
+        "title": "Switch to Original Sidebar",
+        "description": "Toggle back to the platform's built-in sidebar anytime. Your data is always preserved."
       },
       "feedback": {
         "title": "Feedback",
@@ -615,6 +615,10 @@
     "features": "New Features",
     "fixes": "Improvements & Fixes",
     "welcome": "Welcome to the latest version! Enjoy the updates.",
-    "awesome": "Awesome!"
+    "awesome": "Awesome!",
+    "enjoyingIt": "Enjoying Better Sidebar?",
+    "rateUs": "Rate",
+    "starOnGithub": "Star",
+    "buyMeACoffee": "Coffee"
   }
 }

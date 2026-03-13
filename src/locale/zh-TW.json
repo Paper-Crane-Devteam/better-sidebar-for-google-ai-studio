@@ -153,7 +153,7 @@
     "sortAlphabetically": "依字母排序",
     "switchToTimelineView": "切換到時間軸檢視",
     "switchToFolderView": "切換到資料夾檢視",
-    "switchToOriginalUI": "切換到原始介面",
+    "switchToOriginalUI": "切換到原始側邊欄",
     "viewHistory": "檢視歷史",
     "importHistory": "匯入歷史",
     "scanChatList": "掃描聊天清單",
@@ -246,7 +246,7 @@
     "codex": "Codex",
     "myStuff": "我的內容",
     "gems": "Gems",
-    "originalUI": "切換到原始介面"
+    "originalUI": "切換到原始側邊欄"
   },
   "overlay": {
     "settingsPageComingSoon": "設定頁面即將推出",
@@ -268,7 +268,7 @@
     "build": "建置",
     "dashboard": "儀表板",
     "documentation": "文件",
-    "switchToOriginalUI": "切換到原始介面",
+    "switchToOriginalUI": "切換到原始側邊欄",
     "temporaryChat": "臨時對話",
     "toggleMenu": "切換選單"
   },
@@ -521,8 +521,8 @@
         "description": "使用 Gemini Gems — 針對特定任務的客製化 AI 助手。"
       },
       "originalUI": {
-        "title": "切換到原始介面",
-        "description": "隨時可切回 Gemini 內建側邊欄，您的資料都會保留。"
+        "title": "切換到原始側邊欄",
+        "description": "隨時可切回平台內建側邊欄，您的資料都會保留。"
       },
       "feedback": {
         "title": "意見回饋",
@@ -616,6 +616,10 @@
     "features": "新功能",
     "fixes": "改進與修復",
     "welcome": "歡迎使用最新版本！",
-    "awesome": "太棒了！"
+    "awesome": "太棒了！",
+    "enjoyingIt": "喜歡 Better Sidebar 嗎？",
+    "rateUs": "好評",
+    "starOnGithub": "點星",
+    "buyMeACoffee": "咖啡"
   }
 }

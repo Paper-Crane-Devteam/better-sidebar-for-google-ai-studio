@@ -29,7 +29,7 @@
 - react-markdown + remark-gfm — markdown rendering
 - i18next + react-i18next — internationalization
 - jspdf — PDF export
-- webextension-polyfill — cross-browser API compatibility
+- webextension-polyfill — cross-browser API compatibility 
 - @emailjs/browser — feedback form
 
 ## Common Commands

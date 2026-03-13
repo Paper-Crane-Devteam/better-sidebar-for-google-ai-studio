@@ -153,7 +153,7 @@
     "sortAlphabetically": "Ordenar Alfabéticamente",
     "switchToTimelineView": "Cambiar a Vista de Línea de Tiempo",
     "switchToFolderView": "Cambiar a Vista de Carpeta",
-    "switchToOriginalUI": "Cambiar a Interfaz Original",
+    "switchToOriginalUI": "Cambiar a Barra Lateral Original",
     "viewHistory": "Ver Historial",
     "importHistory": "Importar Historial",
     "scanChatList": "Escanear Lista de Chats",
@@ -246,7 +246,7 @@
     "codex": "Codex",
     "myStuff": "Mis Cosas",
     "gems": "Gems",
-    "originalUI": "Cambiar a Interfaz Original"
+    "originalUI": "Cambiar a Barra Lateral Original"
   },
   "overlay": {
     "settingsPageComingSoon": "Página de Configuración Próximamente",
@@ -268,7 +268,7 @@
     "build": "Build",
     "dashboard": "Panel",
     "documentation": "Documentación",
-    "switchToOriginalUI": "Cambiar a Interfaz Original",
+    "switchToOriginalUI": "Cambiar a Barra Lateral Original",
     "temporaryChat": "Chat temporal",
     "toggleMenu": "Alternar menú"
   },
@@ -537,8 +537,8 @@
         "description": "Accede a Gemini Gems: expertos de IA personalizados para tareas específicas."
       },
       "originalUI": {
-        "title": "Cambiar a interfaz original",
-        "description": "Vuelve a la barra lateral integrada de Gemini en cualquier momento. Tus datos siempre se conservan."
+        "title": "Cambiar a barra lateral original",
+        "description": "Vuelve a la barra lateral integrada de la plataforma en cualquier momento. Tus datos siempre se conservan."
       },
       "feedback": {
         "title": "Comentarios",
@@ -616,6 +616,10 @@
     "features": "Nuevas características",
     "fixes": "Mejoras y correcciones",
     "welcome": "¡Bienvenido a la última versión! Disfruta de las actualizaciones.",
-    "awesome": "¡Genial!"
+    "awesome": "¡Genial!",
+    "enjoyingIt": "¿Te gusta Better Sidebar?",
+    "rateUs": "Valorar",
+    "starOnGithub": "Estrella",
+    "buyMeACoffee": "Café"
   }
 }

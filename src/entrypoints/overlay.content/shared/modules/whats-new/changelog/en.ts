@@ -43,7 +43,7 @@ export const changelog: ChangeLogItem[] = [
       '❤️ **Open Source**: The code is now open source! Star us on GitHub if you like it!',
     ],
     fixes: [
-      'Moved the "Switch to Original UI" button for better accessibility.',
+      'Moved the "Switch to Original Sidebar" button for better accessibility.',
       'Fixed various UI glitches and improved performance.',
     ],
   },

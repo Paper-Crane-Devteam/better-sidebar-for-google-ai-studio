@@ -153,7 +153,7 @@
     "sortAlphabetically": "Ordenar Alfabeticamente",
     "switchToTimelineView": "Alternar para Visualização de Linha do Tempo",
     "switchToFolderView": "Alternar para Visualização de Pasta",
-    "switchToOriginalUI": "Alternar para Interface Original",
+    "switchToOriginalUI": "Alternar para Barra Lateral Original",
     "viewHistory": "Ver Histórico",
     "importHistory": "Importar Histórico",
     "scanChatList": "Escanear Lista de Chats",
@@ -246,7 +246,7 @@
     "codex": "Codex",
     "myStuff": "Minhas Coisas",
     "gems": "Gems",
-    "originalUI": "Alternar para Interface Original"
+    "originalUI": "Alternar para Barra Lateral Original"
   },
   "overlay": {
     "settingsPageComingSoon": "Página de Configurações em Breve",
@@ -268,7 +268,7 @@
     "build": "Build",
     "dashboard": "Painel",
     "documentation": "Documentação",
-    "switchToOriginalUI": "Alternar para Interface Original",
+    "switchToOriginalUI": "Alternar para Barra Lateral Original",
     "temporaryChat": "Chat temporário",
     "toggleMenu": "Alternar menu"
   },
@@ -537,8 +537,8 @@
         "description": "Acesse os Gemini Gems — especialistas em IA personalizados para tarefas específicas."
       },
       "originalUI": {
-        "title": "Alternar para interface original",
-        "description": "Volte para a barra lateral integrada do Gemini a qualquer momento. Seus dados são sempre preservados."
+        "title": "Alternar para barra lateral original",
+        "description": "Volte para a barra lateral integrada da plataforma a qualquer momento. Seus dados são sempre preservados."
       },
       "feedback": {
         "title": "Feedback",
@@ -616,6 +616,10 @@
     "features": "Novos recursos",
     "fixes": "Melhorias e correções",
     "welcome": "Bem-vindo à versão mais recente! Aproveite as atualizações.",
-    "awesome": "Incrível!"
+    "awesome": "Incrível!",
+    "enjoyingIt": "Gostando do Better Sidebar?",
+    "rateUs": "Avaliar",
+    "starOnGithub": "Estrela",
+    "buyMeACoffee": "Café"
   }
 }
