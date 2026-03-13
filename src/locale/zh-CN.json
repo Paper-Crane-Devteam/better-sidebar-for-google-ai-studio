@@ -198,7 +198,7 @@
     "import": "导入",
     "gdriveSync": "Google Drive 同步",
     "gdriveNotConnected": "未连接",
-    "gdriveConnectedAs": "已连接：{{email}}",
+    "gdriveConnected": "已连接",
     "gdriveConnect": "连接 Google Drive",
     "gdriveDisconnect": "断开连接",
     "gdriveBackup": "备份到 Drive",

@@ -10,11 +10,9 @@ const OAUTH_CLIENT_ID = import.meta.env.VITE_OAUTH_CLIENT_ID;
 const OAUTH_SCOPES = ['https://www.googleapis.com/auth/drive.appdata'];
 const TOKEN_STORAGE_KEY = 'gdrive_auth_token';
 const TOKEN_EXPIRY_KEY = 'gdrive_auth_token_expiry';
-const USER_EMAIL_KEY = 'gdrive_user_email';
 
 export interface AuthStatus {
   isAuthenticated: boolean;
-  userEmail?: string;
   expiresAt?: number;
 }
 
@@ -55,18 +53,11 @@ async function getCachedToken(): Promise<string | null> {
 /**
  * Store token in local storage
  */
-async function storeToken(
-  token: string,
-  expiresIn: number,
-  email?: string,
-): Promise<void> {
+async function storeToken(token: string, expiresIn: number): Promise<void> {
   const data: Record<string, any> = {
     [TOKEN_STORAGE_KEY]: token,
     [TOKEN_EXPIRY_KEY]: Date.now() + expiresIn * 1000,
   };
-  if (email) {
-    data[USER_EMAIL_KEY] = email;
-  }
   await browser.storage.local.set(data);
 }
 
@@ -74,11 +65,7 @@ async function storeToken(
  * Clear stored token
  */
 async function clearStoredToken(): Promise<void> {
-  await browser.storage.local.remove([
-    TOKEN_STORAGE_KEY,
-    TOKEN_EXPIRY_KEY,
-    USER_EMAIL_KEY,
-  ]);
+  await browser.storage.local.remove([TOKEN_STORAGE_KEY, TOKEN_EXPIRY_KEY]);
 }
 
 /**
@@ -129,21 +116,7 @@ export async function authenticate(): Promise<string> {
     throw new Error('Failed to obtain access token from OAuth response');
   }
 
-  // Fetch user email for display
-  let email: string | undefined;
-  try {
-    const res = await axios.get(
-      'https://www.googleapis.com/oauth2/v2/userinfo',
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      },
-    );
-    email = res.data.email;
-  } catch {
-    // Non-critical, continue without email
-  }
-
-  await storeToken(accessToken, expiresIn, email);
+  await storeToken(accessToken, expiresIn);
   return accessToken;
 }
 
@@ -180,12 +153,10 @@ export async function getAuthStatus(): Promise<AuthStatus> {
   const result = await browser.storage.local.get([
     TOKEN_STORAGE_KEY,
     TOKEN_EXPIRY_KEY,
-    USER_EMAIL_KEY,
   ]);
 
   const token = result[TOKEN_STORAGE_KEY] as string | undefined;
   const expiry = result[TOKEN_EXPIRY_KEY] as number | undefined;
-  const email = result[USER_EMAIL_KEY] as string | undefined;
 
   if (!token || (expiry && Date.now() > expiry - 5 * 60 * 1000)) {
     return { isAuthenticated: false };
@@ -193,7 +164,6 @@ export async function getAuthStatus(): Promise<AuthStatus> {
 
   return {
     isAuthenticated: true,
-    userEmail: email || undefined,
     expiresAt: expiry,
   };
 }

@@ -55,7 +55,7 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
   language: getDefaultLanguage(),
   enhancedFeatures: {
     gemini: {
-      removeWatermark: false,
+      removeWatermark: true,
     },
   },
   setGeminiEnhancedFeature: (key, value) =>

@@ -198,7 +198,7 @@
     "import": "インポート",
     "gdriveSync": "Google ドライブ同期",
     "gdriveNotConnected": "未接続",
-    "gdriveConnectedAs": "{{email}} として接続中",
+    "gdriveConnected": "接続済み",
     "gdriveConnect": "Google ドライブに接続",
     "gdriveDisconnect": "切断",
     "gdriveBackup": "ドライブにバックアップ",
