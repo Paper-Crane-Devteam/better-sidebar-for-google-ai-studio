@@ -4,7 +4,7 @@
 -4. gemini view witdh
 6. bulk export
 -7. google drive sync data
-8. google drive sync chat data
+-8. google drive sync chat data
 9. chatgpt support
 10. claude support
 -11. nano banana watermark removal
@@ -13,4 +13,7 @@
 -14. zen mode
 15. demo video
 -16. landing page
-17. default create conversation folder
+17. default import conversation folder
+18. data takeout
+19. no need to modify message to resend
+20. default model only work on new chat

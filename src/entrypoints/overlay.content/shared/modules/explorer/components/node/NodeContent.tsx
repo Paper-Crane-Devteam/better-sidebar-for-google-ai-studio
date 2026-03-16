@@ -69,11 +69,8 @@ export const NodeContent = ({
         {toggleIcon}
       </div>
 
-      {/* <div className="w-4 h-4 flex items-center justify-center shrink-0 text-muted-foreground">
-        {node.data.type === 'folder' ? folderIcon : fileIcon}
-      </div> */}
       {node.data.type === 'folder' && (
-        <div className="w-4 h-4 flex items-center justify-center shrink-0 text-muted-foreground">
+        <div className="w-4 h-4 flex items-center justify-center shrink-0">
           {folderIcon}
         </div>
       )}

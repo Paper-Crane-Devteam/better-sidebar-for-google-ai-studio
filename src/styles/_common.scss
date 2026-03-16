@@ -45,6 +45,17 @@
     @apply bg-accent;
   }
 
+  /* Colored Tag Item: hover uses the tag's own color at low opacity */
+  .tag-item-colored {
+    &:hover {
+      background-color: color-mix(in srgb, var(--tag-color) 10%, transparent);
+    }
+  }
+
+  .tag-item-colored-active {
+    background-color: color-mix(in srgb, var(--tag-color) 15%, transparent);
+  }
+
   /* Custom Scrollbar */
   .custom-scrollbar {
     &::-webkit-scrollbar {

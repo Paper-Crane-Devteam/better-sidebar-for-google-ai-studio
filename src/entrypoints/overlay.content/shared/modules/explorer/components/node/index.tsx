@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
-import { navigate, navigateToConversation } from '@/shared/lib/navigation';
+import { navigateToConversation } from '@/shared/lib/navigation';
 import { useAppStore } from '@/shared/lib/store';
 import { modal } from '@/shared/lib/modal';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -26,12 +26,10 @@ import { NodeContent } from './NodeContent';
 import { NodeContextMenu } from './NodeContextMenu';
 import { FolderSettingsDialog } from './FolderSettingsDialog';
 import { useDeleteHandler } from '../../hooks/useDeleteHandler';
-import { platform } from 'os';
 
 export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   const { t } = useI18n();
   const {
-    deleteItem,
     conversationTags,
     addTagToConversation,
     removeTagFromConversation,
@@ -48,15 +46,18 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   const [newName, setNewName] = useState(node.data.name);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
 
+  // --- Derived state ---
   const isTimeGroup = node.data.data?.isTimeGroup;
   const isFile = node.data.type === 'file';
-
+  const isFolder = node.data.type === 'folder';
   const isFavorite = favorites.some(
     (f) => f.target_id === node.data.id && f.target_type === 'conversation',
   );
-  const { isBatchMode, selectedIds: batchSelectedIds } = ui.explorer.batch;
+  const folderColor = !isFile && !isTimeGroup ? node.data?.data?.color : null;
+  const url = isFile ? node.data?.data?.external_url : undefined;
 
-  // Calculate selection state
+  // --- Batch selection state ---
+  const { isBatchMode, selectedIds: batchSelectedIds } = ui.explorer.batch;
   let isBatchSelected = false;
   let isBatchIndeterminate = false;
 
@@ -73,16 +74,12 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
     isBatchSelected = batchSelectedIds.includes(node.data.id);
   }
 
-  const handleCreateFolder = async (parentId: string) => {
-    const newFolderId = await createFolder(t('node.newFolder'), parentId);
-    if (newFolderId) {
-      tree.open(parentId);
-      setTimeout(() => {
-        tree.edit(newFolderId);
-      }, 300);
-    }
-  };
+  const isActive = node.isSelected || isBatchSelected;
+  const hasHoverActions =
+    (isFile && !isFavorite && !isBatchMode) ||
+    (!isFile && !isTimeGroup && !isBatchMode);
 
+  // --- Handlers ---
   useEffect(() => {
     setNewName(node.data.name);
   }, [node.data.name, node.isEditing]);
@@ -96,6 +93,16 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
     await deleteHandler([node.data.id]);
   };
 
+  const handleCreateFolder = async (parentId: string) => {
+    const newFolderId = await createFolder(t('node.newFolder'), parentId);
+    if (newFolderId) {
+      tree.open(parentId);
+      setTimeout(() => {
+        tree.edit(newFolderId);
+      }, 300);
+    }
+  };
+
   const handleTagToggle = async (tagId: string, checked: boolean) => {
     let targetIds = [node.data.id];
     if (node.isSelected && node.tree.selectedIds.size > 1) {
@@ -105,47 +112,95 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
       });
     }
 
-    const shouldAdd = checked;
-
     for (const id of targetIds) {
       const hasTag = conversationTags.some(
         (ct) => ct.conversation_id === id && ct.tag_id === tagId,
       );
-
-      if (shouldAdd) {
-        if (!hasTag) await addTagToConversation(id, tagId);
-      } else {
-        if (hasTag) await removeTagFromConversation(id, tagId);
-      }
+      if (checked && !hasTag) await addTagToConversation(id, tagId);
+      if (!checked && hasTag) await removeTagFromConversation(id, tagId);
     }
   };
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (isBatchMode) {
+      e.preventDefault();
+      if (isTimeGroup) {
+        node.toggle();
+      } else {
+        toggleExplorerBatchSelection(node.data.id);
+      }
+      return;
+    }
+
+    if (url) {
+      e.preventDefault();
+      node.select();
+      navigateToConversation(node.data.id);
+    } else {
+      node.select();
+      node.toggle();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+
+    if (isBatchMode) {
+      if (isTimeGroup) {
+        node.toggle();
+      } else {
+        toggleExplorerBatchSelection(node.data.id);
+      }
+      return;
+    }
+
+    if (url) {
+      navigateToConversation(node.data.id);
+    } else {
+      node.toggle();
+    }
+  };
+
+  const handleBatchToggle = () => {
+    if (isTimeGroup) {
+      const childrenIds = node.data.children?.map((c) => c.id) || [];
+      if (childrenIds.length === 0) return;
+
+      let newSelection = [...batchSelectedIds];
+      if (isBatchSelected) {
+        newSelection = newSelection.filter((id) => !childrenIds.includes(id));
+      } else {
+        const childrenSet = new Set(childrenIds);
+        newSelection = newSelection.filter((id) => !childrenSet.has(id));
+        newSelection = [...newSelection, ...childrenIds];
+      }
+      setExplorerBatchSelection(newSelection);
+    } else {
+      toggleExplorerBatchSelection(node.data.id);
+    }
+  };
+
+  // --- Icons ---
   const FolderIconComponent = isTimeGroup
     ? Calendar
     : node.isOpen
       ? FolderOpen
       : FolderIcon;
 
-  // Get folder color from data
-  const folderColor = !isFile && !isTimeGroup ? node.data?.data?.color : null;
-
-  const url = isFile ? node.data?.data?.external_url : undefined;
-
-  const toggleIcon =
-    node.data.type === 'folder' ? (
-      node.isOpen ? (
-        <ChevronDown className="w-3 h-3" />
-      ) : (
-        <ChevronRight className="w-3 h-3" />
-      )
-    ) : null;
-
+  const toggleIcon = isFolder ? (
+    node.isOpen ? (
+      <ChevronDown className="w-3 h-3" />
+    ) : (
+      <ChevronRight className="w-3 h-3" />
+    )
+  ) : null;
   const folderIcon = (
     <FolderIconComponent
-      className={folderColor ? 'w-4 h-4' : 'w-4 h-4 text-foreground/80'}
-      style={folderColor ? { color: folderColor } : undefined}
+      className="w-4 h-4"
+      style={{ color: folderColor || 'inherit' }}
     />
   );
+
   const fileIcon =
     node.data.data?.type === 'text-to-image' ? (
       <Image className="w-4 h-4" />
@@ -153,200 +208,145 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
       <MessageSquare className="w-4 h-4" />
     );
 
-  const innerContent = (
-    <>
-      <NodeContent
-        node={node}
-        style={style}
-        dragHandle={dragHandle}
-        onToggleFavorite={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          toggleFavorite(node.data.id, 'conversation', isFavorite);
-        }}
-        isBatchMode={isBatchMode}
-        isBatchSelected={isBatchSelected}
-        isBatchIndeterminate={isBatchIndeterminate}
-        onToggleBatchSelection={() => {
-          if (isTimeGroup) {
-            const childrenIds = node.data.children?.map((c) => c.id) || [];
-            if (childrenIds.length === 0) return;
+  // --- Colored folder selected style ---
+  const coloredSelectedStyle: React.CSSProperties | undefined =
+    folderColor && isActive
+      ? { backgroundColor: `${folderColor}26`, color: folderColor }
+      : undefined;
 
-            let newSelection = [...batchSelectedIds];
-            if (isBatchSelected) {
-              // Deselect all children
-              newSelection = newSelection.filter(
-                (id) => !childrenIds.includes(id),
-              );
-            } else {
-              // Select all children
-              const childrenSet = new Set(childrenIds);
-              newSelection = newSelection.filter((id) => !childrenSet.has(id)); // Remove existing to avoid dupes
-              newSelection = [...newSelection, ...childrenIds];
-            }
-            setExplorerBatchSelection(newSelection);
-          } else {
-            toggleExplorerBatchSelection(node.data.id);
-          }
-        }}
-        isFavorite={isFavorite}
-        folderIcon={folderIcon}
-        fileIcon={fileIcon}
-        toggleIcon={toggleIcon}
-        handleToggle={handleToggle}
-        folderColor={folderColor}
-        tree={tree}
-        preview={preview}
-        newName={newName}
-        setNewName={setNewName}
-      />
-      {/* Hover Actions */}
-      <div
-        className={cn(
-          'hidden group-hover:flex items-center gap-1 absolute right-2',
-          isContextMenuOpen && 'flex',
-        )}
-      >
-        {/* Folder settings button */}
-        {!isFile && !isTimeGroup && !isBatchMode && (
-          <SimpleTooltip content={t('folderSettings.title')}>
-            <div
-              role="button"
-              className="h-5 w-5 flex items-center justify-center rounded-sm hover:bg-muted/50 cursor-pointer text-muted-foreground hover:text-foreground transition-colors font-medium"
-              onClick={async (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                let pendingName = node.data.name;
-                let pendingColor = folderColor;
-                const confirmed = await modal.confirm({
-                  title: t('folderSettings.title'),
-                  content: (
-                    <FolderSettingsDialog
-                      initialName={node.data.name}
-                      initialColor={folderColor}
-                      onSave={(name, color) => {
-                        pendingName = name;
-                        pendingColor = color;
-                      }}
-                    />
-                  ),
-                  confirmText: t('common.save'),
-                  cancelText: t('common.cancel'),
-                });
-                if (confirmed) {
-                  if (pendingName !== node.data.name) {
-                    await renameItem(node.data.id, pendingName, 'folder');
-                  }
-                  if (pendingColor !== folderColor) {
-                    await updateFolderColor(node.data.id, pendingColor);
-                  }
-                }
-              }}
-            >
-              <Settings className="h-3.5 w-3.5" />
-            </div>
-          </SimpleTooltip>
-        )}
-        {isFile && !isFavorite && !isBatchMode && (
-          <SimpleTooltip content={t('tooltip.addToFavorites')}>
-            <div
-              role="button"
-              className="h-5 w-5 flex items-center justify-center rounded-sm hover:bg-muted/50 cursor-pointer text-muted-foreground hover:text-foreground transition-colors font-medium"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                toggleFavorite(node.data.id, 'conversation', isFavorite);
-              }}
-            >
-              <Star className="h-3.5 w-3.5" />
-            </div>
-          </SimpleTooltip>
-        )}
-      </div>
-    </>
-  );
-
-  const commonClasses = cn(
-    'flex items-center gap-1.5 px-1 cursor-pointer group relative pr-2 h-full no-underline outline-none text-density rounded-sm text-foreground/80',
-    !(node.isSelected || isBatchSelected) && 'hover:bg-accent/50',
-    ((isFile && !isFavorite) || (!isFile && !isTimeGroup)) &&
-      'group-hover:pr-8',
-    (node.isSelected || isBatchSelected) && 'node-item-selected',
-    'font-medium',
+  // --- CSS classes ---
+  const nodeClasses = cn(
+    // Base layout
+    'flex items-center gap-1.5 px-1 pr-2 h-full',
+    'cursor-pointer group relative',
+    'no-underline outline-none rounded-sm',
+    'text-density text-foreground/80 font-medium',
+    // Hover: only apply default hover when not active
+    !isActive && 'hover:bg-accent/50',
+    // Selection state: use node-item-selected for non-colored, inline style for colored
+    isActive && !folderColor && 'node-item-selected',
+    // Expand right padding on hover to make room for action buttons
+    hasHoverActions && 'group-hover:pr-8',
+    // Drag-over state
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
-    isContextMenuOpen && 'bg-accent/50',
-    isContextMenuOpen &&
-      ((isFile && !isFavorite) || (!isFile && !isTimeGroup)) &&
-      'pr-8',
-  );
-
-  const content = (
-    <div
-      style={style}
-      className={cn(
-        'outline-none',
-        'h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]',
-      )}
-    >
-      <div
-        ref={dragHandle}
-        role="button"
-        tabIndex={0}
-        className={cn(commonClasses)}
-        onContextMenu={(e) => {
-          if (isBatchMode) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        }}
-        onClick={(e) => {
-          if (isBatchMode) {
-            e.preventDefault();
-            if (isTimeGroup) {
-              node.toggle();
-            } else {
-              toggleExplorerBatchSelection(node.data.id);
-            }
-            return;
-          }
-
-          if (url) {
-            e.preventDefault();
-            node.select();
-            navigateToConversation(node.data.id);
-          } else {
-            node.select();
-            node.toggle();
-          }
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            if (isBatchMode) {
-              if (isTimeGroup) {
-                node.toggle();
-              } else {
-                toggleExplorerBatchSelection(node.data.id);
-              }
-              return;
-            }
-
-            if (url) {
-              navigateToConversation(node.data.id);
-            } else {
-              node.toggle();
-            }
-          }
-        }}
-      >
-        {innerContent}
-      </div>
-    </div>
+    // Context menu open state
+    isContextMenuOpen && !folderColor && 'bg-accent/50',
+    isContextMenuOpen && hasHoverActions && 'pr-8',
   );
 
   return (
     <ContextMenu onOpenChange={setIsContextMenuOpen}>
       <ContextMenuTrigger asChild disabled={isTimeGroup || isBatchMode}>
-        {content}
+        <div
+          style={style}
+          className="outline-none h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]"
+        >
+          <div
+            ref={dragHandle}
+            role="button"
+            tabIndex={0}
+            className={nodeClasses}
+            style={coloredSelectedStyle}
+            onClick={handleClick}
+            onKeyDown={handleKeyDown}
+            onContextMenu={(e) => {
+              if (isBatchMode) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
+          >
+            {/* Node content: checkbox, toggle, icon, name */}
+            <NodeContent
+              node={node}
+              style={style}
+              dragHandle={dragHandle}
+              onToggleFavorite={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                toggleFavorite(node.data.id, 'conversation', isFavorite);
+              }}
+              isBatchMode={isBatchMode}
+              isBatchSelected={isBatchSelected}
+              isBatchIndeterminate={isBatchIndeterminate}
+              onToggleBatchSelection={handleBatchToggle}
+              isFavorite={isFavorite}
+              folderIcon={folderIcon}
+              fileIcon={fileIcon}
+              toggleIcon={toggleIcon}
+              handleToggle={handleToggle}
+              folderColor={folderColor}
+              tree={tree}
+              preview={preview}
+              newName={newName}
+              setNewName={setNewName}
+            />
+
+            {/* Hover action buttons */}
+            <div
+              className={cn(
+                'hidden group-hover:flex items-center gap-1 absolute right-2',
+                isContextMenuOpen && 'flex',
+              )}
+            >
+              {/* Folder settings button */}
+              {!isFile && !isTimeGroup && !isBatchMode && (
+                <SimpleTooltip content={t('folderSettings.title')}>
+                  <div
+                    role="button"
+                    className="h-5 w-5 flex items-center justify-center rounded-sm hover:bg-muted/50 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      let pendingName = node.data.name;
+                      let pendingColor = folderColor;
+                      const confirmed = await modal.confirm({
+                        title: t('folderSettings.title'),
+                        content: (
+                          <FolderSettingsDialog
+                            initialName={node.data.name}
+                            initialColor={folderColor}
+                            onSave={(name, color) => {
+                              pendingName = name;
+                              pendingColor = color;
+                            }}
+                          />
+                        ),
+                        confirmText: t('common.save'),
+                        cancelText: t('common.cancel'),
+                      });
+                      if (confirmed) {
+                        if (pendingName !== node.data.name) {
+                          await renameItem(node.data.id, pendingName, 'folder');
+                        }
+                        if (pendingColor !== folderColor) {
+                          await updateFolderColor(node.data.id, pendingColor);
+                        }
+                      }
+                    }}
+                  >
+                    <Settings className="h-3.5 w-3.5" />
+                  </div>
+                </SimpleTooltip>
+              )}
+              {isFile && !isFavorite && !isBatchMode && (
+                <SimpleTooltip content={t('tooltip.addToFavorites')}>
+                  <div
+                    role="button"
+                    className="h-5 w-5 flex items-center justify-center rounded-sm hover:bg-muted/50 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      toggleFavorite(node.data.id, 'conversation', isFavorite);
+                    }}
+                  >
+                    <Star className="h-3.5 w-3.5" />
+                  </div>
+                </SimpleTooltip>
+              )}
+            </div>
+          </div>
+        </div>
       </ContextMenuTrigger>
       {!isTimeGroup && !isBatchMode && (
         <NodeContextMenu

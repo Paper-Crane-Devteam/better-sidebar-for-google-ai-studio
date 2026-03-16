@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useUrl } from '@/shared/hooks/useUrl';
 
 export interface ConversationNode {
   id: string; // user message id (e.g. r_xxx)
@@ -17,6 +18,8 @@ export const useConversationNodes = () => {
   const [nodes, setNodes] = useState<ConversationNode[]>([]);
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
   const nodesRef = useRef<ConversationNode[]>([]);
+  const { url } = useUrl();
+  const prevUrlRef = useRef<string>(url);
 
   // Keep ref in sync
   useEffect(() => {
@@ -157,36 +160,12 @@ export const useConversationNodes = () => {
 
   // Clear nodes on URL change (new conversation)
   useEffect(() => {
-    const handleUrlChange = () => {
+    if (url !== prevUrlRef.current) {
+      prevUrlRef.current = url;
       setNodes([]);
       setActiveNodeId(null);
-    };
-
-    // Use popstate for SPA navigation detection
-    window.addEventListener('popstate', handleUrlChange);
-
-    // Also observe pushState / replaceState via a custom approach
-    const originalPushState = history.pushState.bind(history);
-    const originalReplaceState = history.replaceState.bind(history);
-
-    history.pushState = (...args: Parameters<typeof history.pushState>) => {
-      originalPushState(...args);
-      handleUrlChange();
-    };
-
-    history.replaceState = (
-      ...args: Parameters<typeof history.replaceState>
-    ) => {
-      originalReplaceState(...args);
-      handleUrlChange();
-    };
-
-    return () => {
-      window.removeEventListener('popstate', handleUrlChange);
-      history.pushState = originalPushState;
-      history.replaceState = originalReplaceState;
-    };
-  }, []);
+    }
+  }, [url]);
 
   const scrollToNode = useCallback((nodeId: string) => {
     const el = findMessageElement(nodeId);

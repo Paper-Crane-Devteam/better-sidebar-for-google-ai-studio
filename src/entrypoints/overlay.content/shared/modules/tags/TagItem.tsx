@@ -122,16 +122,17 @@ export const TagItem = ({ tag }: TagItemProps) => {
           <div
             className={cn(
               'group flex items-center justify-between px-2 rounded-sm text-sm border border-transparent transition-colors cursor-default h-[calc(100%-2px)] mt-[1px]',
-              isActive
-                ? 'bg-accent/50'
-                : 'hover:bg-accent/50'
+              tag.color
+                ? 'tag-item-colored'
+                : isActive
+                  ? 'bg-accent/50'
+                  : 'hover:bg-accent/50',
+              tag.color && isActive && 'tag-item-colored-active',
             )}
-           
+            style={tag.color ? { '--tag-color': tag.color } as React.CSSProperties : undefined}
           >
             <div className="flex items-center gap-2 overflow-hidden" style={tag.color ? { color: tag.color } : undefined}>
-              <TagIcon
-                className="h-4 w-4 shrink-0"
-              />
+              <TagIcon className="h-4 w-4 shrink-0" />
               <span className="truncate font-medium">{tag.name}</span>
             </div>
             <div

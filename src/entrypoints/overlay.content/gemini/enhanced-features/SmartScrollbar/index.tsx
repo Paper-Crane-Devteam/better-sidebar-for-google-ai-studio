@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronUp, MessageSquare, Minus } from 'lucide-react';
+import { ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
 import { useConversationNodes } from './useConversationNodes';
 import { cn } from '@/shared/lib/utils/utils';
+import { OverflowTooltip } from '@/shared/components/ui/overflow-tooltip';
 
 export const SmartScrollbar: React.FC = () => {
   const { nodes, activeNodeId, scrollToNode } = useConversationNodes();
@@ -76,7 +77,7 @@ export const SmartScrollbar: React.FC = () => {
         >
           <MessageSquare className="h-3.5 w-3.5 shrink-0" />
           {(isExpanded || isHovered) && (
-            <span className="text-[11px] font-semibold truncate flex-1 text-left animate-in fade-in duration-200">
+            <span className="text-xs font-semibold truncate flex-1 text-left animate-in fade-in duration-200">
               {isExpanded ? 'Conversation Outline' : `${nodes.length} messages`}
             </span>
           )}
@@ -134,7 +135,7 @@ export const SmartScrollbar: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <p
                       className={cn(
-                        'text-[12px] leading-relaxed',
+                        'text-[13px] leading-relaxed',
                         node.id === activeNodeId
                           ? 'font-semibold'
                           : 'font-medium',
@@ -159,10 +160,9 @@ export const SmartScrollbar: React.FC = () => {
                     'transition-all duration-200',
                     isHovered ? 'w-full px-2 py-1' : 'p-1',
                   )}
-                  title={truncateText(node.content, 50)}
                 >
                   {isHovered ? (
-                    /* Hovered: show truncated text */
+                    /* Hovered: show truncated text with overflow tooltip */
                     <div
                       className={cn(
                         'flex items-center gap-2 w-full rounded-md px-2 py-1',
@@ -180,17 +180,21 @@ export const SmartScrollbar: React.FC = () => {
                             : 'bg-muted-foreground/40 group-hover:bg-muted-foreground/70',
                         )}
                       />
-                      <span
+                      <OverflowTooltip
+                        content={node.content}
+                        placement="left"
+                        offset={12}
                         className={cn(
-                          'text-[10px] truncate',
+                          'text-xs',
                           'animate-in fade-in slide-in-from-right-2 duration-200',
                           node.id === activeNodeId
                             ? 'text-primary font-semibold'
                             : 'text-muted-foreground group-hover:text-foreground',
                         )}
+                        tooltipClassName="text-xs"
                       >
                         {truncateText(node.content, 25)}
-                      </span>
+                      </OverflowTooltip>
                     </div>
                   ) : (
                     /* Default: minimal dots */
