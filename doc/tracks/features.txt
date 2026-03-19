@@ -13,7 +13,7 @@
 -14. zen mode
 15. demo video
 -16. landing page
-17. default import conversation folder
+-17. default import conversation folder
 -19. no need to modify message to resend
 -20. default model only work on new chat
 -21. selected chat not focused style

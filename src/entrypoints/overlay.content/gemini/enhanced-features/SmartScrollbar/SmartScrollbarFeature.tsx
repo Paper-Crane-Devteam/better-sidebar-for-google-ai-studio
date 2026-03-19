@@ -1,4 +1,3 @@
-import React from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { SmartScrollbar } from './index';
 
