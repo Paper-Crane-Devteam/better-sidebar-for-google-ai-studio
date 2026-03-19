@@ -263,4 +263,4 @@ export const SmartScrollbar: React.FC = () => {
       </div>
     </div>
   );
-};;
+};

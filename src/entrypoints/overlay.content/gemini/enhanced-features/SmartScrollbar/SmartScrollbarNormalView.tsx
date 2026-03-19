@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { cn } from '@/shared/lib/utils/utils';
 import { OverflowTooltip } from '@/shared/components/ui/overflow-tooltip';
 import type { ConversationNode } from './types';
+
+const MAX_DOTS = 15;
 
 interface Props {
   nodes: ConversationNode[];
@@ -19,9 +21,37 @@ function truncateText(text: string, maxLen: number) {
 }
 
 /**
+ * For dotsOnly mode: filter to only inDom nodes, cap at MAX_DOTS,
+ * centered around the active node.
+ */
+function getDotsNodes(
+  nodes: ConversationNode[],
+  activeNodeId: string | null,
+): ConversationNode[] {
+  const activeNodes = nodes.filter((n) => n.inDom);
+  if (activeNodes.length <= MAX_DOTS) return activeNodes;
+
+  const activeIdx = activeNodes.findIndex((n) => n.id === activeNodeId);
+  const center = activeIdx >= 0 ? activeIdx : Math.floor(activeNodes.length / 2);
+
+  let start = center - Math.floor(MAX_DOTS / 2);
+  let end = start + MAX_DOTS;
+
+  if (start < 0) {
+    start = 0;
+    end = MAX_DOTS;
+  } else if (end > activeNodes.length) {
+    end = activeNodes.length;
+    start = end - MAX_DOTS;
+  }
+
+  return activeNodes.slice(start, end);
+}
+
+/**
  * Normal mode view.
- * - dotsOnly=true  → minimal dot indicators (when not hovered)
- * - dotsOnly=false → compact text list with overflow tooltips (when hovered)
+ * - dotsOnly=true  → minimal dot indicators for inDom nodes only (max 15, centered on active)
+ * - dotsOnly=false → compact text list with overflow tooltips (all nodes)
  */
 export const SmartScrollbarNormalView: React.FC<Props> = ({
   nodes,
@@ -31,51 +61,58 @@ export const SmartScrollbarNormalView: React.FC<Props> = ({
   activeNodeRef,
   visible,
   dotsOnly = false,
-}) => (
-  <div
-    ref={containerRef}
-    className={cn(
-      'flex-1 overflow-y-auto overflow-x-hidden',
-      'border border-r-0 border-t-0 border-border/30',
-      'bg-background/80 backdrop-blur-xl',
-      'rounded-bl-xl',
-      'shadow-lg shadow-black/5',
-      'custom-scrollbar',
-      'transition-all duration-300',
-      !visible && 'hidden',
-    )}
-  >
+}) => {
+  const displayNodes = useMemo(
+    () => (dotsOnly ? getDotsNodes(nodes, activeNodeId) : nodes),
+    [nodes, activeNodeId, dotsOnly],
+  );
+
+  return (
     <div
+      ref={containerRef}
       className={cn(
-        'flex flex-col py-2.5',
-        dotsOnly ? 'items-center gap-1' : 'gap-0',
+        'flex-1 overflow-y-auto overflow-x-hidden',
+        'border border-r-0 border-t-0 border-border/30',
+        'bg-background/80 backdrop-blur-xl',
+        'rounded-bl-xl',
+        'shadow-lg shadow-black/5',
+        'custom-scrollbar',
+        'transition-all duration-300',
+        !visible && 'hidden',
       )}
     >
-      {nodes.map((node) => {
-        const isActive = node.inDom && node.id === activeNodeId;
-        return (
-          <div
-            key={node.id}
-            ref={isActive ? activeNodeRef : null}
-            onClick={() => node.inDom && scrollToNode(node.id)}
-            className={cn(
-              'group relative flex items-center justify-center',
-              'transition-all duration-200',
-              node.inDom ? 'cursor-pointer' : 'cursor-default opacity-40',
-              dotsOnly ? 'p-1.5' : 'w-full px-2.5 py-1.5',
-            )}
-          >
-            {dotsOnly ? (
-              <DotItem node={node} isActive={isActive} />
-            ) : (
-              <HoveredItem node={node} isActive={isActive} />
-            )}
-          </div>
-        );
-      })}
+      <div
+        className={cn(
+          'flex flex-col py-2.5',
+          dotsOnly ? 'items-center gap-1' : 'gap-0',
+        )}
+      >
+        {displayNodes.map((node) => {
+          const isActive = node.inDom && node.id === activeNodeId;
+          return (
+            <div
+              key={node.id}
+              ref={isActive ? activeNodeRef : null}
+              onClick={() => node.inDom && scrollToNode(node.id)}
+              className={cn(
+                'group relative flex items-center justify-center',
+                'transition-all duration-200',
+                node.inDom ? 'cursor-pointer' : 'cursor-default opacity-40',
+                dotsOnly ? 'p-1.5' : 'w-full px-2.5 py-1.5',
+              )}
+            >
+              {dotsOnly ? (
+                <DotItem node={node} isActive={isActive} />
+              ) : (
+                <HoveredItem node={node} isActive={isActive} />
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 /** Hovered state: truncated text with overflow tooltip */
 const HoveredItem: React.FC<{
