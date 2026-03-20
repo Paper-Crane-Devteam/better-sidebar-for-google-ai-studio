@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   ChevronsLeft,
   ChevronsRight,
@@ -24,6 +24,7 @@ type ScrollbarMode = 'normal' | 'maximized' | 'minimized';
 
 export const SmartScrollbar: React.FC = () => {
   const { nodes, activeNodeId, scrollToNode } = useConversationNodes();
+  const userCount = nodes.filter((n) => n.role === 'user').length;
   const [mode, setMode] = useState<ScrollbarMode>('normal');
   const [isHovered, setIsHovered] = useState(false);
 
@@ -78,10 +79,9 @@ export const SmartScrollbar: React.FC = () => {
     }
   }, [activeNodeId, isHovered, mode]);
 
-  const handleTitleClick = useCallback(() => {
-    // Clicking title closes the hover panel (same as mouse-leave)
+  const handleTitleClick = () => {
     setIsHovered(false);
-  }, []);
+  };
 
   if (nodes.length === 0) return null;
 
@@ -89,7 +89,7 @@ export const SmartScrollbar: React.FC = () => {
   if (mode === 'minimized') {
     return (
       <SmartScrollbarMinimizedView
-        nodeCount={nodes.length}
+        nodeCount={userCount}
         onRestore={() => setMode('normal')}
       />
     );
@@ -103,20 +103,19 @@ export const SmartScrollbar: React.FC = () => {
       className={cn(
         'fixed right-0 top-1/2 -translate-y-1/2 z-[999998]',
         'flex flex-col items-end',
-        'transition-all duration-300 ease-out',
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
         className={cn(
-          'flex flex-col',
-          'transition-all duration-300 ease-out',
+          'flex flex-col max-h-[60vh] overflow-hidden',
+          'transition-[width] duration-300 ease-out',
           panelOpen
             ? isMaximized
-              ? 'w-[300px] max-h-[70vh]'
-              : 'w-[220px] max-h-[60vh]'
-            : 'w-[40px] max-h-[60vh]',
+              ? 'w-[300px]'
+              : 'w-[220px]'
+            : 'w-[40px]',
         )}
       >
         {/* Header */}
@@ -128,7 +127,7 @@ export const SmartScrollbar: React.FC = () => {
             'bg-background/80 backdrop-blur-xl',
             'text-muted-foreground',
             'shadow-lg shadow-black/5',
-            'transition-all duration-200',
+            'transition-colors duration-200',
           )}
         >
           <List className="h-4 w-4 shrink-0" />
@@ -146,7 +145,7 @@ export const SmartScrollbar: React.FC = () => {
               >
                 {isMaximized
                   ? 'Conversation Outline'
-                  : `${nodes.length} messages`}
+                  : `${userCount} messages`}
               </span>
 
               {/* Action buttons */}
@@ -223,33 +222,28 @@ export const SmartScrollbar: React.FC = () => {
           )}
         </div>
 
-        {/* Content area — only visible when hovered */}
-        {panelOpen && (
+        {/* Content area — always mounted, visibility controlled by props */}
+        {isMaximized ? (
           <>
-            {isMaximized ? (
-              <SmartScrollbarExpandedView
-                nodes={nodes}
-                activeNodeId={activeNodeId}
-                scrollToNode={scrollToNode}
-                containerRef={expandedRef}
-                activeNodeRef={expandedActiveRef}
-                visible
-              />
-            ) : (
-              <SmartScrollbarNormalView
-                nodes={nodes}
-                activeNodeId={activeNodeId}
-                scrollToNode={scrollToNode}
-                containerRef={normalRef}
-                activeNodeRef={activeNodeRef}
-                visible
-              />
-            )}
+            <SmartScrollbarExpandedView
+              nodes={nodes}
+              activeNodeId={activeNodeId}
+              scrollToNode={scrollToNode}
+              containerRef={expandedRef}
+              activeNodeRef={expandedActiveRef}
+              visible={panelOpen}
+            />
+            <SmartScrollbarNormalView
+              nodes={nodes}
+              activeNodeId={activeNodeId}
+              scrollToNode={scrollToNode}
+              containerRef={normalRef}
+              activeNodeRef={activeNodeRef}
+              visible={!panelOpen}
+              dotsOnly
+            />
           </>
-        )}
-
-        {/* Dots when not hovered — show active node indicator */}
-        {!panelOpen && (
+        ) : (
           <SmartScrollbarNormalView
             nodes={nodes}
             activeNodeId={activeNodeId}
@@ -257,7 +251,7 @@ export const SmartScrollbar: React.FC = () => {
             containerRef={normalRef}
             activeNodeRef={activeNodeRef}
             visible
-            dotsOnly
+            dotsOnly={!panelOpen}
           />
         )}
       </div>

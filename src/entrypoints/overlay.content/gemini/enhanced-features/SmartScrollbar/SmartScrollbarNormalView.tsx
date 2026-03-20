@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { cn } from '@/shared/lib/utils/utils';
 import { OverflowTooltip } from '@/shared/components/ui/overflow-tooltip';
 import type { ConversationNode } from './types';
@@ -21,8 +21,8 @@ function truncateText(text: string, maxLen: number) {
 }
 
 /**
- * For dotsOnly mode: filter to only inDom nodes, cap at MAX_DOTS,
- * centered around the active node.
+ * For dotsOnly mode: filter to only inDom USER nodes, cap at MAX_DOTS,
+ * centered around the active node. Model nodes are excluded to keep dots compact.
  */
 function getDotsNodes(
   nodes: ConversationNode[],
@@ -62,10 +62,8 @@ export const SmartScrollbarNormalView: React.FC<Props> = ({
   visible,
   dotsOnly = false,
 }) => {
-  const displayNodes = useMemo(
-    () => (dotsOnly ? getDotsNodes(nodes, activeNodeId) : nodes),
-    [nodes, activeNodeId, dotsOnly],
-  );
+  const userNodes = nodes.filter((n) => n.role === 'user');
+  const displayNodes = dotsOnly ? getDotsNodes(userNodes, activeNodeId) : userNodes;
 
   return (
     <div
@@ -77,7 +75,6 @@ export const SmartScrollbarNormalView: React.FC<Props> = ({
         'rounded-bl-xl',
         'shadow-lg shadow-black/5',
         'custom-scrollbar',
-        'transition-all duration-300',
         !visible && 'hidden',
       )}
     >
