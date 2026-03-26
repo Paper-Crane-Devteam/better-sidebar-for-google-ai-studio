@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { useAppStore } from '@/shared/lib/store';
 import { GemsHeader } from './components/GemsHeader';
 import { GemsTreeView, GemsTreeHandle } from './components/GemsTreeView';
@@ -6,7 +6,6 @@ import { FilterBar } from '../../components/FilterBar';
 import { useStoreFilter } from '../../hooks/useStoreFilter';
 import { Gem as GemIcon } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { useSettingsStore } from '@/shared/lib/settings-store';
 
 interface GemsTabProps {
   menuActions?: {
@@ -20,18 +19,6 @@ export const GemsTab = ({ menuActions }: GemsTabProps) => {
   const { gems, tags: allTags } = useAppStore();
   const filter = useStoreFilter('gems');
   const treeRef = useRef<GemsTreeHandle>(null);
-
-  // Listen for gem creation events from content script
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const { id } = (e as CustomEvent).detail;
-      if (id) {
-        useSettingsStore.getState().setLastCreatedGemId(id);
-      }
-    };
-    window.addEventListener('BETTER_SIDEBAR_GEM_CREATED', handler);
-    return () => window.removeEventListener('BETTER_SIDEBAR_GEM_CREATED', handler);
-  }, []);
 
   const handleCollapseAll = () => {
     treeRef.current?.collapseAll();

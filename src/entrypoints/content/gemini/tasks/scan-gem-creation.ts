@@ -16,7 +16,7 @@ export class GemCreationScanner {
             id,
             name: name || 'Untitled Gem',
             external_id: id,
-            external_url: `https://gemini.google.com/gems/${id}`,
+            external_url: `https://gemini.google.com/gem/${id}`,
             platform: 'gemini',
           },
         })
