@@ -24,13 +24,17 @@ interface GemsHeaderProps {
   menuActions?: {
     onViewHistory?: () => void;
     onSwitchToOriginalUI?: () => void;
+    onViewGems?: () => void;
+    onScanGems?: () => void;
   };
+  isScanningGems?: boolean;
 }
 
 export const GemsHeader = ({
   onCollapseAll,
   filter,
   menuActions,
+  isScanningGems,
 }: GemsHeaderProps) => {
   const { t } = useI18n();
   const { ui, setGemsSortOrder, gems } = useAppStore();
@@ -136,20 +140,23 @@ export const GemsHeader = ({
               <MessageSquarePlus className="h-4 w-4" />
             </Button>
           </SimpleTooltip>
-          {lastSelectedGem && (
-            <SimpleTooltip
-              content={t('gems.chatWithLastGem', { name: lastSelectedGem.name })}
+          <SimpleTooltip
+            content={
+              lastSelectedGem
+                ? t('gems.chatWithLastGem', { name: lastSelectedGem.name })
+                : t('gems.newGemChat')
+            }
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              disabled={!lastSelectedGem}
+              onClick={handleChatWithLastGem}
             >
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={handleChatWithLastGem}
-              >
-                <Sparkles className="h-4 w-4 text-purple-500" />
-              </Button>
-            </SimpleTooltip>
-          )}
+              <Sparkles className="h-4 w-4" />
+            </Button>
+          </SimpleTooltip>
         </div>
       </div>
     </div>

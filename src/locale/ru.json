@@ -636,7 +636,10 @@
     "selectGem": "Выбрать Gem",
     "searchGems": "Поиск gems...",
     "chatWithLastGem": "Чат с {{name}}",
-    "empty": "Gems пока нет. Создайте или синхронизируйте из Gemini."
+    "empty": "Gems пока нет. Создайте или синхронизируйте из Gemini.",
+    "viewGems": "Просмотр Gems",
+    "scanGems": "Сканировать Gems",
+    "scanningGems": "Сканирование..."
   },
   "whatsNew": {
     "title": "Что нового в v{{version}}",

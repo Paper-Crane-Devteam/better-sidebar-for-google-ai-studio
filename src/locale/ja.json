@@ -636,7 +636,10 @@
     "selectGem": "Gem を選択",
     "searchGems": "Gems を検索...",
     "chatWithLastGem": "{{name}} とチャット",
-    "empty": "Gems がまだありません。作成するか Gemini から同期してください。"
+    "empty": "Gems がまだありません。作成するか Gemini から同期してください。",
+    "viewGems": "Gems を表示",
+    "scanGems": "Gems をスキャン",
+    "scanningGems": "スキャン中..."
   },
   "whatsNew": {
     "title": "v{{version}} の新機能",

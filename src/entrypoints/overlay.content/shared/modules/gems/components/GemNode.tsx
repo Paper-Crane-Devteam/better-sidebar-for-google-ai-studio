@@ -3,7 +3,6 @@ import {
   Gem,
   ChevronRight,
   ChevronDown,
-  MessageSquare,
   Star,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
@@ -22,14 +21,24 @@ import {
   ContextMenuTrigger,
 } from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
 import { modal } from '@/shared/lib/modal';
+import { NodeContextMenu } from '../../explorer/components/node/NodeContextMenu';
 
 export const GemNode = ({
   node,
   style,
   dragHandle,
+  tree,
+  preview,
 }: NodeRendererProps<FolderTreeNodeData>) => {
   const { t } = useI18n();
-  const { favorites, toggleFavorite, fetchData } = useAppStore();
+  const {
+    favorites,
+    toggleFavorite,
+    fetchData,
+    conversationTags,
+    addTagToConversation,
+    removeTagFromConversation,
+  } = useAppStore();
   const currentConversationId = useCurrentConversationId();
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
 
@@ -83,9 +92,29 @@ export const GemNode = ({
     }
   };
 
-  // Gem node (folder-like)
-  const gemIcon = <Gem className="w-4 h-4 text-purple-500" />;
-  const fileIcon = <MessageSquare className="w-4 h-4" />;
+  const handleTagToggle = async (tagId: string, checked: boolean) => {
+    const hasTag = conversationTags.some(
+      (ct) => ct.conversation_id === node.data.id && ct.tag_id === tagId,
+    );
+    if (checked && !hasTag) await addTagToConversation(node.data.id, tagId);
+    if (!checked && hasTag) await removeTagFromConversation(node.data.id, tagId);
+  };
+
+  const handleDeleteConversation = async () => {
+    const confirmed = await modal.confirm({
+      title: t('node.delete'),
+      content: t('node.deleteConfirm'),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+    });
+    if (confirmed) {
+      await browser.runtime.sendMessage({
+        type: 'DELETE_CONVERSATION',
+        payload: { id: node.data.id },
+      });
+      fetchData(true);
+    }
+  };
 
   const toggleIcon = isGem ? (
     node.isOpen ? (
@@ -95,7 +124,7 @@ export const GemNode = ({
     )
   ) : null;
 
-  const childCount = isGem ? (node.data.children?.length || 0) : 0;
+  const hasHoverActions = isFile && !isFavorite;
 
   const nodeClasses = cn(
     'flex items-center gap-1.5 px-1 pr-2 h-full',
@@ -105,9 +134,10 @@ export const GemNode = ({
     !isActive && !isCurrentConversation && 'hover:bg-accent/50',
     isActive && 'node-item-selected',
     !isActive && isCurrentConversation && 'node-item-current',
-    isFile && !isFavorite && 'group-hover:pr-8',
+    hasHoverActions && 'group-hover:pr-8',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
     isContextMenuOpen && 'bg-accent/50',
+    isContextMenuOpen && hasHoverActions && 'pr-8',
   );
 
   return (
@@ -136,9 +166,11 @@ export const GemNode = ({
             )}
 
             {/* Icon */}
-            <span className="flex items-center justify-center shrink-0">
-              {isGem ? gemIcon : fileIcon}
-            </span>
+            {isGem && (
+              <span className="flex items-center justify-center shrink-0">
+                <Gem className="w-4 h-4" />
+              </span>
+            )}
 
             {/* Favorite star */}
             {isFile && isFavorite && (
@@ -149,13 +181,6 @@ export const GemNode = ({
             <span className="truncate flex-1 text-sm">
               {node.data.name}
             </span>
-
-            {/* Conversation count badge for gems */}
-            {isGem && childCount > 0 && (
-              <span className="text-xs text-muted-foreground shrink-0 ml-1">
-                {childCount}
-              </span>
-            )}
 
             {/* Hover actions for files */}
             {isFile && !isFavorite && (
@@ -183,53 +208,52 @@ export const GemNode = ({
           </div>
         </div>
       </ContextMenuTrigger>
-      <ContextMenuContent className="z-[9999]">
-        {isGem && (
-          <>
-            <ContextMenuItem
-              onClick={() => {
-                const gemUrl = node.data.data?.external_url;
-                if (gemUrl) navigate(gemUrl);
-              }}
-            >
-              <Gem className="mr-2 h-4 w-4" />
-              {t('gems.openGem')}
-            </ContextMenuItem>
-            <ContextMenuItem
-              onClick={() => {
-                const gemUrl = node.data.data?.external_url;
-                if (gemUrl) window.open(gemUrl, '_blank');
-              }}
-            >
-              {t('gems.openInNewTab')}
-            </ContextMenuItem>
-            <ContextMenuItem
-              onClick={handleDeleteGem}
-              className="text-destructive"
-            >
-              {t('gems.deleteGem')}
-            </ContextMenuItem>
-          </>
-        )}
-        {isFile && (
-          <>
-            <ContextMenuItem
-              onClick={() => {
-                if (url) window.open(url, '_blank');
-              }}
-            >
-              {t('node.openInNewTab')}
-            </ContextMenuItem>
-            <ContextMenuItem
-              onClick={() => toggleFavorite(node.data.id, 'conversation', isFavorite)}
-            >
-              {isFavorite
-                ? t('node.removeFromFavorites')
-                : t('node.addToFavorites')}
-            </ContextMenuItem>
-          </>
-        )}
-      </ContextMenuContent>
+      {/* Context menu */}
+      {isGem && (
+        <ContextMenuContent className="z-[9999]">
+          <ContextMenuItem
+            onClick={() => {
+              const gemUrl = node.data.data?.external_url;
+              if (gemUrl) navigate(gemUrl);
+            }}
+          >
+            <Gem className="mr-2 h-4 w-4" />
+            {t('gems.openGem')}
+          </ContextMenuItem>
+          <ContextMenuItem
+            onClick={() => {
+              const gemUrl = node.data.data?.external_url;
+              if (gemUrl) window.open(gemUrl, '_blank');
+            }}
+          >
+            {t('gems.openInNewTab')}
+          </ContextMenuItem>
+          <ContextMenuItem
+            onClick={handleDeleteGem}
+            className="text-destructive"
+          >
+            {t('gems.deleteGem')}
+          </ContextMenuItem>
+        </ContextMenuContent>
+      )}
+      {isFile && (
+        <NodeContextMenu
+          node={node}
+          onToggleFavorite={(id: string, isFav: boolean) =>
+            toggleFavorite(id, 'conversation', isFav)
+          }
+          onCreateFolder={async () => {}}
+          onDelete={handleDeleteConversation}
+          onTagToggle={handleTagToggle}
+          onColorChange={async () => {}}
+          isFavorite={isFavorite}
+          folderColor={null}
+          style={style}
+          dragHandle={dragHandle}
+          tree={tree}
+          preview={preview}
+        />
+      )}
     </ContextMenu>
   );
 };

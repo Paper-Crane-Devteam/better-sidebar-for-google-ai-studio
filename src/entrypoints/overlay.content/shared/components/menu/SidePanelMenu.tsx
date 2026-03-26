@@ -10,7 +10,7 @@ import { Button } from '../ui/button';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
 import { navigate } from '@/shared/lib/navigation';
-import { MoreVertical, Settings, Database, History, Layout, RefreshCw, FolderPlus, ListCollapse, ArrowDownAZ, Clock, Calendar, Folder, Upload } from 'lucide-react';
+import { MoreVertical, Settings, Database, History, Layout, RefreshCw, FolderPlus, ListCollapse, ArrowDownAZ, Clock, Calendar, Folder, Upload, Gem, Eye } from 'lucide-react';
 
 interface SidePanelMenuProps {
   onNewFolder?: () => void;
@@ -24,6 +24,8 @@ interface SidePanelMenuProps {
     onSwitchToOriginalUI?: () => void;
     handleScanLibrary?: () => void;
     onImportAiStudioSystem?: () => void;
+    onViewGems?: () => void;
+    onScanGems?: () => void;
   };
 }
 
@@ -98,9 +100,23 @@ export const SidePanelMenu = ({
             </DropdownMenuItem>
         )}
         
-        {(onToggleViewMode || menuActions?.onImportAiStudioSystem || handleScanLibrary) && <DropdownMenuSeparator />}
+        {(onToggleViewMode || menuActions?.onImportAiStudioSystem || handleScanLibrary) && !(menuActions?.onViewGems || menuActions?.onScanGems) && <DropdownMenuSeparator />}
         
-        {/* Section 3: Tools & Settings */}
+        {/* Gem Actions */}
+        {menuActions?.onViewGems && (
+            <DropdownMenuItem onClick={menuActions.onViewGems}>
+                <Eye className="mr-2 h-4 w-4" />
+                <span>{t('gems.viewGems')}</span>
+            </DropdownMenuItem>
+        )}
+        {menuActions?.onScanGems && (
+            <DropdownMenuItem onClick={menuActions.onScanGems}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                <span>{t('gems.scanGems')}</span>
+            </DropdownMenuItem>
+        )}
+        
+        {(onToggleViewMode || menuActions?.onImportAiStudioSystem || handleScanLibrary || menuActions?.onViewGems || menuActions?.onScanGems) && <DropdownMenuSeparator />}
         {menuActions?.onViewHistory && (
           <DropdownMenuItem onClick={menuActions.onViewHistory}>
             <History className="mr-2 h-4 w-4" />

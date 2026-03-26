@@ -6,6 +6,7 @@ import { FilterBar } from '../../components/FilterBar';
 import { useStoreFilter } from '../../hooks/useStoreFilter';
 import { Gem as GemIcon } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
+import { navigate } from '@/shared/lib/navigation';
 
 interface GemsTabProps {
   menuActions?: {
@@ -28,12 +29,26 @@ export const GemsTab = ({ menuActions }: GemsTabProps) => {
     // Selection handled inside GemNode (navigation)
   };
 
+  const handleViewGems = () => {
+    navigate('https://gemini.google.com/gems/view');
+  };
+
+  const handleScanGems = () => {
+    // TODO: implement gem scanning
+  };
+
+  const allMenuActions = {
+    ...menuActions,
+    onViewGems: handleViewGems,
+    onScanGems: handleScanGems,
+  };
+
   return (
     <div className="flex flex-col h-full w-full relative">
       <GemsHeader
         onCollapseAll={handleCollapseAll}
         filter={filter}
-        menuActions={menuActions}
+        menuActions={allMenuActions}
       />
 
       <FilterBar filter={filter} allTags={allTags} />

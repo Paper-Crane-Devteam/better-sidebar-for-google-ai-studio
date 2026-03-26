@@ -636,7 +636,10 @@
     "selectGem": "選擇一個 Gem",
     "searchGems": "搜尋 Gems...",
     "chatWithLastGem": "與 {{name}} 對話",
-    "empty": "尚無 Gems。建立一個或從 Gemini 同步。"
+    "empty": "尚無 Gems。建立一個或從 Gemini 同步。",
+    "viewGems": "檢視 Gems",
+    "scanGems": "掃描 Gems",
+    "scanningGems": "掃描中..."
   },
   "whatsNew": {
     "title": "v{{version}} 更新內容",

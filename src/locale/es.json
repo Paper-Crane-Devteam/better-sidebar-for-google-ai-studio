@@ -636,7 +636,10 @@
     "selectGem": "Seleccionar un Gem",
     "searchGems": "Buscar gems...",
     "chatWithLastGem": "Chatear con {{name}}",
-    "empty": "Aún no hay gems. Crea uno o sincroniza desde Gemini."
+    "empty": "Aún no hay gems. Crea uno o sincroniza desde Gemini.",
+    "viewGems": "Ver Gems",
+    "scanGems": "Escanear Gems",
+    "scanningGems": "Escaneando..."
   },
   "whatsNew": {
     "title": "Novedades en v{{version}}",

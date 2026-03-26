@@ -10,6 +10,7 @@ import {
 } from '../../../components/folder-tree';
 import { GemNode } from './GemNode';
 
+
 const STORAGE_KEY = 'gems-tree-open-state';
 
 export interface GemsTreeHandle {
