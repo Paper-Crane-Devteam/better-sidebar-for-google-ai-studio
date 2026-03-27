@@ -18,10 +18,12 @@ import {
 } from '../../components/ui/context-menu';
 
 import type { ExplorerTypeFilter } from '../../types/filter';
+import type { SplitDropdownItem } from '@/shared/components/ui/split-icon-button';
 import { getExternalUrl } from '../../utils';
 
 interface ExplorerTabProps {
   onNewChat: () => void;
+  newChatDropdownItems?: SplitDropdownItem[];
   filterTypes?: ExplorerTypeFilter[];
   extraHeaderButtons?: React.ReactNode;
   visibleFilters?: ('search' | 'tags' | 'type' | 'favorites')[];
@@ -34,6 +36,7 @@ interface ExplorerTabProps {
 
 export const ExplorerTab = ({
   onNewChat,
+  newChatDropdownItems,
   filterTypes,
   extraHeaderButtons,
   visibleFilters,
@@ -253,6 +256,7 @@ export const ExplorerTab = ({
         onCollapseAll={handleCollapseAll}
         onSelectAll={handleSelectAll}
         onNewChat={onNewChat}
+        newChatDropdownItems={newChatDropdownItems}
         filter={filter}
         filterTypes={filterTypes}
         extraHeaderButtons={extraHeaderButtons}

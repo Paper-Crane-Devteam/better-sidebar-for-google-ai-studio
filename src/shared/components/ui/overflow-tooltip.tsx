@@ -20,6 +20,8 @@ export interface OverflowTooltipProps {
   tooltipClassName?: string;
   /** Delay in ms before showing the tooltip */
   showDelay?: number;
+  /** Optional external ref for hover detection (overflow check still uses the inner text element) */
+  hoverRef?: React.RefObject<HTMLElement | null>;
 }
 
 /**
@@ -38,6 +40,7 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
   className,
   tooltipClassName,
   showDelay = 300,
+  hoverRef,
 }) => {
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -45,6 +48,7 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
 
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [isPositioned, setIsPositioned] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number }>({
     top: 0,
     left: 0,
@@ -77,11 +81,11 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
     return () => observer.disconnect();
   }, [checkOverflow]);
 
-  // Calculate tooltip position based on placement
-  const calculatePosition = useCallback(() => {
+  // Calculate tooltip position based on placement — returns coords instead of setting state
+  const calculatePosition = useCallback((): { top: number; left: number } | null => {
     const triggerEl = triggerRef.current;
     const tooltipEl = tooltipRef.current;
-    if (!triggerEl || !tooltipEl) return;
+    if (!triggerEl || !tooltipEl) return null;
 
     const triggerRect = triggerEl.getBoundingClientRect();
     const tooltipRect = tooltipEl.getBoundingClientRect();
@@ -121,15 +125,23 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
     if (left + tooltipRect.width > viewportWidth - margin)
       left = viewportWidth - margin - tooltipRect.width;
 
-    setPosition({ top, left });
+    return { top, left };
   }, [placement, offset]);
 
   // Recalculate position when tooltip becomes visible
   useEffect(() => {
     if (isVisible) {
-      // Use rAF to ensure the tooltip element is rendered before measuring
+      setIsPositioned(false);
+      // Double rAF: first frame renders the invisible tooltip so we can measure,
+      // second frame applies position directly to DOM and reveals.
       requestAnimationFrame(() => {
-        calculatePosition();
+        const pos = calculatePosition();
+        if (pos) {
+          setPosition(pos);
+        }
+        requestAnimationFrame(() => {
+          setIsPositioned(true);
+        });
       });
     }
   }, [isVisible, calculatePosition]);
@@ -159,6 +171,19 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
     };
   }, []);
 
+  // When an external hoverRef is provided, attach hover listeners to it
+  useEffect(() => {
+    const el = hoverRef?.current;
+    if (!el) return;
+
+    el.addEventListener('mouseenter', handleMouseEnter);
+    el.addEventListener('mouseleave', handleMouseLeave);
+    return () => {
+      el.removeEventListener('mouseenter', handleMouseEnter);
+      el.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [hoverRef, isOverflowing]); // re-attach when overflow state changes
+
   const portalContainer = TooltipHelper.getInstance().getContainer();
 
   return (
@@ -166,8 +191,8 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
       <div
         ref={triggerRef}
         className={cn('truncate', className)}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+        onMouseEnter={hoverRef ? undefined : handleMouseEnter}
+        onMouseLeave={hoverRef ? undefined : handleMouseLeave}
       >
         {children}
       </div>
@@ -179,12 +204,13 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
             ref={tooltipRef}
             className={cn(
               'fixed z-[2147483647] pointer-events-none',
-              'px-3 py-1.5 rounded-md',
-              'bg-popover text-popover-foreground text-sm',
-              'border border-border/50',
-              'shadow-lg shadow-black/10',
-              'animate-in fade-in-0 zoom-in-95 duration-150',
+              'px-3 py-1.5 rounded-md text-xs',
+              'bg-foreground text-background dark:bg-foreground dark:text-background',
+              'shadow-sm shadow-black/10 dark:shadow-black/20',
               'max-w-[320px] break-words',
+              isPositioned
+                ? 'animate-in fade-in-0 duration-100'
+                : 'opacity-0',
               tooltipClassName,
             )}
             style={{

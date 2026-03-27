@@ -17,6 +17,7 @@ interface NodeContentProps extends NodeProps {
   folderColor?: string | null;
   newName: string;
   setNewName: (name: string) => void;
+  hoverRef?: React.RefObject<HTMLElement | null>;
 }
 
 export const NodeContent = ({
@@ -34,6 +35,7 @@ export const NodeContent = ({
   folderColor,
   newName,
   setNewName,
+  hoverRef,
 }: NodeContentProps) => {
   return (
     <FolderTreeNodeContent
@@ -43,6 +45,7 @@ export const NodeContent = ({
       toggleIcon={toggleIcon}
       handleToggle={handleToggle}
       folderColor={folderColor}
+      hoverRef={hoverRef}
       batchMode={
         isBatchMode
           ? {

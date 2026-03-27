@@ -19,12 +19,14 @@ import { FilterActions } from '../../../components/FilterActions';
 import type { FilterState, ExplorerTypeFilter } from '../../../types/filter';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { BatchToolbar } from './batch/BatchToolbar';
+import { SplitIconButton, type SplitDropdownItem } from '@/shared/components/ui/split-icon-button';
 
 interface ExplorerHeaderProps {
   onNewFolder: () => void;
   onCollapseAll: () => void;
   onSelectAll: () => void;
   onNewChat: () => void;
+  newChatDropdownItems?: SplitDropdownItem[];
   filter: FilterState<ExplorerTypeFilter>;
   filterTypes?: ExplorerTypeFilter[];
   extraHeaderButtons?: React.ReactNode;
@@ -41,6 +43,7 @@ export const ExplorerHeader = ({
   onCollapseAll,
   onSelectAll,
   onNewChat,
+  newChatDropdownItems,
   filter,
   filterTypes,
   extraHeaderButtons,
@@ -178,16 +181,12 @@ export const ExplorerHeader = ({
               </Button>
             </SimpleTooltip>
           )}
-          <SimpleTooltip content={t('tooltip.newChat')}>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={onNewChat}
-            >
-              <MessageSquarePlus className="h-4 w-4" />
-            </Button>
-          </SimpleTooltip>
+          <SplitIconButton
+            icon={<MessageSquarePlus className="h-4 w-4" />}
+            tooltip={t('tooltip.newChat')}
+            onClick={onNewChat}
+            dropdownItems={newChatDropdownItems}
+          />
           {extraHeaderButtons}
         </div>
       </div>

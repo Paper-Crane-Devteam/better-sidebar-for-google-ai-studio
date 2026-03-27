@@ -1,6 +1,6 @@
 import React from 'react';
 import { NodeApi } from 'react-arborist';
-import { SimpleTooltip } from '@/shared/components/ui/tooltip';
+import { OverflowTooltip } from '@/shared/components/ui/overflow-tooltip';
 import { cn } from '@/shared/lib/utils/utils';
 import { FolderTreeNodeData } from './types';
 import { RenameForm } from './RenameForm';
@@ -35,6 +35,9 @@ export interface FolderTreeNodeContentProps {
 
   /** Content rendered after the name (e.g. favorite star) */
   nameAddon?: React.ReactNode;
+
+  /** Optional external ref for hover detection on the OverflowTooltip */
+  hoverRef?: React.RefObject<HTMLElement | null>;
 }
 
 export const FolderTreeNodeContent = ({
@@ -48,6 +51,7 @@ export const FolderTreeNodeContent = ({
   newName,
   setNewName,
   nameAddon,
+  hoverRef,
 }: FolderTreeNodeContentProps) => {
   const isFile = node.data.type === 'file';
   const isTimeGroup = node.data.data?.isTimeGroup;
@@ -96,11 +100,15 @@ export const FolderTreeNodeContent = ({
         {node.isEditing ? (
           <RenameForm node={node} newName={newName} setNewName={setNewName} />
         ) : isFile ? (
-          <SimpleTooltip content={node.data.name}>
-            <span className="truncate text-sm select-none">
-              {node.data.name}
-            </span>
-          </SimpleTooltip>
+          <OverflowTooltip
+            content={node.data.name}
+            placement="right"
+            offset={16}
+            className="text-sm select-none"
+            hoverRef={hoverRef}
+          >
+            {node.data.name}
+          </OverflowTooltip>
         ) : (
           <span
             className="truncate text-sm select-none"

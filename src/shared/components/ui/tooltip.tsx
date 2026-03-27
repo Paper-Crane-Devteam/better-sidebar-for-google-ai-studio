@@ -33,7 +33,11 @@ const TooltipContent = React.forwardRef<
         ref={ref}
         sideOffset={sideOffset}
         className={cn(
-          "z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 max-w-xs",
+          "z-50 overflow-hidden rounded-md px-3 py-1.5 text-xs max-w-xs",
+          "bg-foreground text-background dark:bg-foreground dark:text-background",
+          "shadow-sm shadow-black/10 dark:shadow-black/20",
+          "animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-1 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-1 data-[side=top]:slide-in-from-bottom-1",
+          "duration-100 data-[state=closed]:duration-75",
           className
         )}
         {...props}
@@ -45,7 +49,7 @@ TooltipContent.displayName = TooltipPrimitive.Content.displayName
 
 function SimpleTooltip({ content, children, ...props }: { content: React.ReactNode } & React.ComponentProps<typeof TooltipContent> & { delayDuration?: number }) {
   return (
-    <TooltipProvider delayDuration={props.delayDuration}>
+    <TooltipProvider delayDuration={props.delayDuration ?? 400}>
       <Tooltip>
         <TooltipTrigger asChild>
           {children}

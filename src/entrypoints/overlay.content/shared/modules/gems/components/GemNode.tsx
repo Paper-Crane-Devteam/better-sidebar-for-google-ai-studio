@@ -7,11 +7,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
-import { navigateToConversation } from '@/shared/lib/navigation';
+import { navigateToConversation, navigateToGem } from '@/shared/lib/navigation';
 import { useAppStore } from '@/shared/lib/store';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useCurrentConversationId } from '../../../../shared/hooks/useCurrentConversationId';
-import { navigate } from '@/shared/lib/navigation';
 import type { NodeRendererProps } from 'react-arborist';
 import type { FolderTreeNodeData } from '../../../components/folder-tree/types';
 import {
@@ -214,7 +213,7 @@ export const GemNode = ({
           <ContextMenuItem
             onClick={() => {
               const gemUrl = node.data.data?.external_url;
-              if (gemUrl) navigate(gemUrl);
+              if (gemUrl) navigateToGem(gemUrl);
             }}
           >
             <Gem className="mr-2 h-4 w-4" />

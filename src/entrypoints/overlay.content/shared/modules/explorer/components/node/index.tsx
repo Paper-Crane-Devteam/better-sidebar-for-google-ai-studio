@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Folder as FolderIcon,
   MessageSquare,
@@ -47,6 +47,16 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   const currentConversationId = useCurrentConversationId();
   const [newName, setNewName] = useState(node.data.name);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+  const nodeRowRef = useRef<HTMLDivElement>(null);
+
+  // Combine dragHandle and nodeRowRef into one callback ref
+  const combinedRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      (nodeRowRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+      if (dragHandle) dragHandle(el);
+    },
+    [dragHandle],
+  );
 
   // --- Derived state ---
   const isTimeGroup = node.data.data?.isTimeGroup;
@@ -248,7 +258,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
           className="outline-none h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]"
         >
           <div
-            ref={dragHandle}
+            ref={combinedRef}
             role="button"
             tabIndex={0}
             className={nodeClasses}
@@ -282,6 +292,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
               toggleIcon={toggleIcon}
               handleToggle={handleToggle}
               folderColor={folderColor}
+              hoverRef={nodeRowRef}
               tree={tree}
               preview={preview}
               newName={newName}

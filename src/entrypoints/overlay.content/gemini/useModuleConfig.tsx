@@ -1,17 +1,17 @@
-import { navigate } from '@/shared/lib/navigation';
+import { navigate, navigateToGem } from '@/shared/lib/navigation';
 import { handleSearchNavigation } from '../shared/utils';
-import type { ExplorerTypeFilter } from '../shared/types/filter';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
-import { Button } from '@/shared/components/ui/button';
-import { SimpleTooltip } from '@/shared/components/ui/tooltip';
-import { MessageSquareDashed } from 'lucide-react';
+import { MessageSquareDashed, Gem as GemIcon } from 'lucide-react';
+import { GemWithHistory } from '@/shared/components/icons/gem-composite-icons';
 import { useAppStore } from '@/shared/lib/store';
 import { useI18n } from '@/shared/hooks/useI18n';
+import { useModalStore } from '@/shared/lib/modal';
+import { GemPickerContent } from '../shared/modules/gems/components/GemPickerContent';
+import { SplitIconButton } from '@/shared/components/ui/split-icon-button';
 import type { ModuleConfig } from '../shared/types/moduleConfig';
 
-const TemporaryChatButton = () => {
-  const { t } = useI18n();
+const useTemporaryChatToggle = () => {
   const [isTempChat, setIsTempChat] = useState(false);
 
   useEffect(() => {
@@ -32,112 +32,135 @@ const TemporaryChatButton = () => {
     };
 
     const updateState = (btn: Element) => {
-      const isTemp = btn.classList.contains('temp-chat-on');
-      setIsTempChat(isTemp);
+      setIsTempChat(btn.classList.contains('temp-chat-on'));
     };
 
     const startObserving = (btn: Element) => {
-      // Disconnect previous observer
       if (observer) observer.disconnect();
-      
-      observer = new MutationObserver((mutations) => {
-        // Check if button state changed
+
+      observer = new MutationObserver(() => {
         updateState(btn);
-        
-        // Check if button is still in DOM or parent changed
         if (!document.body.contains(btn)) {
-            // Button removed, restart polling
-            cleanup();
-            startPolling();
+          cleanup();
+          startPolling();
         }
       });
 
-      // Observe the button for class changes (state)
       observer.observe(btn, { attributes: true, attributeFilter: ['class'] });
-      
-      // Also observe parent for child list changes (detect removal/replacement)
       if (btn.parentNode) {
-          observer.observe(btn.parentNode, { childList: true });
+        observer.observe(btn.parentNode, { childList: true });
       }
     };
 
     const checkAndObserve = () => {
       const btn = document.querySelector('button[aria-label="Temporary chat"]');
-      
       if (btn) {
-        // If it's a new button instance
         if (btn !== currentBtn) {
           currentBtn = btn;
           updateState(btn);
           startObserving(btn);
-          
-          // Found it, stop polling
           if (pollInterval) {
             clearInterval(pollInterval);
             pollInterval = null;
           }
         }
       } else {
-        // Button lost/not found, ensure polling is active
-        if (!pollInterval) {
-            startPolling();
-        }
+        if (!pollInterval) startPolling();
         currentBtn = null;
       }
     };
 
     const startPolling = () => {
       if (!pollInterval) {
-        // Poll more frequently when searching (500ms), then stop when found
         pollInterval = setInterval(checkAndObserve, 1000);
       }
     };
 
-    // Initial check
     checkAndObserve();
-    // Start polling if not found immediately
-    if (!currentBtn) {
-        startPolling();
-    }
+    if (!currentBtn) startPolling();
 
     return cleanup;
   }, []);
 
-  const toggleTempChat = () => {
+  const toggle = () => {
     const btn = document.querySelector(
       'button[aria-label="Temporary chat"]',
     ) as HTMLButtonElement;
     if (btn) {
       btn.click();
-      // State update will happen via observer
     } else {
       console.warn('Temporary chat button not found');
     }
   };
 
+  return { isTempChat, toggle };
+};
+
+const GemSplitButton = () => {
+  const { t } = useI18n();
+  const lastSelectedGemId = useSettingsStore((s) => s.lastSelectedGemId);
+  const { gems } = useAppStore();
+
+  const lastSelectedGem = useMemo(
+    () => (lastSelectedGemId ? gems.find((g) => g.id === lastSelectedGemId) : null),
+    [gems, lastSelectedGemId],
+  );
+
+  const handleChatWithLastGem = () => {
+    if (lastSelectedGem) {
+      navigateToGem(lastSelectedGem.id);
+    }
+  };
+
+  const handleNewGemChat = () => {
+    useModalStore.getState().open({
+      type: 'info',
+      title: t('gems.selectGem'),
+      content: <GemPickerContent lastSelectedGemId={lastSelectedGemId} />,
+      confirmText: t('common.cancel'),
+      modalClassName: 'max-w-sm',
+    });
+  };
+
+  // No last gem — plain button that opens the picker
+  if (!lastSelectedGem) {
+    return (
+      <SplitIconButton
+        icon={<GemIcon className="h-4 w-4" />}
+        tooltip={t('gems.selectGem')}
+        onClick={handleNewGemChat}
+      />
+    );
+  }
+
+  // Has last gem — split button: main = chat with last gem (decorated), dropdown = open picker
   return (
-    <SimpleTooltip content={t('tooltip.temporaryChat')}>
-      <Button
-        variant={isTempChat ? 'secondary' : 'ghost'}
-        size="icon"
-        className="h-7 w-7"
-        onClick={toggleTempChat}
-      >
-        <MessageSquareDashed className="h-4 w-4" />
-      </Button>
-    </SimpleTooltip>
+    <SplitIconButton
+      icon={<GemWithHistory />}
+      tooltip={t('gems.chatWithLastGem', { name: lastSelectedGem.name })}
+      onClick={handleChatWithLastGem}
+      dropdownItems={[
+        {
+          label: t('gems.selectGem'),
+          icon: GemIcon,
+          onClick: handleNewGemChat,
+        },
+      ]}
+    />
   );
 };
 
 export const useModuleConfig = (): ModuleConfig => {
+  const { t } = useI18n();
   const newChatBehavior = useSettingsStore((state) => state.newChatBehavior);
   const setOverlayOpen = useAppStore((state) => state.setOverlayOpen);
+  const { toggle: toggleTempChat } = useTemporaryChatToggle();
 
   return {
     general: {
       menuActions: {
         onViewHistory: () => {
-           navigate('/search');
+          navigate('/search');
         },
         onSwitchToOriginalUI: () => {
           setOverlayOpen(false);
@@ -148,22 +171,27 @@ export const useModuleConfig = (): ModuleConfig => {
       onNewChat: () => {
         const url = 'https://gemini.google.com/app';
         if (newChatBehavior === 'new-tab') {
-            window.open(url, '_blank');
+          window.open(url, '_blank');
         } else {
           const newChatBtn = document.querySelector(
-            'a[aria-label="New chat"]',
+            'side-navigation-content mat-action-list side-nav-action-button a[aria-label="New chat"]',
           ) as HTMLElement;
           if (newChatBtn) {
             newChatBtn.click();
           } else {
-            // Fallback if button not found
             window.location.href = url;
           }
         }
       },
+      newChatDropdownItems: [
+        {
+          label: t('tooltip.temporaryChat'),
+          icon: MessageSquareDashed,
+          onClick: toggleTempChat,
+        },
+      ],
       visibleFilters: ['search', 'tags', 'favorites'],
-      extraHeaderButtons: <TemporaryChatButton />,
-    
+      extraHeaderButtons: <GemSplitButton />,
     },
     favorites: {
       visibleFilters: ['search', 'tags'],
@@ -172,7 +200,7 @@ export const useModuleConfig = (): ModuleConfig => {
       enabled: true,
     },
     search: {
-      onNavigate: handleSearchNavigation
+      onNavigate: handleSearchNavigation,
     },
   };
 };

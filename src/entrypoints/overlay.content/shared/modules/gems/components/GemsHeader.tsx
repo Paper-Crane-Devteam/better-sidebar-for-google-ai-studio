@@ -5,15 +5,14 @@ import {
   ListCollapse,
   ArrowDownAZ,
   Clock,
-  Plus,
-  MessageSquarePlus,
-  Sparkles,
+  Gem as GemIcon,
 } from 'lucide-react';
+import { GemWithPlus, GemWithHistory } from '@/shared/components/icons/gem-composite-icons';
 import { SidePanelMenu } from '@/entrypoints/overlay.content/shared/components/menu/SidePanelMenu';
 import { FilterActions } from '../../../components/FilterActions';
 import type { FilterState, ExplorerTypeFilter } from '../../../types/filter';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { navigate } from '@/shared/lib/navigation';
+import { navigate, navigateToGem } from '@/shared/lib/navigation';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useModalStore } from '@/shared/lib/modal';
 import { GemPickerContent } from './GemPickerContent';
@@ -59,13 +58,14 @@ export const GemsHeader = ({
       type: 'info',
       title: t('gems.selectGem'),
       content: <GemPickerContent lastSelectedGemId={lastSelectedGemId} />,
+      confirmText: t('common.cancel'),
       modalClassName: 'max-w-sm',
     });
   };
 
   const handleChatWithLastGem = () => {
     if (lastSelectedGem) {
-      navigate(`https://gemini.google.com/gem/${lastSelectedGem.id}`);
+      navigateToGem(lastSelectedGem.id);
     }
   };
 
@@ -127,24 +127,24 @@ export const GemsHeader = ({
               className="h-7 w-7"
               onClick={handleCreateGem}
             >
-              <Plus className="h-4 w-4" />
+              <GemWithPlus />
             </Button>
           </SimpleTooltip>
-          <SimpleTooltip content={t('gems.newGemChat')}>
+          <SimpleTooltip content={t('gems.selectGem')}>
             <Button
               variant="ghost"
               size="icon"
               className="h-7 w-7"
               onClick={handleNewGemChat}
             >
-              <MessageSquarePlus className="h-4 w-4" />
+              <GemIcon className="h-4 w-4" />
             </Button>
           </SimpleTooltip>
           <SimpleTooltip
             content={
               lastSelectedGem
                 ? t('gems.chatWithLastGem', { name: lastSelectedGem.name })
-                : t('gems.newGemChat')
+                : t('gems.selectGem')
             }
           >
             <Button
@@ -154,7 +154,7 @@ export const GemsHeader = ({
               disabled={!lastSelectedGem}
               onClick={handleChatWithLastGem}
             >
-              <Sparkles className="h-4 w-4" />
+              <GemWithHistory />
             </Button>
           </SimpleTooltip>
         </div>

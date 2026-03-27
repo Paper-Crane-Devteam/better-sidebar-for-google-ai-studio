@@ -25,8 +25,10 @@ export const GlobalModal = () => {
             style={{ zIndex: z }}
           >
             <div
+              ref={(el) => el?.focus()}
+              tabIndex={-1}
               className={cn(
-                'fixed left-[50%] top-[50%] flex w-full max-w-lg max-h-[90vh] translate-x-[-50%] translate-y-[-50%] flex-col border bg-background shadow-lg duration-200 sm:rounded-lg animate-in fade-in-0 zoom-in-95 slide-in-from-left-1/2 slide-in-from-top-48 overflow-hidden',
+                'fixed left-[50%] top-[50%] flex w-full max-w-lg max-h-[90vh] translate-x-[-50%] translate-y-[-50%] flex-col border bg-background shadow-lg duration-200 sm:rounded-lg animate-in fade-in-0 zoom-in-95 slide-in-from-left-1/2 slide-in-from-top-48 overflow-hidden outline-none',
                 modalClassName,
               )}
               style={{ zIndex: z + 1 }}

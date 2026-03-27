@@ -1,12 +1,16 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { Gem as GemIcon, Search, Sparkles } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { Gem as GemIcon, Search } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
-import { navigate } from '@/shared/lib/navigation';
+import { navigateToGem } from '@/shared/lib/navigation';
 import { useModalStore } from '@/shared/lib/modal';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import type { Gem } from '@/shared/types/db';
+
+const ITEM_HEIGHT = 36;
+const VISIBLE_COUNT = 10;
+const OVERSCAN = 4;
 
 interface GemPickerContentProps {
   lastSelectedGemId?: string | null;
@@ -17,12 +21,10 @@ export const GemPickerContent = ({ lastSelectedGemId }: GemPickerContentProps) =
   const { gems } = useAppStore();
   const close = useModalStore((s) => s.close);
   const [search, setSearch] = useState('');
+  const [activeIndex, setActiveIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const lastSelectedGem = useMemo(
-    () => (lastSelectedGemId ? gems.find((g) => g.id === lastSelectedGemId) : null),
-    [gems, lastSelectedGemId],
-  );
+  const listRef = useRef<HTMLDivElement>(null);
+  const [scrollTop, setScrollTop] = useState(0);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return gems;
@@ -30,18 +32,76 @@ export const GemPickerContent = ({ lastSelectedGemId }: GemPickerContentProps) =
     return gems.filter((g) => g.name.toLowerCase().includes(q));
   }, [gems, search]);
 
+
+
+  // Reset active index when search changes
   useEffect(() => {
-    setTimeout(() => inputRef.current?.focus(), 50);
+    setActiveIndex(-1);
+  }, [search]);
+
+  const handleSelect = useCallback(
+    (gem: Gem) => {
+      useSettingsStore.getState().setLastSelectedGemId(gem.id);
+      close();
+      navigateToGem(gem.id);
+    },
+    [close],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setActiveIndex((prev) => Math.min(prev + 1, filtered.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActiveIndex((prev) => Math.max(prev - 1, 0));
+      } else if (e.key === 'Enter' && activeIndex >= 0 && activeIndex < filtered.length) {
+        e.preventDefault();
+        handleSelect(filtered[activeIndex]);
+      }
+    },
+    [filtered, activeIndex, handleSelect],
+  );
+
+  // Scroll active item into view
+  useEffect(() => {
+    if (activeIndex < 0 || !listRef.current) return;
+    const top = activeIndex * ITEM_HEIGHT;
+    const bottom = top + ITEM_HEIGHT;
+    const el = listRef.current;
+    if (top < el.scrollTop) el.scrollTop = top;
+    else if (bottom > el.scrollTop + el.clientHeight) el.scrollTop = bottom - el.clientHeight;
+  }, [activeIndex]);
+
+  const handleScroll = useCallback(() => {
+    if (listRef.current) setScrollTop(listRef.current.scrollTop);
   }, []);
 
-  const handleSelect = (gem: Gem) => {
-    useSettingsStore.getState().setLastSelectedGemId(gem.id);
-    close();
-    navigate(`https://gemini.google.com/gem/${gem.id}`);
+  // Virtual scrolling calculations
+  const totalHeight = filtered.length * ITEM_HEIGHT;
+  const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN);
+  const endIndex = Math.min(
+    filtered.length,
+    Math.ceil((scrollTop + VISIBLE_COUNT * ITEM_HEIGHT) / ITEM_HEIGHT) + OVERSCAN,
+  );
+  const visibleItems = filtered.slice(startIndex, endIndex);
+
+  const renderGemIcon = (gem: Gem) => {
+    if (gem.icon_url) {
+      return (
+        <img
+          src={gem.icon_url}
+          alt=""
+          className="h-4 w-4 shrink-0 rounded-sm object-cover"
+        />
+      );
+    }
+    return <GemIcon className="h-4 w-4 text-muted-foreground shrink-0" />;
   };
 
   return (
-    <div className="-mx-6 -my-4">
+    <div className="-mx-6 -my-4" onKeyDown={handleKeyDown}>
       {/* Search */}
       <div className="px-3 pb-2 pt-1">
         <div className="relative">
@@ -56,46 +116,42 @@ export const GemPickerContent = ({ lastSelectedGemId }: GemPickerContentProps) =
         </div>
       </div>
 
-      {/* List */}
-      <div className="max-h-[300px] overflow-y-auto px-2 pb-2 flex flex-col gap-0.5">
-        {/* Last selected gem shortcut */}
-        {lastSelectedGem && !search.trim() && (
-          <>
-            <button
-              className={cn(
-                'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm w-full text-left',
-                'hover:bg-accent/50 transition-colors',
-                'text-purple-600 dark:text-purple-400 font-medium',
-              )}
-              onClick={() => handleSelect(lastSelectedGem)}
-            >
-              <Sparkles className="h-4 w-4 shrink-0" />
-              <span className="truncate">
-                {t('gems.chatWithLastGem', { name: lastSelectedGem.name })}
-              </span>
-            </button>
-            <div className="h-px bg-border mx-1 my-1" />
-          </>
-        )}
-
+      {/* List with virtual scrolling */}
+      <div
+        ref={listRef}
+        className="overflow-y-auto px-2 pb-2"
+        style={{ maxHeight: VISIBLE_COUNT * ITEM_HEIGHT }}
+        onScroll={handleScroll}
+      >
         {filtered.length === 0 ? (
           <div className="text-center text-muted-foreground text-sm py-6">
             {t('gems.noGems')}
           </div>
         ) : (
-          filtered.map((gem) => (
-            <button
-              key={gem.id}
-              className={cn(
-                'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm w-full text-left',
-                'hover:bg-accent/50 transition-colors',
-              )}
-              onClick={() => handleSelect(gem)}
-            >
-              <GemIcon className="h-4 w-4 text-purple-500 shrink-0" />
-              <span className="truncate">{gem.name}</span>
-            </button>
-          ))
+          <div style={{ height: totalHeight, position: 'relative' }}>
+            {visibleItems.map((gem, i) => {
+              const index = startIndex + i;
+              return (
+                <button
+                  key={gem.id}
+                  className={cn(
+                    'flex items-center gap-2 px-2 rounded-md text-sm w-full text-left',
+                    'hover:bg-accent/50 transition-colors absolute text-foreground font-medium',
+                    index === activeIndex && 'bg-accent/50',
+                  )}
+                  style={{
+                    height: ITEM_HEIGHT,
+                    top: index * ITEM_HEIGHT,
+                  }}
+                  onClick={() => handleSelect(gem)}
+                  onMouseEnter={() => setActiveIndex(index)}
+                >
+                  {renderGemIcon(gem)}
+                  <span className="truncate">{gem.name}</span>
+                </button>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

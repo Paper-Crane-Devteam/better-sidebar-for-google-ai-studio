@@ -1,5 +1,34 @@
 import { detectPlatform, Platform } from '@/shared/types/platform';
 
+/**
+ * Trigger Gemini's native "New chat" button click.
+ * Returns true if the button was found and clicked.
+ */
+const clickGeminiNewChat = (): boolean => {
+  const newChatBtn = document.querySelector(
+    'side-navigation-content mat-action-list side-nav-action-button a[aria-label="New chat"]',
+  ) as HTMLElement;
+  if (newChatBtn) {
+    newChatBtn.click();
+    return true;
+  }
+  return false;
+};
+
+/**
+ * Navigate to a Gem chat. Creates a new chat first to work around
+ * a bug where navigating directly to a gem URL can fail.
+ * Accepts either a gem ID or a full gem URL.
+ */
+export const navigateToGem = (gemIdOrUrl: string) => {
+  const gemUrl = gemIdOrUrl.startsWith('http')
+    ? gemIdOrUrl
+    : `https://gemini.google.com/gem/${gemIdOrUrl}`;
+  // Trigger new chat first, then navigate to the gem
+  clickGeminiNewChat();
+  navigate(gemUrl);
+};
+
 export const navigate = (url: string) => {
   window.history.pushState({}, '', url);
   window.dispatchEvent(new PopStateEvent('popstate'));
