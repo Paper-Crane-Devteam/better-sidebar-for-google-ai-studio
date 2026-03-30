@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -51,14 +51,45 @@ export const SidePanelMenu = ({
 
   const handleScanLibrary = menuActions?.handleScanLibrary;
 
+  const [open, setOpen] = useState(false);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cancelClose = useCallback(() => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleClose = useCallback(() => {
+    cancelClose();
+    closeTimerRef.current = setTimeout(() => setOpen(false), 150);
+  }, [cancelClose]);
+
+  const handleTriggerEnter = useCallback(() => {
+    cancelClose();
+    setOpen(true);
+  }, [cancelClose]);
+
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="data-[state=open]:bg-accent data-[state=open]:text-accent-foreground">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="data-[state=open]:bg-accent data-[state=open]:text-accent-foreground"
+            onMouseEnter={handleTriggerEnter}
+            onMouseLeave={scheduleClose}
+          >
             <MoreVertical className="h-4 w-4" />
           </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 z-[9999]">
+      <DropdownMenuContent
+        align="end"
+        className="w-56 z-[9999]"
+        onMouseEnter={cancelClose}
+        onMouseLeave={scheduleClose}
+      >
         {/* Section 1: Folder/Tree Actions */}
         {onNewFolder && (
             <DropdownMenuItem onClick={onNewFolder}>

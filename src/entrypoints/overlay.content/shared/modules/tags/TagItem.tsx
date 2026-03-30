@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Tag } from '@/shared/types/db';
 import { useAppStore } from '@/shared/lib/store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
@@ -45,6 +45,24 @@ export const TagItem = ({ tag }: TagItemProps) => {
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cancelDropdownClose = useCallback(() => {
+    if (dropdownCloseTimerRef.current) {
+      clearTimeout(dropdownCloseTimerRef.current);
+      dropdownCloseTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleDropdownClose = useCallback(() => {
+    cancelDropdownClose();
+    dropdownCloseTimerRef.current = setTimeout(() => setIsDropdownOpen(false), 150);
+  }, [cancelDropdownClose]);
+
+  const handleDropdownTriggerEnter = useCallback(() => {
+    cancelDropdownClose();
+    setIsDropdownOpen(true);
+  }, [cancelDropdownClose]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -141,13 +159,23 @@ export const TagItem = ({ tag }: TagItemProps) => {
                 isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
               )}
             >
-              <DropdownMenu onOpenChange={setIsDropdownOpen}>
+              <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onMouseEnter={handleDropdownTriggerEnter}
+                    onMouseLeave={scheduleDropdownClose}
+                  >
                     <MoreVertical className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent
+                  align="end"
+                  onMouseEnter={cancelDropdownClose}
+                  onMouseLeave={scheduleDropdownClose}
+                >
                   <DropdownMenuItem onClick={() => setIsEditing(true)}>
                     <Edit2 className="mr-2 h-4 w-4" />
                     {t('tags.rename')}

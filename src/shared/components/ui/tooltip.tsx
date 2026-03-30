@@ -50,7 +50,7 @@ TooltipContent.displayName = TooltipPrimitive.Content.displayName
 function SimpleTooltip({ content, children, ...props }: { content: React.ReactNode } & React.ComponentProps<typeof TooltipContent> & { delayDuration?: number }) {
   return (
     <TooltipProvider delayDuration={props.delayDuration ?? 400}>
-      <Tooltip>
+      <Tooltip disableHoverableContent>
         <TooltipTrigger asChild>
           {children}
         </TooltipTrigger>

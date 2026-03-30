@@ -15,7 +15,7 @@
 -4. uninstall form
 5. chatgpt integration
 -6. paper crane dev landing page
-7. gemini gems integration and management
+-7. gemini gems integration and management
 -8. advanced prompt template
 9. better acess to prompts
 10. auto sync to local disk
@@ -30,4 +30,4 @@
 -17. gem favorite style
 18. a/b ui compatible
 19, create new chat twice cause the chatbox floating in the middle
-20. hover on favorite then cursor up, the tooltip float at the top left
+-20. hover on favorite then cursor up, the tooltip float at the top left

@@ -177,7 +177,32 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(
         return node.children.length > 0;
       };
 
-      if (tagFilter.selected.length > 0) {
+      const isFiltering =
+        tagFilter.selected.length > 0 ||
+        typeFilter !== 'all' ||
+        onlyFavorites ||
+        !!searchTerm;
+
+      if (isFiltering) {
+        // When search is active, also prune folders whose descendants don't match
+        if (searchTerm) {
+          const term = searchTerm.toLowerCase();
+          const hasMatchingContent = (node: FolderTreeNodeData): boolean => {
+            if (node.type === 'file')
+              return node.name.toLowerCase().includes(term);
+            if (!node.children || node.children.length === 0) return false;
+            node.children = node.children.filter((child) =>
+              hasMatchingContent(child),
+            );
+            return node.children.length > 0;
+          };
+          const prunedRootNodes = rootNodes.filter((node) =>
+            hasMatchingContent(node),
+          );
+          sortNodes(prunedRootNodes);
+          return prunedRootNodes;
+        }
+
         const prunedRootNodes = rootNodes.filter((node) => hasContent(node));
         sortNodes(prunedRootNodes);
         return prunedRootNodes;

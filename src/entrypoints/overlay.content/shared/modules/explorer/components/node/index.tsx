@@ -311,11 +311,11 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
                 'node-action-bar',
                 isContextMenuOpen && 'flex',
               )}
-              style={coloredSelectedStyle ? { backgroundColor: coloredSelectedStyle.backgroundColor } : undefined}
+              style={coloredSelectedStyle ? { backgroundColor: `color-mix(in srgb, ${folderColor} 15%, rgb(var(--background)))` } : undefined}
             >
               <div
                 className="absolute inset-y-0 -left-6 w-6 pointer-events-none [background:inherit] [mask-image:linear-gradient(to_right,transparent,black)]"
-                style={coloredSelectedStyle ? { backgroundColor: coloredSelectedStyle.backgroundColor } : undefined}
+                style={coloredSelectedStyle ? { backgroundColor: `color-mix(in srgb, ${folderColor} 15%, rgb(var(--background)))` } : undefined}
               />
 
               {/* New chat button for folders */}
