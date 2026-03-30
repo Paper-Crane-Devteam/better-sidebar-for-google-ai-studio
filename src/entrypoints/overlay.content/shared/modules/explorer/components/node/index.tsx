@@ -87,6 +87,25 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
       selectedChildrenCount > 0 && selectedChildrenCount < childrenIds.length;
   } else {
     isBatchSelected = batchSelectedIds.includes(node.data.id);
+    // Compute indeterminate state for regular folder nodes
+    if (isFolder && isBatchMode && !isBatchSelected) {
+      const getAllDescendantIds = (folderId: string): string[] => {
+        const ids: string[] = [];
+        const { folders: allFolders, conversations: allConvs } = useAppStore.getState();
+        for (const f of allFolders.filter((f) => f.parent_id === folderId)) {
+          ids.push(f.id);
+          ids.push(...getAllDescendantIds(f.id));
+        }
+        for (const c of allConvs.filter((c) => c.folder_id === folderId)) {
+          ids.push(c.id);
+        }
+        return ids;
+      };
+      const descendantIds = getAllDescendantIds(node.data.id);
+      isBatchIndeterminate =
+        descendantIds.length > 0 &&
+        descendantIds.some((id) => batchSelectedIds.includes(id));
+    }
   }
 
   const isActive = node.isSelected || isBatchSelected;

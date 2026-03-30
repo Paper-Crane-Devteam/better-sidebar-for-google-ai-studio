@@ -213,12 +213,17 @@ export const PromptsTab = ({ menuActions }: PromptsTabProps) => {
     treeRef.current?.collapseAll();
   };
 
+  const handleSelectAll = () => {
+    treeRef.current?.selectAll?.();
+  };
+
   return (
     <div className="flex flex-col h-full w-full relative">
       {/* Header */}
       <PromptsHeader
         onNewFolder={handleNewFolder}
         onCollapseAll={handleCollapseAll}
+        onSelectAll={handleSelectAll}
         onNewChat={handleNewPrompt}
         filter={filter}
         menuActions={menuActions}

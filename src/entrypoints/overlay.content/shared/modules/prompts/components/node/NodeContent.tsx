@@ -6,6 +6,7 @@ import { PromptIconDisplay } from '../../lib/prompt-icons';
 interface NodeContentProps extends NodeProps {
   isBatchMode: boolean;
   isBatchSelected: boolean;
+  isBatchIndeterminate?: boolean;
   onToggleBatchSelection: () => void;
   isFavorite: boolean;
   onToggleFavorite: (e: React.MouseEvent) => void;
@@ -21,6 +22,7 @@ export const NodeContent = ({
   node,
   isBatchMode,
   isBatchSelected,
+  isBatchIndeterminate,
   onToggleBatchSelection,
   isFavorite,
   onToggleFavorite,
@@ -55,6 +57,7 @@ export const NodeContent = ({
           ? {
               enabled: true,
               selected: isBatchSelected,
+              indeterminate: isBatchIndeterminate,
               onToggle: onToggleBatchSelection,
             }
           : undefined

@@ -358,7 +358,11 @@
     "moveSelected": "移動選取項",
     "addTag": "新增標籤",
     "exitBatchMode": "離開批次模式",
-    "selectAll": "全選"
+    "selectAll": "全選",
+    "selectedCount": "已選 {{count}} 項",
+    "selectItems": "選擇項目",
+    "selectedCount": "已選取 {{count}} 項",
+    "selectItems": "選取項目"
   },
   "tags": {
     "noTagsAvailable": "沒有可用的標籤。",

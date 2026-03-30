@@ -40,7 +40,9 @@ export const useGeminiUI = () => {
   // Check for upgrade option
   useEffect(() => {
     const checkUpgradeBtn = () => {
-      const upgradeBtn = document.querySelector('upsell-button');
+      const upgradeBtn =
+        document.querySelector('upsell-button') ||
+        document.querySelector('g1-dynamic-upsell-button');
       setShowUpgradeOption(!!upgradeBtn);
     };
     checkUpgradeBtn();
@@ -128,7 +130,7 @@ export const useGeminiUI = () => {
       css += `hallucination-disclaimer { visibility: hidden !important; height: 10px !important; }\n`;
     }
     if (hideUpgrade) {
-      css += `upsell-button { display: none !important; }\n`;
+      css += `upsell-button, g1-dynamic-upsell-button { display: none !important; }\n`;
     }
 
     // Layout Widths

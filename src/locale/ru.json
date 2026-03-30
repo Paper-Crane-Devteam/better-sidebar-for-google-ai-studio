@@ -358,7 +358,9 @@
     "moveSelected": "Переместить выбранные",
     "addTag": "Добавить тег",
     "exitBatchMode": "Выйти из режима массового выбора",
-    "selectAll": "Выбрать все"
+    "selectAll": "Выбрать все",
+    "selectedCount": "{{count}} выбрано",
+    "selectItems": "Выберите элементы"
   },
   "tags": {
     "noTagsAvailable": "Нет доступных тегов.",

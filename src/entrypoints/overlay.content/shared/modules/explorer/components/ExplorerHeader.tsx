@@ -79,10 +79,6 @@ export const ExplorerHeader = ({
         </h1>
 
         <div className="flex items-center gap-0.5">
-          {isBatchMode ? (
-            <BatchToolbar onSelectAll={onSelectAll} />
-          ) : (
-            <>
               <SimpleTooltip content={t('data.gdriveSync')}>
                 <Button
                   variant="ghost"
@@ -143,8 +139,8 @@ export const ExplorerHeader = ({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setExplorerBatchMode(true)}
+                  className={`h-7 w-7 ${isBatchMode ? 'bg-primary/15 text-primary' : ''}`}
+                  onClick={() => setExplorerBatchMode(!isBatchMode)}
                 >
                   <ListChecks className="h-4 w-4" />
                 </Button>
@@ -155,8 +151,6 @@ export const ExplorerHeader = ({
                 viewMode={viewMode}
                 menuActions={menuActions}
               />
-            </>
-          )}
         </div>
       </div>
 
@@ -190,6 +184,10 @@ export const ExplorerHeader = ({
           {extraHeaderButtons}
         </div>
       </div>
+
+      {isBatchMode && (
+        <BatchToolbar onSelectAll={onSelectAll} />
+      )}
     </div>
   );
 };

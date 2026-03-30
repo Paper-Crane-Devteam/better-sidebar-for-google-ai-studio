@@ -358,7 +358,9 @@
     "moveSelected": "Mover Seleccionados",
     "addTag": "Añadir Etiqueta",
     "exitBatchMode": "Salir del Modo de Lotes",
-    "selectAll": "Seleccionar Todo"
+    "selectAll": "Seleccionar Todo",
+    "selectedCount": "{{count}} seleccionados",
+    "selectItems": "Seleccionar elementos"
   },
   "tags": {
     "noTagsAvailable": "No hay etiquetas disponibles.",

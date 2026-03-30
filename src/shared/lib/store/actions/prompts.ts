@@ -254,6 +254,18 @@ export function createPromptsActions(
           return ancestors;
         };
 
+        const areAllChildrenSelected = (folderId: string): boolean => {
+          const childFolders = promptFolders.filter(
+            (f) => f.parent_id === folderId,
+          );
+          const childFiles = prompts.filter((c) => c.folder_id === folderId);
+          if (childFolders.length === 0 && childFiles.length === 0) return false;
+          return (
+            childFolders.every((f) => currentSelected.has(f.id)) &&
+            childFiles.every((c) => currentSelected.has(c.id))
+          );
+        };
+
         if (isSelected) {
           currentSelected.delete(id);
           getAllDescendants(id).forEach((d) => currentSelected.delete(d));
@@ -261,6 +273,14 @@ export function createPromptsActions(
         } else {
           currentSelected.add(id);
           getAllDescendants(id).forEach((d) => currentSelected.add(d));
+          // Recursively check ancestors: if all children of a parent are selected, select the parent too
+          for (const ancestorId of getAncestors(id)) {
+            if (areAllChildrenSelected(ancestorId)) {
+              currentSelected.add(ancestorId);
+            } else {
+              break;
+            }
+          }
         }
 
         return {

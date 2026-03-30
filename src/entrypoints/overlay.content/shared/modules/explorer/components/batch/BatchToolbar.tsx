@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/shared/components/ui/button';
-import { Trash2, FolderInput, Tag as TagIcon, X, CheckSquare } from 'lucide-react';
+import { Trash2, FolderInput, Tag as TagIcon, CheckSquare, X } from 'lucide-react';
 import { useAppStore } from '@/shared/lib/store';
 import { modal } from '@/shared/lib/modal';
 import { MoveItemsDialog } from './MoveItemsDialog';
@@ -113,42 +113,47 @@ export const BatchToolbar = ({ onSelectAll }: BatchToolbarProps) => {
   };
 
   return (
-    <div className="flex items-center gap-1">
-      <SimpleTooltip content={t('batch.selectAll')}>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onSelectAll}>
-          <CheckSquare className="h-4 w-4" />
-        </Button>
-      </SimpleTooltip>
+    <div className="px-3 py-1.5 flex items-center justify-between border-t bg-muted/30">
+      <span className="text-xs text-muted-foreground">
+        {selectedIds.length > 0
+          ? t('batch.selectedCount', { count: selectedIds.length })
+          : t('batch.selectItems')}
+      </span>
+      <div className="flex items-center gap-1">
+        <SimpleTooltip content={t('batch.selectAll')}>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onSelectAll}>
+            <CheckSquare className="h-4 w-4" />
+          </Button>
+        </SimpleTooltip>
 
-      <SimpleTooltip content={t('batch.deleteSelected')}>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleDelete}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </SimpleTooltip>
+        <div className="w-[1px] h-4 bg-border mx-0.5" />
 
-      <SimpleTooltip content={t('batch.moveSelected')}>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleMove}>
-          <FolderInput className="h-4 w-4" />
-        </Button>
-      </SimpleTooltip>
+        <SimpleTooltip content={t('batch.deleteSelected')}>
+          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={selectedIds.length === 0} onClick={handleDelete}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </SimpleTooltip>
 
-      <SimpleTooltip content={t('batch.addTag')}>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleTag}>
-          <TagIcon className="h-4 w-4" />
-        </Button>
-      </SimpleTooltip>
+        <SimpleTooltip content={t('batch.moveSelected')}>
+          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={selectedIds.length === 0} onClick={handleMove}>
+            <FolderInput className="h-4 w-4" />
+          </Button>
+        </SimpleTooltip>
 
-      <div className="w-[1px] h-4 bg-border mx-1" />
+        <SimpleTooltip content={t('batch.addTag')}>
+          <Button variant="ghost" size="icon" className="h-7 w-7" disabled={selectedIds.length === 0} onClick={handleTag}>
+            <TagIcon className="h-4 w-4" />
+          </Button>
+        </SimpleTooltip>
 
-      <SimpleTooltip content={t('batch.exitBatchMode')}>
-        <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setExplorerBatchMode(false)}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </SimpleTooltip>
+        <div className="w-[1px] h-4 bg-border mx-0.5" />
+
+        <SimpleTooltip content={t('batch.exitBatchMode')}>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setExplorerBatchMode(false)}>
+            <X className="h-4 w-4" />
+          </Button>
+        </SimpleTooltip>
+      </div>
     </div>
   );
 };

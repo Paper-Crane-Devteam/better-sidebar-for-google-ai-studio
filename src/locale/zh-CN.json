@@ -359,7 +359,9 @@
     "moveSelected": "移动选中项",
     "addTag": "添加标签",
     "exitBatchMode": "退出批量模式",
-    "selectAll": "全选"
+    "selectAll": "全选",
+    "selectedCount": "已选 {{count}} 项",
+    "selectItems": "选择项目"
   },
   "tags": {
     "noTagsAvailable": "没有可用的标签。",

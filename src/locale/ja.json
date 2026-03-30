@@ -358,7 +358,9 @@
     "moveSelected": "選択した項目を移動",
     "addTag": "タグを追加",
     "exitBatchMode": "一括モードを終了",
-    "selectAll": "すべて選択"
+    "selectAll": "すべて選択",
+    "selectedCount": "{{count}} 件選択中",
+    "selectItems": "項目を選択"
   },
   "tags": {
     "noTagsAvailable": "利用可能なタグがありません。",

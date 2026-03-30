@@ -359,7 +359,9 @@
     "moveSelected": "Move Selected",
     "addTag": "Add Tag",
     "exitBatchMode": "Exit Batch Mode",
-    "selectAll": "Select All"
+    "selectAll": "Select All",
+    "selectedCount": "{{count}} selected",
+    "selectItems": "Select items"
   },
   "tags": {
     "noTagsAvailable": "No tags available.",

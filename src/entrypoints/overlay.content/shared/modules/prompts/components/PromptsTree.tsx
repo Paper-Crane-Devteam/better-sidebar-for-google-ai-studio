@@ -41,6 +41,18 @@ export const PromptsTree = forwardRef<ArboristTreeHandle, PromptsTreeProps>(
       collapseAll: () => folderTreeRef.current?.collapseAll(),
       edit: (id: string) => folderTreeRef.current?.edit(id),
       select: (id: string) => folderTreeRef.current?.select(id),
+      selectAll: () => {
+        const { setPromptsBatchSelection } = useAppStore.getState();
+        const getAllIds = (nodes: FolderTreeNodeData[]): string[] => {
+          let ids: string[] = [];
+          nodes.forEach((node) => {
+            ids.push(node.id);
+            if (node.children) ids = ids.concat(getAllIds(node.children));
+          });
+          return ids;
+        };
+        setPromptsBatchSelection(getAllIds(data));
+      },
       open: (id: string) => folderTreeRef.current?.open?.(id),
     }));
 

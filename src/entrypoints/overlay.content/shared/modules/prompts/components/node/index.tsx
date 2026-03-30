@@ -64,6 +64,27 @@ export const Node = ({
   const { isBatchMode, selectedIds: batchSelectedIds } = ui.prompts.batch;
   const isBatchSelected = batchSelectedIds.includes(node.data.id);
 
+  // Compute indeterminate state for folder nodes
+  let isBatchIndeterminate = false;
+  if (node.data.type === 'folder' && isBatchMode && !isBatchSelected) {
+    const getAllDescendantIds = (folderId: string): string[] => {
+      const ids: string[] = [];
+      const { promptFolders, prompts: allPrompts } = useAppStore.getState();
+      for (const f of promptFolders.filter((f) => f.parent_id === folderId)) {
+        ids.push(f.id);
+        ids.push(...getAllDescendantIds(f.id));
+      }
+      for (const p of allPrompts.filter((p) => p.folder_id === folderId)) {
+        ids.push(p.id);
+      }
+      return ids;
+    };
+    const descendantIds = getAllDescendantIds(node.data.id);
+    isBatchIndeterminate =
+      descendantIds.length > 0 &&
+      descendantIds.some((id) => batchSelectedIds.includes(id));
+  }
+
   const handleCreateFolder = async (parentId: string) => {
     const newFolderId = await createPromptFolder(t('node.newFolder'), parentId);
     if (newFolderId) {
@@ -186,6 +207,7 @@ export const Node = ({
         }}
         isBatchMode={isBatchMode}
         isBatchSelected={isBatchSelected}
+        isBatchIndeterminate={isBatchIndeterminate}
         onToggleBatchSelection={() => togglePromptsBatchSelection(node.data.id)}
         isFavorite={isFavorite}
         folderIcon={folderIcon}

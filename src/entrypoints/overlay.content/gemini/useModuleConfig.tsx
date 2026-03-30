@@ -83,13 +83,47 @@ const useTemporaryChatToggle = () => {
   }, []);
 
   const toggle = () => {
-    const btn = document.querySelector(
-      'button[aria-label="Temporary chat"]',
-    ) as HTMLButtonElement;
-    if (btn) {
-      btn.click();
+    const isOnNewChat = window.location.pathname === '/app';
+
+    const clickTempChatBtn = () => {
+      const btn = document.querySelector(
+        'button[aria-label="Temporary chat"]',
+      ) as HTMLButtonElement;
+      if (btn) {
+        btn.click();
+      } else {
+        console.warn('Temporary chat button not found');
+      }
+    };
+
+    if (isOnNewChat) {
+      clickTempChatBtn();
     } else {
-      console.warn('Temporary chat button not found');
+      // Navigate to new chat first, then toggle after the page settles
+      const newChatBtn = document.querySelector(
+        'side-navigation-content mat-action-list side-nav-action-button a[aria-label="New chat"]',
+      ) as HTMLElement;
+      if (newChatBtn) {
+        newChatBtn.click();
+      } else {
+        navigate('/app');
+      }
+      // Wait for the new chat page to render the temporary chat button
+      const waitAndClick = (retries = 10) => {
+        setTimeout(() => {
+          const btn = document.querySelector(
+            'button[aria-label="Temporary chat"]',
+          ) as HTMLButtonElement;
+          if (btn) {
+            btn.click();
+          } else if (retries > 0) {
+            waitAndClick(retries - 1);
+          } else {
+            console.warn('Temporary chat button not found after navigation');
+          }
+        }, 300);
+      };
+      waitAndClick();
     }
   };
 
@@ -191,7 +225,8 @@ export const useModuleConfig = (): ModuleConfig => {
           onClick: toggleTempChat,
         },
       ],
-      visibleFilters: ['search', 'tags', 'favorites'],
+      filterTypes: ['all', 'conversation', 'gem'] as const,
+      visibleFilters: ['search', 'tags', 'type', 'favorites'],
       extraHeaderButtons: <GemSplitButton />,
     },
     favorites: {

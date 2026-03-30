@@ -213,7 +213,7 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(
     }, [
       folders, conversations, sortOrder, favorites,
       tagFilter.selected, conversationTags, typeFilter,
-      onlyFavorites, ignoredFolders, t,
+      onlyFavorites, ignoredFolders, searchTerm, t,
     ]);
 
     useImperativeHandle(ref, () => ({
@@ -227,7 +227,7 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(
             const matches =
               !searchTerm ||
               node.name.toLowerCase().includes(searchTerm.toLowerCase());
-            if (node.type === 'file' && matches) ids.push(node.id);
+            if (matches) ids.push(node.id);
             if (node.children) ids = ids.concat(getAllIds(node.children));
           });
           return ids;

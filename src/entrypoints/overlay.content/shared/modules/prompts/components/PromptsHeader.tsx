@@ -13,6 +13,7 @@ interface PromptsHeaderProps {
   onNewFolder: () => void;
   onCollapseAll: () => void;
   onNewChat: () => void;
+  onSelectAll?: () => void;
   filter: FilterState<PromptsTypeFilter>;
   menuActions?: {
     onViewHistory?: () => void;
@@ -26,6 +27,7 @@ export const PromptsHeader = ({
   onNewFolder,
   onCollapseAll,
   onNewChat,
+  onSelectAll,
   filter,
   menuActions,
 }: PromptsHeaderProps) => {
@@ -48,10 +50,6 @@ export const PromptsHeader = ({
         </h1>
 
         <div className="flex items-center gap-0.5">
-          {isBatchMode ? (
-            <BatchToolbar />
-          ) : (
-            <>
               <SimpleTooltip content={t('menu.collapseAll')}>
                 <Button
                   variant="ghost"
@@ -88,16 +86,14 @@ export const PromptsHeader = ({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
-                  onClick={() => setPromptsBatchMode(true)}
+                  className={`h-7 w-7 ${isBatchMode ? 'bg-primary/15 text-primary' : ''}`}
+                  onClick={() => setPromptsBatchMode(!isBatchMode)}
                 >
                   <ListChecks className="h-4 w-4" />
                 </Button>
               </SimpleTooltip>
 
               <SidePanelMenu menuActions={menuActions} />
-            </>
-          )}
         </div>
       </div>
 
@@ -128,6 +124,10 @@ export const PromptsHeader = ({
           </SimpleTooltip>
         </div>
       </div>
+
+      {isBatchMode && (
+        <BatchToolbar onSelectAll={onSelectAll} />
+      )}
     </div>
   );
 };
