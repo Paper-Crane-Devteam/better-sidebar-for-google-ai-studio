@@ -103,7 +103,7 @@ export const GemsHeader = ({
               onClick={onScanGems}
               disabled={isScanningGems}
             >
-              <ScanSearch className={`h-4 w-4 ${isScanningGems ? 'animate-spin' : ''}`} />
+              <ScanSearch className="h-4 w-4" />
             </Button>
           </SimpleTooltip>
         </div>

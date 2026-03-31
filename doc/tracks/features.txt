@@ -1,5 +1,5 @@
 -1. resizable sidebar
-2. gemini smart scroll bar
+-2. gemini smart scroll bar
 -3. gemini default model
 -4. gemini view witdh
 6. bulk export

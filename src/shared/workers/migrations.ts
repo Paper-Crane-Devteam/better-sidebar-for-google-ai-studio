@@ -128,12 +128,21 @@ export const runMigrations = async (db: any) => {
           description TEXT,
           platform TEXT DEFAULT 'gemini',
           order_index INTEGER DEFAULT 0,
+          is_deleted INTEGER DEFAULT 0,
           created_at INTEGER DEFAULT (unixepoch()),
           updated_at INTEGER DEFAULT (unixepoch())
         )
       `);
       await db.run(
         'CREATE INDEX IF NOT EXISTS idx_gems_platform ON gems(platform)',
+      );
+    }
+
+    // Migration: Add is_deleted to gems if missing (soft deletion)
+    if (await hasColumn('gems', 'id') && !(await hasColumn('gems', 'is_deleted'))) {
+      console.log('Worker: Migrating gems table - adding is_deleted for soft deletion');
+      await db.run(
+        'ALTER TABLE gems ADD COLUMN is_deleted INTEGER DEFAULT 0',
       );
     }
   } catch (err) {

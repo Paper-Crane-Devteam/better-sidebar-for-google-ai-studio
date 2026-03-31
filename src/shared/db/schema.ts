@@ -127,6 +127,7 @@ CREATE TABLE IF NOT EXISTS gems (
   description TEXT,
   platform TEXT DEFAULT 'gemini',
   order_index INTEGER DEFAULT 0,
+  is_deleted INTEGER DEFAULT 0,
   created_at INTEGER DEFAULT (unixepoch()),
   updated_at INTEGER DEFAULT (unixepoch())
 );

@@ -51,7 +51,7 @@ export const GeminiUIControl = () => {
 
   return (
     <div className="fixed top-16 right-4 z-[999999]">
-      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>
         <DropdownMenuTrigger asChild>
           <button
             className={cn(

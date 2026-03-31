@@ -4,17 +4,12 @@ import {
   MessageSquare,
   ChevronRight,
   ChevronDown,
-  FolderOpen,
-  Star,
-  Eye,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
-import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { useAppStore } from '@/shared/lib/store';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useModalStore } from '@/shared/lib/modal';
 import {
-  hasPromptVariables,
   parsePromptVariables,
   substitutePromptVariables,
   hasImportReferences,
@@ -35,6 +30,8 @@ import {
 } from '../VariableFillForm';
 
 import { toast } from '@/shared/lib/toast';
+import { NodeActionBar } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
+import { usePromptsMenuItems } from './usePromptsMenuItems';
 
 export const Node = ({
   node,
@@ -56,6 +53,7 @@ export const Node = ({
   const { handleDelete: deleteHandler } = useDeleteHandler();
   const [newName, setNewName] = useState(node.data.name);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const variableFormRef = useRef<VariableFillFormRef | null>(null);
 
   const isFavorite = favorites.some(
@@ -122,9 +120,9 @@ export const Node = ({
   const folderIcon = <FolderIcon className="w-4 h-4 text-foreground/80" />;
   const fileIcon = <MessageSquare className="w-4 h-4" />;
 
-  const handleView = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
+  const handleView = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    e?.preventDefault();
     if (onPreview) {
       onPreview(node.data.data);
     }
@@ -176,9 +174,9 @@ export const Node = ({
     }
   };
 
-  const handleCopy = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
+  const handleCopy = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    e?.preventDefault();
     const content = node.data.data.content || '';
     tryCopyContent(content);
   };
@@ -193,6 +191,20 @@ export const Node = ({
       folder_id,
     );
   };
+
+  const menuItems = usePromptsMenuItems({
+    node,
+    isFavorite,
+    onDelete: handleDelete,
+    onCreateFolder: handleCreateFolder,
+    onToggleFavorite: (id: string, isFav: boolean) =>
+      toggleFavorite(id, 'prompt', isFav),
+    onCopy: handleCopy,
+    onDuplicate: handleDuplicate,
+    onView: onPreview ? handleView : undefined,
+  });
+
+  const isMenuActive = isContextMenuOpen || isDropdownOpen;
 
   const innerContent = (
     <>
@@ -219,65 +231,26 @@ export const Node = ({
         newName={newName}
         setNewName={setNewName}
       />
-      {/* Hover Actions */}
-      <div
-        className={cn(
-          'hidden group-hover:flex items-center gap-1 absolute right-0 pr-2 top-0 bottom-0',
-          'node-action-bar',
-          isContextMenuOpen && 'flex',
-        )}
-      >
-        <div className="absolute inset-y-0 -left-6 w-6 pointer-events-none [background:inherit] [mask-image:linear-gradient(to_right,transparent,black)]" />
-        {isFile && !isBatchMode && (
-          <>
-            <SimpleTooltip content={t('prompts.viewPrompt')}>
-              <div
-                role="button"
-                className="h-5 w-5 flex items-center justify-center rounded-sm cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
-                onClick={handleView}
-              >
-                <Eye className="h-3.5 w-3.5" />
-              </div>
-            </SimpleTooltip>
-
-            <SimpleTooltip
-              content={
-                isFavorite
-                  ? t('tooltip.removeFromFavorites')
-                  : t('tooltip.addToFavorites')
-              }
-            >
-              <div
-                role="button"
-                className={cn(
-                  'h-5 w-5 flex items-center justify-center rounded-sm cursor-pointer transition-colors',
-                  isFavorite
-                    ? 'text-yellow-500'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  toggleFavorite(node.data.id, 'prompt', isFavorite);
-                }}
-              >
-                <Star
-                  className={cn('h-3.5 w-3.5', isFavorite && 'fill-current')}
-                />
-              </div>
-            </SimpleTooltip>
-          </>
-        )}
-      </div>
+      {/* Action bar with three-dot menu – hidden while renaming */}
+      {!isBatchMode && !node.isEditing && (
+        <NodeActionBar
+          menuItems={menuItems}
+          forceVisible={isMenuActive}
+          onDropdownOpenChange={setIsDropdownOpen}
+        />
+      )}
     </>
   );
 
   const commonClasses = cn(
     'flex items-center gap-1.5 px-1 cursor-pointer group relative pr-2 h-full no-underline outline-none text-density rounded-sm font-medium text-foreground/80',
+    !node.isEditing && 'group-hover:pr-8',
     !((node.isSelected && !isFile) || isBatchSelected) && 'hover:bg-accent/50',
     ((node.isSelected && !isFile) || isBatchSelected) && 'node-item-selected',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
-    isContextMenuOpen && 'bg-accent/50',
+    isMenuActive && 'bg-accent/50',
+    isMenuActive && 'pr-8',
+    isMenuActive && 'node-menu-active',
   );
 
   const content = (
@@ -336,7 +309,7 @@ export const Node = ({
   );
 
   return (
-    <ContextMenu onOpenChange={setIsContextMenuOpen}>
+    <ContextMenu onOpenChange={setIsContextMenuOpen} modal={false}>
       <ContextMenuTrigger asChild disabled={isBatchMode}>
         {content}
       </ContextMenuTrigger>

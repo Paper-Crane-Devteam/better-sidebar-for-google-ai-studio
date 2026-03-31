@@ -343,6 +343,7 @@ export type ExtensionMessage = (
       };
     }
   | { type: 'DELETE_GEM'; payload: { id: string } }
+  | { type: 'HIDE_GEM'; payload: { id: string } }
   | {
       type: 'UPDATE_GEM';
       payload: {

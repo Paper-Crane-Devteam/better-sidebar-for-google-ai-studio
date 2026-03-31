@@ -83,3 +83,13 @@ export function extractWrbFrPayloads(chunks: any[]): any[] {
   
   return payloads;
 }
+
+/**
+ * Convenience: parse streaming response body and extract wrb.fr payloads in one step.
+ * Every interceptor does this same sequence, so this avoids repetition.
+ */
+export function parseResponsePayloads(responseBody: string): any[] {
+  const retChunks = parseStreamingResponse(responseBody);
+  const chunks = retChunks.map((chunk) => chunk[0]);
+  return extractWrbFrPayloads(chunks);
+}

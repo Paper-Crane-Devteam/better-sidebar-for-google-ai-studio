@@ -6,13 +6,10 @@ import {
   ChevronRight,
   ChevronDown,
   FolderOpen,
-  Star,
   Calendar,
   Image,
-  Settings,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
-import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { navigateToConversation } from '@/shared/lib/navigation';
 import { useAppStore } from '@/shared/lib/store';
 import { modal } from '@/shared/lib/modal';
@@ -29,6 +26,8 @@ import { NodeContextMenu } from './NodeContextMenu';
 import { FolderSettingsDialog } from './FolderSettingsDialog';
 import { useDeleteHandler } from '../../hooks/useDeleteHandler';
 import { useExplorerContext } from '../../ExplorerContext';
+import { NodeActionBar } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
+import { useExplorerMenuItems } from './useExplorerMenuItems';
 
 export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   const { t } = useI18n();
@@ -50,6 +49,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   const currentConversationId = useCurrentConversationId();
   const [newName, setNewName] = useState(node.data.name);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const nodeRowRef = useRef<HTMLDivElement>(null);
 
   // Combine dragHandle and nodeRowRef into one callback ref
@@ -157,6 +157,51 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
     }
   };
 
+  const handleFolderSettings = async () => {
+    let pendingName = node.data.name;
+    let pendingColor = folderColor;
+    const confirmed = await modal.confirm({
+      title: t('folderSettings.title'),
+      content: (
+        <FolderSettingsDialog
+          initialName={node.data.name}
+          initialColor={folderColor}
+          onSave={(name, color) => {
+            pendingName = name;
+            pendingColor = color;
+          }}
+        />
+      ),
+      confirmText: t('common.save'),
+      cancelText: t('common.cancel'),
+    });
+    if (confirmed) {
+      if (pendingName !== node.data.name) {
+        await renameItem(node.data.id, pendingName, 'folder');
+      }
+      if (pendingColor !== folderColor) {
+        await updateFolderColor(node.data.id, pendingColor);
+      }
+    }
+  };
+
+  const menuItems = useExplorerMenuItems({
+    node,
+    isFavorite,
+    folderColor,
+    onDelete: handleDelete,
+    onTagToggle: handleTagToggle,
+    onColorChange: async (color: string | null) => {
+      await updateFolderColor(node.data.id, color);
+    },
+    onCreateFolder: handleCreateFolder,
+    onToggleFavorite: (id: string, isFav: boolean) =>
+      toggleFavorite(id, 'conversation', isFav),
+    onFolderSettings: !isFile && !isTimeGroup ? handleFolderSettings : undefined,
+  });
+
+  const isMenuActive = isContextMenuOpen || isDropdownOpen;
+
   const handleClick = (e: React.MouseEvent) => {
     if (isBatchMode) {
       e.preventDefault();
@@ -263,19 +308,18 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
     isActive && !folderColor && 'node-item-selected',
     // Current conversation state: lighter highlight when not actively selected (lower priority)
     !isActive && isCurrentConversation && 'node-item-current',
-    // Expand right padding on hover to make room for action buttons
-    hasHoverActions && isFile && 'group-hover:pr-8',
-    hasHoverActions && !isFile && !isTimeGroup && 'group-hover:pr-14',
+    // Expand right padding on hover to make room for action buttons (skip while renaming)
+    hasHoverActions && !node.isEditing && 'group-hover:pr-8',
     // Drag-over state
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
-    // Context menu open state
-    isContextMenuOpen && !folderColor && 'bg-accent/50',
-    isContextMenuOpen && hasHoverActions && isFile && 'pr-8',
-    isContextMenuOpen && hasHoverActions && !isFile && !isTimeGroup && 'pr-14',
+    // Context menu or dropdown open state
+    isMenuActive && !folderColor && 'bg-accent/50',
+    isMenuActive && hasHoverActions && 'pr-8',
+    isMenuActive && 'node-menu-active',
   );
 
   return (
-    <ContextMenu onOpenChange={setIsContextMenuOpen}>
+    <ContextMenu onOpenChange={setIsContextMenuOpen} modal={false}>
       <ContextMenuTrigger asChild disabled={isTimeGroup || isBatchMode}>
         <div
           style={style}
@@ -323,99 +367,29 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
               setNewName={setNewName}
             />
 
-            {/* Hover action buttons */}
-            <div
-              className={cn(
-                'hidden group-hover:flex items-center gap-1 absolute right-0 pr-2 top-0 bottom-0',
-                'node-action-bar',
-                isContextMenuOpen && 'flex',
-              )}
-              style={coloredSelectedStyle ? { backgroundColor: `color-mix(in srgb, ${folderColor} 15%, rgb(var(--background)))` } : undefined}
-            >
-              <div
-                className="absolute inset-y-0 -left-6 w-6 pointer-events-none [background:inherit] [mask-image:linear-gradient(to_right,transparent,black)]"
-                style={coloredSelectedStyle ? { backgroundColor: `color-mix(in srgb, ${folderColor} 15%, rgb(var(--background)))` } : undefined}
-              />
-
-              {/* New chat button for folders */}
-              {!isFile && !isTimeGroup && !isBatchMode && onNewChat && (
-                <SimpleTooltip content={t('tooltip.newChat')}>
-                  <div
-                    role="button"
-                    className="h-5 w-5 flex items-center justify-center rounded-sm cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={(e) => {
+            {/* Action bar with three-dot menu – hidden while renaming */}
+            {hasHoverActions && !node.isEditing && (
+              <NodeActionBar
+                actions={[
+                  // New chat button for folders
+                  ...(!isFile && !isTimeGroup && onNewChat ? [{
+                    icon: <MessageSquarePlus className="h-3.5 w-3.5" />,
+                    tooltip: t('tooltip.newChat'),
+                    onClick: (e: React.MouseEvent) => {
                       e.stopPropagation();
                       e.preventDefault();
                       node.select();
                       onNewChat();
-                    }}
-                  >
-                    <MessageSquarePlus className="h-3.5 w-3.5" />
-                  </div>
-                </SimpleTooltip>
-              )}
-
-              {/* Folder settings button */}
-              {!isFile && !isTimeGroup && !isBatchMode && (
-                <SimpleTooltip content={t('folderSettings.title')}>
-                  <div
-                    role="button"
-                    className="h-5 w-5 flex items-center justify-center rounded-sm cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      let pendingName = node.data.name;
-                      let pendingColor = folderColor;
-                      const confirmed = await modal.confirm({
-                        title: t('folderSettings.title'),
-                        content: (
-                          <FolderSettingsDialog
-                            initialName={node.data.name}
-                            initialColor={folderColor}
-                            onSave={(name, color) => {
-                              pendingName = name;
-                              pendingColor = color;
-                            }}
-                          />
-                        ),
-                        confirmText: t('common.save'),
-                        cancelText: t('common.cancel'),
-                      });
-                      if (confirmed) {
-                        if (pendingName !== node.data.name) {
-                          await renameItem(node.data.id, pendingName, 'folder');
-                        }
-                        if (pendingColor !== folderColor) {
-                          await updateFolderColor(node.data.id, pendingColor);
-                        }
-                      }
-                    }}
-                  >
-                    <Settings className="h-3.5 w-3.5" />
-                  </div>
-                </SimpleTooltip>
-              )}
-              {isFile && !isBatchMode && (
-                <SimpleTooltip content={isFavorite ? t('tooltip.removeFromFavorites') : t('tooltip.addToFavorites')}>
-                  <div
-                    role="button"
-                    className={cn(
-                      'h-5 w-5 flex items-center justify-center rounded-sm cursor-pointer transition-colors',
-                      isFavorite
-                        ? 'text-yellow-500'
-                        : 'text-muted-foreground hover:text-foreground',
-                    )}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      toggleFavorite(node.data.id, 'conversation', isFavorite);
-                    }}
-                  >
-                    <Star className={cn('h-3.5 w-3.5', isFavorite && 'fill-current')} />
-                  </div>
-                </SimpleTooltip>
-              )}
-            </div>
+                    },
+                  }] : []),
+                ]}
+                menuItems={menuItems}
+                forceVisible={isMenuActive}
+                barStyle={coloredSelectedStyle ? { backgroundColor: `color-mix(in srgb, ${folderColor} 15%, rgb(var(--background)))` } : undefined}
+                gradientStyle={coloredSelectedStyle ? { backgroundColor: `color-mix(in srgb, ${folderColor} 15%, rgb(var(--background)))` } : undefined}
+                onDropdownOpenChange={setIsDropdownOpen}
+              />
+            )}
           </div>
         </div>
       </ContextMenuTrigger>

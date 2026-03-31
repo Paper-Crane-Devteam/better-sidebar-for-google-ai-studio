@@ -35,6 +35,7 @@ export interface Gem {
   description: string | null;
   platform: string;
   order_index: number;
+  is_deleted: number;
   created_at: number;
   updated_at: number;
 }

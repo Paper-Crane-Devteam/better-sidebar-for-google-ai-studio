@@ -57,7 +57,7 @@ export const PlatformFilter = () => {
   const activeCount = options.platforms?.length || 0;
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <SimpleTooltip content={t('search.filterPlatform')}>
         <DropdownMenuTrigger asChild>
           <Button variant={activeCount > 1 ? "secondary" : "ghost"} size="icon" className="h-7 w-7">

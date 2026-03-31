@@ -256,7 +256,7 @@ export const ExplorerTab = ({
       <FilterBar filter={filter} allTags={allTags} />
 
       {/* Content */}
-      <ContextMenu>
+      <ContextMenu modal={false}>
         <ContextMenuTrigger asChild>
           <div className="flex-1 overflow-hidden relative">
             {(() => {

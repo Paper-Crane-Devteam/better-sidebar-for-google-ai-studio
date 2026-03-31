@@ -33,12 +33,12 @@ export const gemRepo = {
   getAll: async (platform?: string): Promise<Gem[]> => {
     if (platform) {
       return (await runQuery(
-        'SELECT * FROM gems WHERE platform = ? ORDER BY order_index ASC, name ASC',
+        'SELECT * FROM gems WHERE platform = ? AND is_deleted = 0 ORDER BY order_index ASC, name ASC',
         [platform],
       )) as Gem[];
     }
     return (await runQuery(
-      'SELECT * FROM gems ORDER BY order_index ASC, name ASC',
+      'SELECT * FROM gems WHERE is_deleted = 0 ORDER BY order_index ASC, name ASC',
     )) as Gem[];
   },
 
@@ -63,6 +63,13 @@ export const gemRepo = {
 
   delete: async (id: string): Promise<void> => {
     await runCommand('DELETE FROM gems WHERE id = ?', [id]);
+  },
+
+  softDelete: async (id: string): Promise<void> => {
+    await runCommand(
+      'UPDATE gems SET is_deleted = 1, updated_at = unixepoch() WHERE id = ?',
+      [id],
+    );
   },
 
   bulkSave: async (gems: (Partial<Gem> & Pick<Gem, 'id' | 'name'>)[]): Promise<void> => {
