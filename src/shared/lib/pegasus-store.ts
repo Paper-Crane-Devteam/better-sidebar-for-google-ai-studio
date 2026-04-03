@@ -38,6 +38,7 @@ const getDefaultLanguage = ():
 interface PegasusState {
   language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru';
   defaultSyncFolderId: string | null; // null = "Imported" folder, '__root__' = root level, string = folder ID
+  gdriveAutoSync: boolean;
   enhancedFeatures: {
     gemini: {
       removeWatermark: boolean;
@@ -51,11 +52,13 @@ interface PegasusState {
     language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru',
   ) => void;
   setDefaultSyncFolderId: (folderId: string | null) => void;
+  setGdriveAutoSync: (enabled: boolean) => void;
 }
 
 export const usePegasusStore = create<PegasusState>()((set) => ({
   language: getDefaultLanguage(),
   defaultSyncFolderId: null,
+  gdriveAutoSync: true,
   enhancedFeatures: {
     gemini: {
       removeWatermark: true,
@@ -74,6 +77,7 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
     })),
   setLanguage: (language) => set({ language }),
   setDefaultSyncFolderId: (defaultSyncFolderId) => set({ defaultSyncFolderId }),
+  setGdriveAutoSync: (gdriveAutoSync) => set({ gdriveAutoSync }),
 }));
 
 export const STORE_NAME = 'pegasusGlobalStore';

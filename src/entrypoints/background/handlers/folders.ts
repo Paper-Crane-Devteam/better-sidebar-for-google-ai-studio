@@ -4,6 +4,7 @@ import type {
   ExtensionResponse,
 } from '@/shared/types/messages';
 import type { MessageSender } from '../types';
+import { triggerAutoSync } from './gdrive-sync';
 
 export async function handleFolders(
   message: ExtensionMessage,
@@ -16,14 +17,17 @@ export async function handleFolders(
     }
     case 'CREATE_FOLDER': {
       await folderRepo.create({ ...message.payload, platform: message.platform });
+      triggerAutoSync();
       return { success: true };
     }
     case 'UPDATE_FOLDER': {
       await folderRepo.update(message.payload.id, message.payload.updates);
+      triggerAutoSync();
       return { success: true };
     }
     case 'DELETE_FOLDER': {
       await folderRepo.delete(message.payload.id);
+      triggerAutoSync();
       return { success: true };
     }
     default:

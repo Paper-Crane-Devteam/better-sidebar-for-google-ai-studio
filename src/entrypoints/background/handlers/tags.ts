@@ -2,6 +2,7 @@ import { tagRepo, conversationTagRepo } from '@/shared/db/operations';
 import type { ExtensionMessage, ExtensionResponse } from '@/shared/types/messages';
 import type { MessageSender } from '../types';
 import { notifyDataUpdated } from '../notify';
+import { triggerAutoSync } from './gdrive-sync';
 
 export async function handleTags(
   message: ExtensionMessage,
@@ -16,29 +17,34 @@ export async function handleTags(
       const { name, color } = message.payload;
       const id = await tagRepo.create(name, color);
       await notifyDataUpdated();
+      triggerAutoSync();
       return { success: true, data: { id } };
     }
     case 'UPDATE_TAG': {
       const { id, updates } = message.payload;
       await tagRepo.update(id, updates);
       await notifyDataUpdated();
+      triggerAutoSync();
       return { success: true };
     }
     case 'DELETE_TAG': {
       await tagRepo.delete(message.payload.id);
       await notifyDataUpdated();
+      triggerAutoSync();
       return { success: true };
     }
     case 'ADD_TAG_TO_CONVERSATION': {
       const { conversationId, tagId } = message.payload;
       await conversationTagRepo.addTag(conversationId, tagId);
       await notifyDataUpdated();
+      triggerAutoSync();
       return { success: true };
     }
     case 'REMOVE_TAG_FROM_CONVERSATION': {
       const { conversationId, tagId } = message.payload;
       await conversationTagRepo.removeTag(conversationId, tagId);
       await notifyDataUpdated();
+      triggerAutoSync();
       return { success: true };
     }
     case 'GET_CONVERSATION_TAGS': {

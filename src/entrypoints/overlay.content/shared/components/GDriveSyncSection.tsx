@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { Separator } from '@/shared/components/ui/separator';
+import { Switch } from '@/shared/components/ui/switch';
 import {
   Loader2,
   UploadCloud,
@@ -8,24 +9,28 @@ import {
   Link,
   Unlink,
   AlertTriangle,
+  RefreshCw,
 } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { modal } from '@/shared/lib/modal';
 import { toast } from '@/shared/lib/toast';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import dayjs from 'dayjs';
+
+type SyncDirection = 'up' | 'down' | 'merge' | null;
 
 export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
   const { t } = useI18n();
+  const { gdriveAutoSync, setGdriveAutoSync } = usePegasusStore();
 
-  // Google Drive sync state
   const [gdriveSupported, setGdriveSupported] = useState(false);
   const [gdriveStatus, setGdriveStatus] = useState<{
     isAuthenticated: boolean;
     lastSyncTime?: number | null;
+    lastSyncDirection?: SyncDirection;
+    autoSyncing?: boolean;
   }>({ isAuthenticated: false });
-  const [gdriveSyncing, setGdriveSyncing] = useState<'up' | 'down' | null>(
-    null,
-  );
+  const [gdriveSyncing, setGdriveSyncing] = useState<SyncDirection>(null);
   const [gdriveConnecting, setGdriveConnecting] = useState(false);
 
   const fetchGdriveStatus = async () => {
@@ -37,7 +42,6 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
         setGdriveSupported(supportRes.data);
         if (!supportRes.data) return;
       }
-
       const res = await browser.runtime.sendMessage({
         type: 'GDRIVE_GET_STATUS',
       });
@@ -52,6 +56,13 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
   useEffect(() => {
     fetchGdriveStatus();
   }, []);
+
+  const directionLabel = (dir: SyncDirection) => {
+    if (dir === 'up') return t('data.gdriveDirUp');
+    if (dir === 'down') return t('data.gdriveDirDown');
+    if (dir === 'merge') return t('data.gdriveDirMerge');
+    return '';
+  };
 
   const handleGdriveConnect = async () => {
     setGdriveConnecting(true);
@@ -82,6 +93,23 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
     }
   };
 
+  const handleGdriveMerge = async () => {
+    setGdriveSyncing('merge');
+    try {
+      const res = await browser.runtime.sendMessage({ type: 'GDRIVE_MERGE' });
+      if (res?.success) {
+        toast.success(t('data.gdriveSyncSuccess'));
+        await fetchGdriveStatus();
+      } else {
+        toast.error(res?.error || t('data.gdriveBackupFailed'));
+      }
+    } catch (e) {
+      toast.error(t('data.gdriveBackupFailed'));
+    } finally {
+      setGdriveSyncing(null);
+    }
+  };
+
   const handleGdriveBackup = async () => {
     const confirmed = await modal.confirm({
       title: t('data.gdriveBackup'),
@@ -93,7 +121,9 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
 
     setGdriveSyncing('up');
     try {
-      const res = await browser.runtime.sendMessage({ type: 'GDRIVE_SYNC_UP' });
+      const res = await browser.runtime.sendMessage({
+        type: 'GDRIVE_SYNC_UP',
+      });
       if (res?.success) {
         toast.success(t('data.gdriveBackupSuccess'));
         await fetchGdriveStatus();
@@ -153,7 +183,7 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
       <div
         className={`p-4 border rounded-lg bg-muted/10 space-y-3 ${hideTitle ? '' : 'mt-3'}`}
       >
-        {/* Status */}
+        {/* Connection status */}
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <span className="text-sm font-medium">
@@ -167,6 +197,16 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
                 {dayjs
                   .unix(gdriveStatus.lastSyncTime)
                   .format('YYYY-MM-DD HH:mm')}
+                {gdriveStatus.lastSyncDirection && (
+                  <span className="ml-1 text-muted-foreground/70">
+                    ({directionLabel(gdriveStatus.lastSyncDirection)})
+                  </span>
+                )}
+              </p>
+            )}
+            {gdriveStatus.autoSyncing && (
+              <p className="text-xs text-blue-500">
+                {t('data.gdriveAutoSyncing')}
               </p>
             )}
           </div>
@@ -203,10 +243,51 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
           )}
         </div>
 
-        {/* Sync buttons */}
+        {/* Sync controls (only when authenticated) */}
         {gdriveStatus.isAuthenticated && (
           <>
             <Separator />
+
+            {/* Auto-sync toggle */}
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <span className="text-sm font-medium">
+                  {t('data.gdriveAutoSyncLabel')}
+                </span>
+                <p className="text-xs text-muted-foreground">
+                  {t('data.gdriveAutoSyncDesc')}
+                </p>
+              </div>
+              <Switch
+                checked={gdriveAutoSync}
+                onCheckedChange={setGdriveAutoSync}
+              />
+            </div>
+
+            <Separator />
+
+            {/* Merge sync button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full gap-2"
+              onClick={handleGdriveMerge}
+              disabled={gdriveSyncing !== null}
+            >
+              {gdriveSyncing === 'merge' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              {t('data.gdriveMergeSync')}
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              {t('data.gdriveMergeSyncDesc')}
+            </p>
+
+            <Separator />
+
+            {/* Manual backup/restore */}
             <div className="flex gap-2">
               <Button
                 variant="outline"

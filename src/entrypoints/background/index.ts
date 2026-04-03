@@ -4,6 +4,18 @@ import { initPegasusTransport } from '@webext-pegasus/transport/background';
 import { initPegasusBackendStore } from '@/shared/lib/pegasus-store';
 import { dbReady } from './db';
 import { seedDefaultPrompts } from './seed-prompts';
+import {
+  registerAutoSyncAlarm,
+  handleAutoSyncAlarm,
+  flushPendingSync,
+} from '@/shared/lib/gdrive';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
+import {
+  getActiveDbName,
+  setActiveTabId,
+  ensureDbForActiveTab,
+} from './tab-profile-map';
+import { notifyDataUpdated } from './notify';
 
 console.log(
   'Better Sidebar for Gemini & AI Studio: Background Service Worker Starting...',
@@ -48,4 +60,36 @@ export default defineBackground(() => {
       return true;
     },
   );
+
+  // Track active tab for auto-sync profile resolution.
+  // When switching tabs, flush any pending debounced sync first
+  // so it runs against the OLD tab's profile before we switch.
+  browser.tabs.onActivated.addListener((activeInfo) => {
+    flushPendingSync(ensureDbForActiveTab, () => notifyDataUpdated()).then(() => {
+      setActiveTabId(activeInfo.tabId);
+    });
+  });
+
+  // Register auto-sync alarm after DB is ready
+  dbReady.then(() => {
+    registerAutoSyncAlarm();
+  });
+
+  // Handle alarm events for periodic auto-sync.
+  // Respects the gdriveAutoSync setting from pegasus store.
+  browser.alarms.onAlarm.addListener((alarm) => {
+    dbReady.then(() => {
+      const { gdriveAutoSync } = usePegasusStore.getState();
+      if (!gdriveAutoSync) {
+        console.log('[Background] Auto-sync disabled, skipping alarm');
+        return;
+      }
+      handleAutoSyncAlarm(
+        alarm,
+        getActiveDbName,
+        ensureDbForActiveTab,
+        () => notifyDataUpdated(),
+      );
+    });
+  });
 });

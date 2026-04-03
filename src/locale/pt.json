@@ -219,7 +219,16 @@
     "gdriveNoBackupFound": "Nenhum backup encontrado no Google Drive para este perfil",
     "gdriveBackupConfirm": "Tem certeza de que deseja fazer backup no Google Drive? Isso substituirá seu backup existente na nuvem para este perfil.",
     "gdriveRestoreConfirm": "Tem certeza de que deseja restaurar do Google Drive? Isso substituirá seus dados locais (as mensagens não são afetadas).",
-    "gdriveUnsupported": "A sincronização com Google Drive não está disponível neste navegador"
+    "gdriveUnsupported": "A sincronização com Google Drive não está disponível neste navegador",
+    "gdriveSyncSuccess": "Sincronização concluída com sucesso",
+    "gdriveMergeSync": "Sincronizar agora",
+    "gdriveMergeSyncDesc": "Mesclagem inteligente: obtém as alterações remotas, mescla com os dados locais e depois envia.",
+    "gdriveAutoSyncing": "Sincronizando automaticamente...",
+    "gdriveAutoSyncLabel": "Sincronização automática",
+    "gdriveAutoSyncDesc": "Sincronizar automaticamente a cada 25 minutos e após alterações nos dados",
+    "gdriveDirUp": "Backup",
+    "gdriveDirDown": "Restaurar",
+    "gdriveDirMerge": "Mesclar"
   },
   "explorerSettings": {
     "viewOptions": "Opções de Visualização",

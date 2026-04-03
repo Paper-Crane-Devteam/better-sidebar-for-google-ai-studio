@@ -219,7 +219,16 @@
     "gdriveNoBackupFound": "No se encontró copia de seguridad en Google Drive para este perfil",
     "gdriveBackupConfirm": "¿Estás seguro de que deseas hacer una copia de seguridad en Google Drive? Esto sobrescribirá tu copia de seguridad existente en la nube para este perfil.",
     "gdriveRestoreConfirm": "¿Estás seguro de que deseas restaurar desde Google Drive? Esto sobrescribirá tus datos locales (los mensajes no se ven afectados).",
-    "gdriveUnsupported": "La sincronización con Google Drive no está disponible en este navegador"
+    "gdriveUnsupported": "La sincronización con Google Drive no está disponible en este navegador",
+    "gdriveSyncSuccess": "Sincronización completada correctamente",
+    "gdriveMergeSync": "Sincronizar ahora",
+    "gdriveMergeSyncDesc": "Fusión inteligente: obtiene los cambios remotos, los fusiona con los datos locales y luego los envía.",
+    "gdriveAutoSyncing": "Sincronizando automáticamente...",
+    "gdriveAutoSyncLabel": "Sincronización automática",
+    "gdriveAutoSyncDesc": "Sincronizar automáticamente cada 25 minutos y después de cambios en los datos",
+    "gdriveDirUp": "Copia de seguridad",
+    "gdriveDirDown": "Restaurar",
+    "gdriveDirMerge": "Fusionar"
   },
   "explorerSettings": {
     "viewOptions": "Opciones de Vista",

@@ -219,7 +219,16 @@
     "gdriveNoBackupFound": "Google 雲端硬碟上未找到此設定檔的備份",
     "gdriveBackupConfirm": "確定要備份到 Google 雲端硬碟嗎？這會覆蓋雲端目前的備份資料。",
     "gdriveRestoreConfirm": "確定要從 Google 雲端硬碟還原嗎？這將覆蓋本機資料（對話訊息不受影響）。",
-    "gdriveUnsupported": "目前瀏覽器不支援 Google 雲端硬碟同步"
+    "gdriveUnsupported": "目前瀏覽器不支援 Google 雲端硬碟同步",
+    "gdriveSyncSuccess": "同步完成",
+    "gdriveMergeSync": "立即同步",
+    "gdriveMergeSyncDesc": "智慧合併：拉取雲端變更，與本機資料合併後推送。",
+    "gdriveAutoSyncing": "自動同步中...",
+    "gdriveAutoSyncLabel": "自動同步",
+    "gdriveAutoSyncDesc": "每 25 分鐘自動同步一次，資料變更後也會自動同步",
+    "gdriveDirUp": "備份",
+    "gdriveDirDown": "還原",
+    "gdriveDirMerge": "合併"
   },
   "explorerSettings": {
     "viewOptions": "檢視選項",

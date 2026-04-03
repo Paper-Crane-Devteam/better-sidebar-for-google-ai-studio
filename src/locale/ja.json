@@ -219,7 +219,16 @@
     "gdriveNoBackupFound": "このプロファイルの Google ドライブバックアップが見つかりません",
     "gdriveBackupConfirm": "Google ドライブにバックアップしますか？このプロファイルの既存のクラウドバックアップが上書きされます。",
     "gdriveRestoreConfirm": "Google ドライブから復元しますか？ローカルデータが上書きされます（メッセージは影響を受けません）。",
-    "gdriveUnsupported": "このブラウザでは Google ドライブ同期は利用できません"
+    "gdriveUnsupported": "このブラウザでは Google ドライブ同期は利用できません",
+    "gdriveSyncSuccess": "同期が完了しました",
+    "gdriveMergeSync": "今すぐ同期",
+    "gdriveMergeSyncDesc": "スマートマージ：リモートの変更を取得し、ローカルデータとマージしてからプッシュします。",
+    "gdriveAutoSyncing": "自動同期中...",
+    "gdriveAutoSyncLabel": "自動同期",
+    "gdriveAutoSyncDesc": "25分ごとおよびデータ変更後に自動同期",
+    "gdriveDirUp": "バックアップ",
+    "gdriveDirDown": "復元",
+    "gdriveDirMerge": "マージ"
   },
   "explorerSettings": {
     "viewOptions": "表示オプション",

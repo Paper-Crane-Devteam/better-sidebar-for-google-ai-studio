@@ -5,6 +5,7 @@ import type {
 } from '@/shared/types/messages';
 import type { MessageSender } from '../types';
 import { notifyDataUpdated } from '../notify';
+import { triggerAutoSync } from './gdrive-sync';
 
 export async function handlePrompts(
   message: ExtensionMessage,
@@ -17,6 +18,7 @@ export async function handlePrompts(
     }
     case 'CREATE_PROMPT_FOLDER': {
       await promptFolderRepo.create(message.payload);
+      triggerAutoSync();
       return { success: true };
     }
     case 'UPDATE_PROMPT_FOLDER': {
@@ -24,10 +26,12 @@ export async function handlePrompts(
         message.payload.id,
         message.payload.updates,
       );
+      triggerAutoSync();
       return { success: true };
     }
     case 'DELETE_PROMPT_FOLDER': {
       await promptFolderRepo.delete(message.payload.id);
+      triggerAutoSync();
       return { success: true };
     }
     case 'GET_PROMPTS': {
@@ -51,16 +55,19 @@ export async function handlePrompts(
         order_index: orderIndex,
       });
       await notifyDataUpdated();
+      triggerAutoSync();
       return { success: true };
     }
     case 'UPDATE_PROMPT': {
       await promptRepo.update(message.payload.id, message.payload.updates);
       await notifyDataUpdated();
+      triggerAutoSync();
       return { success: true };
     }
     case 'DELETE_PROMPT': {
       await promptRepo.delete(message.payload.id);
       await notifyDataUpdated();
+      triggerAutoSync();
       return { success: true };
     }
     case 'DELETE_PROMPT_ITEMS': {
@@ -68,10 +75,12 @@ export async function handlePrompts(
       if (promptIds?.length) await promptRepo.deleteMultiple(promptIds);
       if (folderIds?.length) await promptFolderRepo.deleteMultiple(folderIds);
       await notifyDataUpdated();
+      triggerAutoSync();
       return { success: true };
     }
     case 'MOVE_PROMPT': {
       await promptRepo.move(message.payload.id, message.payload.folderId);
+      triggerAutoSync();
       return { success: true };
     }
     case 'MOVE_PROMPTS': {
@@ -79,6 +88,7 @@ export async function handlePrompts(
         message.payload.ids,
         message.payload.folderId,
       );
+      triggerAutoSync();
       return { success: true };
     }
     default:

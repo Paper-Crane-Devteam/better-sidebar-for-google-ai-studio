@@ -219,7 +219,16 @@
     "gdriveNoBackupFound": "No backup found on Google Drive for this profile",
     "gdriveBackupConfirm": "Are you sure you want to backup to Google Drive? This will overwrite your existing cloud backup for this profile.",
     "gdriveRestoreConfirm": "Are you sure you want to restore from Google Drive? This will overwrite your local data (messages are not affected).",
-    "gdriveUnsupported": "Google Drive sync is not available in this browser"
+    "gdriveUnsupported": "Google Drive sync is not available in this browser",
+    "gdriveSyncSuccess": "Sync completed successfully",
+    "gdriveMergeSync": "Sync Now",
+    "gdriveMergeSyncDesc": "Smart merge: pulls remote changes, merges with local data, then pushes back.",
+    "gdriveAutoSyncing": "Auto-syncing...",
+    "gdriveAutoSyncLabel": "Auto Sync",
+    "gdriveAutoSyncDesc": "Automatically sync every 25 minutes and after data changes",
+    "gdriveDirUp": "Backup",
+    "gdriveDirDown": "Restore",
+    "gdriveDirMerge": "Merge"
   },
   "explorerSettings": {
     "viewOptions": "View Options",

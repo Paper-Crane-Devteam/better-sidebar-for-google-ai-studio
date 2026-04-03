@@ -10,6 +10,7 @@ import type {
 import type { MessageSender } from '../types';
 import { notifyDataUpdated } from '../notify';
 import { resolveSyncFolderId } from './resolve-sync-folder';
+import { triggerAutoSync } from './gdrive-sync';
 
 export async function handleConversations(
   message: ExtensionMessage,
@@ -37,6 +38,7 @@ export async function handleConversations(
     case 'DELETE_CONVERSATION': {
       await conversationRepo.delete(message.payload.id);
       await notifyDataUpdated();
+      triggerAutoSync();
       return { success: true };
     }
     case 'DELETE_ITEMS': {
@@ -45,6 +47,7 @@ export async function handleConversations(
         await conversationRepo.deleteMultiple(conversationIds);
       if (folderIds?.length) await folderRepo.deleteMultiple(folderIds);
       await notifyDataUpdated();
+      triggerAutoSync();
       return { success: true };
     }
     case 'UPDATE_CONVERSATION': {
@@ -55,6 +58,7 @@ export async function handleConversations(
       if (title) updates.title = title;
       await conversationRepo.update(id, updates);
       await notifyDataUpdated();
+      triggerAutoSync();
       return { success: true };
     }
     case 'CREATE_CONVERSATION': {
@@ -99,10 +103,12 @@ export async function handleConversations(
         gem_id: gem_id || null,
       });
       await notifyDataUpdated();
+      triggerAutoSync();
       return { success: true };
     }
     case 'MOVE_CONVERSATION': {
       await conversationRepo.move(message.payload.id, message.payload.folderId);
+      triggerAutoSync();
       return { success: true };
     }
     case 'MOVE_CONVERSATIONS': {
@@ -110,6 +116,7 @@ export async function handleConversations(
         message.payload.ids,
         message.payload.folderId,
       );
+      triggerAutoSync();
       return { success: true };
     }
     case 'SYNC_CONVERSATIONS': {
@@ -140,6 +147,7 @@ export async function handleConversations(
         await conversationRepo.bulkSave(conversationsToSave);
         await notifyDataUpdated();
       }
+      triggerAutoSync();
       return { success: true, data: { added: itemsToSync.length } };
     }
     default:

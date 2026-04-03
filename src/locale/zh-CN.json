@@ -219,7 +219,16 @@
     "gdriveNoBackupFound": "Google Drive 上未找到此 Profile 的备份",
     "gdriveBackupConfirm": "确定要备份到 Google Drive 吗？这会覆盖云端当前的备份数据。",
     "gdriveRestoreConfirm": "确定要从 Google Drive 恢复吗？这将覆盖本地数据（对话消息不受影响）。",
-    "gdriveUnsupported": "当前浏览器不支持 Google Drive 同步"
+    "gdriveUnsupported": "当前浏览器不支持 Google Drive 同步",
+    "gdriveSyncSuccess": "同步完成",
+    "gdriveMergeSync": "立即同步",
+    "gdriveMergeSyncDesc": "智能合并：拉取云端变更，与本地数据合并后推送。",
+    "gdriveAutoSyncing": "自动同步中...",
+    "gdriveAutoSyncLabel": "自动同步",
+    "gdriveAutoSyncDesc": "每 25 分钟自动同步一次，数据变更后也会自动同步",
+    "gdriveDirUp": "备份",
+    "gdriveDirDown": "恢复",
+    "gdriveDirMerge": "合并"
   },
   "explorerSettings": {
     "viewOptions": "视图选项",

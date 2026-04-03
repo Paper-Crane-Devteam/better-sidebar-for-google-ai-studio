@@ -69,7 +69,67 @@ async function clearStoredToken(): Promise<void> {
 }
 
 /**
- * Launch OAuth2 flow using chrome.identity.launchWebAuthFlow
+ * Build the OAuth URL for launchWebAuthFlow
+ */
+function buildAuthUrl(): string {
+  const redirectUrl = chrome.identity.getRedirectURL();
+  const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  authUrl.searchParams.set('client_id', OAUTH_CLIENT_ID);
+  authUrl.searchParams.set('response_type', 'token');
+  authUrl.searchParams.set('redirect_uri', redirectUrl);
+  authUrl.searchParams.set('scope', OAUTH_SCOPES.join(' '));
+  return authUrl.toString();
+}
+
+/**
+ * Extract token from OAuth callback URL
+ */
+function extractTokenFromUrl(responseUrl: string): { accessToken: string; expiresIn: number } {
+  const url = new URL(responseUrl);
+  const hashParams = new URLSearchParams(url.hash.substring(1));
+  const accessToken = hashParams.get('access_token');
+  const expiresIn = parseInt(hashParams.get('expires_in') || '3600', 10);
+
+  if (!accessToken) {
+    throw new Error('Failed to obtain access token from OAuth response');
+  }
+
+  return { accessToken, expiresIn };
+}
+
+/**
+ * Try to silently refresh the token without user interaction.
+ * Works if the user has previously granted consent and the session cookie is still valid.
+ */
+export async function silentRefresh(): Promise<string | null> {
+  if (!isGdriveAuthSupported()) return null;
+
+  try {
+    const responseUrl = await new Promise<string>((resolve, reject) => {
+      chrome.identity.launchWebAuthFlow(
+        { url: buildAuthUrl(), interactive: false },
+        (callbackUrl) => {
+          if (chrome.runtime.lastError || !callbackUrl) {
+            reject(new Error(chrome.runtime.lastError?.message || 'Silent refresh failed'));
+            return;
+          }
+          resolve(callbackUrl);
+        },
+      );
+    });
+
+    const { accessToken, expiresIn } = extractTokenFromUrl(responseUrl);
+    await storeToken(accessToken, expiresIn);
+    return accessToken;
+  } catch {
+    // Silent refresh failed — user needs to re-authorize interactively
+    return null;
+  }
+}
+
+/**
+ * Launch interactive OAuth2 flow using chrome.identity.launchWebAuthFlow.
+ * Does NOT force consent — allows silent re-auth if user already approved.
  */
 export async function authenticate(): Promise<string> {
   if (!isGdriveAuthSupported()) {
@@ -78,18 +138,10 @@ export async function authenticate(): Promise<string> {
     );
   }
 
-  const redirectUrl = chrome.identity.getRedirectURL();
-  const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-  authUrl.searchParams.set('client_id', OAUTH_CLIENT_ID);
-  authUrl.searchParams.set('response_type', 'token');
-  authUrl.searchParams.set('redirect_uri', redirectUrl);
-  authUrl.searchParams.set('scope', OAUTH_SCOPES.join(' '));
-  authUrl.searchParams.set('prompt', 'consent');
-
   const responseUrl = await new Promise<string>((resolve, reject) => {
     chrome.identity.launchWebAuthFlow(
       {
-        url: authUrl.toString(),
+        url: buildAuthUrl(),
         interactive: true,
       },
       (callbackUrl) => {
@@ -106,26 +158,28 @@ export async function authenticate(): Promise<string> {
     );
   });
 
-  // Extract access token from the callback URL hash fragment
-  const url = new URL(responseUrl);
-  const hashParams = new URLSearchParams(url.hash.substring(1));
-  const accessToken = hashParams.get('access_token');
-  const expiresIn = parseInt(hashParams.get('expires_in') || '3600', 10);
-
-  if (!accessToken) {
-    throw new Error('Failed to obtain access token from OAuth response');
-  }
-
+  const { accessToken, expiresIn } = extractTokenFromUrl(responseUrl);
   await storeToken(accessToken, expiresIn);
   return accessToken;
 }
 
 /**
- * Get a valid access token, returning cached if available
+ * Get a valid access token.
+ * Priority: cached → silent refresh → interactive auth.
+ * If `noInteractive` is true, will NOT prompt the user (returns error if silent fails).
  */
-export async function getAccessToken(): Promise<string> {
+export async function getAccessToken(noInteractive = false): Promise<string> {
   const cached = await getCachedToken();
   if (cached) return cached;
+
+  // Try silent refresh first
+  const silentToken = await silentRefresh();
+  if (silentToken) return silentToken;
+
+  if (noInteractive) {
+    throw new Error('Token expired and interactive auth is disabled');
+  }
+
   return authenticate();
 }
 

@@ -3,6 +3,7 @@ export {
   disconnect,
   getAuthStatus,
   getAccessToken,
+  silentRefresh,
   isGdriveAuthSupported,
 } from './google-auth';
 export {
@@ -13,5 +14,16 @@ export {
   deleteFile,
 } from './gdrive-api';
 export { exportSyncData, importSyncData } from './sync-data';
+export { mergeSyncData } from './sync-merge';
+export {
+  performMergeSync,
+  scheduleDebouncedSync,
+  flushPendingSync,
+  registerAutoSyncAlarm,
+  handleAutoSyncAlarm,
+  isAutoSyncing,
+} from './auto-sync';
 export type { SyncPayload } from './sync-data';
+export type { MergeResult } from './sync-merge';
 export type { AuthStatus } from './google-auth';
+export type { AutoSyncOptions } from './auto-sync';
