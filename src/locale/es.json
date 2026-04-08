@@ -247,8 +247,7 @@
     "ignoredFoldersDescription": "Lista de nombres de carpetas para ocultar (separados por comas)",
     "ignoredFoldersPlaceholder": "ej: archive, temp, old",
     "enableRightClickRename": "Habilitar Renombrar con Clic Derecho",
-    "enableRightClickRenameDescription": "Permitir renombrar conversaciones mediante menú contextual",
-    "enableRightClickRenameDisclaimer": "Nota: Este renombrado es solo local (alias) y no afecta el nombre real de la conversación en Google AI Studio."
+    "enableRightClickRenameDescription": "Permitir renombrar conversaciones mediante menú contextual (sincroniza con Gemini)"
   },
   "shortcuts": {
     "title": "Accesos Directos de la Barra Lateral",

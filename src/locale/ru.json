@@ -247,8 +247,7 @@
     "ignoredFoldersDescription": "Список имён папок для скрытия (через запятую)",
     "ignoredFoldersPlaceholder": "например: archive, temp, old",
     "enableRightClickRename": "Включить переименование по правому клику",
-    "enableRightClickRenameDescription": "Разрешить переименование диалогов через контекстное меню",
-    "enableRightClickRenameDisclaimer": "Примечание: Это переименование только локальное (псевдоним) и не влияет на фактическое имя диалога в Google AI Studio."
+    "enableRightClickRenameDescription": "Разрешить переименование диалогов через контекстное меню (синхронизация с Gemini)"
   },
   "shortcuts": {
     "title": "Боковая панель — ярлыки",

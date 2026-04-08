@@ -247,8 +247,7 @@
     "ignoredFoldersDescription": "要隱藏的資料夾名稱清單（逗號分隔）",
     "ignoredFoldersPlaceholder": "例如：archive, temp, old",
     "enableRightClickRename": "啟用右鍵重新命名",
-    "enableRightClickRenameDescription": "允許透過右鍵選單重新命名對話",
-    "enableRightClickRenameDisclaimer": "注意：此重新命名僅為本機別名，不會影響 Google AI Studio 上的實際對話名稱。"
+    "enableRightClickRenameDescription": "允許透過右鍵選單重新命名對話（同步到 Gemini）"
   },
   "shortcuts": {
     "title": "側邊欄捷徑",

@@ -111,6 +111,25 @@ export function createDataActions(
               type: 'SAVE_CONVERSATION',
               payload: { ...convo, title: newName },
             });
+
+            // Call Gemini API to rename the conversation on the server side
+            try {
+              window.dispatchEvent(
+                new CustomEvent('GEMINI_API_EXECUTE', {
+                  detail: {
+                    rpcid: 'MUAZcd',
+                    payload: [
+                      null,
+                      [['title']],
+                      [`c_${itemId}`, newName],
+                    ],
+                    callbackEvent: `GEMINI_RENAME_RESULT_${itemId}`,
+                  },
+                }),
+              );
+            } catch (apiError) {
+              console.warn('Failed to rename on Gemini API (local rename still applied):', apiError);
+            }
           }
         }
         await get().fetchData(true);

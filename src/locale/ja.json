@@ -247,8 +247,7 @@
     "ignoredFoldersDescription": "非表示にするフォルダ名のリスト（カンマ区切り）",
     "ignoredFoldersPlaceholder": "例：archive, temp, old",
     "enableRightClickRename": "右クリックで名前を変更を有効化",
-    "enableRightClickRenameDescription": "コンテキストメニューから会話の名前を変更できるようにする",
-    "enableRightClickRenameDisclaimer": "注意：この名前変更はローカルのみ（エイリアス）で、Google AI Studio 上の実際の会話名には影響しません。"
+    "enableRightClickRenameDescription": "コンテキストメニューから会話の名前を変更できるようにする（Gemini と同期）"
   },
   "shortcuts": {
     "title": "サイドバーショートカット",

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
+import { useSettingsStore } from '@/shared/lib/settings-store';
 import { toast } from '@/shared/lib/toast';
 import {
   fetchMessagesForExport,
@@ -25,7 +26,6 @@ import {
   FolderInput,
   Palette,
   Check,
-  EyeOff,
   Settings,
 } from 'lucide-react';
 import { modal } from '@/shared/lib/modal';
@@ -62,6 +62,7 @@ export function useExplorerMenuItems({
 }: UseExplorerMenuItemsParams): MenuEntryDef[] {
   const { t } = useI18n();
   const { tags, conversationTags } = useAppStore();
+  const { enableRightClickRename } = useSettingsStore((s) => s.explorer);
 
   const isFile = node.data.type === 'file';
 
@@ -232,6 +233,17 @@ export function useExplorerMenuItems({
       ],
     });
 
+    // Rename (controlled by setting)
+    if (enableRightClickRename) {
+      items.push({
+        type: 'item',
+        key: 'rename',
+        icon: <Edit2 className="h-4 w-4" />,
+        label: t('node.rename'),
+        onClick: () => node.edit(),
+      });
+    }
+
     items.push({ type: 'separator', key: 'sep-file-bottom' });
   }
 
@@ -294,15 +306,13 @@ export function useExplorerMenuItems({
     });
   }
 
-  // Delete/Hide (always last)
+  // Delete (always last)
   items.push({
     type: 'item',
     key: 'delete',
-    icon: isFile
-      ? <EyeOff className="h-4 w-4" />
-      : <Trash2 className="h-4 w-4" />,
-    label: isFile ? t('node.hide') : t('node.delete'),
-    className: isFile ? '' : 'text-destructive focus:text-destructive',
+    icon: <Trash2 className="h-4 w-4" />,
+    label: t('node.delete'),
+    className: 'text-destructive focus:text-destructive',
     onClick: onDelete,
   });
 

@@ -247,8 +247,7 @@
     "ignoredFoldersDescription": "List of folder names to hide (comma separated)",
     "ignoredFoldersPlaceholder": "e.g. archive, temp, old",
     "enableRightClickRename": "Enable Right-Click Rename",
-    "enableRightClickRenameDescription": "Allow renaming conversations via context menu",
-    "enableRightClickRenameDisclaimer": "Note: This rename is local only (alias) and does not affect the actual conversation name on Google AI Studio."
+    "enableRightClickRenameDescription": "Allow renaming conversations via context menu (syncs with Gemini)"
   },
   "shortcuts": {
     "title": "Sidebar Shortcuts",

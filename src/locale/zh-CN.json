@@ -247,8 +247,7 @@
     "ignoredFoldersDescription": "要隐藏的文件夹名称列表（逗号分隔）",
     "ignoredFoldersPlaceholder": "例如：archive, temp, old",
     "enableRightClickRename": "启用右键重命名",
-    "enableRightClickRenameDescription": "允许通过右键菜单重命名对话",
-    "enableRightClickRenameDisclaimer": "注意：此重命名仅为本地别名，不会影响 Google AI Studio 上的实际对话名称。"
+    "enableRightClickRenameDescription": "允许通过右键菜单重命名对话（同步到 Gemini）"
   },
   "shortcuts": {
     "title": "侧边栏快捷方式",
