@@ -35,3 +35,4 @@
 -22. rename gemini chat update
 23. delete gem update
 -24. edit gem shortcut,generate a copy gem shortcut
+25. rescan not import hidden gem

@@ -13,7 +13,8 @@ export function mountEnhancedFeatures(mainStyles: string) {
     const enhancedWrapper = document.createElement('div');
     enhancedWrapper.id = 'better-sidebar-enhanced-features';
     enhancedWrapper.style.position = 'relative';
-    enhancedWrapper.style.zIndex = '999999';
+    // Keep below overlay modals (z-50 = 50) but above normal page content
+    enhancedWrapper.style.zIndex = '40';
     document.body.appendChild(enhancedWrapper);
 
     const enhancedShadow = enhancedWrapper.attachShadow({ mode: 'open' });

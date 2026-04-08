@@ -39,7 +39,7 @@
     "scanLibrary": "扫描库",
     "scanning": "扫描中...",
     "newFolder": "新建文件夹",
-    "imported": "已导入",
+    "imported": "收件箱",
     "conversations": "条对话",
     "scanComplete": "扫描完成，未发现新对话"
   },
@@ -73,7 +73,7 @@
     "newTab": "新标签页",
     "defaultSyncFolder": "默认同步文件夹",
     "defaultSyncFolderDescription": "新同步和扫描的对话将放置在此文件夹中",
-    "defaultSyncFolderImported": "已导入（默认）",
+    "defaultSyncFolderImported": "收件箱（默认）",
     "defaultSyncFolderChange": "更改",
     "language": "语言",
     "languageDescription": "选择界面语言",

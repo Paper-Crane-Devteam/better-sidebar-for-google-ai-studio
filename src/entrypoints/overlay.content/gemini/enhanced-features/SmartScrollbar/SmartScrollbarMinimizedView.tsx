@@ -24,7 +24,7 @@ export const SmartScrollbarMinimizedView: React.FC<Props> = ({
   return (
     <div
       className={cn(
-        'fixed right-0 top-1/2 -translate-y-1/2 z-[999998]',
+        'fixed right-0 top-1/2 -translate-y-1/2 z-[38]',
         'flex flex-col items-end',
         'transition-all duration-300 ease-out',
       )}

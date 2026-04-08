@@ -39,7 +39,7 @@
     "scanLibrary": "Escanear Biblioteca",
     "scanning": "Escaneando...",
     "newFolder": "Nova Pasta",
-    "imported": "Importado",
+    "imported": "Caixa de entrada",
     "conversations": "conversas",
     "scanComplete": "Varredura concluída, nenhuma nova conversa encontrada"
   },
@@ -73,7 +73,7 @@
     "newTab": "Nova Aba",
     "defaultSyncFolder": "Pasta de Sincronização Padrão",
     "defaultSyncFolderDescription": "Onde as conversas sincronizadas e escaneadas são colocadas",
-    "defaultSyncFolderImported": "Importado (padrão)",
+    "defaultSyncFolderImported": "Caixa de entrada (padrão)",
     "defaultSyncFolderChange": "Alterar",
     "language": "Idioma",
     "languageDescription": "Selecione o idioma da interface",

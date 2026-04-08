@@ -39,7 +39,7 @@
     "scanLibrary": "掃描資料庫",
     "scanning": "掃描中...",
     "newFolder": "新增資料夾",
-    "imported": "已匯入",
+    "imported": "收件匣",
     "conversations": "則對話",
     "scanComplete": "掃描完成，未發現新對話"
   },
@@ -73,7 +73,7 @@
     "newTab": "新標籤頁",
     "defaultSyncFolder": "預設同步資料夾",
     "defaultSyncFolderDescription": "新同步和掃描的對話將放置在此資料夾中",
-    "defaultSyncFolderImported": "已匯入（預設）",
+    "defaultSyncFolderImported": "收件匣（預設）",
     "defaultSyncFolderChange": "更改",
     "language": "語言",
     "languageDescription": "選擇介面語言",

@@ -39,7 +39,7 @@
     "scanLibrary": "ライブラリをスキャン",
     "scanning": "スキャン中...",
     "newFolder": "新しいフォルダ",
-    "imported": "インポート済み",
+    "imported": "受信トレイ",
     "conversations": "件の会話",
     "scanComplete": "スキャン完了、新しい会話は見つかりませんでした"
   },
@@ -73,7 +73,7 @@
     "newTab": "新しいタブ",
     "defaultSyncFolder": "デフォルト同期フォルダ",
     "defaultSyncFolderDescription": "同期・スキャンされた会話の保存先",
-    "defaultSyncFolderImported": "インポート済み（デフォルト）",
+    "defaultSyncFolderImported": "受信トレイ（デフォルト）",
     "defaultSyncFolderChange": "変更",
     "language": "言語",
     "languageDescription": "インターフェース言語を選択",

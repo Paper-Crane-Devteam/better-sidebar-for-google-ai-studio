@@ -39,7 +39,7 @@
     "scanLibrary": "Escanear Biblioteca",
     "scanning": "Escaneando...",
     "newFolder": "Nueva Carpeta",
-    "imported": "Importado",
+    "imported": "Bandeja de entrada",
     "conversations": "conversaciones",
     "scanComplete": "Escaneo completado, no se encontraron nuevas conversaciones"
   },
@@ -73,7 +73,7 @@
     "newTab": "Nueva Pestaña",
     "defaultSyncFolder": "Carpeta de Sincronización Predeterminada",
     "defaultSyncFolderDescription": "Dónde se colocan las conversaciones sincronizadas y escaneadas",
-    "defaultSyncFolderImported": "Importado (predeterminado)",
+    "defaultSyncFolderImported": "Bandeja de entrada (predeterminado)",
     "defaultSyncFolderChange": "Cambiar",
     "language": "Idioma",
     "languageDescription": "Seleccionar el idioma de la interfaz",

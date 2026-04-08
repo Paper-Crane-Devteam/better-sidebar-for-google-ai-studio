@@ -50,8 +50,10 @@ export const navigateToConversation = (targetId: string) => {
       }
     }
     
-    console.warn(`Conversation link not found for id: ${targetId}, falling back to location.href`);
-    window.location.href = `/app/${targetId}`;
+    // Fallback: same approach as navigateToGem — click "New chat" first, then pushState
+    console.warn(`Conversation link not found for id: ${targetId}, falling back to new chat + pushState`);
+    clickGeminiNewChat();
+    navigate(`/app/${targetId}`);
   }
   if(platform === Platform.AI_STUDIO) {
     navigate(`/prompts/${targetId}`);

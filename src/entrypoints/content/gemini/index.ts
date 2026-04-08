@@ -86,9 +86,11 @@ export async function initGemini() {
       );
       return;
     }
-    syncConversations().catch((err) => {
-      console.error('Better Sidebar: Auto-sync failed', err);
-    });
+    // Disabled: no longer scroll the entire conversation list in the background.
+    // The interceptor (apiScanner) already captures items that Gemini loads on its own.
+    // syncConversations().catch((err) => {
+    //   console.error('Better Sidebar: Auto-sync failed', err);
+    // });
   };
 
   if (document.readyState === 'complete') {

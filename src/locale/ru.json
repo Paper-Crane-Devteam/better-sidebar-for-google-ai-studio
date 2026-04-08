@@ -39,7 +39,7 @@
     "scanLibrary": "Сканировать библиотеку",
     "scanning": "Сканирование...",
     "newFolder": "Новая папка",
-    "imported": "Импортировано",
+    "imported": "Входящие",
     "conversations": "диалогов",
     "scanComplete": "Сканирование завершено, новых диалогов не найдено"
   },
@@ -73,7 +73,7 @@
     "newTab": "Новая вкладка",
     "defaultSyncFolder": "Папка синхронизации по умолчанию",
     "defaultSyncFolderDescription": "Куда помещаются синхронизированные и отсканированные диалоги",
-    "defaultSyncFolderImported": "Импортировано (по умолчанию)",
+    "defaultSyncFolderImported": "Входящие (по умолчанию)",
     "defaultSyncFolderChange": "Изменить",
     "language": "Язык",
     "languageDescription": "Выберите язык интерфейса",

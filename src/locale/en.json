@@ -39,7 +39,7 @@
     "scanLibrary": "Scan Library",
     "scanning": "Scanning...",
     "newFolder": "New Folder",
-    "imported": "Imported",
+    "imported": "Inbox",
     "conversations": "conversations",
     "scanComplete": "Scan complete, no new conversations found"
   },
@@ -73,7 +73,7 @@
     "newTab": "New Tab",
     "defaultSyncFolder": "Default Sync Folder",
     "defaultSyncFolderDescription": "Where new synced and scanned conversations are placed",
-    "defaultSyncFolderImported": "Imported (default)",
+    "defaultSyncFolderImported": "Inbox (default)",
     "defaultSyncFolderChange": "Change",
     "language": "Language",
     "languageDescription": "Select the interface language",
