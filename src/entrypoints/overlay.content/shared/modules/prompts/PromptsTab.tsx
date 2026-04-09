@@ -269,6 +269,7 @@ export const PromptsTab = ({ menuActions }: PromptsTabProps) => {
                   ref={treeRef}
                   onSelect={handleSelect}
                   onPreview={openPreviewModal}
+                  onEdit={openEditModal}
                 />
               );
             })()}

@@ -138,6 +138,7 @@ export function useExplorerMenuItems({
 
   // File-specific items
   if (isFile) {
+    // — Navigation —
     items.push({
       type: 'item',
       key: 'open-new-tab',
@@ -149,6 +150,9 @@ export function useExplorerMenuItems({
       },
     });
 
+    items.push({ type: 'separator', key: 'sep-nav' });
+
+    // — Organize —
     items.push({
       type: 'item',
       key: 'toggle-favorite',
@@ -199,6 +203,17 @@ export function useExplorerMenuItems({
           }),
     });
 
+    items.push({ type: 'separator', key: 'sep-organize' });
+
+    // — Manage —
+    items.push({
+      type: 'item',
+      key: 'rename',
+      icon: <Edit2 className="h-4 w-4" />,
+      label: t('node.rename'),
+      onClick: () => node.edit(),
+    });
+
     // Export submenu
     items.push({
       type: 'sub',
@@ -231,38 +246,12 @@ export function useExplorerMenuItems({
       ],
     });
 
-    // Rename
-    items.push({
-      type: 'item',
-      key: 'rename',
-      icon: <Edit2 className="h-4 w-4" />,
-      label: t('node.rename'),
-      onClick: () => node.edit(),
-    });
-
     items.push({ type: 'separator', key: 'sep-file-bottom' });
   }
 
-  // Folder: settings + rename + color
+  // Folder-specific: organize + manage
   if (node.data.type === 'folder') {
-    if (onFolderSettings) {
-      items.push({
-        type: 'item',
-        key: 'folder-settings',
-        icon: <Settings className="h-4 w-4" />,
-        label: t('folderSettings.title'),
-        onClick: () => onFolderSettings(),
-      });
-    }
-
-    items.push({
-      type: 'item',
-      key: 'rename',
-      icon: <Edit2 className="h-4 w-4" />,
-      label: t('node.rename'),
-      onClick: () => node.edit(),
-    });
-
+    // — Organize —
     // Color submenu
     items.push({
       type: 'sub',
@@ -300,6 +289,29 @@ export function useExplorerMenuItems({
         </div>
       ),
     });
+
+    items.push({ type: 'separator', key: 'sep-folder-organize' });
+
+    // — Manage —
+    items.push({
+      type: 'item',
+      key: 'rename',
+      icon: <Edit2 className="h-4 w-4" />,
+      label: t('node.rename'),
+      onClick: () => node.edit(),
+    });
+
+    if (onFolderSettings) {
+      items.push({
+        type: 'item',
+        key: 'folder-settings',
+        icon: <Settings className="h-4 w-4" />,
+        label: t('folderSettings.title'),
+        onClick: () => onFolderSettings(),
+      });
+    }
+
+    items.push({ type: 'separator', key: 'sep-folder-manage' });
   }
 
   // Delete (always last)

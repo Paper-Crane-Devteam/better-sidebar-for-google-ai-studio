@@ -4,6 +4,7 @@ import {
   MessageSquare,
   ChevronRight,
   ChevronDown,
+  Eye,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { useAppStore } from '@/shared/lib/store';
@@ -31,6 +32,7 @@ import {
 
 import { toast } from '@/shared/lib/toast';
 import { NodeActionBar } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
+import type { ActionButtonDef } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import { usePromptsMenuItems } from './usePromptsMenuItems';
 
 export const Node = ({
@@ -40,6 +42,7 @@ export const Node = ({
   tree,
   preview,
   onPreview,
+  onEdit,
 }: NodeProps) => {
   const { t } = useI18n();
   const {
@@ -128,6 +131,14 @@ export const Node = ({
     }
   };
 
+  const handleEdit = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    e?.preventDefault();
+    if (onEdit) {
+      onEdit(node.data.data);
+    }
+  };
+
   const doCopy = (content: string) => {
     navigator.clipboard.writeText(content);
     toast.success(t('prompts.promptCopiedToClipboard'), 1000);
@@ -201,10 +212,19 @@ export const Node = ({
       toggleFavorite(id, 'prompt', isFav),
     onCopy: handleCopy,
     onDuplicate: handleDuplicate,
-    onView: onPreview ? handleView : undefined,
+    onEdit: onEdit ? handleEdit : undefined,
   });
 
   const isMenuActive = isContextMenuOpen || isDropdownOpen;
+
+  const quickActions: ActionButtonDef[] = [];
+  if (isFile && onPreview) {
+    quickActions.push({
+      icon: <Eye className="h-3.5 w-3.5" />,
+      tooltip: t('prompts.viewPrompt'),
+      onClick: handleView,
+    });
+  }
 
   const innerContent = (
     <>
@@ -234,6 +254,7 @@ export const Node = ({
       {/* Action bar with three-dot menu – hidden while renaming */}
       {!isBatchMode && !node.isEditing && (
         <NodeActionBar
+          actions={quickActions}
           menuItems={menuItems}
           forceVisible={isMenuActive}
           onDropdownOpenChange={setIsDropdownOpen}
@@ -244,12 +265,12 @@ export const Node = ({
 
   const commonClasses = cn(
     'flex items-center gap-1.5 px-1 cursor-pointer group relative pr-2 h-full no-underline outline-none text-density rounded-sm font-medium text-foreground/80',
-    !node.isEditing && 'group-hover:pr-8',
+    !node.isEditing && (isFile ? 'group-hover:pr-14' : 'group-hover:pr-8'),
     !((node.isSelected && !isFile) || isBatchSelected) && 'hover:bg-accent/50',
     ((node.isSelected && !isFile) || isBatchSelected) && 'node-item-selected',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
     isMenuActive && 'bg-accent/50',
-    isMenuActive && 'pr-8',
+    isMenuActive && (isFile ? 'pr-14' : 'pr-8'),
     isMenuActive && 'node-menu-active',
   );
 
@@ -328,6 +349,7 @@ export const Node = ({
           preview={preview}
           onDuplicate={handleDuplicate}
           onCopy={handleCopy}
+          onEditPrompt={onEdit ? handleEdit : undefined}
         />
       )}
     </ContextMenu>

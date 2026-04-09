@@ -5,9 +5,10 @@ import {
   ChevronDown,
   Edit2,
   Copy,
-  EyeOff,
+  Trash2,
   ExternalLink,
   Star,
+  MessageSquarePlus,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { navigateToConversation, navigateToGem, navigate } from '@/shared/lib/navigation';
@@ -82,16 +83,31 @@ export const GemNode = ({
     node.toggle();
   };
 
-  const handleHideGem = async () => {
+  const handleDeleteGem = async () => {
     const confirmed = await modal.confirm({
-      title: t('gems.hideGem'),
-      content: t('gems.hideGemConfirm', { name: node.data.name }),
-      confirmText: t('common.hide'),
+      title: t('gems.deleteGem'),
+      content: t('gems.deleteGemConfirm', { name: node.data.name }),
+      confirmText: t('common.delete'),
       cancelText: t('common.cancel'),
     });
     if (confirmed) {
+      // Call Gemini API to delete the gem
+      try {
+        window.dispatchEvent(
+          new CustomEvent('GEMINI_API_EXECUTE', {
+            detail: {
+              rpcid: 'UXcSJb',
+              payload: [node.data.id],
+              callbackEvent: `GEMINI_DELETE_GEM_RESULT_${node.data.id}`,
+            },
+          }),
+        );
+      } catch {
+        // non-critical
+      }
+
       await browser.runtime.sendMessage({
-        type: 'HIDE_GEM',
+        type: 'DELETE_GEM',
         payload: { id: node.data.id },
       });
       fetchData(true);
@@ -107,18 +123,15 @@ export const GemNode = ({
   };
 
   const handleDeleteConversation = async () => {
+    const { deleteItem } = useAppStore.getState();
     const confirmed = await modal.confirm({
-      title: t('node.hideItem'),
-      content: t('node.hideConfirm'),
-      confirmText: t('common.hide'),
+      title: t('node.deleteItem'),
+      content: t('node.deleteConfirm', { name: node.data.name }),
+      confirmText: t('node.delete'),
       cancelText: t('common.cancel'),
     });
     if (confirmed) {
-      await browser.runtime.sendMessage({
-        type: 'DELETE_CONVERSATION',
-        payload: { id: node.data.id },
-      });
-      fetchData(true);
+      await deleteItem(node.data.id, 'file');
     }
   };
 
@@ -134,6 +147,17 @@ export const GemNode = ({
 
   // Menu items for gem nodes
   const gemMenuItems: MenuEntryDef[] = isGem ? [
+    // — Primary action —
+    {
+      type: 'item' as const,
+      key: 'new-gem-chat',
+      icon: <MessageSquarePlus className="h-4 w-4" />,
+      label: t('gems.newGemChat'),
+      onClick: () => {
+        navigateToGem(node.data.id);
+      },
+    },
+    // — Navigation —
     {
       type: 'item' as const,
       key: 'open-gem',
@@ -154,6 +178,8 @@ export const GemNode = ({
         if (gemUrl) window.open(gemUrl, '_blank');
       },
     },
+    { type: 'separator' as const, key: 'sep-nav' },
+    // — Manage —
     {
       type: 'item' as const,
       key: 'edit-gem',
@@ -172,13 +198,15 @@ export const GemNode = ({
         navigate(`https://gemini.google.com/gems/copy/${node.data.id}`);
       },
     },
-    { type: 'separator' as const, key: 'sep-gem' },
+    { type: 'separator' as const, key: 'sep-manage' },
+    // — Destructive —
     {
       type: 'item' as const,
-      key: 'hide-gem',
-      icon: <EyeOff className="h-4 w-4" />,
-      label: t('gems.hideGem'),
-      onClick: () => void handleHideGem(),
+      key: 'delete-gem',
+      icon: <Trash2 className="h-4 w-4" />,
+      label: t('gems.deleteGem'),
+      className: 'text-destructive focus:text-destructive',
+      onClick: () => void handleDeleteGem(),
     },
   ] : [];
 

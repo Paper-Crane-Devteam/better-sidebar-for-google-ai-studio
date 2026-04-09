@@ -8,6 +8,7 @@ export class GemCreationScanner {
     this.listener = (event: Event) => {
       const { id, name } = (event as CustomEvent).detail;
       if (!id) return;
+      if (name === 'Chess champ') return;
 
       console.log('Gemini GemCreationScanner: Detected new gem', id, name);
 

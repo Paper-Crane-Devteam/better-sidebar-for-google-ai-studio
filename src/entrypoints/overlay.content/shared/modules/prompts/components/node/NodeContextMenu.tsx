@@ -13,6 +13,7 @@ interface NodeContextMenuProps extends NodeProps {
   onToggleFavorite: (id: string, isFav: boolean) => void;
   onCopy: (e?: React.MouseEvent) => void;
   onDuplicate: () => void;
+  onEditPrompt?: (e?: React.MouseEvent) => void;
 }
 
 export const NodeContextMenu = ({
@@ -23,6 +24,7 @@ export const NodeContextMenu = ({
   isFavorite,
   onCopy,
   onDuplicate,
+  onEditPrompt,
 }: NodeContextMenuProps) => {
   const shouldPreventRef = React.useRef(false);
 
@@ -34,6 +36,7 @@ export const NodeContextMenu = ({
     onToggleFavorite,
     onCopy,
     onDuplicate,
+    onEdit: onEditPrompt,
   });
 
   return (

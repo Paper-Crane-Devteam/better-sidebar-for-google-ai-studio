@@ -8,7 +8,7 @@ import {
   StarOff,
   Copy,
   Files,
-  Eye,
+  Pencil,
 } from 'lucide-react';
 import type { MenuEntryDef } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import type { NodeRendererProps } from 'react-arborist';
@@ -22,7 +22,7 @@ interface UsePromptsMenuItemsParams {
   onToggleFavorite: (id: string, isFav: boolean) => void;
   onCopy: (e?: React.MouseEvent) => void;
   onDuplicate: () => void;
-  onView?: (e?: React.MouseEvent) => void;
+  onEdit?: (e?: React.MouseEvent) => void;
 }
 
 export function usePromptsMenuItems({
@@ -33,7 +33,7 @@ export function usePromptsMenuItems({
   onToggleFavorite,
   onCopy,
   onDuplicate,
-  onView,
+  onEdit,
 }: UsePromptsMenuItemsParams): MenuEntryDef[] {
   const { t } = useI18n();
   const isFile = node.data.type === 'file';
@@ -56,13 +56,27 @@ export function usePromptsMenuItems({
 
   // File-specific
   if (isFile) {
-    if (onView) {
+    // — Organize —
+    items.push({
+      type: 'item',
+      key: 'toggle-favorite',
+      icon: isFavorite
+        ? <StarOff className="h-4 w-4" />
+        : <Star className="h-4 w-4" />,
+      label: isFavorite ? t('node.removeFromFavorites') : t('node.addToFavorites'),
+      onClick: () => onToggleFavorite(node.data.id, isFavorite),
+    });
+
+    items.push({ type: 'separator', key: 'sep-organize' });
+
+    // — Manage —
+    if (onEdit) {
       items.push({
         type: 'item',
-        key: 'view',
-        icon: <Eye className="h-4 w-4" />,
-        label: t('prompts.viewPrompt'),
-        onClick: (e) => onView(e),
+        key: 'edit',
+        icon: <Pencil className="h-4 w-4" />,
+        label: t('prompts.editPrompt'),
+        onClick: (e) => onEdit(e),
       });
     }
 
@@ -84,25 +98,27 @@ export function usePromptsMenuItems({
 
     items.push({
       type: 'item',
-      key: 'toggle-favorite',
-      icon: isFavorite
-        ? <StarOff className="h-4 w-4" />
-        : <Star className="h-4 w-4" />,
-      label: isFavorite ? t('node.removeFromFavorites') : t('node.addToFavorites'),
-      onClick: () => onToggleFavorite(node.data.id, isFavorite),
+      key: 'rename',
+      icon: <Edit2 className="h-4 w-4" />,
+      label: t('node.rename'),
+      onClick: () => node.edit(),
     });
 
     items.push({ type: 'separator', key: 'sep-file-bottom' });
   }
 
-  // Rename (always)
-  items.push({
-    type: 'item',
-    key: 'rename',
-    icon: <Edit2 className="h-4 w-4" />,
-    label: t('node.rename'),
-    onClick: () => node.edit(),
-  });
+  // Folder: manage
+  if (node.data.type === 'folder') {
+    items.push({
+      type: 'item',
+      key: 'rename',
+      icon: <Edit2 className="h-4 w-4" />,
+      label: t('node.rename'),
+      onClick: () => node.edit(),
+    });
+
+    items.push({ type: 'separator', key: 'sep-folder-manage' });
+  }
 
   // Delete (always last)
   items.push({
