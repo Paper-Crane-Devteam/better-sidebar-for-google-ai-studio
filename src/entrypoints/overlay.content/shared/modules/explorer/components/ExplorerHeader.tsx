@@ -62,7 +62,8 @@ export const ExplorerHeader = ({
 
   const { sortOrder, viewMode } = ui.explorer;
   const { isBatchMode } = ui.explorer.batch;
-  const { gdriveSyncing } = usePegasusStore();
+  // TODO [AUTO-SYNC]: Re-enable when auto-sync is fully tested
+  // const { gdriveSyncing } = usePegasusStore();
 
   const handleSort = () => {
     const newOrder = sortOrder === 'alpha' ? 'date' : 'alpha';
@@ -82,7 +83,8 @@ export const ExplorerHeader = ({
         </h1>
 
         <div className="flex items-center gap-0.5">
-              <SimpleTooltip content={gdriveSyncing ? t('data.gdriveAutoSyncing') : t('data.gdriveSync')}>
+              {/* TODO [AUTO-SYNC]: Re-enable syncing indicator when auto-sync is fully tested */}
+              <SimpleTooltip content={t('data.gdriveSync')}>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -100,11 +102,7 @@ export const ExplorerHeader = ({
                     });
                   }}
                 >
-                  {gdriveSyncing ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Cloud className="h-4 w-4" />
-                  )}
+                  <Cloud className="h-4 w-4" />
                 </Button>
               </SimpleTooltip>
 

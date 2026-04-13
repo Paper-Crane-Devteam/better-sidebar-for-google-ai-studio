@@ -66,36 +66,40 @@ export default defineBackground(() => {
   // When switching tabs, flush any pending debounced sync first
   // so it runs against the OLD tab's profile before we switch.
   browser.tabs.onActivated.addListener((activeInfo) => {
-    flushPendingSync(ensureDbForActiveTab, () => notifyDataUpdated()).then(() => {
-      setActiveTabId(activeInfo.tabId);
-    });
+    // TODO [AUTO-SYNC]: Re-enable when auto-sync is fully tested
+    // flushPendingSync(ensureDbForActiveTab, () => notifyDataUpdated()).then(() => {
+    //   setActiveTabId(activeInfo.tabId);
+    // });
+    setActiveTabId(activeInfo.tabId);
   });
 
   // Register auto-sync alarm after DB is ready
   dbReady.then(() => {
-    registerAutoSyncAlarm();
-
-    // Wire syncing state to pegasus store so UI can show loading indicator
-    onSyncingChange((syncing) => {
-      usePegasusStore.getState().setGdriveSyncing(syncing);
-    });
+    // TODO [AUTO-SYNC]: Re-enable when auto-sync is fully tested
+    // registerAutoSyncAlarm();
+    //
+    // // Wire syncing state to pegasus store so UI can show loading indicator
+    // onSyncingChange((syncing) => {
+    //   usePegasusStore.getState().setGdriveSyncing(syncing);
+    // });
   });
 
   // Handle alarm events for periodic auto-sync.
   // Respects the gdriveAutoSync setting from pegasus store.
-  browser.alarms.onAlarm.addListener((alarm) => {
-    dbReady.then(() => {
-      const { gdriveAutoSync } = usePegasusStore.getState();
-      if (!gdriveAutoSync) {
-        console.log('[Background] Auto-sync disabled, skipping alarm');
-        return;
-      }
-      handleAutoSyncAlarm(
-        alarm,
-        getActiveDbName,
-        ensureDbForActiveTab,
-        () => notifyDataUpdated(),
-      );
-    });
-  });
+  // TODO [AUTO-SYNC]: Re-enable when auto-sync is fully tested
+  // browser.alarms.onAlarm.addListener((alarm) => {
+  //   dbReady.then(() => {
+  //     const { gdriveAutoSync } = usePegasusStore.getState();
+  //     if (!gdriveAutoSync) {
+  //       console.log('[Background] Auto-sync disabled, skipping alarm');
+  //       return;
+  //     }
+  //     handleAutoSyncAlarm(
+  //       alarm,
+  //       getActiveDbName,
+  //       ensureDbForActiveTab,
+  //       () => notifyDataUpdated(),
+  //     );
+  //   });
+  // });
 });
