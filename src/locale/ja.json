@@ -39,7 +39,7 @@
     "scanLibrary": "ライブラリをスキャン",
     "scanning": "スキャン中...",
     "newFolder": "新しいフォルダ",
-    "imported": "インポート済み",
+    "imported": "受信トレイ",
     "conversations": "件の会話",
     "scanComplete": "スキャン完了、新しい会話は見つかりませんでした"
   },
@@ -73,7 +73,7 @@
     "newTab": "新しいタブ",
     "defaultSyncFolder": "デフォルト同期フォルダ",
     "defaultSyncFolderDescription": "同期・スキャンされた会話の保存先",
-    "defaultSyncFolderImported": "インポート済み（デフォルト）",
+    "defaultSyncFolderImported": "受信トレイ（デフォルト）",
     "defaultSyncFolderChange": "変更",
     "language": "言語",
     "languageDescription": "インターフェース言語を選択",
@@ -219,7 +219,16 @@
     "gdriveNoBackupFound": "このプロファイルの Google ドライブバックアップが見つかりません",
     "gdriveBackupConfirm": "Google ドライブにバックアップしますか？このプロファイルの既存のクラウドバックアップが上書きされます。",
     "gdriveRestoreConfirm": "Google ドライブから復元しますか？ローカルデータが上書きされます（メッセージは影響を受けません）。",
-    "gdriveUnsupported": "このブラウザでは Google ドライブ同期は利用できません"
+    "gdriveUnsupported": "このブラウザでは Google ドライブ同期は利用できません",
+    "gdriveSyncSuccess": "同期が完了しました",
+    "gdriveMergeSync": "今すぐ同期",
+    "gdriveMergeSyncDesc": "スマートマージ：リモートの変更を取得し、ローカルデータとマージしてからプッシュします。",
+    "gdriveAutoSyncing": "自動同期中...",
+    "gdriveAutoSyncLabel": "自動同期",
+    "gdriveAutoSyncDesc": "25分ごとおよびデータ変更後に自動同期",
+    "gdriveDirUp": "バックアップ",
+    "gdriveDirDown": "復元",
+    "gdriveDirMerge": "マージ"
   },
   "explorerSettings": {
     "viewOptions": "表示オプション",
@@ -238,8 +247,7 @@
     "ignoredFoldersDescription": "非表示にするフォルダ名のリスト（カンマ区切り）",
     "ignoredFoldersPlaceholder": "例：archive, temp, old",
     "enableRightClickRename": "右クリックで名前を変更を有効化",
-    "enableRightClickRenameDescription": "コンテキストメニューから会話の名前を変更できるようにする",
-    "enableRightClickRenameDisclaimer": "注意：この名前変更はローカルのみ（エイリアス）で、Google AI Studio 上の実際の会話名には影響しません。"
+    "enableRightClickRenameDescription": "コンテキストメニューから会話の名前を変更できるようにする（Gemini と同期）"
   },
   "shortcuts": {
     "title": "サイドバーショートカット",
@@ -306,9 +314,11 @@
     "hideConfirm": "\"{{name}}\" を非表示にしてもよろしいですか？",
 
     "deleteFolderConfirm": "フォルダ \"{{name}}\" とそのすべての内容を削除してもよろしいですか？",
-    "deleteNote": "注意：削除された項目は、チャットリストをインポートすることで復元できます。",
+    "deleteNote": "注意：この操作により、会話が完全に削除されます。",
     "hideNote": "注意：非表示にした項目は、チャットリストをインポートすることで復元できます。",
     "deleteFolderNote": "注意：削除されたフォルダは復元できませんが、会話はチャットリストをインポートすることで復元できます。",
+    "folderNotEmpty": "このフォルダには {{count}} 件の会話が含まれています。先に一括削除で会話を削除してください。",
+    "folderNotEmptyNote": "フォルダは空の状態でのみ削除できます。先に一括選択でフォルダ内の会話を削除してください。",
     "openInNewTab": "新しいタブで開く",
     "moveTo": "移動...",
     "export": "エクスポート",
@@ -373,7 +383,10 @@
     "exitBatchMode": "一括モードを終了",
     "selectAll": "すべて選択",
     "selectedCount": "{{count}} 件選択中",
-    "selectItems": "項目を選択"
+    "selectItems": "項目を選択",
+    "deletingProgress": "削除中 {{current}}/{{total}}...",
+    "deleteSuccess": "{{count}} 件の会話を削除しました",
+    "deletePartial": "{{succeeded}}/{{total}} 件削除、{{failed}} 件失敗"
   },
   "tags": {
     "noTagsAvailable": "利用可能なタグがありません。",
@@ -649,8 +662,12 @@
     "conversations": "件の会話",
     "openGem": "Gem を開く",
     "openInNewTab": "新しいタブで開く",
+    "editGem": "Gem を編集",
+    "copyGem": "Gem をコピー",
+    "hideGem": "Gem を非表示",
+    "hideGemConfirm": "\"{{name}}\" を非表示にしますか？再スキャンしてこの Gem を再取得できます。",
     "deleteGem": "Gem を削除",
-    "deleteGemConfirm": "\"{{name}}\" を削除しますか？会話は削除されません。再スキャンしてこの Gem を再取得できます。",
+    "deleteGemConfirm": "\"{{name}}\" を削除しますか？この操作により Gem は Gemini から完全に削除されます。",
     "renameGem": "Gem の名前を変更",
     "createGem": "Gem を作成",
     "selectGem": "Gem を選択",
@@ -668,7 +685,7 @@
     "welcome": "最新バージョンへようこそ！",
     "awesome": "素晴らしい！",
     "enjoyingIt": "気に入ったら応援してください 👇",
-    "rateUs": "評価",
+    "rateUs": "評価 👍",
     "starOnGithub": "スター ⭐",
     "buyMeACoffee": "コーヒー ☕"
   },

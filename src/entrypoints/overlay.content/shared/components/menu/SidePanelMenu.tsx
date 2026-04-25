@@ -78,7 +78,7 @@ export const SidePanelMenu = ({
   };
 
   return (
-    <DropdownMenu open={open} onOpenChange={(v) => { if (v) setOpen(true); }}>
+    <DropdownMenu open={open} onOpenChange={(v) => { if (v) setOpen(true); }} modal={false}>
       <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"

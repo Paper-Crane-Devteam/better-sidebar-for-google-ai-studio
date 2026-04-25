@@ -39,7 +39,7 @@
     "scanLibrary": "Escanear Biblioteca",
     "scanning": "Escaneando...",
     "newFolder": "Nueva Carpeta",
-    "imported": "Importado",
+    "imported": "Bandeja de entrada",
     "conversations": "conversaciones",
     "scanComplete": "Escaneo completado, no se encontraron nuevas conversaciones"
   },
@@ -73,7 +73,7 @@
     "newTab": "Nueva Pestaña",
     "defaultSyncFolder": "Carpeta de Sincronización Predeterminada",
     "defaultSyncFolderDescription": "Dónde se colocan las conversaciones sincronizadas y escaneadas",
-    "defaultSyncFolderImported": "Importado (predeterminado)",
+    "defaultSyncFolderImported": "Bandeja de entrada (predeterminado)",
     "defaultSyncFolderChange": "Cambiar",
     "language": "Idioma",
     "languageDescription": "Seleccionar el idioma de la interfaz",
@@ -219,7 +219,16 @@
     "gdriveNoBackupFound": "No se encontró copia de seguridad en Google Drive para este perfil",
     "gdriveBackupConfirm": "¿Estás seguro de que deseas hacer una copia de seguridad en Google Drive? Esto sobrescribirá tu copia de seguridad existente en la nube para este perfil.",
     "gdriveRestoreConfirm": "¿Estás seguro de que deseas restaurar desde Google Drive? Esto sobrescribirá tus datos locales (los mensajes no se ven afectados).",
-    "gdriveUnsupported": "La sincronización con Google Drive no está disponible en este navegador"
+    "gdriveUnsupported": "La sincronización con Google Drive no está disponible en este navegador",
+    "gdriveSyncSuccess": "Sincronización completada correctamente",
+    "gdriveMergeSync": "Sincronizar ahora",
+    "gdriveMergeSyncDesc": "Fusión inteligente: obtiene los cambios remotos, los fusiona con los datos locales y luego los envía.",
+    "gdriveAutoSyncing": "Sincronizando automáticamente...",
+    "gdriveAutoSyncLabel": "Sincronización automática",
+    "gdriveAutoSyncDesc": "Sincronizar automáticamente cada 25 minutos y después de cambios en los datos",
+    "gdriveDirUp": "Copia de seguridad",
+    "gdriveDirDown": "Restaurar",
+    "gdriveDirMerge": "Fusionar"
   },
   "explorerSettings": {
     "viewOptions": "Opciones de Vista",
@@ -238,8 +247,7 @@
     "ignoredFoldersDescription": "Lista de nombres de carpetas para ocultar (separados por comas)",
     "ignoredFoldersPlaceholder": "ej: archive, temp, old",
     "enableRightClickRename": "Habilitar Renombrar con Clic Derecho",
-    "enableRightClickRenameDescription": "Permitir renombrar conversaciones mediante menú contextual",
-    "enableRightClickRenameDisclaimer": "Nota: Este renombrado es solo local (alias) y no afecta el nombre real de la conversación en Google AI Studio."
+    "enableRightClickRenameDescription": "Permitir renombrar conversaciones mediante menú contextual (sincroniza con Gemini)"
   },
   "shortcuts": {
     "title": "Accesos Directos de la Barra Lateral",
@@ -305,9 +313,11 @@
     "deleteConfirm": "¿Estás seguro de que deseas eliminar \"{{name}}\"?",
     "hideConfirm": "¿Estás seguro de que deseas ocultar \"{{name}}\"?",
     "deleteFolderConfirm": "¿Estás seguro de que deseas eliminar la carpeta \"{{name}}\" y todo su contenido?",
-    "deleteNote": "Nota: Los elementos eliminados se pueden restaurar importando la lista de chats.",
+    "deleteNote": "Nota: Esto eliminará permanentemente la conversación.",
     "hideNote": "Nota: Los elementos ocultos se pueden restaurar importando la lista de chats.",
     "deleteFolderNote": "Nota: Las carpetas eliminadas no se pueden restaurar, pero las conversaciones se pueden recuperar importando la lista de chats.",
+    "folderNotEmpty": "Esta carpeta contiene {{count}} conversación(es). Usa la eliminación por lotes para eliminar las conversaciones primero.",
+    "folderNotEmptyNote": "Las carpetas solo se pueden eliminar cuando están vacías. Usa la selección por lotes para eliminar las conversaciones dentro de la carpeta primero.",
     "openInNewTab": "Abrir en Nueva Pestaña",
     "moveTo": "Mover a...",
     "export": "Exportar",
@@ -372,7 +382,10 @@
     "exitBatchMode": "Salir del Modo de Lotes",
     "selectAll": "Seleccionar Todo",
     "selectedCount": "{{count}} seleccionados",
-    "selectItems": "Seleccionar elementos"
+    "selectItems": "Seleccionar elementos",
+    "deletingProgress": "Eliminando {{current}}/{{total}}...",
+    "deleteSuccess": "{{count}} conversaciones eliminadas",
+    "deletePartial": "Eliminadas {{succeeded}}/{{total}}, {{failed}} fallidas"
   },
   "tags": {
     "noTagsAvailable": "No hay etiquetas disponibles.",
@@ -648,8 +661,12 @@
     "conversations": "conversaciones",
     "openGem": "Abrir Gem",
     "openInNewTab": "Abrir en nueva pestaña",
+    "editGem": "Editar Gem",
+    "copyGem": "Copiar Gem",
+    "hideGem": "Ocultar Gem",
+    "hideGemConfirm": "¿Estás seguro de que quieres ocultar \"{{name}}\"? Puedes volver a escanear para recuperar este Gem.",
     "deleteGem": "Eliminar Gem",
-    "deleteGemConfirm": "¿Estás seguro de que deseas eliminar \"{{name}}\"? Las conversaciones no se eliminarán. Puedes volver a escanear para recuperar este Gem.",
+    "deleteGemConfirm": "¿Estás seguro de que deseas eliminar \"{{name}}\"? Esto eliminará permanentemente el Gem de Gemini.",
     "renameGem": "Renombrar Gem",
     "createGem": "Crear Gem",
     "selectGem": "Seleccionar un Gem",
@@ -667,7 +684,7 @@
     "welcome": "¡Bienvenido a la última versión! Disfruta de las actualizaciones.",
     "awesome": "¡Genial!",
     "enjoyingIt": "¿Te gusta? Muéstranos tu apoyo 👇",
-    "rateUs": "Valorar",
+    "rateUs": "Valorar 👍",
     "starOnGithub": "Estrella ⭐",
     "buyMeACoffee": "Café ☕"
   },

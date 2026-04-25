@@ -39,7 +39,7 @@
     "scanLibrary": "Scan Library",
     "scanning": "Scanning...",
     "newFolder": "New Folder",
-    "imported": "Imported",
+    "imported": "Inbox",
     "conversations": "conversations",
     "scanComplete": "Scan complete, no new conversations found"
   },
@@ -73,7 +73,7 @@
     "newTab": "New Tab",
     "defaultSyncFolder": "Default Sync Folder",
     "defaultSyncFolderDescription": "Where new synced and scanned conversations are placed",
-    "defaultSyncFolderImported": "Imported (default)",
+    "defaultSyncFolderImported": "Inbox (default)",
     "defaultSyncFolderChange": "Change",
     "language": "Language",
     "languageDescription": "Select the interface language",
@@ -219,7 +219,16 @@
     "gdriveNoBackupFound": "No backup found on Google Drive for this profile",
     "gdriveBackupConfirm": "Are you sure you want to backup to Google Drive? This will overwrite your existing cloud backup for this profile.",
     "gdriveRestoreConfirm": "Are you sure you want to restore from Google Drive? This will overwrite your local data (messages are not affected).",
-    "gdriveUnsupported": "Google Drive sync is not available in this browser"
+    "gdriveUnsupported": "Google Drive sync is not available in this browser",
+    "gdriveSyncSuccess": "Sync completed successfully",
+    "gdriveMergeSync": "Sync Now",
+    "gdriveMergeSyncDesc": "Smart merge: pulls remote changes, merges with local data, then pushes back.",
+    "gdriveAutoSyncing": "Auto-syncing...",
+    "gdriveAutoSyncLabel": "Auto Sync",
+    "gdriveAutoSyncDesc": "Automatically sync every 25 minutes and after data changes",
+    "gdriveDirUp": "Backup",
+    "gdriveDirDown": "Restore",
+    "gdriveDirMerge": "Merge"
   },
   "explorerSettings": {
     "viewOptions": "View Options",
@@ -238,8 +247,7 @@
     "ignoredFoldersDescription": "List of folder names to hide (comma separated)",
     "ignoredFoldersPlaceholder": "e.g. archive, temp, old",
     "enableRightClickRename": "Enable Right-Click Rename",
-    "enableRightClickRenameDescription": "Allow renaming conversations via context menu",
-    "enableRightClickRenameDisclaimer": "Note: This rename is local only (alias) and does not affect the actual conversation name on Google AI Studio."
+    "enableRightClickRenameDescription": "Allow renaming conversations via context menu (syncs with Gemini)"
   },
   "shortcuts": {
     "title": "Sidebar Shortcuts",
@@ -305,9 +313,11 @@
     "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
     "hideConfirm": "Are you sure you want to hide \"{{name}}\"?",
     "deleteFolderConfirm": "Are you sure you want to delete the folder \"{{name}}\" and all its contents?",
-    "deleteNote": "Note: Deleted items can be restored by importing the chat list.",
+    "deleteNote": "Note: This will permanently delete the conversation.",
     "hideNote": "Note: Hidden items can be restored by importing the chat list.",
     "deleteFolderNote": "Note: Deleted folders cannot be restored, but conversations can be recovered by importing the chat list.",
+    "folderNotEmpty": "This folder contains {{count}} conversation(s). Please use batch delete to remove conversations first.",
+    "folderNotEmptyNote": "Folders can only be deleted when they are empty. Use batch selection to delete conversations inside the folder first.",
     "openInNewTab": "Open in New Tab",
     "moveTo": "Move to...",
     "export": "Export",
@@ -372,7 +382,10 @@
     "exitBatchMode": "Exit Batch Mode",
     "selectAll": "Select All",
     "selectedCount": "{{count}} selected",
-    "selectItems": "Select items"
+    "selectItems": "Select items",
+    "deletingProgress": "Deleting {{current}}/{{total}}...",
+    "deleteSuccess": "Deleted {{count}} conversations",
+    "deletePartial": "Deleted {{succeeded}}/{{total}}, {{failed}} failed"
   },
   "tags": {
     "noTagsAvailable": "No tags available.",
@@ -647,8 +660,12 @@
     "conversations": "conversations",
     "openGem": "Open Gem",
     "openInNewTab": "Open in New Tab",
+    "editGem": "Edit Gem",
+    "copyGem": "Copy Gem",
+    "hideGem": "Hide Gem",
+    "hideGemConfirm": "Are you sure you want to hide \"{{name}}\"? You can rescan to retrieve this Gem.",
     "deleteGem": "Delete Gem",
-    "deleteGemConfirm": "Are you sure you want to delete \"{{name}}\"? Conversations will not be deleted. You can rescan to retrieve this Gem.",
+    "deleteGemConfirm": "Are you sure you want to delete \"{{name}}\"? This will permanently delete the Gem from Gemini.",
     "renameGem": "Rename Gem",
     "createGem": "Create Gem",
     "selectGem": "Select a Gem",
@@ -666,7 +683,7 @@
     "welcome": "Welcome to the latest version! Enjoy the updates.",
     "awesome": "Awesome!",
     "enjoyingIt": "Enjoying Better Sidebar? Show some love 👇",
-    "rateUs": "Rate",
+    "rateUs": "Rate 👍",
     "starOnGithub": "Star ⭐",
     "buyMeACoffee": "Coffee ☕"
   },

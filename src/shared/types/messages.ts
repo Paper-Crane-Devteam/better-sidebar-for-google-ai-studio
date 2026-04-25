@@ -343,6 +343,7 @@ export type ExtensionMessage = (
       };
     }
   | { type: 'DELETE_GEM'; payload: { id: string } }
+  | { type: 'HIDE_GEM'; payload: { id: string } }
   | {
       type: 'UPDATE_GEM';
       payload: {
@@ -357,6 +358,7 @@ export type ExtensionMessage = (
   | { type: 'GDRIVE_GET_STATUS' }
   | { type: 'GDRIVE_SYNC_UP' }
   | { type: 'GDRIVE_SYNC_DOWN' }
+  | { type: 'GDRIVE_MERGE' }
   | { type: 'GDRIVE_CHECK_SUPPORT' }
 ) & { platform?: string };
 

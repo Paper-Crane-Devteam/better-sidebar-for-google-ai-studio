@@ -34,6 +34,17 @@ export const navigate = (url: string) => {
   window.dispatchEvent(new PopStateEvent('popstate'));
 };
 
+export const navigateToNewChat = () => {
+  const platform = detectPlatform();
+  if (platform === Platform.GEMINI) {
+    if (!clickGeminiNewChat()) {
+      navigate('/app');
+    }
+  } else if (platform === Platform.AI_STUDIO) {
+    navigate('/prompts/new_chat');
+  }
+};
+
 export const navigateToConversation = (targetId: string) => {
   const platform = detectPlatform();
   if (platform === Platform.GEMINI) {
@@ -50,8 +61,10 @@ export const navigateToConversation = (targetId: string) => {
       }
     }
     
-    console.warn(`Conversation link not found for id: ${targetId}, falling back to location.href`);
-    window.location.href = `/app/${targetId}`;
+    // Fallback: same approach as navigateToGem — click "New chat" first, then pushState
+    console.warn(`Conversation link not found for id: ${targetId}, falling back to new chat + pushState`);
+    clickGeminiNewChat();
+    navigate(`/app/${targetId}`);
   }
   if(platform === Platform.AI_STUDIO) {
     navigate(`/prompts/${targetId}`);

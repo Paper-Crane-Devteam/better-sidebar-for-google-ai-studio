@@ -3,11 +3,14 @@ import {
   Gem,
   ChevronRight,
   ChevronDown,
+  Edit2,
+  Copy,
+  Trash2,
+  ExternalLink,
   Star,
-  Plus,
+  MessageSquarePlus,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
-import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { navigateToConversation, navigateToGem, navigate } from '@/shared/lib/navigation';
 import { useAppStore } from '@/shared/lib/store';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -17,11 +20,14 @@ import type { FolderTreeNodeData } from '../../../components/folder-tree/types';
 import {
   ContextMenu,
   ContextMenuContent,
-  ContextMenuItem,
   ContextMenuTrigger,
 } from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
 import { modal } from '@/shared/lib/modal';
 import { NodeContextMenu } from '../../explorer/components/node/NodeContextMenu';
+import { NodeActionBar } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
+import { useExplorerMenuItems } from '../../explorer/components/node/useExplorerMenuItems';
+import { renderMenuItems } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
+import type { MenuEntryDef } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 
 export const GemNode = ({
   node,
@@ -41,6 +47,7 @@ export const GemNode = ({
   } = useAppStore();
   const currentConversationId = useCurrentConversationId();
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const isGem = node.data.data?.isGem;
   const isFile = node.data.type === 'file';
@@ -84,6 +91,21 @@ export const GemNode = ({
       cancelText: t('common.cancel'),
     });
     if (confirmed) {
+      // Call Gemini API to delete the gem
+      try {
+        window.dispatchEvent(
+          new CustomEvent('GEMINI_API_EXECUTE', {
+            detail: {
+              rpcid: 'UXcSJb',
+              payload: [node.data.id],
+              callbackEvent: `GEMINI_DELETE_GEM_RESULT_${node.data.id}`,
+            },
+          }),
+        );
+      } catch {
+        // non-critical
+      }
+
       await browser.runtime.sendMessage({
         type: 'DELETE_GEM',
         payload: { id: node.data.id },
@@ -101,18 +123,15 @@ export const GemNode = ({
   };
 
   const handleDeleteConversation = async () => {
+    const { deleteItem } = useAppStore.getState();
     const confirmed = await modal.confirm({
-      title: t('node.hideItem'),
-      content: t('node.hideConfirm'),
-      confirmText: t('common.hide'),
+      title: t('node.deleteItem'),
+      content: t('node.deleteConfirm', { name: node.data.name }),
+      confirmText: t('node.delete'),
       cancelText: t('common.cancel'),
     });
     if (confirmed) {
-      await browser.runtime.sendMessage({
-        type: 'DELETE_CONVERSATION',
-        payload: { id: node.data.id },
-      });
-      fetchData(true);
+      await deleteItem(node.data.id, 'file');
     }
   };
 
@@ -124,7 +143,88 @@ export const GemNode = ({
     )
   ) : null;
 
-  const hasHoverActions = isFile;
+  const hasHoverActions = isFile || isGem;
+
+  // Menu items for gem nodes
+  const gemMenuItems: MenuEntryDef[] = isGem ? [
+    // — Primary action —
+    {
+      type: 'item' as const,
+      key: 'new-gem-chat',
+      icon: <MessageSquarePlus className="h-4 w-4" />,
+      label: t('gems.newGemChat'),
+      onClick: () => {
+        navigateToGem(node.data.id);
+      },
+    },
+    // — Navigation —
+    {
+      type: 'item' as const,
+      key: 'open-gem',
+      icon: <Gem className="h-4 w-4" />,
+      label: t('gems.openGem'),
+      onClick: () => {
+        const gemUrl = node.data.data?.external_url;
+        if (gemUrl) navigateToGem(gemUrl);
+      },
+    },
+    {
+      type: 'item' as const,
+      key: 'open-new-tab',
+      icon: <ExternalLink className="h-4 w-4" />,
+      label: t('gems.openInNewTab'),
+      onClick: () => {
+        const gemUrl = node.data.data?.external_url;
+        if (gemUrl) window.open(gemUrl, '_blank');
+      },
+    },
+    { type: 'separator' as const, key: 'sep-nav' },
+    // — Manage —
+    {
+      type: 'item' as const,
+      key: 'edit-gem',
+      icon: <Edit2 className="h-4 w-4" />,
+      label: t('gems.editGem'),
+      onClick: () => {
+        navigate(`https://gemini.google.com/gems/edit/${node.data.id}`);
+      },
+    },
+    {
+      type: 'item' as const,
+      key: 'copy-gem',
+      icon: <Copy className="h-4 w-4" />,
+      label: t('gems.copyGem'),
+      onClick: () => {
+        navigate(`https://gemini.google.com/gems/copy/${node.data.id}`);
+      },
+    },
+    { type: 'separator' as const, key: 'sep-manage' },
+    // — Destructive —
+    {
+      type: 'item' as const,
+      key: 'delete-gem',
+      icon: <Trash2 className="h-4 w-4" />,
+      label: t('gems.deleteGem'),
+      className: 'text-destructive focus:text-destructive',
+      onClick: () => void handleDeleteGem(),
+    },
+  ] : [];
+
+  // Menu items for conversation files (reuse explorer menu items)
+  const fileMenuItems = useExplorerMenuItems({
+    node,
+    isFavorite,
+    folderColor: null,
+    onDelete: handleDeleteConversation,
+    onTagToggle: handleTagToggle,
+    onColorChange: async () => {},
+    onCreateFolder: async () => {},
+    onToggleFavorite: (id: string, isFav: boolean) =>
+      toggleFavorite(id, 'conversation', isFav),
+  });
+
+  const activeMenuItems = isGem ? gemMenuItems : isFile ? fileMenuItems : [];
+  const isMenuActive = isContextMenuOpen || isDropdownOpen;
 
   const nodeClasses = cn(
     'flex items-center gap-1.5 px-1 pr-2 h-full',
@@ -136,12 +236,13 @@ export const GemNode = ({
     !isActive && isCurrentConversation && 'node-item-current',
     hasHoverActions && 'group-hover:pr-8',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
-    isContextMenuOpen && 'bg-accent/50',
-    isContextMenuOpen && hasHoverActions && 'pr-8',
+    isMenuActive && 'bg-accent/50',
+    isMenuActive && hasHoverActions && 'pr-8',
+    isMenuActive && 'node-menu-active',
   );
 
   return (
-    <ContextMenu onOpenChange={setIsContextMenuOpen}>
+    <ContextMenu onOpenChange={setIsContextMenuOpen} modal={false}>
       <ContextMenuTrigger asChild>
         <div
           style={style}
@@ -173,71 +274,30 @@ export const GemNode = ({
             )}
 
             {/* Name */}
-            <div className="flex-1 min-w-0 flex items-center gap-1 overflow-hidden justify-between">
+            <div className="flex-1 min-w-0 flex items-center gap-1 overflow-hidden">
+              {isFavorite && (
+                <Star className="h-3 w-3 shrink-0 fill-yellow-400 text-yellow-400" />
+              )}
               <span className="truncate text-sm">
                 {node.data.name}
               </span>
             </div>
 
-            {/* Hover actions for files */}
-            {isFile && (
-              <div
-                className={cn(
-                  'hidden group-hover:flex items-center gap-1 absolute right-0 pr-2 top-0 bottom-0',
-                  'node-action-bar',
-                  isContextMenuOpen && 'flex',
-                )}
-              >
-                <div className="absolute inset-y-0 -left-6 w-6 pointer-events-none [background:inherit] [mask-image:linear-gradient(to_right,transparent,black)]" />
-                <SimpleTooltip content={isFavorite ? t('tooltip.removeFromFavorites') : t('tooltip.addToFavorites')}>
-                  <div
-                    role="button"
-                    className={cn(
-                      'h-5 w-5 flex items-center justify-center rounded-sm cursor-pointer transition-colors',
-                      isFavorite
-                        ? 'text-yellow-500'
-                        : 'text-muted-foreground hover:text-foreground',
-                    )}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      toggleFavorite(node.data.id, 'conversation', isFavorite);
-                    }}
-                  >
-                    <Star className={cn('h-3.5 w-3.5', isFavorite && 'fill-current')} />
-                  </div>
-                </SimpleTooltip>
-              </div>
+            {/* Action bar with three-dot menu */}
+            {hasHoverActions && (
+              <NodeActionBar
+                menuItems={activeMenuItems}
+                forceVisible={isMenuActive}
+                onDropdownOpenChange={setIsDropdownOpen}
+              />
             )}
           </div>
         </div>
       </ContextMenuTrigger>
-      {/* Context menu */}
+      {/* Context menu - reuses same menu items as the three-dot dropdown */}
       {isGem && (
-        <ContextMenuContent className="z-[9999]">
-          <ContextMenuItem
-            onClick={() => navigate('https://gemini.google.com/gems/create')}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {t('gems.createGem')}
-          </ContextMenuItem>
-          <ContextMenuItem
-            onClick={() => {
-              const gemUrl = node.data.data?.external_url;
-              if (gemUrl) navigateToGem(gemUrl);
-            }}
-          >
-            <Gem className="mr-2 h-4 w-4" />
-            {t('gems.openGem')}
-          </ContextMenuItem>
-          <ContextMenuItem
-            onClick={() => {
-              const gemUrl = node.data.data?.external_url;
-              if (gemUrl) window.open(gemUrl, '_blank');
-            }}
-          >
-            {t('gems.openInNewTab')}
-          </ContextMenuItem>
+        <ContextMenuContent className="z-[9999] w-48">
+          {renderMenuItems(gemMenuItems, 'context')}
         </ContextMenuContent>
       )}
       {isFile && (

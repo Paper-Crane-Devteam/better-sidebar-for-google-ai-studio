@@ -86,7 +86,7 @@ export async function initGemini() {
       );
       return;
     }
-    syncConversations().catch((err) => {
+    syncConversations({ scroll: false }).catch((err) => {
       console.error('Better Sidebar: Auto-sync failed', err);
     });
   };
@@ -113,6 +113,39 @@ export async function initGemini() {
     }
   });
 
+  window.addEventListener('GEMINI_GEM_DELETE', async (event: any) => {
+    const { id } = event.detail;
+    console.log(
+      'Better Sidebar: Content Script received GEMINI_GEM_DELETE',
+      id,
+    );
+    try {
+      await browser.runtime.sendMessage({
+        type: 'DELETE_GEM',
+        payload: { id },
+      });
+    } catch (e) {
+      console.error('Better Sidebar: Failed to handle GEMINI_GEM_DELETE', e);
+    }
+  });
+
+  window.addEventListener('GEMINI_CHAT_RENAME', async (event: any) => {
+    const { id, newName } = event.detail;
+    console.log(
+      'Better Sidebar: Content Script received GEMINI_CHAT_RENAME',
+      id,
+      newName,
+    );
+    try {
+      await browser.runtime.sendMessage({
+        type: 'UPDATE_CONVERSATION',
+        payload: { id, title: newName },
+      });
+    } catch (e) {
+      console.error('Better Sidebar: Failed to handle GEMINI_CHAT_RENAME', e);
+    }
+  });
+
   // Message listener for library scan
   browser.runtime.onMessage.addListener(
     (message: ExtensionMessage, _sender, sendResponse) => {
@@ -136,16 +169,16 @@ export async function initGemini() {
           });
         return true;
       }
-      // if (message.type === 'START_SYNC_CONVERSATIONS') {
-      //   syncConversations()
-      //     .then((count) => {
-      //       sendResponse({ success: true, data: { count } });
-      //     })
-      //     .catch((err) => {
-      //       sendResponse({ success: false, error: err.message });
-      //     });
-      //   return true;
-      // }
+      if (message.type === 'START_SYNC_CONVERSATIONS') {
+        syncConversations({ scroll: true })
+          .then((count) => {
+            sendResponse({ success: true, data: { count } });
+          })
+          .catch((err) => {
+            sendResponse({ success: false, error: err.message });
+          });
+        return true;
+      }
     },
   );
 }

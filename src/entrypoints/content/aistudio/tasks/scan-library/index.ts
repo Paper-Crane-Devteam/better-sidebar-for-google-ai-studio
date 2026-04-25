@@ -6,7 +6,7 @@ import { Platform } from '@/shared/types/platform';
 /**
  * Manual library scan (user-initiated)
  * This performs a full DOM scan and collects API data
- * New items will be saved to the "Imported" folder
+ * New items will be saved to the "Inbox" folder
  */
 export async function scanLibrary() {
   console.log('=== Starting Manual Library Scan ===');
@@ -50,7 +50,7 @@ export async function scanLibrary() {
         return {
           ...item,
           created_at: apiItem.created_at,
-          updated_at: apiItem.created_at,
+          last_active_at: apiItem.created_at,
           prompt_metadata: apiItem.prompt_metadata,
           type: apiItem.type,
           platform: Platform.AI_STUDIO,
@@ -62,7 +62,7 @@ export async function scanLibrary() {
       };
     });
 
-    // Send to background - new items will go to "Imported" folder
+    // Send to background - new items will go to "Inbox" folder
     console.log(
       `Sending ${mergedItems.length} items to background (manual scan)...`,
     );

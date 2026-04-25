@@ -39,7 +39,7 @@
     "scanLibrary": "扫描库",
     "scanning": "扫描中...",
     "newFolder": "新建文件夹",
-    "imported": "已导入",
+    "imported": "收件箱",
     "conversations": "条对话",
     "scanComplete": "扫描完成，未发现新对话"
   },
@@ -73,7 +73,7 @@
     "newTab": "新标签页",
     "defaultSyncFolder": "默认同步文件夹",
     "defaultSyncFolderDescription": "新同步和扫描的对话将放置在此文件夹中",
-    "defaultSyncFolderImported": "已导入（默认）",
+    "defaultSyncFolderImported": "收件箱（默认）",
     "defaultSyncFolderChange": "更改",
     "language": "语言",
     "languageDescription": "选择界面语言",
@@ -219,7 +219,16 @@
     "gdriveNoBackupFound": "Google Drive 上未找到此 Profile 的备份",
     "gdriveBackupConfirm": "确定要备份到 Google Drive 吗？这会覆盖云端当前的备份数据。",
     "gdriveRestoreConfirm": "确定要从 Google Drive 恢复吗？这将覆盖本地数据（对话消息不受影响）。",
-    "gdriveUnsupported": "当前浏览器不支持 Google Drive 同步"
+    "gdriveUnsupported": "当前浏览器不支持 Google Drive 同步",
+    "gdriveSyncSuccess": "同步完成",
+    "gdriveMergeSync": "立即同步",
+    "gdriveMergeSyncDesc": "智能合并：拉取云端变更，与本地数据合并后推送。",
+    "gdriveAutoSyncing": "自动同步中...",
+    "gdriveAutoSyncLabel": "自动同步",
+    "gdriveAutoSyncDesc": "每 25 分钟自动同步一次，数据变更后也会自动同步",
+    "gdriveDirUp": "备份",
+    "gdriveDirDown": "恢复",
+    "gdriveDirMerge": "合并"
   },
   "explorerSettings": {
     "viewOptions": "视图选项",
@@ -238,8 +247,7 @@
     "ignoredFoldersDescription": "要隐藏的文件夹名称列表（逗号分隔）",
     "ignoredFoldersPlaceholder": "例如：archive, temp, old",
     "enableRightClickRename": "启用右键重命名",
-    "enableRightClickRenameDescription": "允许通过右键菜单重命名对话",
-    "enableRightClickRenameDisclaimer": "注意：此重命名仅为本地别名，不会影响 Google AI Studio 上的实际对话名称。"
+    "enableRightClickRenameDescription": "允许通过右键菜单重命名对话（同步到 Gemini）"
   },
   "shortcuts": {
     "title": "侧边栏快捷方式",
@@ -305,9 +313,11 @@
     "deleteConfirm": "您确定要删除 \"{{name}}\" 吗？",
     "hideConfirm": "您确定要隐藏 \"{{name}}\" 吗？",
     "deleteFolderConfirm": "您确定要删除文件夹 \"{{name}}\" 及其包含的所有内容吗？",
-    "deleteNote": "注意：删除的项目可以通过导入聊天列表来恢复。",
+    "deleteNote": "注意：此操作将永久删除该对话。",
     "hideNote": "注意：隐藏的项目可以通过导入聊天列表来恢复。",
     "deleteFolderNote": "注意：删除的文件夹无法恢复，但对话可以通过导入聊天列表来恢复。",
+    "folderNotEmpty": "此文件夹包含 {{count}} 个对话，请先使用批量删除功能删除对话。",
+    "folderNotEmptyNote": "只有空文件夹才能直接删除。请先使用批量选择功能删除文件夹内的对话。",
     "openInNewTab": "在新标签页打开",
     "moveTo": "移动到...",
     "export": "导出",
@@ -372,7 +382,10 @@
     "exitBatchMode": "退出批量模式",
     "selectAll": "全选",
     "selectedCount": "已选 {{count}} 项",
-    "selectItems": "选择项目"
+    "selectItems": "选择项目",
+    "deletingProgress": "正在删除 {{current}}/{{total}}...",
+    "deleteSuccess": "已删除 {{count}} 个对话",
+    "deletePartial": "已删除 {{succeeded}}/{{total}}，{{failed}} 个失败"
   },
   "tags": {
     "noTagsAvailable": "没有可用的标签。",
@@ -647,8 +660,12 @@
     "conversations": "条对话",
     "openGem": "打开 Gem",
     "openInNewTab": "在新标签页打开",
+    "editGem": "编辑 Gem",
+    "copyGem": "复制 Gem",
+    "hideGem": "隐藏 Gem",
+    "hideGemConfirm": "确定要隐藏 \"{{name}}\" 吗？你可以重新扫描来恢复此 Gem。",
     "deleteGem": "删除 Gem",
-    "deleteGemConfirm": "确定要删除 \"{{name}}\" 吗？对话不会被删除，你可以重新扫描来重新获取该 Gem。",
+    "deleteGemConfirm": "确定要删除 \"{{name}}\" 吗？此操作将从 Gemini 永久删除该 Gem。",
     "renameGem": "重命名 Gem",
     "createGem": "创建 Gem",
     "selectGem": "选择一个 Gem",
@@ -666,7 +683,7 @@
     "welcome": "欢迎使用最新版本！",
     "awesome": "太棒了！",
     "enjoyingIt": "觉得好用？支持一下 👇",
-    "rateUs": "好评",
+    "rateUs": "好评 👍",
     "starOnGithub": "点星 ⭐",
     "buyMeACoffee": "咖啡 ☕"
   },

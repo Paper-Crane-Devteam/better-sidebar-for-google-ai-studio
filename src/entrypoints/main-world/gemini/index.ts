@@ -4,10 +4,35 @@ import { handleChatContentResponse } from './interceptors/chat-content';
 import { handleListChatResponse } from './interceptors/list-chat';
 import { handleDeleteResponse } from './interceptors/delete';
 import { handleCreateGemResponse } from './interceptors/create-gem';
+import { handleRenameResponse } from './interceptors/rename';
+import { handleDeleteGemResponse } from './interceptors/delete-gem';
 import { handleDownloadResponse } from './interceptors/download';
+import { geminiRequestBuilder } from './lib/request-builder';
 
 export function initGeminiInterceptors() {
   console.log('Better Sidebar: Main World Script (Gemini) Initialized');
+
+  // Expose request builder for content script via custom events
+  globalThis.addEventListener('GEMINI_API_EXECUTE', async (e: Event) => {
+    const { rpcid, payload, sourcePath, callbackEvent } = (e as CustomEvent).detail || {};
+    if (!rpcid || !callbackEvent) return;
+
+    try {
+      const res = await geminiRequestBuilder.execute({ rpcid, payload, sourcePath });
+      const text = await res.text();
+      globalThis.dispatchEvent(
+        new CustomEvent(callbackEvent, {
+          detail: { ok: res.ok, status: res.status, body: text },
+        }),
+      );
+    } catch (err: any) {
+      globalThis.dispatchEvent(
+        new CustomEvent(callbackEvent, {
+          detail: { ok: false, status: 0, error: err.message },
+        }),
+      );
+    }
+  });
 
   const originalFetch = window.fetch.bind(window);
   window.fetch = function (input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -27,6 +52,18 @@ export function initGeminiInterceptors() {
 
   proxy({
     onRequest: (config, handler) => {
+      // Learn params from every batchexecute request for the request builder
+      if (config.url?.includes('batchexecute')) {
+        try {
+          geminiRequestBuilder.learn(
+            config.url,
+            (config.headers as Record<string, string>) || {},
+            typeof config.body === 'string' ? config.body : undefined,
+          );
+        } catch {
+          // non-critical
+        }
+      }
       handler.next(config);
     },
     onError: (err, handler) => {
@@ -48,6 +85,10 @@ export function initGeminiInterceptors() {
             handleDeleteResponse(response, url);
           } else if (url.includes('rpcids=CNgdBe')) {
             handleCreateGemResponse(response, url);
+          } else if (url.includes('rpcids=MUAZcd')) {
+            handleRenameResponse(response, url);
+          } else if (url.includes('rpcids=UXcSJb')) {
+            handleDeleteGemResponse(response, url);
           }
         }
       } catch (e) {

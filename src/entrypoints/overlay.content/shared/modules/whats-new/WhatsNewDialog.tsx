@@ -6,10 +6,6 @@ import {
   Sparkles,
   CheckCircle2,
   Wrench,
-  Github,
-  Star,
-  Coffee,
-  ThumbsUp,
 } from 'lucide-react';
 import { useModalStore } from '@/shared/lib/modal';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -91,41 +87,40 @@ export const WhatsNewDialog = () => {
                 )}
 
                 {/* Support Buttons */}
-                <div className="flex items-center justify-center gap-2 pt-2 border-t border-border/50">
-                  <span className="text-xs text-muted-foreground mr-1">
+                <div className="flex flex-col items-center gap-2 pt-2 border-t border-border/50">
+                  <span className="text-xs text-muted-foreground">
                     {t('whatsNew.enjoyingIt')}
                   </span>
-                  <a
-                    href="https://chromewebstore.google.com/detail/cjeoaidogoaekodkbhijgljhenknkenj"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
-                  >
-                    <ThumbsUp className="w-3.5 h-3.5" />
-                    {t('whatsNew.rateUs')}
-                  </a>
-                  <a
-                    href="https://github.com/Paper-Crane-Devteam/better-sidebar-for-google-ai-studio"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
-                  >
-                    <Star className="w-3.5 h-3.5" />
-                    {t('whatsNew.starOnGithub')}
-                  </a>
-                  <a
-                    href={
-                      currentLanguage === 'zh-CN'
-                        ? 'https://afdian.com/a/papercranedev'
-                        : 'https://ko-fi.com/papercranedev57397'
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
-                  >
-                    <Coffee className="w-3.5 h-3.5" />
-                    {t('whatsNew.buyMeACoffee')}
-                  </a>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href="https://chromewebstore.google.com/detail/cjeoaidogoaekodkbhijgljhenknkenj"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
+                    >
+                      {t('whatsNew.rateUs')}
+                    </a>
+                    <a
+                      href="https://github.com/Paper-Crane-Devteam/better-sidebar-for-google-ai-studio"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
+                    >
+                      {t('whatsNew.starOnGithub')}
+                    </a>
+                    <a
+                      href={
+                        currentLanguage === 'zh-CN'
+                          ? 'https://afdian.com/a/papercranedev'
+                          : 'https://ko-fi.com/papercranedev57397'
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
+                    >
+                      {t('whatsNew.buyMeACoffee')}
+                    </a>
+                  </div>
                 </div>
               </div>
             ) : (

@@ -33,3 +33,7 @@
 -20. hover on favorite then cursor up, the tooltip float at the top left
 -21. aistudio three dot menu flicker
 22. some built in tooltip has no anchor
+-22. rename gemini chat update
+23. delete gem update
+-24. edit gem shortcut,generate a copy gem shortcut
+25. rescan not import hidden gem

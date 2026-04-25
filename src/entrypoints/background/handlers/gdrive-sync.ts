@@ -1,6 +1,6 @@
 /**
  * Background handler for Google Drive sync operations.
- * Handles auth, sync up (backup), sync down (restore), and status queries.
+ * Handles auth, sync up (backup), sync down (restore), merge, and status queries.
  * Each profile syncs to a separate file on Drive (namespaced by dbName).
  */
 
@@ -19,29 +19,67 @@ import {
   downloadFile,
   exportSyncData,
   importSyncData,
+  performMergeSync,
+  scheduleDebouncedSync,
+  isAutoSyncing,
+  triggerSyncOnPageLoad,
 } from '@/shared/lib/gdrive';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import i18n from '@/locale/i18n';
 import { notifyDataUpdated } from '../notify';
-import { getCurrentDbName } from '../tab-profile-map';
+import { getCurrentDbName, ensureDbForActiveTab } from '../tab-profile-map';
 
-/**
- * Build a Drive filename namespaced by the current profile's dbName.
- * e.g. "better-sidebar-sync__prompt-manager-for-google-ai-studio.db.json"
- */
 function getSyncFileName(): string {
-  const dbName = getCurrentDbName();
-  return `better-sidebar-sync__${dbName}.json`;
+  return `better-sidebar-sync__${getCurrentDbName()}.json`;
 }
 
-/** Storage key for last sync time, scoped by dbName */
 function getSyncMetaKey(): string {
-  const dbName = getCurrentDbName();
-  return `gdrive_last_sync_time__${dbName}`;
+  return `gdrive_last_sync_time__${getCurrentDbName()}`;
+}
+
+function getSyncDirectionKey(): string {
+  return `gdrive_last_sync_dir__${getCurrentDbName()}`;
+}
+
+/** Save sync metadata (time + direction) */
+async function saveSyncMeta(direction: 'up' | 'down' | 'merge'): Promise<number> {
+  const now = Math.floor(Date.now() / 1000);
+  await browser.storage.local.set({
+    [getSyncMetaKey()]: now,
+    [getSyncDirectionKey()]: direction,
+  });
+  return now;
+}
+
+/**
+ * Trigger a debounced auto-sync after local data changes.
+ * Respects the gdriveAutoSync setting from pegasus store.
+ * TODO [AUTO-SYNC]: Re-enable when auto-sync is fully tested
+ */
+export function triggerAutoSync(): void {
+  // const { gdriveAutoSync } = usePegasusStore.getState();
+  // if (!gdriveAutoSync) return;
+  // scheduleDebouncedSync(getCurrentDbName());
+}
+
+/**
+ * Trigger a merge sync on page load (called after SYNC_CONVERSATIONS).
+ * Respects the gdriveAutoSync setting and uses a 5-minute cooldown.
+ * TODO [AUTO-SYNC]: Re-enable when auto-sync is fully tested
+ */
+export function triggerPageLoadSync(): void {
+  // const { gdriveAutoSync } = usePegasusStore.getState();
+  // if (!gdriveAutoSync) return;
+  // triggerSyncOnPageLoad(
+  //   getCurrentDbName(),
+  //   ensureDbForActiveTab,
+  //   () => notifyDataUpdated(),
+  // );
 }
 
 export async function handleGdriveSync(
   message: ExtensionMessage,
-  sender: MessageSender,
+  _sender: MessageSender,
 ): Promise<ExtensionResponse | null> {
   switch (message.type) {
     case 'GDRIVE_AUTH': {
@@ -67,12 +105,15 @@ export async function handleGdriveSync(
       try {
         const authStatus = await getAuthStatus();
         const metaKey = getSyncMetaKey();
-        const meta = await browser.storage.local.get(metaKey);
+        const dirKey = getSyncDirectionKey();
+        const meta = await browser.storage.local.get([metaKey, dirKey]);
         return {
           success: true,
           data: {
             ...authStatus,
             lastSyncTime: meta[metaKey] || null,
+            lastSyncDirection: meta[dirKey] || null,
+            autoSyncing: isAutoSyncing(),
           },
         };
       } catch (e: unknown) {
@@ -82,36 +123,29 @@ export async function handleGdriveSync(
 
     case 'GDRIVE_SYNC_UP': {
       try {
+        usePegasusStore.getState().setGdriveSyncing(true);
         const token = await getAccessToken();
         const syncFileName = getSyncFileName();
-        const metaKey = getSyncMetaKey();
 
-        // Export local data
         const syncData = await exportSyncData();
-
-        // Check if sync file already exists on Drive
         const existing = await findFile(token, syncFileName);
-
-        // Upload or update
         await uploadFile(token, syncFileName, syncData, existing?.id);
 
-        // Save last sync time
-        const now = Math.floor(Date.now() / 1000);
-        await browser.storage.local.set({ [metaKey]: now });
-
+        const now = await saveSyncMeta('up');
         return { success: true, data: { lastSyncTime: now } };
       } catch (e: unknown) {
         return { success: false, error: (e as Error).message };
+      } finally {
+        usePegasusStore.getState().setGdriveSyncing(false);
       }
     }
 
     case 'GDRIVE_SYNC_DOWN': {
       try {
+        usePegasusStore.getState().setGdriveSyncing(true);
         const token = await getAccessToken();
         const syncFileName = getSyncFileName();
-        const metaKey = getSyncMetaKey();
 
-        // Find the sync file for this profile
         const file = await findFile(token, syncFileName);
         if (!file) {
           return {
@@ -120,20 +154,44 @@ export async function handleGdriveSync(
           };
         }
 
-        // Download and import
         const content = await downloadFile(token, file.id);
         await importSyncData(content);
 
-        // Save last sync time
-        const now = Math.floor(Date.now() / 1000);
-        await browser.storage.local.set({ [metaKey]: now });
-
-        // Notify UI to refresh
+        const now = await saveSyncMeta('down');
         await notifyDataUpdated();
 
         return { success: true, data: { lastSyncTime: now } };
       } catch (e: unknown) {
         return { success: false, error: (e as Error).message };
+      } finally {
+        usePegasusStore.getState().setGdriveSyncing(false);
+      }
+    }
+
+    case 'GDRIVE_MERGE': {
+      try {
+        usePegasusStore.getState().setGdriveSyncing(true);
+        const result = await performMergeSync({
+          dbName: getCurrentDbName(),
+          ensureActiveDb: ensureDbForActiveTab,
+          onSyncComplete: () => notifyDataUpdated(),
+        });
+
+        if (!result.success) {
+          return { success: false, error: result.error };
+        }
+
+        await saveSyncMeta('merge');
+        const metaKey = getSyncMetaKey();
+        const meta = await browser.storage.local.get(metaKey);
+        return {
+          success: true,
+          data: { lastSyncTime: meta[metaKey] || null },
+        };
+      } catch (e: unknown) {
+        return { success: false, error: (e as Error).message };
+      } finally {
+        usePegasusStore.getState().setGdriveSyncing(false);
       }
     }
 

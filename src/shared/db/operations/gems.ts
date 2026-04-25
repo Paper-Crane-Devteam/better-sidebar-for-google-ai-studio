@@ -1,4 +1,5 @@
 import { runQuery, runCommand, runBatch } from '../index';
+import { updateWithTimestamp } from './helpers';
 import type { Gem } from '../../types/db';
 
 export const gemRepo = {
@@ -33,12 +34,12 @@ export const gemRepo = {
   getAll: async (platform?: string): Promise<Gem[]> => {
     if (platform) {
       return (await runQuery(
-        'SELECT * FROM gems WHERE platform = ? ORDER BY order_index ASC, name ASC',
+        'SELECT * FROM gems WHERE platform = ? AND is_deleted = 0 ORDER BY order_index ASC, name ASC',
         [platform],
       )) as Gem[];
     }
     return (await runQuery(
-      'SELECT * FROM gems ORDER BY order_index ASC, name ASC',
+      'SELECT * FROM gems WHERE is_deleted = 0 ORDER BY order_index ASC, name ASC',
     )) as Gem[];
   },
 
@@ -51,18 +52,15 @@ export const gemRepo = {
     id: string,
     updates: Partial<Pick<Gem, 'name' | 'description' | 'icon_url' | 'order_index'>>,
   ): Promise<void> => {
-    const fields = Object.keys(updates);
-    if (fields.length === 0) return;
-    const values = Object.values(updates);
-    const setClause = fields.map((f) => `${f} = ?`).join(', ');
-    await runCommand(
-      `UPDATE gems SET ${setClause}, updated_at = unixepoch() WHERE id = ?`,
-      [...values, id],
-    );
+    await updateWithTimestamp('gems', id, updates);
   },
 
   delete: async (id: string): Promise<void> => {
     await runCommand('DELETE FROM gems WHERE id = ?', [id]);
+  },
+
+  softDelete: async (id: string): Promise<void> => {
+    await updateWithTimestamp('gems', id, { is_deleted: 1 });
   },
 
   bulkSave: async (gems: (Partial<Gem> & Pick<Gem, 'id' | 'name'>)[]): Promise<void> => {
@@ -95,7 +93,7 @@ export const gemRepo = {
 
   getConversationsByGemId: async (gemId: string): Promise<any[]> => {
     return (await runQuery(
-      'SELECT * FROM conversations WHERE gem_id = ? AND deleted_at IS NULL ORDER BY updated_at DESC',
+      'SELECT * FROM conversations WHERE gem_id = ? AND deleted_at IS NULL ORDER BY last_active_at DESC',
       [gemId],
     )) as any[];
   },

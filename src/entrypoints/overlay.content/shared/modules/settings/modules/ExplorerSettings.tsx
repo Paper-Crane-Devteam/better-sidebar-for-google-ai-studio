@@ -117,7 +117,6 @@ export const ExplorerSettings = () => {
                         <div className="space-y-0.5">
                             <label className="text-sm font-medium">{t('explorerSettings.enableRightClickRename')}</label>
                             <p className="text-xs text-muted-foreground">{t('explorerSettings.enableRightClickRenameDescription')}</p>
-                            <p className="text-[10px] text-muted-foreground/70 mt-1">{t('explorerSettings.enableRightClickRenameDisclaimer')}</p>
                         </div>
                         <Switch 
                             checked={enableRightClickRename} 

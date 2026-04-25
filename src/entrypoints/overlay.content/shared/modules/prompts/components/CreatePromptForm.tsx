@@ -186,6 +186,7 @@ export const CreatePromptForm = ({
             <DropdownMenu
               open={iconDropdownOpen}
               onOpenChange={setIconDropdownOpen}
+              modal={false}
             >
               <SimpleTooltip content={icon}>
                 <DropdownMenuTrigger asChild>

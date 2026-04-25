@@ -1,34 +1,19 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Tag } from '@/shared/types/db';
 import { useAppStore } from '@/shared/lib/store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
-import { Tag as TagIcon, MoreVertical, Trash2, Edit2, Palette } from 'lucide-react';
-import { Button } from '@/entrypoints/overlay.content/shared/components/ui/button';
+import { Tag as TagIcon } from 'lucide-react';
 import { Input } from '@/entrypoints/overlay.content/shared/components/ui/input';
 import { cn } from '@/shared/lib/utils/utils';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuSeparator,
-} from '@/shared/components/ui/dropdown-menu';
-import {
   ContextMenu,
   ContextMenuContent,
-  ContextMenuItem,
   ContextMenuTrigger,
-  ContextMenuSub,
-  ContextMenuSubTrigger,
-  ContextMenuSubContent,
-  ContextMenuSeparator,
 } from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
 import { modal } from '@/shared/lib/modal';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { ColorPickerGrid } from '../../components/ColorPickerGrid';
+import { NodeActionBar, renderMenuItems } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
+import { useTagMenuItems } from './useTagMenuItems';
 
 interface TagItemProps {
   tag: Tag;
@@ -45,24 +30,6 @@ export const TagItem = ({ tag }: TagItemProps) => {
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const cancelDropdownClose = useCallback(() => {
-    if (dropdownCloseTimerRef.current) {
-      clearTimeout(dropdownCloseTimerRef.current);
-      dropdownCloseTimerRef.current = null;
-    }
-  }, []);
-
-  const scheduleDropdownClose = useCallback(() => {
-    cancelDropdownClose();
-    dropdownCloseTimerRef.current = setTimeout(() => setIsDropdownOpen(false), 150);
-  }, [cancelDropdownClose]);
-
-  const handleDropdownTriggerEnter = useCallback(() => {
-    cancelDropdownClose();
-    setIsDropdownOpen(true);
-  }, [cancelDropdownClose]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -88,7 +55,6 @@ export const TagItem = ({ tag }: TagItemProps) => {
       confirmText: t('common.delete'),
       cancelText: t('common.cancel'),
     });
-    
     if (confirmed) {
       await deleteTag(tag.id);
     }
@@ -107,6 +73,13 @@ export const TagItem = ({ tag }: TagItemProps) => {
     }
   };
 
+  const menuItems = useTagMenuItems({
+    tag,
+    onRename: () => setIsEditing(true),
+    onDelete: handleDelete,
+    onColorChange: handleColorChange,
+  });
+
   if (isEditing) {
     return (
       <div className="p-2">
@@ -123,29 +96,22 @@ export const TagItem = ({ tag }: TagItemProps) => {
     );
   }
 
-  const isActive = isContextMenuOpen || isDropdownOpen;
-
-  // Color picker grid for dropdown and context menus
-  const colorPickerContent = (
-    <ColorPickerGrid
-      selectedColor={tag.color}
-      onColorChange={handleColorChange}
-    />
-  );
+  const isMenuActive = isContextMenuOpen || isDropdownOpen;
 
   return (
-    <ContextMenu onOpenChange={setIsContextMenuOpen}>
+    <ContextMenu onOpenChange={setIsContextMenuOpen} modal={false}>
       <ContextMenuTrigger>
         <div style={{ height: rowHeight }} className="w-full px-1">
           <div
             className={cn(
-              'group flex items-center justify-between px-2 rounded-sm text-sm border border-transparent transition-colors cursor-default h-[calc(100%-2px)] mt-[1px]',
+              'group flex items-center justify-between px-2 rounded-sm text-sm border border-transparent transition-colors cursor-default h-[calc(100%-2px)] mt-[1px] relative pr-8',
               tag.color
                 ? 'tag-item-colored'
-                : isActive
+                : isMenuActive
                   ? 'bg-accent/50'
                   : 'hover:bg-accent/50',
-              tag.color && isActive && 'tag-item-colored-active',
+              tag.color && isMenuActive && 'tag-item-colored-active',
+              isMenuActive && 'node-menu-active',
             )}
             style={tag.color ? { '--tag-color': tag.color } as React.CSSProperties : undefined}
           >
@@ -153,78 +119,16 @@ export const TagItem = ({ tag }: TagItemProps) => {
               <TagIcon className="h-4 w-4 shrink-0" />
               <span className="truncate font-medium">{tag.name}</span>
             </div>
-            <div
-              className={cn(
-                'flex items-center transition-opacity',
-                isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-              )}
-            >
-              <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onMouseEnter={handleDropdownTriggerEnter}
-                    onMouseLeave={scheduleDropdownClose}
-                  >
-                    <MoreVertical className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  onMouseEnter={cancelDropdownClose}
-                  onMouseLeave={scheduleDropdownClose}
-                >
-                  <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                    <Edit2 className="mr-2 h-4 w-4" />
-                    {t('tags.rename')}
-                  </DropdownMenuItem>
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <Palette className="mr-2 h-4 w-4" />
-                      {t('tags.changeColor')}
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-auto p-2">
-                      {colorPickerContent}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleDelete}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    {t('common.delete')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <NodeActionBar
+              menuItems={menuItems}
+              forceVisible={isMenuActive}
+              onDropdownOpenChange={setIsDropdownOpen}
+            />
           </div>
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent className="w-48">
-        <ContextMenuItem onClick={() => setIsEditing(true)}>
-          <Edit2 className="mr-2 h-4 w-4" />
-          {t('tags.rename')}
-        </ContextMenuItem>
-        <ContextMenuSub>
-          <ContextMenuSubTrigger>
-            <Palette className="mr-2 h-4 w-4" />
-            {t('tags.changeColor')}
-          </ContextMenuSubTrigger>
-          <ContextMenuSubContent className="w-auto p-2">
-            {colorPickerContent}
-          </ContextMenuSubContent>
-        </ContextMenuSub>
-        <ContextMenuSeparator />
-        <ContextMenuItem
-          onClick={handleDelete}
-          className="text-destructive focus:text-destructive"
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          {t('common.delete')}
-        </ContextMenuItem>
+        {renderMenuItems(menuItems, 'context')}
       </ContextMenuContent>
     </ContextMenu>
   );

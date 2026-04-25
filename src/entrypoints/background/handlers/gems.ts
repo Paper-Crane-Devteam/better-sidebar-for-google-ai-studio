@@ -36,6 +36,11 @@ export async function handleGems(
       await notifyDataUpdated();
       return { success: true };
     }
+    case 'HIDE_GEM': {
+      await gemRepo.softDelete(message.payload.id);
+      await notifyDataUpdated();
+      return { success: true };
+    }
     case 'UPDATE_GEM': {
       await gemRepo.update(message.payload.id, message.payload.updates);
       await notifyDataUpdated();

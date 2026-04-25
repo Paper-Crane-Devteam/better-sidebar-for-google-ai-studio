@@ -50,8 +50,8 @@ export const GeminiUIControl = () => {
   };
 
   return (
-    <div className="fixed top-16 right-4 z-[999999]">
-      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+    <div className="fixed top-16 right-4 z-[39]">
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>
         <DropdownMenuTrigger asChild>
           <button
             className={cn(
@@ -69,7 +69,7 @@ export const GeminiUIControl = () => {
         <DropdownMenuContent
           align="end"
           sideOffset={8}
-          className="w-[340px] max-h-[85vh] flex flex-col rounded-2xl border border-border bg-popover/95 p-0 backdrop-blur-xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
+          className="z-[39] w-[340px] max-h-[85vh] flex flex-col rounded-2xl border border-border bg-popover/95 p-0 backdrop-blur-xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-center gap-2.5 p-5 pb-4 border-b border-border/40 bg-popover/50 backdrop-blur-sm z-10">

@@ -2,6 +2,7 @@ import { favoriteRepo } from '@/shared/db/operations';
 import type { ExtensionMessage, ExtensionResponse } from '@/shared/types/messages';
 import type { MessageSender } from '../types';
 import { notifyDataUpdated } from '../notify';
+import { triggerAutoSync } from './gdrive-sync';
 
 export async function handleFavorites(
   message: ExtensionMessage,
@@ -12,12 +13,14 @@ export async function handleFavorites(
       const { targetId, targetType, note } = message.payload;
       await favoriteRepo.add(targetId, targetType, note);
       await notifyDataUpdated();
+      triggerAutoSync();
       return { success: true };
     }
     case 'REMOVE_FAVORITE': {
       const { targetId, targetType } = message.payload;
       await favoriteRepo.remove(targetId, targetType);
       await notifyDataUpdated();
+      triggerAutoSync();
       return { success: true };
     }
     case 'GET_FAVORITES': {

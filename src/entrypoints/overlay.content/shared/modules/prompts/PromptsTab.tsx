@@ -232,7 +232,7 @@ export const PromptsTab = ({ menuActions }: PromptsTabProps) => {
       <FilterBar filter={filter} allTags={[]} />
 
       {/* Content */}
-      <ContextMenu>
+      <ContextMenu modal={false}>
         <ContextMenuTrigger asChild>
           <div className="flex-1 overflow-hidden relative">
             {(() => {
@@ -269,6 +269,7 @@ export const PromptsTab = ({ menuActions }: PromptsTabProps) => {
                   ref={treeRef}
                   onSelect={handleSelect}
                   onPreview={openPreviewModal}
+                  onEdit={openEditModal}
                 />
               );
             })()}

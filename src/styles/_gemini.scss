@@ -162,7 +162,9 @@
     background-color: color-mix(in srgb, var(--gem-sys-color--primary-container) 60%, rgb(var(--background)));
   }
   .theme-gemini .group:hover:not(.node-item-selected):not(.node-item-current) > .node-action-bar,
-  :host(.theme-gemini) .group:hover:not(.node-item-selected):not(.node-item-current) > .node-action-bar {
+  :host(.theme-gemini) .group:hover:not(.node-item-selected):not(.node-item-current) > .node-action-bar,
+  .theme-gemini .group.node-menu-active:not(.node-item-selected):not(.node-item-current) > .node-action-bar,
+  :host(.theme-gemini) .group.node-menu-active:not(.node-item-selected):not(.node-item-current) > .node-action-bar {
     background-color: color-mix(in srgb, rgb(var(--accent)) 50%, rgb(var(--background)));
   }
 

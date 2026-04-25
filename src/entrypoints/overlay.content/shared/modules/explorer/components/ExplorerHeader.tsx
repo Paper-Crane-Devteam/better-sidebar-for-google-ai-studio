@@ -11,6 +11,7 @@ import {
   Clock,
   ListChecks,
   Cloud,
+  Loader2,
 } from 'lucide-react';
 import { SidePanelMenu } from '@/entrypoints/overlay.content/shared/components/menu/SidePanelMenu';
 import { useModalStore } from '@/shared/lib/modal';
@@ -20,6 +21,7 @@ import type { FilterState, ExplorerTypeFilter } from '../../../types/filter';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { BatchToolbar } from './batch/BatchToolbar';
 import { SplitIconButton, type SplitDropdownItem } from '@/shared/components/ui/split-icon-button';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 
 interface ExplorerHeaderProps {
   onNewFolder: () => void;
@@ -60,6 +62,8 @@ export const ExplorerHeader = ({
 
   const { sortOrder, viewMode } = ui.explorer;
   const { isBatchMode } = ui.explorer.batch;
+  // TODO [AUTO-SYNC]: Re-enable when auto-sync is fully tested
+  // const { gdriveSyncing } = usePegasusStore();
 
   const handleSort = () => {
     const newOrder = sortOrder === 'alpha' ? 'date' : 'alpha';
@@ -79,6 +83,7 @@ export const ExplorerHeader = ({
         </h1>
 
         <div className="flex items-center gap-0.5">
+              {/* TODO [AUTO-SYNC]: Re-enable syncing indicator when auto-sync is fully tested */}
               <SimpleTooltip content={t('data.gdriveSync')}>
                 <Button
                   variant="ghost"

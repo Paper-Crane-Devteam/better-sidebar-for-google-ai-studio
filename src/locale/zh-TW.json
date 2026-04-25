@@ -39,7 +39,7 @@
     "scanLibrary": "掃描資料庫",
     "scanning": "掃描中...",
     "newFolder": "新增資料夾",
-    "imported": "已匯入",
+    "imported": "收件匣",
     "conversations": "則對話",
     "scanComplete": "掃描完成，未發現新對話"
   },
@@ -73,7 +73,7 @@
     "newTab": "新標籤頁",
     "defaultSyncFolder": "預設同步資料夾",
     "defaultSyncFolderDescription": "新同步和掃描的對話將放置在此資料夾中",
-    "defaultSyncFolderImported": "已匯入（預設）",
+    "defaultSyncFolderImported": "收件匣（預設）",
     "defaultSyncFolderChange": "更改",
     "language": "語言",
     "languageDescription": "選擇介面語言",
@@ -219,7 +219,16 @@
     "gdriveNoBackupFound": "Google 雲端硬碟上未找到此設定檔的備份",
     "gdriveBackupConfirm": "確定要備份到 Google 雲端硬碟嗎？這會覆蓋雲端目前的備份資料。",
     "gdriveRestoreConfirm": "確定要從 Google 雲端硬碟還原嗎？這將覆蓋本機資料（對話訊息不受影響）。",
-    "gdriveUnsupported": "目前瀏覽器不支援 Google 雲端硬碟同步"
+    "gdriveUnsupported": "目前瀏覽器不支援 Google 雲端硬碟同步",
+    "gdriveSyncSuccess": "同步完成",
+    "gdriveMergeSync": "立即同步",
+    "gdriveMergeSyncDesc": "智慧合併：拉取雲端變更，與本機資料合併後推送。",
+    "gdriveAutoSyncing": "自動同步中...",
+    "gdriveAutoSyncLabel": "自動同步",
+    "gdriveAutoSyncDesc": "每 25 分鐘自動同步一次，資料變更後也會自動同步",
+    "gdriveDirUp": "備份",
+    "gdriveDirDown": "還原",
+    "gdriveDirMerge": "合併"
   },
   "explorerSettings": {
     "viewOptions": "檢視選項",
@@ -238,8 +247,7 @@
     "ignoredFoldersDescription": "要隱藏的資料夾名稱清單（逗號分隔）",
     "ignoredFoldersPlaceholder": "例如：archive, temp, old",
     "enableRightClickRename": "啟用右鍵重新命名",
-    "enableRightClickRenameDescription": "允許透過右鍵選單重新命名對話",
-    "enableRightClickRenameDisclaimer": "注意：此重新命名僅為本機別名，不會影響 Google AI Studio 上的實際對話名稱。"
+    "enableRightClickRenameDescription": "允許透過右鍵選單重新命名對話（同步到 Gemini）"
   },
   "shortcuts": {
     "title": "側邊欄捷徑",
@@ -305,9 +313,11 @@
     "deleteConfirm": "您確定要刪除 \"{{name}}\" 嗎？",
     "hideConfirm": "您確定要隱藏 \"{{name}}\" 嗎？",
     "deleteFolderConfirm": "您確定要刪除資料夾 \"{{name}}\" 及其包含的所有內容嗎？",
-    "deleteNote": "注意：刪除的項目可以透過匯入聊天清單來還原。",
+    "deleteNote": "注意：此操作將永久刪除該對話。",
     "hideNote": "注意：隱藏的項目可以透過匯入聊天清單來還原。",
     "deleteFolderNote": "注意：刪除的資料夾無法還原，但對話可以透過匯入聊天清單來還原。",
+    "folderNotEmpty": "此資料夾包含 {{count}} 則對話，請先使用批量刪除功能刪除對話。",
+    "folderNotEmptyNote": "只有空資料夾才能直接刪除。請先使用批量選取功能刪除資料夾內的對話。",
     "openInNewTab": "在新標籤頁開啟",
     "moveTo": "移動到...",
     "export": "匯出",
@@ -372,7 +382,10 @@
     "exitBatchMode": "離開批次模式",
     "selectAll": "全選",
     "selectedCount": "已選取 {{count}} 項",
-    "selectItems": "選取項目"
+    "selectItems": "選取項目",
+    "deletingProgress": "正在刪除 {{current}}/{{total}}...",
+    "deleteSuccess": "已刪除 {{count}} 則對話",
+    "deletePartial": "已刪除 {{succeeded}}/{{total}}，{{failed}} 則失敗"
   },
   "tags": {
     "noTagsAvailable": "沒有可用的標籤。",
@@ -648,8 +661,12 @@
     "conversations": "則對話",
     "openGem": "開啟 Gem",
     "openInNewTab": "在新標籤頁開啟",
+    "editGem": "編輯 Gem",
+    "copyGem": "複製 Gem",
+    "hideGem": "隱藏 Gem",
+    "hideGemConfirm": "確定要隱藏 \"{{name}}\" 嗎？你可以重新掃描來恢復此 Gem。",
     "deleteGem": "刪除 Gem",
-    "deleteGemConfirm": "確定要刪除 \"{{name}}\" 嗎？對話不會被刪除，你可以重新掃描來重新獲取該 Gem。",
+    "deleteGemConfirm": "確定要刪除 \"{{name}}\" 嗎？此操作將從 Gemini 永久刪除該 Gem。",
     "renameGem": "重新命名 Gem",
     "createGem": "建立 Gem",
     "selectGem": "選擇一個 Gem",
@@ -667,7 +684,7 @@
     "welcome": "歡迎使用最新版本！",
     "awesome": "太棒了！",
     "enjoyingIt": "覺得好用？支持一下 👇",
-    "rateUs": "好評",
+    "rateUs": "好評 👍",
     "starOnGithub": "點星 ⭐",
     "buyMeACoffee": "咖啡 ☕"
   },

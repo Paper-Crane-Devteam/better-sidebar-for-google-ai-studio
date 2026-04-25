@@ -20,6 +20,7 @@ export default defineConfig({
       // 'sidePanel',
       'unlimitedStorage',
       'storage',
+      // 'alarms',
       // 'tabs', // Removed to speed up review, we have host permissions
       'scripting',
       'offscreen',

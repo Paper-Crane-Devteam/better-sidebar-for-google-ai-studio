@@ -128,6 +128,7 @@ export const runMigrations = async (db: any) => {
           description TEXT,
           platform TEXT DEFAULT 'gemini',
           order_index INTEGER DEFAULT 0,
+          is_deleted INTEGER DEFAULT 0,
           created_at INTEGER DEFAULT (unixepoch()),
           updated_at INTEGER DEFAULT (unixepoch())
         )
@@ -135,6 +136,54 @@ export const runMigrations = async (db: any) => {
       await db.run(
         'CREATE INDEX IF NOT EXISTS idx_gems_platform ON gems(platform)',
       );
+    }
+
+    // Migration: Add is_deleted to gems if missing (soft deletion)
+    if (await hasColumn('gems', 'id') && !(await hasColumn('gems', 'is_deleted'))) {
+      console.log('Worker: Migrating gems table - adding is_deleted for soft deletion');
+      await db.run(
+        'ALTER TABLE gems ADD COLUMN is_deleted INTEGER DEFAULT 0',
+      );
+    }
+
+    // Migration: Add updated_at to favorites if missing
+    if (!(await hasColumn('favorites', 'updated_at'))) {
+      console.log('Worker: Migrating favorites table - adding updated_at');
+      await db.run(
+        'ALTER TABLE favorites ADD COLUMN updated_at INTEGER',
+      );
+      // Backfill from created_at
+      await db.run('UPDATE favorites SET updated_at = COALESCE(created_at, unixepoch())');
+    }
+
+    // Migration: Add updated_at to tags if missing
+    if (!(await hasColumn('tags', 'updated_at'))) {
+      console.log('Worker: Migrating tags table - adding updated_at');
+      await db.run(
+        'ALTER TABLE tags ADD COLUMN updated_at INTEGER',
+      );
+      // Backfill from created_at
+      await db.run('UPDATE tags SET updated_at = COALESCE(created_at, unixepoch())');
+    }
+
+    // Migration: Add updated_at to conversation_tags if missing
+    if (!(await hasColumn('conversation_tags', 'updated_at'))) {
+      console.log('Worker: Migrating conversation_tags table - adding updated_at');
+      await db.run(
+        'ALTER TABLE conversation_tags ADD COLUMN updated_at INTEGER',
+      );
+      // Backfill from created_at
+      await db.run('UPDATE conversation_tags SET updated_at = COALESCE(created_at, unixepoch())');
+    }
+
+    // Migration: Add last_active_at to conversations if missing
+    if (!(await hasColumn('conversations', 'last_active_at'))) {
+      console.log('Worker: Migrating conversations table - adding last_active_at');
+      await db.run(
+        'ALTER TABLE conversations ADD COLUMN last_active_at INTEGER',
+      );
+      // Backfill from existing updated_at (which previously held the business timestamp)
+      await db.run('UPDATE conversations SET last_active_at = COALESCE(updated_at, unixepoch())');
     }
   } catch (err) {
     console.error('Worker: Migration failed:', err);

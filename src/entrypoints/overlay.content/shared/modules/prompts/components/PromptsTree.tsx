@@ -17,10 +17,11 @@ export type { ArboristTreeHandle } from '../types';
 interface PromptsTreeProps {
   onSelect: (item: any) => void;
   onPreview: (prompt: any) => void;
+  onEdit: (prompt: any) => void;
 }
 
 export const PromptsTree = forwardRef<ArboristTreeHandle, PromptsTreeProps>(
-  ({ onSelect, onPreview }, ref) => {
+  ({ onSelect, onPreview, onEdit }, ref) => {
     const { t } = useI18n();
     const {
       promptFolders,
@@ -168,7 +169,7 @@ export const PromptsTree = forwardRef<ArboristTreeHandle, PromptsTreeProps>(
           return createPromptFolder(name, parentId);
         }}
         renderNode={(props: NodeRendererProps<FolderTreeNodeData>) => (
-          <Node {...props} onPreview={onPreview} />
+          <Node {...props} onPreview={onPreview} onEdit={onEdit} />
         )}
       />
     );
