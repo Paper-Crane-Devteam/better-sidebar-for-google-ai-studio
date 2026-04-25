@@ -36,4 +36,6 @@
 -22. rename gemini chat update
 23. delete gem update
 -24. edit gem shortcut,generate a copy gem shortcut
-25. rescan not import hidden gem
+-25. rescan not import hidden gem
+-26. ai studio create chat not in selected folder
+27. smart scroll bar first message appear twice
