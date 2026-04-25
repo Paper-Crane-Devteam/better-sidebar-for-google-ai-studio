@@ -24,3 +24,4 @@
 26. scroll to top and bottom button
 27. keyboard shortcuts
 28. real deletion of chats
+29. debounce sync with gdrive and keep session
