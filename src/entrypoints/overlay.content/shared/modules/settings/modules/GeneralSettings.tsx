@@ -25,8 +25,6 @@ export const GeneralSettings = () => {
   const {
     layoutDensity,
     setLayoutDensity,
-    overlayPosition,
-    setOverlayPosition,
     newChatBehavior,
     setNewChatBehavior,
     shortcuts,
@@ -195,38 +193,6 @@ export const GeneralSettings = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <span className="text-sm font-medium">
-                {t('settings.overlayPosition')}
-              </span>
-              <p className="text-xs text-muted-foreground">
-                {t('settings.overlayPositionDescription')}
-              </p>
-            </div>
-            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border">
-              <Button
-                variant={
-                  overlayPosition === 'bottom-left' ? 'secondary' : 'ghost'
-                }
-                size="sm"
-                className="h-7 px-3 text-xs"
-                onClick={() => setOverlayPosition('bottom-left')}
-              >
-                {t('settings.bottomLeft')}
-              </Button>
-              <Button
-                variant={
-                  overlayPosition === 'bottom-right' ? 'secondary' : 'ghost'
-                }
-                size="sm"
-                className="h-7 px-3 text-xs"
-                onClick={() => setOverlayPosition('bottom-right')}
-              >
-                {t('settings.bottomRight')}
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
 
