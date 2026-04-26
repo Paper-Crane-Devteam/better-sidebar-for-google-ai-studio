@@ -44,6 +44,7 @@ interface SettingsState {
     codex: boolean;
     myStuff: boolean;
     gems: boolean;
+    notebooks: boolean;
     originalUI: boolean;
   };
   enhancedFeatures: {
@@ -141,6 +142,7 @@ export const useSettingsStore = create<SettingsState>()(
         codex: true,
         myStuff: true,
         gems: true,
+        notebooks: true,
         originalUI: true,
       },
       enhancedFeatures: {

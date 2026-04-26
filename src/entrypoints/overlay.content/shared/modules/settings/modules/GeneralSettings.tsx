@@ -311,6 +311,17 @@ export const GeneralSettings = () => {
                   onCheckedChange={(c) => setShortcutVisible('gems', c)}
                 />
               </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <label className="text-sm font-medium">
+                    {t('shortcuts.notebooks')}
+                  </label>
+                </div>
+                <Switch
+                  checked={shortcuts?.notebooks ?? true}
+                  onCheckedChange={(c) => setShortcutVisible('notebooks', c)}
+                />
+              </div>
             </>
           )}
           <div className="flex items-center justify-between">
