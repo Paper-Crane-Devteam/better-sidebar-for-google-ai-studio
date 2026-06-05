@@ -10,7 +10,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 
 /** License tier derived from token prefix */
-export type LicenseTier = 'support_pack' | 'pro' | 'none';
+export type LicenseTier = 'support_pack' | 'power_pack' | 'pro' | 'none';
 
 export interface LicenseState {
   /** Whether the user has an active support pack */
@@ -128,4 +128,14 @@ export function isLicenseValid(state: LicenseState): boolean {
   if (!state.isActivated) return false;
   if (!state.expiresAt) return false;
   return Date.now() < state.expiresAt;
+}
+
+/**
+ * Check if the current user has Power Pack (or higher) tier.
+ * Used by Agent Loop for paywall checks.
+ */
+export function isPowerPackUser(): boolean {
+  const state = useLicenseStore.getState();
+  if (!isLicenseValid(state)) return false;
+  return state.tier === 'power_pack' || state.tier === 'pro';
 }

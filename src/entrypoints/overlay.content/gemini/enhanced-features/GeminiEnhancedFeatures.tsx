@@ -7,6 +7,7 @@ import { SmartScrollbarFeature } from './SmartScrollbar/SmartScrollbarFeature';
 import { QuickResendFeature } from './QuickResendFeature';
 import { AutoHideInputFeature } from './AutoHideInputFeature';
 import { SlashCommandFeature } from './SlashCommandFeature';
+import { AgentLoopFeature } from './AgentLoopFeature';
 import { GlobalModal } from '@/shared/components/GlobalModal';
 
 /**
@@ -27,6 +28,7 @@ export const GeminiEnhancedFeatures = () => {
       <QuickResendFeature />
       <AutoHideInputFeature />
       <SlashCommandFeature />
+      <AgentLoopFeature />
       <GlobalModal />
     </>
   );

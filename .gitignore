@@ -24,7 +24,7 @@ package-lock.json
 # Editor directories and files
 .vscode/*
 .cursor/
-.kiro/
+# .kiro/
 !.vscode/extensions.json
 .idea
 .DS_Store
