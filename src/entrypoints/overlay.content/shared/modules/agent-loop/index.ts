@@ -40,3 +40,7 @@ export { GeminiAgentAdapter } from './adapters/gemini-adapter';
 export { AgentCommandPopup } from './AgentCommandPopup';
 export { AgentLoopStatusBar } from './AgentLoopStatusBar';
 export { AgentLoopConfirmDialog } from './AgentLoopConfirmDialog';
+
+// Renderer
+export { ConversationRenderer, injectRendererStyles, buildPromptMarker } from './renderer';
+export { TOOL_TAG } from './engine/ToolCallParser';

@@ -3,12 +3,15 @@
  *
  * Parses AI response text for tool calls in the XML-like format:
  *
- * <tool_call>
+ * <bs_agent_tool>
  * <name>execute_sql</name>
  * <params>
  * <query>SELECT * FROM conversations LIMIT 10</query>
  * </params>
- * </tool_call>
+ * </bs_agent_tool>
+ *
+ * Uses `<bs_agent_tool>` instead of generic `<tool_call>` to avoid conflicts
+ * with Gemini's native function calling / tool_call format.
  *
  * Handles:
  * - Multiple tool calls per message (max 20)
@@ -20,6 +23,9 @@
 import type { ParsedToolCall, ParseResult } from '../types';
 
 const MAX_TOOL_CALLS = 20;
+
+/** The unique tag name for our tool calls — will NOT conflict with Gemini's native <tool_call> */
+export const TOOL_TAG = 'bs_agent_tool';
 
 const SUPPORTED_TOOLS = ['execute_sql', 'sync_conversation_messages', 'export'];
 
@@ -47,7 +53,7 @@ export function parseToolCalls(responseText: string): ParseResult {
   const toolCalls: ParsedToolCall[] = [];
   const errors: string[] = [];
 
-  const toolCallRegex = /<tool_call>([\s\S]*?)<\/tool_call>/g;
+  const toolCallRegex = /<bs_agent_tool>([\s\S]*?)<\/bs_agent_tool>/g;
   let match: RegExpExecArray | null;
 
   while ((match = toolCallRegex.exec(responseText)) !== null) {

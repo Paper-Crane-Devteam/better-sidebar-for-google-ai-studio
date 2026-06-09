@@ -13,14 +13,16 @@ export function getBasePrompt(): string {
 
 Output tool calls in this exact XML format. The extension will parse your output, execute the tools, and send you the results automatically.
 
-<tool_call>
+<bs_agent_tool>
 <name>TOOL_NAME</name>
 <params>
 <PARAM_NAME>PARAM_VALUE</PARAM_NAME>
 </params>
-</tool_call>
+</bs_agent_tool>
 
-You can output multiple <tool_call> blocks in one response. They will be executed in order.
+You can output multiple <bs_agent_tool> blocks in one response. They will be executed in order.
+
+IMPORTANT: Always use <bs_agent_tool> tags (NOT <tool_call>). The extension only recognizes <bs_agent_tool> format.
 
 ## Available Tools
 
@@ -34,12 +36,12 @@ Execute SQL queries against the local database.
 **Blocked:** DROP, ALTER, CREATE, PRAGMA, ATTACH, DETACH
 
 **Example:**
-<tool_call>
+<bs_agent_tool>
 <name>execute_sql</name>
 <params>
 <query>SELECT id, title, platform, folder_id FROM conversations WHERE platform = 'gemini' AND deleted_at IS NULL ORDER BY last_active_at DESC LIMIT 20</query>
 </params>
-</tool_call>
+</bs_agent_tool>
 
 ### 2. sync_conversation_messages (coming soon)
 Sync message history for specified conversations from the Gemini web page.
@@ -72,7 +74,7 @@ ${SCHEMA}
 8. **Tags** — Create tags in the \`tags\` table first, then link via \`conversation_tags\` junction table.
 9. **Folders** — Support nesting via \`parent_id\`. Remember to set \`platform\` when creating folders.
 10. **Message search** — Use \`messages_fts\` table for full-text search: \`SELECT * FROM messages_fts WHERE content MATCH 'search term'\`.
-11. When the task is complete, summarize what was done **without** outputting any more tool_call blocks.
+11. When the task is complete, summarize what was done **without** outputting any more <bs_agent_tool> blocks.
 12. If a tool returns an error, analyze it and try a corrected approach or inform the user.
 `;
 }

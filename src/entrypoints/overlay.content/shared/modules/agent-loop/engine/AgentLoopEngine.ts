@@ -136,27 +136,131 @@ export class AgentLoopEngine {
       getStore().setCurrentTool(null);
       this.checkAbort();
 
-      // 5. Format and send results
+      // 5. Format results and insert into editor as a capsule (user decides to send)
       getStore().setStatus('sending');
       const formattedResult = this.formatResults(results, errors);
-      console.log('[AgentLoop] Sending results back, length:', formattedResult.length);
+      console.log('[AgentLoop] Inserting results into editor, length:', formattedResult.length);
 
-      this.adapter.insertText(formattedResult);
-      await this.adapter.triggerSend();
+      this.insertResultCapsule(formattedResult);
 
-      // 6. Wait a moment for the message to be sent
-      await new Promise((r) => setTimeout(r, 500));
+      // 6. Pause — user must press Enter/send to continue the loop
+      getStore().pause('Tool results ready. Press Enter to send and continue.');
 
-      // 7. Advance to next round
+      // 7. Wait for user to send (we listen for the message to actually be sent)
+      await this.waitForUserSend();
+
+      this.checkAbort();
+
+      // 8. Advance to next round
+      getStore().resume();
       getStore().nextRound();
 
-      // 8. Check max rounds
+      // 9. Check max rounds
       if (getStore().currentRound > getStore().maxRounds) {
         console.log('[AgentLoop] Max rounds reached');
         getStore().pause(`Reached maximum rounds (${getStore().maxRounds}). Continue?`);
         return;
       }
     }
+  }
+
+  /**
+   * Insert the tool execution results into the editor wrapped in a capsule element.
+   * The capsule shows a summary pill; the full XML content is stored in a data attribute
+   * and expanded before sending.
+   */
+  private insertResultCapsule(resultText: string): void {
+    const editor = this.adapter.getEditor();
+    if (!editor) {
+      // Fallback: just insert raw text
+      this.adapter.insertText(resultText);
+      return;
+    }
+
+    // Wrap results in our result XML tag
+    const wrappedResult = `<bs_agent_result>\n${resultText}\n</bs_agent_result>`;
+
+    // Clear editor and insert capsule
+    editor.innerHTML = '';
+
+    const p = document.createElement('p');
+    const capsule = document.createElement('strong');
+    capsule.className = 'bs-agent-result-capsule';
+    capsule.setAttribute('data-result-content', wrappedResult);
+    capsule.contentEditable = 'false';
+    capsule.textContent = '📋 Tool Results (press Enter to send)';
+
+    p.appendChild(capsule);
+    // Add a space after for cursor placement
+    p.appendChild(document.createTextNode('\u00A0'));
+    editor.appendChild(p);
+
+    // Trigger input event
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    editor.focus();
+  }
+
+  /**
+   * Wait for the user to send the message (detects the result capsule being removed
+   * from the editor — meaning the message was sent).
+   * Resolves when the editor no longer contains the result capsule.
+   */
+  private waitForUserSend(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        observer.disconnect();
+        // Don't reject — just resolve so the engine can continue waiting
+        resolve();
+      }, 300000); // 5 min timeout
+
+      const editor = this.adapter.getEditor();
+      if (!editor) {
+        clearTimeout(timeout);
+        resolve();
+        return;
+      }
+
+      const checkCapsule = () => {
+        // If capsule is gone, user sent the message
+        const capsule = editor.querySelector('.bs-agent-result-capsule');
+        if (!capsule) {
+          clearTimeout(timeout);
+          observer.disconnect();
+          // Small delay for the message to be processed
+          setTimeout(resolve, 500);
+        }
+      };
+
+      // Also check if abort was called
+      const checkAbort = () => {
+        if (this.abortController?.signal.aborted) {
+          clearTimeout(timeout);
+          observer.disconnect();
+          reject(new Error('Agent loop aborted'));
+        }
+      };
+
+      const observer = new MutationObserver(() => {
+        checkAbort();
+        checkCapsule();
+      });
+
+      observer.observe(editor, { childList: true, subtree: true, characterData: true });
+
+      // Also observe parent (in case editor gets replaced)
+      const parentObserver = new MutationObserver(() => {
+        const newEditor = this.adapter.getEditor();
+        if (newEditor && !newEditor.querySelector('.bs-agent-result-capsule')) {
+          clearTimeout(timeout);
+          parentObserver.disconnect();
+          observer.disconnect();
+          setTimeout(resolve, 500);
+        }
+      });
+      if (editor.parentElement) {
+        parentObserver.observe(editor.parentElement, { childList: true, subtree: true });
+      }
+    });
   }
 
   private formatResults(results: string[], errors: string[]): string {
