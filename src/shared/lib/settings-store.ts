@@ -146,7 +146,7 @@ export const useSettingsStore = create<SettingsState>()(
       theme: 'system',
       customTheme: null,
       geminiStyle: 'default',
-      layoutDensity: 'relaxed',
+      layoutDensity: 'compact',
       newChatBehavior: 'current-tab',
       autoScanLibrary: false,
       overlayPosition: { x: 16, y: 16 },

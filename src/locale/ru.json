@@ -641,7 +641,7 @@
     "defaultModel": "Модель по умолчанию:",
     "defaultModelSelect": "Выбрать",
     "defaultModelNone": "нет",
-    "smartScrollbar": "Умная полоса прокрутки (Экспериментально)",
+    "smartScrollbar": "Умная полоса прокрутки",
     "smartScrollbarDesc": "Показывать навигацию по беседе справа",
     "autoHideInput": "Автоскрытие ввода",
     "autoHideInputDesc": "Скрывать поле ввода, пока курсор не наведён на нижнюю область",

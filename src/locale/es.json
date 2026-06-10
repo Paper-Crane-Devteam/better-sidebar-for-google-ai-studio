@@ -641,7 +641,7 @@
     "defaultModel": "Modelo Predeterminado:",
     "defaultModelSelect": "Seleccionar",
     "defaultModelNone": "Ninguno",
-    "smartScrollbar": "Barra de desplazamiento inteligente (Experimental)",
+    "smartScrollbar": "Barra de desplazamiento inteligente",
     "smartScrollbarDesc": "Mostrar navegación de conversación en el lado derecho",
     "autoHideInput": "Ocultar entrada automáticamente",
     "autoHideInputDesc": "Ocultar el cuadro de entrada hasta que pases el cursor por la zona inferior",

@@ -642,7 +642,7 @@
     "defaultModel": "デフォルトモデル：",
     "defaultModelSelect": "選択",
     "defaultModelNone": "なし",
-    "smartScrollbar": "スマートスクロールバー（実験的）",
+    "smartScrollbar": "スマートスクロールバー",
     "smartScrollbarDesc": "右側に会話ナビゲーションを表示",
     "autoHideInput": "入力欄の自動非表示",
     "autoHideInputDesc": "下部エリアにホバーするまで入力欄を非表示にする",

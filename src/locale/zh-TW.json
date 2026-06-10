@@ -641,7 +641,7 @@
     "defaultModel": "預設模型：",
     "defaultModelSelect": "選擇",
     "defaultModelNone": "無",
-    "smartScrollbar": "智慧捲軸（實驗性）",
+    "smartScrollbar": "智慧捲軸",
     "smartScrollbarDesc": "在右側顯示對話導覽",
     "autoHideInput": "自動隱藏輸入框",
     "autoHideInputDesc": "滑鼠懸停在底部區域時才顯示輸入框",

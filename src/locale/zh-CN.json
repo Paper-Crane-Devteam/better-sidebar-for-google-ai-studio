@@ -640,7 +640,7 @@
     "defaultModel": "默认模型：",
     "defaultModelSelect": "选择",
     "defaultModelNone": "无",
-    "smartScrollbar": "智能滚动条（实验性）",
+    "smartScrollbar": "智能滚动条",
     "smartScrollbarDesc": "在右侧显示对话导航",
     "autoHideInput": "自动隐藏输入框",
     "autoHideInputDesc": "隐藏输入框，鼠标悬停底部时自动显示",

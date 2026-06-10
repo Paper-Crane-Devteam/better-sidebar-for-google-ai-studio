@@ -62,22 +62,26 @@ function getWatermarkInfo(width: number, height: number): WatermarkPosition {
   const isLarge = width > 1024 && height > 1024;
 
   let size: number;
-  let margin: number;
+  let marginRight: number;
+  let marginBottom: number;
   if (isXLarge) {
     size = 100;
-    margin = 63;
+    marginRight = 188;
+    marginBottom = 190;
   } else if (isLarge) {
     size = 96;
-    margin = 64;
+    marginRight = 140;
+    marginBottom = 140;
   } else {
     size = 48;
-    margin = 32;
+    marginRight = 95;
+    marginBottom = 95;
   }
 
   return {
     size,
-    x: Math.floor(width - margin - size),
-    y: Math.floor(height - margin - size),
+    x: Math.floor(width - marginRight - size),
+    y: Math.floor(height - marginBottom - size),
     width: size,
     height: size,
   };
