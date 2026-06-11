@@ -57,34 +57,109 @@ function removeWatermark(
 }
 
 // ============= Watermark Config Detection =============
-function getWatermarkInfo(width: number, height: number): WatermarkPosition {
+
+/** Candidate margin configs for free vs pro accounts */
+interface MarginConfig {
+  margin: number;
+}
+
+function getWatermarkCandidates(width: number, height: number): { size: number; candidates: MarginConfig[] } {
   const isXLarge = width > 2048 || height > 2048;
   const isLarge = width > 1024 && height > 1024;
 
-  let size: number;
-  let marginRight: number;
-  let marginBottom: number;
   if (isXLarge) {
-    size = 100;
-    marginRight = 188;
-    marginBottom = 190;
+    return { size: 100, candidates: [{ margin: 63 }, { margin: 188 }] };
   } else if (isLarge) {
-    size = 96;
-    marginRight = 140;
-    marginBottom = 140;
+    return { size: 96, candidates: [{ margin: 64 }, { margin: 140 }] };
   } else {
-    size = 48;
-    marginRight = 95;
-    marginBottom = 95;
+    return { size: 48, candidates: [{ margin: 32 }, { margin: 95 }] };
+  }
+}
+
+/**
+ * Score how well the watermark template matches at a given position.
+ * Higher score = more likely the watermark is there.
+ * We check if pixels under non-transparent parts of the template
+ * look like they've been alpha-blended with white (LOGO_VALUE=255).
+ */
+function scorePosition(
+  imageData: ImageData,
+  alphaMap: Float32Array,
+  position: WatermarkPosition,
+): number {
+  const { x, y, width, height } = position;
+  let totalScore = 0;
+  let count = 0;
+
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      const alphaIdx = row * width + col;
+      const alpha = alphaMap[alphaIdx];
+      if (alpha < ALPHA_THRESHOLD) continue;
+
+      const imgIdx = ((y + row) * imageData.width + (x + col)) * 4;
+      const r = imageData.data[imgIdx];
+      const g = imageData.data[imgIdx + 1];
+      const b = imageData.data[imgIdx + 2];
+
+      // If watermark is here, pixels should be brighter than surroundings
+      // proportional to alpha. Check how close to expected blended value.
+      const brightness = (r + g + b) / 3;
+      // Watermark blends toward white, so higher alpha → brighter pixel
+      const expectedMinBrightness = alpha * LOGO_VALUE * 0.5;
+      if (brightness >= expectedMinBrightness) {
+        totalScore += alpha;
+      }
+      count++;
+    }
   }
 
-  return {
-    size,
-    x: Math.floor(width - marginRight - size),
-    y: Math.floor(height - marginBottom - size),
-    width: size,
-    height: size,
-  };
+  return count > 0 ? totalScore / count : 0;
+}
+
+function detectWatermarkPosition(
+  imageData: ImageData,
+  alphaMap: Float32Array,
+  width: number,
+  height: number,
+): WatermarkPosition {
+  const { size, candidates } = getWatermarkCandidates(width, height);
+
+  let bestPosition: WatermarkPosition | null = null;
+  let bestScore = -1;
+
+  for (const { margin } of candidates) {
+    const pos: WatermarkPosition = {
+      size,
+      x: Math.floor(width - margin - size),
+      y: Math.floor(height - margin - size),
+      width: size,
+      height: size,
+    };
+
+    // Bounds check
+    if (pos.x < 0 || pos.y < 0) continue;
+
+    const score = scorePosition(imageData, alphaMap, pos);
+    if (score > bestScore) {
+      bestScore = score;
+      bestPosition = pos;
+    }
+  }
+
+  // Fallback: if detection fails, use free account position (closer to edge)
+  if (!bestPosition) {
+    const fallbackMargin = candidates[0].margin;
+    bestPosition = {
+      size,
+      x: Math.floor(width - fallbackMargin - size),
+      y: Math.floor(height - fallbackMargin - size),
+      width: size,
+      height: size,
+    };
+  }
+
+  return bestPosition;
 }
 
 // ============= Image Loader =============
@@ -150,8 +225,11 @@ export class WatermarkEngine {
 
     ctx.drawImage(img, 0, 0);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const config = getWatermarkInfo(canvas.width, canvas.height);
-    const alphaMap = await this.getAlphaMap(config.size);
+
+    // Determine watermark size from image dimensions, then detect exact position
+    const { size } = getWatermarkCandidates(canvas.width, canvas.height);
+    const alphaMap = await this.getAlphaMap(size);
+    const config = detectWatermarkPosition(imageData, alphaMap, canvas.width, canvas.height);
 
     removeWatermark(imageData, alphaMap, config);
     ctx.putImageData(imageData, 0, 0);
