@@ -18,18 +18,21 @@ src/entrypoints/overlay.content/shared/modules/agent-loop/
 ├── index.ts                    # 公共 API barrel export
 ├── types.ts                    # 所有共享类型
 ├── agent-loop-store.ts         # Zustand 运行时状态（非持久化）
+├── event-bus.ts                # 轻量级类型安全事件总线
 ├── useAgentTrigger.ts          # > 前缀检测 hook
 ├── AgentCommandPopup.tsx       # > 弹出选择列表
 ├── AgentLoopStatusBar.tsx      # 循环执行状态条
 ├── AgentLoopConfirmDialog.tsx  # SQL 写操作确认对话框
 ├── adapters/
 │   ├── types.ts                # AgentPlatformAdapter 接口定义
+│   ├── adapter-factory.ts      # 平台自动检测 + 工厂函数
 │   └── gemini-adapter.ts       # Gemini 平台实现
 ├── engine/
 │   ├── AgentLoopEngine.ts      # 核心循环引擎（调度器）
-│   └── ToolCallParser.ts       # XML tool call 正则解析
+│   ├── ToolCallParser.ts       # XML tool call 正则解析
+│   └── circuit-breaker.ts      # 循环检测 + 连续失败熔断器
 ├── prompts/
-│   ├── base-prompt.ts          # Base prompt（schema + tool 定义）
+│   ├── base-prompt.ts          # Base prompt（schema + tool 定义，平台感知）
 │   ├── built-in-registry.ts    # 内置 prompt 注册表
 │   └── utilities/              # 各 utility prompt
 │       ├── auto-classify.ts
@@ -38,6 +41,7 @@ src/entrypoints/overlay.content/shared/modules/agent-loop/
 ├── tools/
 │   ├── tool-registry.ts        # Tool 路由分发
 │   ├── execute-sql.ts          # SQL 执行（完整实现）
+│   ├── complete-task.ts        # 显式任务完成信号
 │   ├── sync-messages.ts        # 占位
 │   └── export-tool.ts          # 占位
 └── snapshot/

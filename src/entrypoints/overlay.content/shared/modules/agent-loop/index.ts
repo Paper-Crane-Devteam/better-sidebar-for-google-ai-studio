@@ -30,6 +30,7 @@ export type { CircuitBreakerState, LoopCheckResult, FailureCheckResult, NoProgre
 // Tools
 export { executeToolCall } from './tools/tool-registry';
 export { executeSql } from './tools/execute-sql';
+export { completeTask, COMPLETE_TASK_SIGNAL } from './tools/complete-task';
 
 // Prompts
 export { getBasePrompt } from './prompts/base-prompt';
@@ -41,6 +42,15 @@ export { useAgentTrigger } from './useAgentTrigger';
 // Adapters
 export type { AgentPlatformAdapter } from './adapters/types';
 export { GeminiAgentAdapter } from './adapters/gemini-adapter';
+export {
+  createAdapterForCurrentPlatform,
+  createAdapterForPlatform,
+  detectPlatform,
+  getCurrentPlatformId,
+  getCurrentPlatformName,
+  getRegisteredPlatforms,
+} from './adapters/adapter-factory';
+export type { PlatformId, PlatformInfo } from './adapters/adapter-factory';
 
 // UI Components
 export { AgentCommandPopup } from './AgentCommandPopup';

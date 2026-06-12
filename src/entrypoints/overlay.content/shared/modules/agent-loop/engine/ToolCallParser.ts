@@ -27,13 +27,14 @@ const MAX_TOOL_CALLS = 20;
 /** The unique tag name for our tool calls — will NOT conflict with Gemini's native <tool_call> */
 export const TOOL_TAG = 'bs_agent_tool';
 
-const SUPPORTED_TOOLS = ['execute_sql', 'sync_conversation_messages', 'export'];
+const SUPPORTED_TOOLS = ['execute_sql', 'sync_conversation_messages', 'export', 'complete_task'];
 
 /** Required parameters per tool type */
 const REQUIRED_PARAMS: Record<string, string[]> = {
   execute_sql: ['query'],
   sync_conversation_messages: ['conversation_ids'],
   export: ['ids', 'format'],
+  complete_task: ['summary'],
 };
 
 /**

@@ -20,6 +20,7 @@ import { parseToolCalls } from './ToolCallParser';
 import { executeToolCall } from '../tools/tool-registry';
 import { CircuitBreaker } from './circuit-breaker';
 import { agentEventBus } from '../event-bus';
+import { COMPLETE_TASK_SIGNAL } from '../tools/complete-task';
 
 export class AgentLoopEngine {
   private adapter: AgentPlatformAdapter;
@@ -240,6 +241,24 @@ export class AgentLoopEngine {
         });
 
         results.push(`### ${toolCall.name}\n${finalResult}`);
+
+        // Check if task was explicitly completed
+        if (result.startsWith(COMPLETE_TASK_SIGNAL)) {
+          const summary = result.slice(COMPLETE_TASK_SIGNAL.length + 1); // +1 for the colon
+          console.log('[AgentLoop] Task explicitly completed:', summary);
+          getStore().addResult({
+            toolName: 'complete_task',
+            success: true,
+            result: summary,
+            timestamp: Date.now(),
+          });
+          getStore().stop();
+          agentEventBus.emit('loop:ended', {
+            reason: 'complete',
+            totalRounds: getStore().currentRound,
+          });
+          return;
+        }
 
         // Check if paywall was hit
         if (result.includes('PAYWALL')) {

@@ -13,7 +13,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import {
-  GeminiAgentAdapter,
   AgentCommandPopup,
   AgentLoopStatusBar,
   AgentLoopConfirmDialog,
@@ -25,7 +24,11 @@ import {
   injectRendererStyles,
   buildPromptMarker,
 } from '@/entrypoints/overlay.content/shared/modules/agent-loop';
-import type { BuiltInPrompt } from '@/entrypoints/overlay.content/shared/modules/agent-loop';
+import {
+  createAdapterForCurrentPlatform,
+  getCurrentPlatformId,
+} from '@/entrypoints/overlay.content/shared/modules/agent-loop/adapters/adapter-factory';
+import type { BuiltInPrompt, AgentPlatformAdapter } from '@/entrypoints/overlay.content/shared/modules/agent-loop';
 
 // ─── Agent Capsule Helpers ───────────────────────────────────────────────────
 
@@ -74,7 +77,8 @@ function expandAgentCapsule(editor: HTMLElement): { fullMessage: string; promptI
 
   // Compose: marker + base prompt + utility prompt + user input
   const marker = buildPromptMarker(promptId);
-  const basePrompt = getBasePrompt();
+  const platform = getCurrentPlatformId();
+  const basePrompt = getBasePrompt({ platform });
   let fullMessage = `${marker}\n${basePrompt}\n\n${promptContent}`;
 
   if (userInput.trim()) {
@@ -198,7 +202,15 @@ export const AgentLoopFeature: React.FC = () => {
     (s) => s.enhancedFeatures.gemini.slashCommand,
   );
 
-  const adapterRef = useRef(new GeminiAgentAdapter());
+  const adapterRef = useRef<AgentPlatformAdapter | null>(null);
+
+  // Lazily create adapter on first access (auto-detects platform)
+  const getAdapter = useCallback((): AgentPlatformAdapter | null => {
+    if (!adapterRef.current) {
+      adapterRef.current = createAdapterForCurrentPlatform();
+    }
+    return adapterRef.current;
+  }, []);
   const engineRef = useRef<AgentLoopEngine | null>(null);
   const rendererRef = useRef<ConversationRenderer | null>(null);
   const [popupPosition, setPopupPosition] = useState({ bottom: 0, left: 0 });
@@ -243,7 +255,11 @@ export const AgentLoopFeature: React.FC = () => {
   // ─── Start agent loop (called after message is sent) ────────────────
 
   const startAgentEngine = useCallback(() => {
-    const adapter = adapterRef.current;
+    const adapter = getAdapter();
+    if (!adapter) {
+      console.error('[AgentLoop] No adapter available for current platform');
+      return;
+    }
     const engine = new AgentLoopEngine(adapter);
     engineRef.current = engine;
 
@@ -251,7 +267,7 @@ export const AgentLoopFeature: React.FC = () => {
     setTimeout(() => {
       engine.start(20);
     }, 300);
-  }, []);
+  }, [getAdapter]);
 
   // ─── Handle capsule insertion (selection from popup) ────────────────
 
@@ -260,9 +276,9 @@ export const AgentLoopFeature: React.FC = () => {
       const match = triggerState.matches[index];
       if (!match) return;
 
-      const adapter = adapterRef.current;
-      const editor = adapter.getEditor();
-      if (!editor) return;
+      const adapter = getAdapter();
+      const editor = adapter?.getEditor();
+      if (!adapter || !editor) return;
 
       const triggerPos = triggerStateRef.current.triggerPosition;
       const cursorPos = adapter.getCursorPosition();
@@ -273,7 +289,7 @@ export const AgentLoopFeature: React.FC = () => {
 
       editor.focus();
     },
-    [triggerState.matches, close],
+    [triggerState.matches, close, getAdapter],
   );
 
   const handleConfirmSelectionRef = useRef(handleConfirmSelection);
@@ -287,7 +303,9 @@ export const AgentLoopFeature: React.FC = () => {
       return;
     }
 
-    const adapter = adapterRef.current;
+    const adapter = getAdapter();
+    if (!adapter) return;
+
     let currentEditor: HTMLElement | null = null;
 
     const onInput = () => {
@@ -456,7 +474,7 @@ export const AgentLoopFeature: React.FC = () => {
       if (currentEditor) detachListeners(currentEditor);
       bodyObserver.disconnect();
     };
-  }, [slashCommandEnabled, startAgentEngine]);
+  }, [slashCommandEnabled, startAgentEngine, getAdapter]);
 
   // Monitor for slash command popup to track its active state
   useEffect(() => {
