@@ -66,10 +66,7 @@ Execute SQL queries against the local database.
 
 **Example:**
 <bs_agent_tool>
-<name>execute_sql</name>
-<params>
-<query>${exampleQuery}</query>
-</params>
+{"name": "execute_sql", "description": "查询最近的对话列表", "params": {"query": "${exampleQuery}"}}
 </bs_agent_tool>
 
 ### 2. sync_conversation_messages (coming soon)
@@ -93,10 +90,7 @@ Signal that the task is finished. You MUST call this when your work is done.
 
 **Example:**
 <bs_agent_tool>
-<name>complete_task</name>
-<params>
-<summary>Created 3 folders (Coding, Research, Casual) and organized 15 conversations into them based on their titles.</summary>
-</params>
+{"name": "complete_task", "description": "任务完成，报告结果", "params": {"summary": "Created 3 folders (Coding, Research, Casual) and organized 15 conversations into them based on their titles."}}
 </bs_agent_tool>
 
 **IMPORTANT:** Always end with complete_task when your task is done. Do NOT just stop outputting tools — that will be treated as an error.
@@ -140,16 +134,18 @@ export function getBasePrompt(context?: PromptContext): string {
 
 ## How to Call Tools
 
-Output tool calls in this exact XML format. The extension will parse your output, execute the tools, and send you the results automatically.
+Output tool calls in this exact format. The extension will parse your output, execute the tools, and send you the results automatically.
 
 <bs_agent_tool>
-<name>TOOL_NAME</name>
-<params>
-<PARAM_NAME>PARAM_VALUE</PARAM_NAME>
-</params>
+{"name": "TOOL_NAME", "description": "brief description of what this call does", "params": {"PARAM_NAME": "PARAM_VALUE"}}
 </bs_agent_tool>
 
-You can output multiple <bs_agent_tool> blocks in one response. They will be executed in order.
+Rules for tool call format:
+- The outer \`<bs_agent_tool>\` wrapper is REQUIRED (do NOT omit it)
+- Inside must be a valid JSON object with "name", "description", and "params" fields
+- "description" is REQUIRED — a short human-readable explanation (e.g., "查询最近20条对话", "为对话添加标签")
+- Do NOT use XML tags inside <bs_agent_tool> — use JSON only
+- You can output multiple <bs_agent_tool> blocks in one response. They will be executed in order.
 
 IMPORTANT: Always use <bs_agent_tool> tags (NOT <tool_call>). The extension only recognizes <bs_agent_tool> format.
 ${getPlatformContextBlock(platform)}

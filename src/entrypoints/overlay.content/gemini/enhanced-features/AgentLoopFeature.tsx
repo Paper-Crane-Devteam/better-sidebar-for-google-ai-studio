@@ -1,13 +1,12 @@
 /**
  * AgentLoopFeature — Gemini entry point for Agent Loop.
  *
- * Revised flow:
+ * Flow:
  * 1. User types `>` → popup shows built-in prompts
- * 2. User selects a prompt → capsule inserted (like slash command), NOT immediately sent
+ * 2. User selects a prompt → capsule inserted (shared <strong> pattern)
  * 3. User optionally types additional context after the capsule
- * 4. User presses Enter to send → capsule expanded, prompt marker prepended, message sent
- * 5. Engine starts listening for AI response
- * 6. ConversationRenderer observes DOM to collapse prompts & render tool calls
+ * 4. User presses Enter → onBeforeSend extracts prompt info, composes full message, sends, starts engine
+ * 5. Engine listens for AI response, parses tool calls, loops
  */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
@@ -28,174 +27,14 @@ import {
   createAdapterForCurrentPlatform,
   getCurrentPlatformId,
 } from '@/entrypoints/overlay.content/shared/modules/agent-loop/adapters/adapter-factory';
-import type { BuiltInPrompt, AgentPlatformAdapter } from '@/entrypoints/overlay.content/shared/modules/agent-loop';
-
-// ─── Agent Capsule Helpers ───────────────────────────────────────────────────
-
-/** Class name for the agent prompt capsule in the editor */
-const AGENT_CAPSULE_CLASS = 'bs-agent-capsule';
-const AGENT_CAPSULE_ATTR_ID = 'data-bs-prompt-id';
-
-/** Check if the editor has an agent capsule */
-function hasAgentCapsule(editor: HTMLElement): boolean {
-  return editor.querySelector(`.${AGENT_CAPSULE_CLASS}`) !== null;
-}
-
-/** Get the prompt ID from the capsule in the editor */
-function getAgentCapsulePromptId(editor: HTMLElement): string | null {
-  const capsule = editor.querySelector(`.${AGENT_CAPSULE_CLASS}`);
-  return capsule?.getAttribute(AGENT_CAPSULE_ATTR_ID) || null;
-}
-
-/**
- * Expand the agent capsule and compose the full message for sending.
- * Returns the composed message text, or null if no capsule found.
- */
-function expandAgentCapsule(editor: HTMLElement): { fullMessage: string; promptId: string } | null {
-  const capsule = editor.querySelector(`.${AGENT_CAPSULE_CLASS}`) as HTMLElement | null;
-  if (!capsule) return null;
-
-  const promptId = capsule.getAttribute(AGENT_CAPSULE_ATTR_ID) || '';
-  const promptContent = capsule.getAttribute('data-prompt-content') || '';
-
-  // Get user's additional text (everything after the capsule)
-  let userInput = '';
-  let node = capsule.nextSibling;
-  while (node) {
-    userInput += node.textContent || '';
-    node = node.nextSibling;
-  }
-  // Also check sibling paragraphs
-  const capsuleParent = capsule.parentElement;
-  if (capsuleParent) {
-    let sibling = capsuleParent.nextElementSibling;
-    while (sibling) {
-      userInput += '\n' + (sibling.textContent || '');
-      sibling = sibling.nextElementSibling;
-    }
-  }
-
-  // Compose: marker + base prompt + utility prompt + user input
-  const marker = buildPromptMarker(promptId);
-  const platform = getCurrentPlatformId();
-  const basePrompt = getBasePrompt({ platform });
-  let fullMessage = `${marker}\n${basePrompt}\n\n${promptContent}`;
-
-  if (userInput.trim()) {
-    fullMessage += `\n\n## User Request\n\n${userInput.trim()}`;
-  }
-
-  // Truncate to 30000 chars
-  if (fullMessage.length > 30000) {
-    fullMessage = fullMessage.substring(0, 30000);
-    console.warn('[AgentLoop] Message truncated to 30000 chars');
-  }
-
-  return { fullMessage, promptId };
-}
-
-/**
- * Insert a capsule into the editor replacing the >query text.
- * Similar to slash command's capsule insertion.
- */
-function insertAgentCapsule(
-  editor: HTMLElement,
-  triggerPos: number,
-  cursorPos: number,
-  prompt: BuiltInPrompt,
-): void {
-  const displayText = `>${prompt.title}`;
-
-  // Walk text nodes to select the >query range
-  const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
-  let offset = 0;
-  let startNode: Node | null = null;
-  let startOffset = 0;
-  let endNode: Node | null = null;
-  let endOffset = 0;
-
-  while (walker.nextNode()) {
-    const node = walker.currentNode;
-    const nodeLen = node.textContent?.length || 0;
-
-    if (!startNode && offset + nodeLen > triggerPos) {
-      startNode = node;
-      startOffset = triggerPos - offset;
-    }
-    if (!endNode && offset + nodeLen >= cursorPos) {
-      endNode = node;
-      endOffset = cursorPos - offset;
-      break;
-    }
-    offset += nodeLen;
-  }
-
-  if (!startNode || !endNode) return;
-
-  // Select the >query text
-  const range = document.createRange();
-  range.setStart(startNode, startOffset);
-  range.setEnd(endNode, endOffset);
-  const sel = window.getSelection();
-  sel?.removeAllRanges();
-  sel?.addRange(range);
-
-  // Replace with display text + space
-  document.execCommand('insertText', false, displayText + '\u00A0');
-
-  // After Quill processes, wrap in <strong> capsule
-  requestAnimationFrame(() => {
-    wrapInAgentCapsule(editor, displayText, prompt);
-  });
-}
-
-/** Find the display text and wrap it in a capsule element */
-function wrapInAgentCapsule(editor: HTMLElement, displayText: string, prompt: BuiltInPrompt): void {
-  const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
-  while (walker.nextNode()) {
-    const node = walker.currentNode;
-    const text = node.textContent || '';
-    const idx = text.indexOf(displayText);
-    if (idx === -1) continue;
-
-    const parent = node.parentNode;
-    if (!parent) continue;
-    if ((parent as HTMLElement).classList?.contains(AGENT_CAPSULE_CLASS)) continue;
-
-    const before = text.slice(0, idx);
-    const after = text.slice(idx + displayText.length);
-
-    const strong = document.createElement('strong');
-    strong.className = AGENT_CAPSULE_CLASS;
-    strong.setAttribute(AGENT_CAPSULE_ATTR_ID, prompt.id);
-    strong.setAttribute('data-prompt-content', prompt.getPromptContent());
-    strong.contentEditable = 'false';
-    strong.textContent = displayText;
-
-    const frag = document.createDocumentFragment();
-    if (before) frag.appendChild(document.createTextNode(before));
-    frag.appendChild(strong);
-    if (after) frag.appendChild(document.createTextNode(after));
-
-    parent.replaceChild(frag, node);
-
-    // Place cursor after capsule
-    const sel = window.getSelection();
-    if (sel) {
-      const afterNode = strong.nextSibling;
-      if (afterNode) {
-        const r = document.createRange();
-        r.setStartAfter(afterNode);
-        r.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(r);
-      }
-    }
-    return;
-  }
-}
-
-// ─── Component ───────────────────────────────────────────────────────────────
+import type { AgentPlatformAdapter } from '@/entrypoints/overlay.content/shared/modules/agent-loop';
+import {
+  useEditorIntegration,
+  insertCapsule,
+  expandAllCapsules,
+  CAPSULE_CLASS,
+} from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
+import type { TriggerPopupItem } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
 
 export const AgentLoopFeature: React.FC = () => {
   const slashCommandEnabled = useSettingsStore(
@@ -203,17 +42,15 @@ export const AgentLoopFeature: React.FC = () => {
   );
 
   const adapterRef = useRef<AgentPlatformAdapter | null>(null);
-
-  // Lazily create adapter on first access (auto-detects platform)
   const getAdapter = useCallback((): AgentPlatformAdapter | null => {
     if (!adapterRef.current) {
       adapterRef.current = createAdapterForCurrentPlatform();
     }
     return adapterRef.current;
   }, []);
+
   const engineRef = useRef<AgentLoopEngine | null>(null);
   const rendererRef = useRef<ConversationRenderer | null>(null);
-  const [popupPosition, setPopupPosition] = useState({ bottom: 0, left: 0 });
   const [isSlashCommandActive, setIsSlashCommandActive] = useState(false);
 
   const {
@@ -228,17 +65,8 @@ export const AgentLoopFeature: React.FC = () => {
 
   const loopStatus = useAgentLoopStore((s) => s.status);
 
-  // Refs for stable access in event handlers
   const triggerStateRef = useRef(triggerState);
   triggerStateRef.current = triggerState;
-  const handleInputRef = useRef(handleInput);
-  handleInputRef.current = handleInput;
-  const selectPreviousRef = useRef(selectPrevious);
-  selectPreviousRef.current = selectPrevious;
-  const selectNextRef = useRef(selectNext);
-  selectNextRef.current = selectNext;
-  const closeRef = useRef(close);
-  closeRef.current = close;
   const getSelectedPromptRef = useRef(getSelectedPrompt);
   getSelectedPromptRef.current = getSelectedPrompt;
 
@@ -252,7 +80,7 @@ export const AgentLoopFeature: React.FC = () => {
     return () => renderer.stop();
   }, []);
 
-  // ─── Start agent loop (called after message is sent) ────────────────
+  // ─── Start agent loop engine ────────────────────────────────────────
 
   const startAgentEngine = useCallback(() => {
     const adapter = getAdapter();
@@ -262,240 +90,110 @@ export const AgentLoopFeature: React.FC = () => {
     }
     const engine = new AgentLoopEngine(adapter);
     engineRef.current = engine;
-
-    // Small delay to ensure message is sent before engine starts observing
-    setTimeout(() => {
-      engine.start(20);
-    }, 300);
+    setTimeout(() => engine.start(20), 300);
   }, [getAdapter]);
 
-  // ─── Handle capsule insertion (selection from popup) ────────────────
+  // ─── Capsule insertion ──────────────────────────────────────────────
 
-  const handleConfirmSelection = useCallback(
-    (index: number) => {
-      const match = triggerState.matches[index];
-      if (!match) return;
+  function handleConfirmSelection() {
+    const prompt = getSelectedPromptRef.current();
+    if (!prompt) return;
 
-      const adapter = getAdapter();
-      const editor = adapter?.getEditor();
-      if (!adapter || !editor) return;
+    const adapter = getAdapter();
+    const editor = adapter?.getEditor();
+    if (!adapter || !editor) return;
 
-      const triggerPos = triggerStateRef.current.triggerPosition;
-      const cursorPos = adapter.getCursorPosition();
+    const triggerPos = triggerStateRef.current.triggerPosition;
+    const cursorPos = adapter.getCursorPosition();
 
-      // Close popup and insert capsule (don't send yet!)
-      close();
-      insertAgentCapsule(editor, triggerPos, cursorPos, match);
+    const item: TriggerPopupItem = {
+      id: prompt.id,
+      title: prompt.title,
+      description: prompt.description,
+      icon: prompt.icon,
+      content: prompt.getPromptContent(),
+    };
 
-      editor.focus();
-    },
-    [triggerState.matches, close, getAdapter],
-  );
+    close();
+    insertCapsule(editor, triggerPos, cursorPos, item, '>');
+    editor.focus();
+  }
 
   const handleConfirmSelectionRef = useRef(handleConfirmSelection);
   handleConfirmSelectionRef.current = handleConfirmSelection;
 
-  // ─── Set up input monitoring + send interception ────────────────────
+  // ─── Editor integration ─────────────────────────────────────────────
 
-  useEffect(() => {
-    if (!slashCommandEnabled) {
-      closeRef.current();
-      return;
-    }
-
-    const adapter = getAdapter();
-    if (!adapter) return;
-
-    let currentEditor: HTMLElement | null = null;
-
-    const onInput = () => {
-      // Don't interfere if agent loop is running
+  const { popupPosition, suppressInput } = useEditorIntegration({
+    getEditor: () => getAdapter()?.getEditor() || null,
+    enabled: slashCommandEnabled,
+    triggerChar: '>',
+    onInput: (text, cursorPos) => {
       if (useAgentLoopStore.getState().status !== 'idle') return;
+      handleInput(text, cursorPos);
+    },
+    getPopupState: () => triggerStateRef.current as any,
+    selectPrevious,
+    selectNext,
+    close,
+    onConfirmSelection: () => handleConfirmSelectionRef.current(),
+    onBeforeSend: (editor) => {
+      // Extract prompt info from capsule BEFORE expansion (only agent capsules with data-trigger=">")
+      const capsule = editor.querySelector(`.${CAPSULE_CLASS}[data-trigger=">"]`);
+      if (!capsule) return false;
 
-      const text = adapter.getText();
-      const cursorPos = adapter.getCursorPosition();
-      handleInputRef.current(text, cursorPos);
+      const promptId = capsule.getAttribute('data-prompt-id') || '';
+      const promptContent = capsule.getAttribute('data-prompt-content') || '';
 
-      // Update popup position
-      const editor = adapter.getEditor();
-      if (editor) {
-        const rect = editor.getBoundingClientRect();
-        setPopupPosition({
-          bottom: window.innerHeight - rect.top + 8,
-          left: Math.max(rect.left, 16),
-        });
+      if (!promptId || !promptContent) return false;
+
+      const adapter = getAdapter();
+      if (!adapter) return false;
+
+      // Expand all capsules (both / and >) to get the full editor text
+      expandAllCapsules(editor);
+
+      // Collect user's additional input (everything that's not the prompt content)
+      const editorText = editor.textContent || '';
+      const userInput = editorText.replace(promptContent, '').trim();
+
+      // Compose full message
+      const marker = buildPromptMarker(promptId);
+      const platform = getCurrentPlatformId();
+      const basePrompt = getBasePrompt({ platform });
+
+      let fullMessage = `${marker}\n${basePrompt}\n\n${promptContent}`;
+      if (userInput) {
+        fullMessage += `\n\n## User Request\n\n${userInput}`;
       }
-    };
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      // When popup is open, intercept navigation keys
-      if (triggerStateRef.current.isOpen) {
-        switch (e.key) {
-          case 'ArrowUp':
-            e.preventDefault();
-            e.stopPropagation();
-            selectPreviousRef.current();
-            return;
-          case 'ArrowDown':
-            e.preventDefault();
-            e.stopPropagation();
-            selectNextRef.current();
-            return;
-          case 'Enter':
-          case 'Tab':
-            e.preventDefault();
-            e.stopPropagation();
-            {
-              const prompt = getSelectedPromptRef.current();
-              if (prompt) {
-                const idx = triggerStateRef.current.matches.findIndex(
-                  (m) => m.id === prompt.id,
-                );
-                if (idx >= 0) {
-                  handleConfirmSelectionRef.current(idx);
-                }
-              }
-            }
-            return;
-          case 'Escape':
-            e.preventDefault();
-            e.stopPropagation();
-            closeRef.current();
-            return;
-        }
+      if (fullMessage.length > 30000) {
+        fullMessage = fullMessage.substring(0, 30000);
+        console.warn('[AgentLoop] Message truncated to 30000 chars');
       }
 
-      // Intercept Backspace: if cursor is inside agent capsule, delete whole capsule
-      if (e.key === 'Backspace' && !triggerStateRef.current.isOpen) {
-        const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0) {
-          const range = sel.getRangeAt(0);
-          let node: Node | null = range.startContainer;
-          let capsule: HTMLElement | null = null;
-          while (node && node !== adapter.getEditor()) {
-            if (
-              node.nodeType === Node.ELEMENT_NODE &&
-              (node as HTMLElement).classList?.contains(AGENT_CAPSULE_CLASS)
-            ) {
-              capsule = node as HTMLElement;
-              break;
-            }
-            node = node.parentNode;
-          }
-          if (capsule) {
-            e.preventDefault();
-            e.stopPropagation();
-            const next = capsule.nextSibling;
-            if (next?.nodeType === Node.TEXT_NODE && next.textContent?.[0] === '\u00A0') {
-              next.textContent = next.textContent.slice(1);
-              if (!next.textContent) next.parentNode?.removeChild(next);
-            }
-            capsule.remove();
-            adapter.getEditor()?.dispatchEvent(new Event('input', { bubbles: true }));
-            return;
-          }
-        }
-      }
+      // Send via adapter and start engine
+      adapter.insertText(fullMessage);
+      adapter.triggerSend().then(() => startAgentEngine());
 
-      // Intercept Enter (send) — if there's an agent capsule, expand it first
-      if (e.key === 'Enter' && !e.shiftKey && !triggerStateRef.current.isOpen) {
-        const editor = adapter.getEditor();
-        if (!editor) return;
+      return true; // We handled sending
+    },
+  });
 
-        // Check for result capsule (tool execution results waiting to be sent)
-        const resultCapsule = editor.querySelector('.bs-agent-result-capsule') as HTMLElement | null;
-        if (resultCapsule) {
-          e.preventDefault();
-          e.stopPropagation();
+  // ─── Monitor slash command popup for mutual exclusion ───────────────
 
-          const resultContent = resultCapsule.getAttribute('data-result-content') || '';
-          // Replace editor with the actual result content
-          adapter.insertText(resultContent);
-          // Send
-          adapter.triggerSend();
-          return;
-        }
-
-        // Check for agent prompt capsule
-        if (hasAgentCapsule(editor)) {
-          e.preventDefault();
-          e.stopPropagation();
-
-          const expanded = expandAgentCapsule(editor);
-          if (expanded) {
-            adapter.insertText(expanded.fullMessage);
-            adapter.triggerSend().then(() => {
-              startAgentEngine();
-            });
-          }
-          return;
-        }
-      }
-    };
-
-    const onBlur = () => {
-      setTimeout(() => {
-        if (triggerStateRef.current.isOpen) {
-          closeRef.current();
-        }
-      }, 300);
-    };
-
-    const attachListeners = (editor: HTMLElement) => {
-      editor.addEventListener('input', onInput);
-      editor.addEventListener('keydown', onKeyDown, true);
-      editor.addEventListener('blur', onBlur);
-    };
-
-    const detachListeners = (editor: HTMLElement) => {
-      editor.removeEventListener('input', onInput);
-      editor.removeEventListener('keydown', onKeyDown, true);
-      editor.removeEventListener('blur', onBlur);
-    };
-
-    // Attach to existing editor
-    currentEditor = adapter.getEditor();
-    if (currentEditor) {
-      attachListeners(currentEditor);
-    }
-
-    // Watch for editor appearing/changing (SPA navigation)
-    const bodyObserver = new MutationObserver(() => {
-      const editor = adapter.getEditor();
-      if (editor && editor !== currentEditor) {
-        if (currentEditor) detachListeners(currentEditor);
-        currentEditor = editor;
-        attachListeners(editor);
-      }
-    });
-    bodyObserver.observe(document.body, { childList: true, subtree: true });
-
-    return () => {
-      if (currentEditor) detachListeners(currentEditor);
-      bodyObserver.disconnect();
-    };
-  }, [slashCommandEnabled, startAgentEngine, getAdapter]);
-
-  // Monitor for slash command popup to track its active state
   useEffect(() => {
-    const checkSlashCommand = () => {
+    const observer = new MutationObserver(() => {
       const slashPopup = document.querySelector('[data-slash-command-popup]');
       setIsSlashCommandActive(!!slashPopup);
-    };
-
-    const observer = new MutationObserver(checkSlashCommand);
+    });
     observer.observe(document.body, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, []);
 
-  // Engine control handlers
-  const handleStop = useCallback(() => {
-    engineRef.current?.stop();
-  }, []);
+  // ─── Engine controls ────────────────────────────────────────────────
 
-  const handleRetry = useCallback(() => {
-    engineRef.current?.resume();
-  }, []);
+  const handleStop = useCallback(() => { engineRef.current?.stop(); }, []);
+  const handleRetry = useCallback(() => { engineRef.current?.resume(); }, []);
 
   if (!slashCommandEnabled) return null;
 
@@ -506,7 +204,14 @@ export const AgentLoopFeature: React.FC = () => {
           matches={triggerState.matches}
           selectedIndex={triggerState.selectedIndex}
           onHighlight={setHighlight}
-          onConfirm={handleConfirmSelection}
+          onConfirm={(index) => {
+            const matches = triggerStateRef.current.matches;
+            if (matches[index]) {
+              suppressInput();
+              setHighlight(index);
+              handleConfirmSelectionRef.current();
+            }
+          }}
           position={popupPosition}
           query={triggerState.query}
         />

@@ -1,40 +1,27 @@
 /**
- * useAgentTrigger — Hook for detecting `>` prefix and managing built-in prompt popup.
- * Similar to useSlashCommand but triggers built-in (invisible) prompts.
+ * useAgentTrigger — Agent trigger popup for `>` prefix.
+ * Thin wrapper around shared useTriggerPopup.
  */
 
-import { useState, useCallback } from 'react';
 import type { AgentTriggerState, BuiltInPrompt } from './types';
 import { getBuiltInPrompts } from './prompts/built-in-registry';
-
-const MAX_RESULTS = 8;
-
-const initialState: AgentTriggerState = {
-  isOpen: false,
-  query: '',
-  triggerPosition: -1,
-  matches: [],
-  selectedIndex: 0,
-};
+import { useTriggerPopup } from '../trigger-popup';
+import type { TriggerPopupMatch } from '../trigger-popup';
 
 /**
- * Core `>` trigger logic — platform-agnostic.
- * Handles search matching, popup state, and keyboard navigation.
- *
  * @param isSlashCommandActive - When true, `>` trigger is suppressed
  */
 export function useAgentTrigger(isSlashCommandActive: boolean) {
-  const [state, setState] = useState<AgentTriggerState>(initialState);
-
   /**
-   * Filter built-in prompts by query.
-   * Case-insensitive, multi-word AND matching on title.
+   * Filter built-in prompts by query (multi-word AND on title + description).
    */
-  const filterPrompts = useCallback((query: string): BuiltInPrompt[] => {
+  function search(query: string): TriggerPopupMatch[] {
     const allPrompts = getBuiltInPrompts();
 
     if (!query.trim()) {
-      return allPrompts.slice(0, MAX_RESULTS);
+      return allPrompts.slice(0, 8).map((p) => ({
+        item: { id: p.id, title: p.title, description: p.description, icon: p.icon, content: p.getPromptContent(), meta: p },
+      }));
     }
 
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
@@ -45,96 +32,40 @@ export function useAgentTrigger(isSlashCommandActive: boolean) {
         const desc = p.description.toLowerCase();
         return words.every((w) => title.includes(w) || desc.includes(w));
       })
-      .slice(0, MAX_RESULTS);
-  }, []);
+      .slice(0, 8)
+      .map((p) => ({
+        item: { id: p.id, title: p.title, description: p.description, icon: p.icon, content: p.getPromptContent(), meta: p },
+      }));
+  }
 
-  /** Called on input change. Detects `>` prefix and updates popup state. */
-  const handleInput = useCallback(
-    (text: string, cursorPos: number) => {
-      // If slash command is active, suppress agent trigger
-      if (isSlashCommandActive) {
-        if (state.isOpen) setState(initialState);
-        return;
-      }
+  const popup = useTriggerPopup({
+    triggerChar: '>',
+    search,
+    suppressed: isSlashCommandActive,
+  });
 
-      // Search backwards from cursor for `>`
-      let triggerPos = -1;
-      for (let i = cursorPos - 1; i >= 0; i--) {
-        if (text[i] === '>') {
-          // Valid: at start of text or preceded by whitespace/newline
-          if (i === 0 || /[\s\n]/.test(text[i - 1])) {
-            triggerPos = i;
-          }
-          break;
-        }
-        // Stop at newline (trigger doesn't span lines)
-        if (text[i] === '\n') break;
-      }
+  // ─── Adapt to legacy AgentTriggerState for backward compat ─────────
 
-      if (triggerPos === -1) {
-        if (state.isOpen) setState(initialState);
-        return;
-      }
+  const state: AgentTriggerState = {
+    isOpen: popup.state.isOpen,
+    query: popup.state.query,
+    triggerPosition: popup.state.triggerPosition,
+    matches: popup.state.matches.map((m) => m.item.meta as BuiltInPrompt),
+    selectedIndex: popup.state.selectedIndex,
+  };
 
-      const query = text.slice(triggerPos + 1, cursorPos);
-      const matches = filterPrompts(query);
-
-      // If query has content but no matches, close popup
-      if (query.trim() && matches.length === 0) {
-        setState(initialState);
-        return;
-      }
-
-      setState({
-        isOpen: true,
-        query,
-        triggerPosition: triggerPos,
-        matches,
-        selectedIndex: 0,
-      });
-    },
-    [isSlashCommandActive, state.isOpen, filterPrompts],
-  );
-
-  /** Move selection up */
-  const selectPrevious = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      selectedIndex: prev.selectedIndex <= 0 ? prev.matches.length - 1 : prev.selectedIndex - 1,
-    }));
-  }, []);
-
-  /** Move selection down */
-  const selectNext = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      selectedIndex: prev.selectedIndex >= prev.matches.length - 1 ? 0 : prev.selectedIndex + 1,
-    }));
-  }, []);
-
-  /** Set highlighted index (mouse hover) */
-  const setHighlight = useCallback((index: number) => {
-    setState((prev) => ({ ...prev, selectedIndex: index }));
-  }, []);
-
-  /** Close the popup */
-  const close = useCallback(() => {
-    setState(initialState);
-  }, []);
-
-  /** Get the currently selected prompt */
-  const getSelectedPrompt = useCallback((): BuiltInPrompt | null => {
-    if (!state.isOpen || state.matches.length === 0) return null;
-    return state.matches[state.selectedIndex] ?? null;
-  }, [state]);
+  function getSelectedPrompt(): BuiltInPrompt | null {
+    const item = popup.getSelectedItem();
+    return item ? (item.meta as BuiltInPrompt) : null;
+  }
 
   return {
     state,
-    handleInput,
-    selectPrevious,
-    selectNext,
-    setHighlight,
-    close,
+    handleInput: popup.handleInput,
+    selectPrevious: popup.selectPrevious,
+    selectNext: popup.selectNext,
+    setHighlight: popup.setHighlight,
+    close: popup.close,
     getSelectedPrompt,
   };
 }

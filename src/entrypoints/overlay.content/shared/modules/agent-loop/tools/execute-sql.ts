@@ -5,9 +5,11 @@
  * - SELECT: direct execution, max 1000 rows
  * - DML (INSERT/UPDATE/DELETE): paywall check + optional confirmation
  * - DDL (DROP/ALTER/CREATE/PRAGMA...): blocked
+ *
+ * Communicates via browser.runtime.sendMessage (EXECUTE_SQL) so it works
+ * correctly from content script context.
  */
 
-import { runQuery, runCommand } from '@/shared/db';
 import { useLicenseStore } from '@/shared/lib/license-store';
 import { useAgentLoopStore } from '../agent-loop-store';
 
@@ -22,6 +24,24 @@ const MAX_RESULT_ROWS = 1000;
 
 export interface ExecuteSqlParams {
   query: string;
+}
+
+/**
+ * Execute SQL via the background service worker's EXECUTE_SQL handler.
+ * This works from content script context (unlike direct runQuery which
+ * requires the offscreen/worker communication that only background has).
+ */
+async function executeSqlViaBackground(sql: string): Promise<any> {
+  const response = await browser.runtime.sendMessage({
+    type: 'EXECUTE_SQL',
+    payload: { sql },
+  });
+
+  if (!response.success) {
+    throw new Error(response.error || 'SQL execution failed');
+  }
+
+  return response.data;
 }
 
 /**
@@ -61,24 +81,25 @@ export async function executeSql(params: ExecuteSqlParams): Promise<string> {
 
   // 4. Execute
   try {
+    const result = await executeSqlViaBackground(query);
+
     if (isSelect) {
-      const rows = await runQuery(query);
-      if (!rows || rows.length === 0) {
+      const rows = Array.isArray(result) ? result : [];
+      if (rows.length === 0) {
         return 'Result: 0 rows returned.';
       }
       const truncated = rows.length > MAX_RESULT_ROWS;
       const displayRows = truncated ? rows.slice(0, MAX_RESULT_ROWS) : rows;
-      let result = `Result: ${rows.length} row(s)`;
+      let output = `Result: ${rows.length} row(s)`;
       if (truncated) {
-        result += ` (showing first ${MAX_RESULT_ROWS}, ${rows.length - MAX_RESULT_ROWS} omitted)`;
+        output += ` (showing first ${MAX_RESULT_ROWS}, ${rows.length - MAX_RESULT_ROWS} omitted)`;
       }
-      result += '\n' + JSON.stringify(displayRows, null, 2);
-      return result;
+      output += '\n' + JSON.stringify(displayRows, null, 2);
+      return output;
     } else {
-      await runCommand(query);
-      // Get affected row count
+      // For write operations, query changes()
       try {
-        const changesResult = await runQuery('SELECT changes() as affected_rows');
+        const changesResult = await executeSqlViaBackground('SELECT changes() as affected_rows');
         const affectedRows = changesResult?.[0]?.affected_rows ?? 'unknown';
         return `Success: ${affectedRows} row(s) affected.`;
       } catch {
@@ -95,8 +116,6 @@ export async function executeSql(params: ExecuteSqlParams): Promise<string> {
  * Sets store state → UI renders confirmation dialog → resolves with user choice.
  */
 async function requestUserConfirmation(sql: string): Promise<boolean> {
-  // Check if confirmation is disabled in settings
-  // Import dynamically to avoid circular deps at module level
   const { useSettingsStore } = await import('@/shared/lib/settings-store');
   const settings = useSettingsStore.getState();
   const agentLoopSettings = (settings.enhancedFeatures.gemini as any).agentLoop;

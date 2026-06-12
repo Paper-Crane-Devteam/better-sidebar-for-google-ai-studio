@@ -18,6 +18,8 @@ export type AgentLoopStatus =
 
 export interface ParsedToolCall {
   name: string;
+  /** Human-readable description of what this tool call does (shown to user) */
+  description?: string;
   params: Record<string, string>;
 }
 

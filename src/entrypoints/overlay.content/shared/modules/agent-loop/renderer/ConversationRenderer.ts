@@ -302,9 +302,9 @@ export class ConversationRenderer {
       }
 
       const fullText = blockParagraphs.map((el) => el.textContent || '').join('\n');
-      const { toolName, query } = this.extractToolInfo(fullText);
+      const { toolName, description, query } = this.extractToolInfo(fullText);
 
-      this.mountToolCallShadow(blockParagraphs, toolName, query);
+      this.mountToolCallShadow(blockParagraphs, toolName, description, query);
       i += blockParagraphs.length;
     }
   }
@@ -312,6 +312,7 @@ export class ConversationRenderer {
   private mountToolCallShadow(
     paragraphs: HTMLElement[],
     toolName: string,
+    description: string,
     query: string,
   ): void {
     if (paragraphs.length === 0) return;
@@ -338,6 +339,10 @@ export class ConversationRenderer {
     shadow.appendChild(root);
     this.syncDarkMode(root);
 
+    const descHtml = description
+      ? `<span class="ml-2 max-w-[300px] truncate text-muted-foreground text-[11px]">${escapeHtml(description)}</span>`
+      : '';
+
     const previewText = query
       ? escapeHtml(query.length > 80 ? query.slice(0, 80) + '…' : query)
       : '';
@@ -347,8 +352,12 @@ export class ConversationRenderer {
         <div class="bs-tool-header flex items-center gap-2 px-3 py-1.5 text-xs cursor-pointer select-none hover:bg-emerald-500/10 transition-colors">
           <span class="flex h-5 w-5 items-center justify-center rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px]">⚙</span>
           <span class="font-mono font-medium text-emerald-700 dark:text-emerald-300 text-xs">${escapeHtml(toolName)}</span>
-          ${previewText ? `<span class="ml-2 max-w-[240px] truncate text-muted-foreground font-mono text-[11px]">${previewText}</span>` : ''}
-          <span class="bs-toggle-icon ml-auto text-muted-foreground text-[10px]">▶</span>
+          ${descHtml}
+          ${!description && previewText ? `<span class="ml-2 max-w-[240px] truncate text-muted-foreground font-mono text-[11px]">${previewText}</span>` : ''}
+          <button class="bs-run-btn ml-auto inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/25 transition-colors cursor-pointer border border-emerald-500/30" title="执行此工具调用">
+            ▶ 执行
+          </button>
+          <span class="bs-toggle-icon text-muted-foreground text-[10px] ml-1">▶</span>
         </div>
         <div class="bs-tool-body hidden border-t border-emerald-500/15 px-3 py-2 text-xs text-muted-foreground font-mono whitespace-pre-wrap"></div>
       </div>
@@ -357,8 +366,11 @@ export class ConversationRenderer {
     const header = root.querySelector('.bs-tool-header')!;
     const body = root.querySelector('.bs-tool-body')! as HTMLElement;
     const toggleIcon = root.querySelector('.bs-toggle-icon')!;
+    const runBtn = root.querySelector('.bs-run-btn')! as HTMLButtonElement;
 
-    header.addEventListener('click', () => {
+    // Toggle expand/collapse (click on header but not on the run button)
+    header.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('.bs-run-btn')) return;
       const isOpen = !body.classList.contains('hidden');
       if (isOpen) {
         body.classList.add('hidden');
@@ -371,37 +383,145 @@ export class ConversationRenderer {
         body.textContent = text;
       }
     });
+
+    // Execute button — run the tool and fill result into the input editor
+    runBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      runBtn.disabled = true;
+      runBtn.textContent = '⏳ 执行中...';
+
+      try {
+        // Re-parse the full tool call from original paragraphs
+        const fullText = paragraphs.map((p) => p.textContent || '').join('\n');
+        const parsed = this.parseToolCallFromText(fullText);
+
+        if (!parsed) {
+          runBtn.textContent = '❌ 解析失败';
+          return;
+        }
+
+        const { executeToolCall } = await import('../tools/tool-registry');
+        const result = await executeToolCall(parsed);
+
+        // Fill result into input editor
+        this.fillResultToEditor(parsed.name, result);
+
+        runBtn.textContent = '✅ 已完成';
+        runBtn.classList.remove('bg-emerald-500/15', 'text-emerald-700', 'dark:text-emerald-300', 'hover:bg-emerald-500/25', 'border-emerald-500/30');
+        runBtn.classList.add('bg-green-500/15', 'text-green-700', 'border-green-500/30');
+      } catch (err) {
+        console.error('[ConversationRenderer] Execute error:', err);
+        runBtn.textContent = '❌ 失败';
+      }
+    });
+  }
+
+  /** Parse a full tool call block from raw text into a ParsedToolCall */
+  private parseToolCallFromText(text: string): import('../types').ParsedToolCall | null {
+    // Extract content inside <bs_agent_tool>...</bs_agent_tool>
+    const tagRegex = new RegExp(`<${TOOL_CALL_TAG}>([\\s\\S]*?)<\\/${TOOL_CALL_TAG}>`);
+    const tagContent = text.match(tagRegex);
+    const content = tagContent ? tagContent[1].trim() : text.trim();
+
+    // Strategy 1: JSON
+    if (content.startsWith('{')) {
+      try {
+        const obj = JSON.parse(content);
+        if (typeof obj.name !== 'string') return null;
+        return {
+          name: obj.name.trim(),
+          description: typeof obj.description === 'string' ? obj.description.trim() : undefined,
+          params: typeof obj.params === 'object' && obj.params !== null
+            ? Object.fromEntries(Object.entries(obj.params).map(([k, v]) => [k, String(v)]))
+            : {},
+        };
+      } catch {
+        // fall through
+      }
+    }
+
+    // Strategy 2: Unstructured
+    const knownTools = ['execute_sql', 'sync_conversation_messages', 'export', 'complete_task'];
+    for (const tool of knownTools) {
+      if (content.startsWith(tool)) {
+        const rest = content.slice(tool.length).trim();
+        if (tool === 'execute_sql') {
+          const sqlMatch = rest.match(/(SELECT|INSERT|UPDATE|DELETE)\b[\s\S]*/i);
+          if (sqlMatch) {
+            const description = rest.slice(0, sqlMatch.index).trim() || undefined;
+            return { name: tool, description, params: { query: sqlMatch[0].trim() } };
+          }
+        }
+        if (tool === 'complete_task') {
+          return { name: tool, description: undefined, params: { summary: rest } };
+        }
+        return { name: tool, description: undefined, params: {} };
+      }
+    }
+
+    return null;
+  }
+
+  /** Fill tool execution result into the platform's input editor */
+  private fillResultToEditor(toolName: string, result: string): void {
+    const wrappedResult = `<bs_agent_result>\n### ${toolName}\n${result}\n</bs_agent_result>`;
+
+    // Find the editor and insert text
+    const editor = document.querySelector<HTMLElement>(
+      'div.ql-editor[contenteditable="true"], .input-area [contenteditable="true"]',
+    );
+
+    if (editor) {
+      editor.focus();
+      // Clear and set content
+      const p = document.createElement('p');
+      p.textContent = wrappedResult;
+      editor.innerHTML = '';
+      editor.appendChild(p);
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
+    }
   }
 
   // ─── Helpers ───────────────────────────────────────────────────────
 
-  private extractToolInfo(text: string): { toolName: string; query: string } {
-    // Structured: <name>...</name> <params><query>...</query></params>
-    const nameMatch = text.match(/<name>([\s\S]*?)<\/name>/);
-    const queryMatch = text.match(/<query>([\s\S]*?)<\/query>/);
-
-    if (nameMatch) {
-      return {
-        toolName: nameMatch[1].trim(),
-        query: queryMatch?.[1]?.trim() || '',
-      };
-    }
-
-    // Unstructured: <bs_agent_tool>execute_sqlSELECT...;</bs_agent_tool>
+  private extractToolInfo(text: string): { toolName: string; description: string; query: string } {
+    // Extract content inside <bs_agent_tool>...</bs_agent_tool>
     const tagRegex = new RegExp(`<${TOOL_CALL_TAG}>([\\s\\S]*?)<\\/${TOOL_CALL_TAG}>`);
     const tagContent = text.match(tagRegex);
-    if (tagContent) {
-      const content = tagContent[1].trim();
-      const knownTools = ['execute_sql', 'sync_conversation_messages', 'export'];
-      for (const tool of knownTools) {
-        if (content.startsWith(tool)) {
-          return { toolName: tool, query: content.slice(tool.length).trim() };
-        }
+    const content = tagContent ? tagContent[1].trim() : text.trim();
+
+    // Strategy 1: JSON parse
+    if (content.startsWith('{')) {
+      try {
+        const obj = JSON.parse(content);
+        return {
+          toolName: obj.name || 'unknown',
+          description: obj.description || '',
+          query: obj.params?.query || obj.params?.summary || '',
+        };
+      } catch {
+        // fall through
       }
-      return { toolName: 'unknown', query: content };
     }
 
-    return { toolName: 'tool_call', query: '' };
+    // Strategy 2: Unstructured (Gemini stripped formatting)
+    const knownTools = ['execute_sql', 'sync_conversation_messages', 'export', 'complete_task'];
+    for (const tool of knownTools) {
+      if (content.startsWith(tool)) {
+        const rest = content.slice(tool.length).trim();
+        const sqlMatch = rest.match(/(SELECT|INSERT|UPDATE|DELETE)\b[\s\S]*/i);
+        if (sqlMatch) {
+          return {
+            toolName: tool,
+            description: rest.slice(0, sqlMatch.index).trim(),
+            query: sqlMatch[0].trim(),
+          };
+        }
+        return { toolName: tool, description: '', query: rest };
+      }
+    }
+
+    return { toolName: 'tool_call', description: '', query: '' };
   }
 
   /** Sync Gemini dark mode to a shadow root container */
