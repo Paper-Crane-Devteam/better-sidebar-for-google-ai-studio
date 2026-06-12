@@ -227,7 +227,7 @@ export async function syncConversations(options: SyncConversationsOptions = {}) 
   }
 
   // Stop scanner
-  apiScanner.stop();
+  // apiScanner.stop();
   // apiScanner.clear();
 
   return totalSynced;
