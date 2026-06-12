@@ -7,19 +7,28 @@
  * 3. Execute each tool call
  * 4. Format results and auto-send back to AI
  * 5. Repeat until no tool calls or max rounds reached
+ *
+ * Includes circuit breaker protection against:
+ * - Repeated identical tool calls (loop detection)
+ * - Consecutive failures (progressive escalation)
+ * - No-progress rounds (AI not using tools)
  */
 
 import type { AgentPlatformAdapter } from '../adapters/types';
 import { useAgentLoopStore } from '../agent-loop-store';
 import { parseToolCalls } from './ToolCallParser';
 import { executeToolCall } from '../tools/tool-registry';
+import { CircuitBreaker } from './circuit-breaker';
+import { agentEventBus } from '../event-bus';
 
 export class AgentLoopEngine {
   private adapter: AgentPlatformAdapter;
   private abortController: AbortController | null = null;
+  private circuitBreaker: CircuitBreaker;
 
   constructor(adapter: AgentPlatformAdapter) {
     this.adapter = adapter;
+    this.circuitBreaker = new CircuitBreaker();
   }
 
   /**
@@ -28,10 +37,12 @@ export class AgentLoopEngine {
    */
   async start(maxRounds: number = 20): Promise<void> {
     this.abortController = new AbortController();
+    this.circuitBreaker.reset();
     const store = useAgentLoopStore.getState();
     store.start(maxRounds);
 
     console.log('[AgentLoop] Engine started, max rounds:', maxRounds);
+    agentEventBus.emit('loop:started', { maxRounds, timestamp: Date.now() });
 
     try {
       await this.runLoop();
@@ -40,6 +51,10 @@ export class AgentLoopEngine {
       if (msg !== 'Agent loop aborted') {
         console.error('[AgentLoop] Engine error:', e);
         useAgentLoopStore.getState().setError(msg);
+        agentEventBus.emit('loop:ended', {
+          reason: 'error',
+          totalRounds: useAgentLoopStore.getState().currentRound,
+        });
       }
     }
   }
@@ -49,6 +64,10 @@ export class AgentLoopEngine {
     console.log('[AgentLoop] Engine stopped by user');
     this.abortController?.abort();
     useAgentLoopStore.getState().stop();
+    agentEventBus.emit('loop:ended', {
+      reason: 'user_stop',
+      totalRounds: useAgentLoopStore.getState().currentRound,
+    });
   }
 
   /** Resume after pause (retry) */
@@ -77,14 +96,18 @@ export class AgentLoopEngine {
 
       // 1. Wait for AI response
       getStore().setStatus('waiting_ai');
+      agentEventBus.emit('ai:response-waiting', undefined);
       console.log(`[AgentLoop] Round ${getStore().currentRound}: Waiting for AI response...`);
+      agentEventBus.emit('loop:round-started', { round: getStore().currentRound });
 
       let responseElement: HTMLElement;
       try {
         responseElement = await this.adapter.observeAIResponseComplete(60000);
       } catch (e) {
         console.warn('[AgentLoop] AI response timeout');
+        agentEventBus.emit('ai:response-timeout', { timeoutMs: 60000 });
         getStore().pause('AI response timed out (60s). Click "Retry" to try again.');
+        agentEventBus.emit('loop:paused', { reason: 'AI response timeout' });
         return;
       }
 
@@ -98,43 +121,152 @@ export class AgentLoopEngine {
       const { toolCalls, errors } = parseToolCalls(responseText);
       console.log(`[AgentLoop] Found ${toolCalls.length} tool calls, ${errors.length} errors`);
 
-      // 3. No tool calls → loop complete
+      agentEventBus.emit('ai:response-received', {
+        textLength: responseText.length,
+        toolCallCount: toolCalls.length,
+      });
+
+      // 3. No tool calls → check circuit breaker for no-progress
       if (toolCalls.length === 0) {
+        const noProgressResult = this.circuitBreaker.recordNoToolResponse();
+
+        if (noProgressResult && noProgressResult.action === 'stop') {
+          console.log('[AgentLoop] No-progress threshold reached, stopping');
+          getStore().pause(noProgressResult.message);
+          agentEventBus.emit('loop:ended', {
+            reason: 'circuit_breaker',
+            totalRounds: getStore().currentRound,
+          });
+          return;
+        }
+
+        if (noProgressResult && noProgressResult.action === 'nudge') {
+          // AI didn't use tools — send a nudge and let it try again
+          console.log('[AgentLoop] No tool calls, nudging AI');
+          this.insertResultCapsule(noProgressResult.message);
+          await this.waitForUserSend();
+          this.checkAbort();
+          getStore().nextRound();
+          continue;
+        }
+
+        // First time no tools — task is likely complete
         console.log('[AgentLoop] No tool calls found, loop complete');
         getStore().stop();
+        agentEventBus.emit('loop:ended', {
+          reason: 'complete',
+          totalRounds: getStore().currentRound,
+        });
         return;
       }
+
+      // Reset no-progress counter since we have tool calls
+      this.circuitBreaker.resetNoProgress();
 
       // 4. Execute tool calls
       getStore().setStatus('executing');
       const results: string[] = [];
+      let circuitBroken = false;
 
       for (const toolCall of toolCalls) {
         this.checkAbort();
+
+        // ── Circuit breaker: loop detection ──────────────────────────────
+        const loopCheck = this.circuitBreaker.checkRepeatedToolCall(toolCall.name, toolCall.params);
+
+        if (loopCheck.action === 'stop') {
+          console.warn('[AgentLoop] Circuit breaker: loop hard stop');
+          results.push(`### ${toolCall.name}\n${loopCheck.message}`);
+          circuitBroken = true;
+          break;
+        }
+
+        if (loopCheck.action === 'warn') {
+          // Inject warning but still execute this time
+          results.push(`### ⚠️ Loop Warning\n${loopCheck.message}`);
+        }
+
+        // ── Execute the tool ─────────────────────────────────────────────
         getStore().setCurrentTool(toolCall.name);
         console.log(`[AgentLoop] Executing: ${toolCall.name}`, toolCall.params);
+        agentEventBus.emit('tool:executing', { toolName: toolCall.name, params: toolCall.params });
 
+        const startTime = Date.now();
         const result = await executeToolCall(toolCall);
+        const durationMs = Date.now() - startTime;
+
+        const success = !result.startsWith('ERROR:') && !result.startsWith('CANCELLED:');
+
+        agentEventBus.emit('tool:executed', {
+          toolName: toolCall.name,
+          success,
+          result: result.substring(0, 200), // Truncate for event
+          durationMs,
+        });
+
+        // ── Circuit breaker: failure tracking ────────────────────────────
+        const failureResult = this.circuitBreaker.recordToolResult(
+          toolCall.name,
+          success,
+          success ? undefined : result,
+        );
+
+        let finalResult = result;
+
+        if (!success && failureResult) {
+          // Apply progressive error guidance
+          finalResult = this.circuitBreaker.getProgressiveErrorGuidance(result);
+
+          if (failureResult.action === 'stop') {
+            console.warn('[AgentLoop] Circuit breaker: failure hard stop');
+            results.push(`### ${toolCall.name}\n${finalResult}\n\n${failureResult.message}`);
+            circuitBroken = true;
+
+            agentEventBus.emit('tool:error', { toolName: toolCall.name, error: failureResult.message });
+            break;
+          }
+
+          if (failureResult.action === 'warn') {
+            // Append warning to result
+            finalResult += `\n\n${failureResult.message}`;
+          }
+        }
 
         getStore().addResult({
           toolName: toolCall.name,
-          success: !result.startsWith('ERROR:') && !result.startsWith('CANCELLED:'),
-          result,
+          success,
+          result: finalResult,
           timestamp: Date.now(),
         });
 
-        results.push(`### ${toolCall.name}\n${result}`);
+        results.push(`### ${toolCall.name}\n${finalResult}`);
 
         // Check if paywall was hit
         if (result.includes('PAYWALL')) {
           console.log('[AgentLoop] Paywall hit, stopping');
           getStore().stop();
+          agentEventBus.emit('loop:ended', { reason: 'error', totalRounds: getStore().currentRound });
           return;
         }
       }
 
       getStore().setCurrentTool(null);
       this.checkAbort();
+
+      // If circuit breaker triggered a hard stop, pause the loop
+      if (circuitBroken) {
+        getStore().pause('Circuit breaker triggered. Please review the issue above.');
+        agentEventBus.emit('loop:ended', {
+          reason: 'circuit_breaker',
+          totalRounds: getStore().currentRound,
+        });
+        return;
+      }
+
+      agentEventBus.emit('loop:round-completed', {
+        round: getStore().currentRound,
+        toolCallCount: toolCalls.length,
+      });
 
       // 5. Format results and insert into editor as a capsule (user decides to send)
       getStore().setStatus('sending');
@@ -145,6 +277,7 @@ export class AgentLoopEngine {
 
       // 6. Pause — user must press Enter/send to continue the loop
       getStore().pause('Tool results ready. Press Enter to send and continue.');
+      agentEventBus.emit('loop:paused', { reason: 'Waiting for user to send results' });
 
       // 7. Wait for user to send (we listen for the message to actually be sent)
       await this.waitForUserSend();
@@ -153,12 +286,17 @@ export class AgentLoopEngine {
 
       // 8. Advance to next round
       getStore().resume();
+      agentEventBus.emit('loop:resumed', undefined);
       getStore().nextRound();
 
       // 9. Check max rounds
       if (getStore().currentRound > getStore().maxRounds) {
         console.log('[AgentLoop] Max rounds reached');
         getStore().pause(`Reached maximum rounds (${getStore().maxRounds}). Continue?`);
+        agentEventBus.emit('loop:ended', {
+          reason: 'max_rounds',
+          totalRounds: getStore().maxRounds,
+        });
         return;
       }
     }

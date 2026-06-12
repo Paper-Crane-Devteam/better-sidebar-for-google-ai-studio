@@ -17,9 +17,15 @@ export type {
 // Store
 export { useAgentLoopStore } from './agent-loop-store';
 
+// Event Bus
+export { agentEventBus } from './event-bus';
+export type { AgentEventMap } from './event-bus';
+
 // Engine
 export { AgentLoopEngine } from './engine/AgentLoopEngine';
 export { parseToolCalls } from './engine/ToolCallParser';
+export { CircuitBreaker } from './engine/circuit-breaker';
+export type { CircuitBreakerState, LoopCheckResult, FailureCheckResult, NoProgressResult } from './engine/circuit-breaker';
 
 // Tools
 export { executeToolCall } from './tools/tool-registry';
