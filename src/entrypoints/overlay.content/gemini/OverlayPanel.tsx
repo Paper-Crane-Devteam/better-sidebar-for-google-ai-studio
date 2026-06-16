@@ -206,9 +206,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     return <OverlayToggle onToggle={() => setIsFeatureEnabled(true)} />;
   }
 
-  if (showSqlInterface) {
-    return <SqlExecutor onClose={() => setShowSqlInterface(false)} />;
-  }
+
 
   return (
     <div
@@ -504,6 +502,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           onSkip={guidedTour.skipTour}
         />
       )}
+      {showSqlInterface && <SqlExecutor onClose={() => setShowSqlInterface(false)} />}
     </div>
   );
 };

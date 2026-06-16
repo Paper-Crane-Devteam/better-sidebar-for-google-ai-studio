@@ -166,9 +166,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     return <OverlayToggle onToggle={() => setOverlayOpen(true)} />;
   }
 
-  if (showSqlInterface) {
-    return <SqlExecutor onClose={() => setShowSqlInterface(false)} />;
-  }
+
 
   return (
     <div
@@ -353,6 +351,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       <ProfilePickerDialog />
       <RatingPromptDialog />
       <GlobalToast />
+      {showSqlInterface && <SqlExecutor onClose={() => setShowSqlInterface(false)} />}
     </div>
   );
 };

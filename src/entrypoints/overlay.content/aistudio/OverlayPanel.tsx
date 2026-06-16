@@ -214,9 +214,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     return <OverlayToggle onToggle={() => setIsUIVisible(true)} />;
   }
 
-  if (showSqlInterface) {
-    return <SqlExecutor onClose={() => setShowSqlInterface(false)} />;
-  }
+
 
   const handleNavigation = (url: string) => {
     const token = Math.random().toString(36).substring(7);
@@ -417,6 +415,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       <ProfilePickerDialog />
       <GlobalToast />
       <HotkeyCheatsheet />
+      {showSqlInterface && <SqlExecutor onClose={() => setShowSqlInterface(false)} />}
     </div>
   );
 };
