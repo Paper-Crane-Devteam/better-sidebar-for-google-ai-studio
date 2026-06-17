@@ -5,6 +5,7 @@
 
 import React from 'react';
 import type { BuiltInPrompt } from './types';
+import { PopupFooterHints } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
 
 interface AgentCommandPopupProps {
   matches: BuiltInPrompt[];
@@ -73,11 +74,7 @@ export const AgentCommandPopup: React.FC<AgentCommandPopupProps> = ({
       </div>
 
       {/* Footer hint */}
-      <div className="border-t border-border px-3 py-1.5">
-        <span className="text-[10px] text-muted-foreground">
-          ↑↓ navigate · Enter select · Esc close
-        </span>
-      </div>
+      <PopupFooterHints />
     </div>
   );
 };

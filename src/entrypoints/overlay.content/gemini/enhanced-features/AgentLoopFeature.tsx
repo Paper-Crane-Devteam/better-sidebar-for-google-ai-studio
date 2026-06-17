@@ -11,6 +11,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
+import { useModalStore } from '@/shared/lib/modal';
 import {
   AgentCommandPopup,
   AgentLoopStatusBar,
@@ -34,7 +35,7 @@ import {
   expandAllCapsules,
   CAPSULE_CLASS,
 } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
-import type { TriggerPopupItem } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
+import type { TriggerPopupItem, CapsuleClickInfo } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
 
 export const AgentLoopFeature: React.FC = () => {
   const slashCommandEnabled = useSettingsStore(
@@ -65,6 +66,25 @@ export const AgentLoopFeature: React.FC = () => {
 
   const loopStatus = useAgentLoopStore((s) => s.status);
 
+  const handleCapsuleClick = useCallback((info: CapsuleClickInfo) => {
+    const displayContent = info.content.length > 2000
+      ? info.content.slice(0, 2000) + '…'
+      : info.content;
+
+    useModalStore.getState().open({
+      type: 'info',
+      title: 'Prompt Content',
+      content: (
+        <pre className="text-xs whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[400px] overflow-y-auto">
+          {displayContent}
+        </pre>
+      ),
+      confirmText: 'Close',
+      onConfirm: () => useModalStore.getState().close(),
+      onCancel: () => {},
+    });
+  }, []);
+
   const triggerStateRef = useRef(triggerState);
   triggerStateRef.current = triggerState;
   const getSelectedPromptRef = useRef(getSelectedPrompt);
@@ -78,6 +98,39 @@ export const AgentLoopFeature: React.FC = () => {
     renderer.start();
     rendererRef.current = renderer;
     return () => renderer.stop();
+  }, []);
+
+  // ─── Result capsule click handler (shows content in modal) ──────────
+
+  useEffect(() => {
+    const handleResultCapsuleClick = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest('.bs-agent-result-capsule');
+      if (!target) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const content = target.getAttribute('data-result-content') || '';
+      const displayContent = content.length > 3000
+        ? content.slice(0, 3000) + '…'
+        : content;
+
+      useModalStore.getState().open({
+        type: 'info',
+        title: 'Tool Results',
+        content: (
+          <pre className="text-xs whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[400px] overflow-y-auto">
+            {displayContent}
+          </pre>
+        ),
+        confirmText: 'Close',
+        onConfirm: () => useModalStore.getState().close(),
+        onCancel: () => {},
+      });
+    };
+
+    document.addEventListener('click', handleResultCapsuleClick);
+    return () => document.removeEventListener('click', handleResultCapsuleClick);
   }, []);
 
   // ─── Start agent loop engine ────────────────────────────────────────
@@ -137,6 +190,7 @@ export const AgentLoopFeature: React.FC = () => {
     selectNext,
     close,
     onConfirmSelection: () => handleConfirmSelectionRef.current(),
+    onCapsuleClick: handleCapsuleClick,
     onBeforeSend: (editor) => {
       // Extract prompt info from capsule BEFORE expansion (only agent capsules with data-trigger=">")
       const capsule = editor.querySelector(`.${CAPSULE_CLASS}[data-trigger=">"]`);

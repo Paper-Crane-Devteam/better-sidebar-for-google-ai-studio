@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useModalStore } from '@/shared/lib/modal';
@@ -17,7 +17,7 @@ import {
   useEditorIntegration,
   insertCapsule,
 } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
-import type { TriggerPopupItem } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
+import type { TriggerPopupItem, CapsuleClickInfo } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
 
 function getEditor(): HTMLElement | null {
   return document.querySelector('rich-textarea .ql-editor[contenteditable="true"]');
@@ -43,6 +43,25 @@ export const SlashCommandFeature: React.FC = () => {
   stateRef.current = state;
   const getSelectedPromptRef = useRef(getSelectedPrompt);
   getSelectedPromptRef.current = getSelectedPrompt;
+
+  const handleCapsuleClick = useCallback((info: CapsuleClickInfo) => {
+    const displayContent = info.content.length > 2000
+      ? info.content.slice(0, 2000) + '…'
+      : info.content;
+
+    useModalStore.getState().open({
+      type: 'info',
+      title: t('slashCommand.promptInserted'),
+      content: (
+        <pre className="text-xs whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[400px] overflow-y-auto">
+          {displayContent}
+        </pre>
+      ),
+      confirmText: t('common.close'),
+      onConfirm: () => useModalStore.getState().close(),
+      onCancel: () => {},
+    });
+  }, [t]);
 
   function doInsertPrompt(prompt: Prompt) {
     const { resolvedContent, variables } = resolvePromptContent(prompt);
@@ -112,6 +131,7 @@ export const SlashCommandFeature: React.FC = () => {
       const prompt = getSelectedPromptRef.current();
       if (prompt) doInsertPromptRef.current(prompt);
     },
+    onCapsuleClick: handleCapsuleClick,
   });
 
   function handleSelect(index: number) {
@@ -121,16 +141,20 @@ export const SlashCommandFeature: React.FC = () => {
     doInsertPrompt(match.prompt);
   }
 
-  if (!slashCommandEnabled || !state.isOpen) return null;
+  if (!slashCommandEnabled) return null;
 
   return (
-    <SlashCommandPopup
-      matches={state.matches}
-      selectedIndex={state.selectedIndex}
-      onHighlight={setHighlight}
-      onConfirm={handleSelect}
-      position={popupPosition}
-      query={state.query}
-    />
+    <>
+      {state.isOpen && (
+        <SlashCommandPopup
+          matches={state.matches}
+          selectedIndex={state.selectedIndex}
+          onHighlight={setHighlight}
+          onConfirm={handleSelect}
+          position={popupPosition}
+          query={state.query}
+        />
+      )}
+    </>
   );
 };

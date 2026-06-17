@@ -21,6 +21,10 @@ export const RENDERER_CSS = `
  * Must be self-contained since the editor is outside our shadow roots.
  */
 const EDITOR_CAPSULE_STYLES = `
+.bs-prompt-capsule {
+  cursor: pointer;
+}
+
 .bs-agent-capsule {
   display: inline-block;
   padding: 2px 10px;
@@ -46,7 +50,7 @@ const EDITOR_CAPSULE_STYLES = `
   font-weight: 500;
   font-size: 13px;
   user-select: none;
-  pointer-events: none;
+  cursor: pointer;
   vertical-align: baseline;
   margin-right: 4px;
   border: 1px solid rgba(52, 168, 83, 0.25);

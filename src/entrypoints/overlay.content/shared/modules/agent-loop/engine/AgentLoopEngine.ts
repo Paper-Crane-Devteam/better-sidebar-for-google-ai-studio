@@ -177,7 +177,7 @@ export class AgentLoopEngine {
 
         if (loopCheck.action === 'stop') {
           console.warn('[AgentLoop] Circuit breaker: loop hard stop');
-          results.push(`### ${toolCall.name}\n${loopCheck.message}`);
+          results.push(`### ${toolCall.description || toolCall.name}\n${loopCheck.message}`);
           circuitBroken = true;
           break;
         }
@@ -220,7 +220,7 @@ export class AgentLoopEngine {
 
           if (failureResult.action === 'stop') {
             console.warn('[AgentLoop] Circuit breaker: failure hard stop');
-            results.push(`### ${toolCall.name}\n${finalResult}\n\n${failureResult.message}`);
+            results.push(`### ${toolCall.description || toolCall.name}\n${finalResult}\n\n${failureResult.message}`);
             circuitBroken = true;
 
             agentEventBus.emit('tool:error', { toolName: toolCall.name, error: failureResult.message });
@@ -240,7 +240,7 @@ export class AgentLoopEngine {
           timestamp: Date.now(),
         });
 
-        results.push(`### ${toolCall.name}\n${finalResult}`);
+        results.push(`### ${toolCall.description || toolCall.name}\n${finalResult}`);
 
         // Check if task was explicitly completed
         if (result.startsWith(COMPLETE_TASK_SIGNAL)) {
@@ -337,6 +337,12 @@ export class AgentLoopEngine {
     // Wrap results in our result XML tag
     const wrappedResult = `<bs_agent_result>\n${resultText}\n</bs_agent_result>`;
 
+    // Extract tool names from results for display
+    const toolLabels = this.extractToolLabelsFromResults(resultText);
+    const displayLabel = toolLabels.length > 0
+      ? `📋 ${toolLabels.join(', ')}`
+      : '📋 Tool Results';
+
     // Clear editor and insert capsule
     editor.innerHTML = '';
 
@@ -345,7 +351,7 @@ export class AgentLoopEngine {
     capsule.className = 'bs-agent-result-capsule';
     capsule.setAttribute('data-result-content', wrappedResult);
     capsule.contentEditable = 'false';
-    capsule.textContent = '📋 Tool Results (press Enter to send)';
+    capsule.textContent = displayLabel;
 
     p.appendChild(capsule);
     // Add a space after for cursor placement
@@ -355,6 +361,22 @@ export class AgentLoopEngine {
     // Trigger input event
     editor.dispatchEvent(new Event('input', { bubbles: true }));
     editor.focus();
+  }
+
+  /** Extract tool labels from formatted results text (### description_or_name\n...) */
+  private extractToolLabelsFromResults(resultText: string): string[] {
+    const matches = resultText.matchAll(/^### (.+)$/gm);
+    const countMap = new Map<string, number>();
+    for (const m of matches) {
+      const label = m[1].trim();
+      if (!label || label.startsWith('⚠️')) continue;
+      countMap.set(label, (countMap.get(label) || 0) + 1);
+    }
+    const labels: string[] = [];
+    for (const [label, count] of countMap) {
+      labels.push(count > 1 ? `${label} ×${count}` : label);
+    }
+    return labels;
   }
 
   /**

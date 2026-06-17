@@ -23,10 +23,12 @@ export {
   CAPSULE_ATTR_ID,
 } from './useEditorIntegration';
 export type { PopupPosition } from './useEditorIntegration';
+export { PopupFooterHints } from './PopupFooterHints';
 export type {
   TriggerPopupItem,
   TriggerPopupMatch,
   TriggerPopupState,
   TriggerPopupConfig,
   EditorIntegrationConfig,
+  CapsuleClickInfo,
 } from './types';

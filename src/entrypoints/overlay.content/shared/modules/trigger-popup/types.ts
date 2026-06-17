@@ -54,6 +54,20 @@ export interface TriggerPopupConfig {
 }
 
 /**
+ * Info passed to onCapsuleClick when user clicks a capsule in the editor.
+ */
+export interface CapsuleClickInfo {
+  /** The capsule DOM element that was clicked */
+  element: HTMLElement;
+  /** The stored prompt content (from data-prompt-content) */
+  content: string;
+  /** The prompt ID (from data-prompt-id) */
+  promptId: string;
+  /** Bounding rect for positioning a popover */
+  rect: DOMRect;
+}
+
+/**
  * Configuration for useEditorIntegration — connects the popup to the DOM editor.
  */
 export interface EditorIntegrationConfig {
@@ -82,4 +96,6 @@ export interface EditorIntegrationConfig {
   onBeforeSend?: (editor: HTMLElement) => boolean;
   /** CSS class for capsules created by this trigger (default: 'bs-prompt-capsule') */
   capsuleClass?: string;
+  /** Called when user clicks on a capsule belonging to this trigger */
+  onCapsuleClick?: (info: CapsuleClickInfo) => void;
 }

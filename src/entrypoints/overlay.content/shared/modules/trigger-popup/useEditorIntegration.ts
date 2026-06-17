@@ -15,7 +15,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import type { EditorIntegrationConfig, TriggerPopupItem } from './types';
+import type { EditorIntegrationConfig, TriggerPopupItem, CapsuleClickInfo } from './types';
 
 const CAPSULE_CLASS = 'bs-prompt-capsule';
 const CAPSULE_ATTR_CONTENT = 'data-prompt-content';
@@ -56,8 +56,13 @@ export function useEditorIntegration(config: EditorIntegrationConfig) {
       const editor = configRef.current.getEditor();
       if (!editor) return;
 
-      const text = editor.textContent || '';
-      const cursorPos = getCursorPosition(editor);
+      const triggerChar = configRef.current.triggerChar;
+      const capsuleClass = configRef.current.capsuleClass || CAPSULE_CLASS;
+
+      // Get text and cursor position, but exclude text inside capsules belonging
+      // to this trigger — prevents the trigger char inside a capsule from re-opening the popup.
+      const { text, cursorPos } = getTextExcludingCapsules(editor, capsuleClass, triggerChar);
+
       configRef.current.onInput(text, cursorPos);
 
       // Update popup position
@@ -118,6 +123,29 @@ export function useEditorIntegration(config: EditorIntegrationConfig) {
         const editor = configRef.current.getEditor();
         if (!editor) return;
 
+        // First: expand any result capsules (bs-agent-result-capsule)
+        const resultCapsules = editor.querySelectorAll('.bs-agent-result-capsule');
+        if (resultCapsules.length > 0) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          resultCapsules.forEach((capsule) => {
+            const content = capsule.getAttribute('data-result-content') || '';
+            const textNode = document.createTextNode(content);
+            capsule.parentNode?.replaceChild(textNode, capsule);
+          });
+          editor.dispatchEvent(new Event('input', { bubbles: true }));
+
+          // After DOM settles, programmatically click the send button
+          setTimeout(() => {
+            const sendBtn = document.querySelector<HTMLButtonElement>(
+              'button.send-button, button[aria-label="Send message"], button[data-testid="send-button"]',
+            );
+            sendBtn?.click();
+          }, 50);
+          return;
+        }
+
         const triggerChar = configRef.current.triggerChar;
         if (hasOwnCapsules(editor, capsuleClass, triggerChar)) {
           // Let consumer handle sending if they want to
@@ -143,16 +171,39 @@ export function useEditorIntegration(config: EditorIntegrationConfig) {
       }, 300);
     };
 
+    const onClick = (e: MouseEvent) => {
+      const capsuleClass = configRef.current.capsuleClass || CAPSULE_CLASS;
+      const triggerChar = configRef.current.triggerChar;
+      const target = (e.target as HTMLElement).closest(`.${capsuleClass}[data-trigger="${triggerChar}"]`);
+      if (!target) return;
+
+      const onCapsuleClick = configRef.current.onCapsuleClick;
+      if (!onCapsuleClick) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const info: CapsuleClickInfo = {
+        element: target as HTMLElement,
+        content: target.getAttribute(CAPSULE_ATTR_CONTENT) || '',
+        promptId: target.getAttribute(CAPSULE_ATTR_ID) || '',
+        rect: target.getBoundingClientRect(),
+      };
+      onCapsuleClick(info);
+    };
+
     const attachListeners = (editor: HTMLElement) => {
       editor.addEventListener('input', onInput);
       editor.addEventListener('keydown', onKeyDown, true);
       editor.addEventListener('blur', onBlur);
+      editor.addEventListener('click', onClick);
     };
 
     const detachListeners = (editor: HTMLElement) => {
       editor.removeEventListener('input', onInput);
       editor.removeEventListener('keydown', onKeyDown, true);
       editor.removeEventListener('blur', onBlur);
+      editor.removeEventListener('click', onClick);
     };
 
     // Attach to existing editor
@@ -373,6 +424,82 @@ function getCursorPosition(editor: HTMLElement): number {
   preRange.selectNodeContents(editor);
   preRange.setEnd(range.startContainer, range.startOffset);
   return preRange.toString().length;
+}
+
+/**
+ * Get editor text and cursor position with capsule text belonging to a specific
+ * trigger character replaced by a placeholder that won't contain the trigger char.
+ * This prevents the trigger char inside `>Title` capsules from re-opening the popup.
+ */
+function getTextExcludingCapsules(
+  editor: HTMLElement,
+  capsuleClass: string,
+  triggerChar: string,
+): { text: string; cursorPos: number } {
+  const sel = window.getSelection();
+  const hasSel = sel && sel.rangeCount > 0;
+  const cursorRange = hasSel ? sel!.getRangeAt(0) : null;
+
+  let text = '';
+  let cursorPos = 0;
+  let cursorFound = false;
+
+  const walk = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const nodeText = node.textContent || '';
+      // Check if cursor is in this text node
+      if (!cursorFound && cursorRange && cursorRange.startContainer === node) {
+        cursorPos = text.length + cursorRange.startOffset;
+        cursorFound = true;
+      }
+      text += nodeText;
+      return;
+    }
+
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+
+      // If this is a capsule belonging to our trigger, replace with neutral placeholder
+      if (
+        el.classList.contains(capsuleClass) &&
+        el.getAttribute('data-trigger') === triggerChar
+      ) {
+        const placeholder = '\u200B'.repeat(el.textContent?.length || 1); // zero-width spaces
+        // Check if cursor is inside this capsule
+        if (!cursorFound && cursorRange && el.contains(cursorRange.startContainer)) {
+          cursorPos = text.length + placeholder.length;
+          cursorFound = true;
+        }
+        text += placeholder;
+        return;
+      }
+
+      const tag = el.tagName.toLowerCase();
+      if (tag === 'br') {
+        text += '\n';
+        return;
+      }
+
+      for (const child of el.childNodes) {
+        walk(child);
+      }
+
+      if ((tag === 'p' || tag === 'div') && el.nextSibling) {
+        text += '\n';
+      }
+    }
+  };
+
+  for (const child of editor.childNodes) {
+    walk(child);
+  }
+
+  // Fallback: if cursor not found in walk, use plain method
+  if (!cursorFound) {
+    cursorPos = getCursorPosition(editor);
+  }
+
+  return { text, cursorPos };
 }
 
 /** Get the prompt ID from the first capsule in the editor */

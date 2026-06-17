@@ -4,6 +4,7 @@ import { cn } from '@/shared/lib/utils/utils';
 import type { SlashCommandMatch } from './types';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { PromptIconDisplay } from '@/entrypoints/overlay.content/shared/modules/prompts/lib/prompt-icons';
+import { PopupFooterHints } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
 
 interface SlashCommandPopupProps {
   matches: SlashCommandMatch[];
@@ -93,20 +94,7 @@ export const SlashCommandPopup: React.FC<SlashCommandPopupProps> = ({
       </div>
 
       {/* Footer hint */}
-      <div className="flex items-center gap-3 px-3 py-1.5 border-t border-border/50 bg-muted/20">
-        <span className="text-[10px] text-muted-foreground">
-          <kbd className="px-1 py-0.5 rounded bg-muted text-[9px] font-mono">↑↓</kbd>
-          {' '}{t('slashCommand.navigate')}
-        </span>
-        <span className="text-[10px] text-muted-foreground">
-          <kbd className="px-1 py-0.5 rounded bg-muted text-[9px] font-mono">↵</kbd>
-          {' '}{t('slashCommand.select')}
-        </span>
-        <span className="text-[10px] text-muted-foreground">
-          <kbd className="px-1 py-0.5 rounded bg-muted text-[9px] font-mono">Esc</kbd>
-          {' '}{t('slashCommand.dismiss')}
-        </span>
-      </div>
+      <PopupFooterHints />
     </div>
   );
 };

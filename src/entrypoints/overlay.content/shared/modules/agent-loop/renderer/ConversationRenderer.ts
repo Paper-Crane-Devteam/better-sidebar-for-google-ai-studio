@@ -10,7 +10,13 @@
  * - Tool calls appear as escaped text in <p> elements:
  *   &lt;bs_agent_tool&gt;...&lt;/bs_agent_tool&gt;
  * - The .markdown div has aria-busy="true" while streaming, "false" when done.
- * - We must wait for streaming to complete before processing.
+ *
+ * Streaming Tool Call Rendering (borrowed from MCP-SuperAssistant):
+ * - Detects `<bs_agent_tool>` opening tag DURING streaming (aria-busy="true")
+ * - Immediately mounts a loading widget without waiting for stream to complete
+ * - Attaches a per-element MutationObserver to track incremental content
+ * - Transitions widget to "complete" state once closing tag is detected
+ * - Uses debounced updates to prevent render jitter
  */
 
 import mainStyles from '@/index.scss?inline';
@@ -28,12 +34,62 @@ import {
 import { getBuiltInPromptById } from '../prompts/built-in-registry';
 import { RENDERER_CSS } from './renderer-styles';
 
+// ─── Streaming Widget CSS ────────────────────────────────────────────────────
+
+/**
+ * Additional CSS for the streaming tool call widget.
+ * The spinner animation and smooth transitions for the loading state.
+ */
+const STREAMING_WIDGET_CSS = `
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+  .bs-streaming-widget {
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+  }
+`;
+
+// ─── Streaming Tool Call State ───────────────────────────────────────────────
+
+/** Tracks a single streaming tool call block being progressively rendered */
+interface StreamingToolBlock {
+  /** The model-response element containing this tool call */
+  modelResponse: HTMLElement;
+  /** The markdown element being streamed into */
+  markdownEl: HTMLElement;
+  /** The shadow host we mounted for this streaming block */
+  shadowHost: HTMLElement;
+  /** Root element inside shadow DOM */
+  shadowRoot: HTMLElement;
+  /** Per-block MutationObserver watching for content growth */
+  observer: MutationObserver;
+  /** Last known text content length — used for chunk detection */
+  lastContentLength: number;
+  /** Whether the closing tag has been detected */
+  isComplete: boolean;
+  /** Debounce timer for rendering updates */
+  debounceTimer: ReturnType<typeof setTimeout> | null;
+  /** Paragraphs belonging to this tool call (populated once complete) */
+  paragraphs: HTMLElement[];
+}
+
+/** Render debounce interval during streaming (ms) */
+const STREAM_RENDER_DEBOUNCE_MS = 80;
+
+/** Stability interval — how long after last mutation before marking "stalled" */
+const STREAM_STALL_TIMEOUT_MS = 3000;
+
 export class ConversationRenderer {
   private observer: MutationObserver | null = null;
   private container: HTMLElement | null = null;
   private pollInterval: ReturnType<typeof setInterval> | null = null;
   /** Track model-response elements waiting for streaming to complete */
   private pendingResponses = new Set<HTMLElement>();
+  /** Active streaming tool call blocks being progressively rendered */
+  private streamingBlocks = new Map<HTMLElement, StreamingToolBlock>();
 
   start(): void {
     if (this.observer) return;
@@ -55,6 +111,18 @@ export class ConversationRenderer {
               this.pendingResponses.delete(modelResp);
               this.processModelResponse(modelResp);
             }
+            // Also finalize any streaming blocks for this model-response
+            if (modelResp) {
+              this.finalizeStreamingBlock(modelResp);
+            }
+          }
+        }
+        // Detect streaming tool call content during characterData or childList mutations
+        if (mutation.type === 'childList' || mutation.type === 'characterData') {
+          const target = (mutation.target as HTMLElement);
+          const modelResp = target?.closest?.('model-response') as HTMLElement | null;
+          if (modelResp && !modelResp.classList.contains(TOOL_CALL_RENDERED_CLASS)) {
+            this.checkStreamingToolCall(modelResp);
           }
         }
       }
@@ -83,6 +151,13 @@ export class ConversationRenderer {
     this.observer = null;
     this.container = null;
     this.pendingResponses.clear();
+    // Clean up all active streaming blocks
+    for (const [, block] of this.streamingBlocks) {
+      block.observer?.disconnect();
+      if (block.debounceTimer) clearTimeout(block.debounceTimer);
+      block.shadowHost?.remove();
+    }
+    this.streamingBlocks.clear();
     if (this.pollInterval) {
       clearInterval(this.pollInterval);
       this.pollInterval = null;
@@ -108,6 +183,7 @@ export class ConversationRenderer {
       this.observer.observe(container, {
         childList: true,
         subtree: true,
+        characterData: true,
         attributes: true,
         attributeFilter: ['aria-busy'],
       });
@@ -187,8 +263,10 @@ export class ConversationRenderer {
     // Check if still streaming (aria-busy="true")
     const isBusy = markdownEl.getAttribute('aria-busy') === 'true';
     if (isBusy) {
-      // Queue for later — will be processed when aria-busy changes to false
+      // Queue for aria-busy completion callback
       this.pendingResponses.add(el);
+      // BUT — also check if we can start streaming rendering early
+      this.checkStreamingToolCall(el);
       return;
     }
 
@@ -200,6 +278,236 @@ export class ConversationRenderer {
     el.setAttribute(TOOL_CALL_ATTR, 'true');
 
     this.renderToolCallWidgets(markdownEl as HTMLElement);
+  }
+
+  // ─── Streaming Tool Call Detection & Rendering ─────────────────────
+
+  /**
+   * Check if a model-response that is still streaming contains tool call markers.
+   * If the opening tag is detected, immediately mount a loading widget.
+   * Inspired by MCP-SuperAssistant's streamObserver approach.
+   */
+  private checkStreamingToolCall(modelResp: HTMLElement): void {
+    // Already tracking this element or already fully rendered
+    if (this.streamingBlocks.has(modelResp)) return;
+    if (modelResp.classList.contains(TOOL_CALL_RENDERED_CLASS)) return;
+
+    const markdownEl = modelResp.querySelector('.markdown') as HTMLElement;
+    if (!markdownEl) return;
+
+    const allText = markdownEl.textContent || '';
+    const openTag = `<${TOOL_CALL_TAG}>`;
+
+    // Only proceed if we see the opening tag
+    if (!allText.includes(openTag)) return;
+
+    // Mount a streaming widget immediately
+    const block = this.mountStreamingWidget(modelResp, markdownEl, allText);
+    if (!block) return;
+
+    this.streamingBlocks.set(modelResp, block);
+
+    // Attach a per-element observer to track incremental content
+    const streamObserver = new MutationObserver(() => {
+      this.handleStreamingMutation(modelResp);
+    });
+
+    block.observer = streamObserver;
+    streamObserver.observe(markdownEl, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+  }
+
+  /**
+   * Handle mutation events on a streaming tool call block.
+   * Debounced to prevent excessive re-renders during rapid streaming.
+   */
+  private handleStreamingMutation(modelResp: HTMLElement): void {
+    const block = this.streamingBlocks.get(modelResp);
+    if (!block || block.isComplete) return;
+
+    // Debounce: clear previous timer and schedule a new check
+    if (block.debounceTimer) {
+      clearTimeout(block.debounceTimer);
+    }
+
+    block.debounceTimer = setTimeout(() => {
+      this.updateStreamingWidget(block);
+    }, STREAM_RENDER_DEBOUNCE_MS);
+  }
+
+  /**
+   * Update the streaming widget with new content from the still-streaming DOM.
+   */
+  private updateStreamingWidget(block: StreamingToolBlock): void {
+    const allText = block.markdownEl.textContent || '';
+    const closeTag = `</${TOOL_CALL_TAG}>`;
+    const openTag = `<${TOOL_CALL_TAG}>`;
+
+    const currentLength = allText.length;
+
+    // No new content — skip
+    if (currentLength === block.lastContentLength) return;
+    block.lastContentLength = currentLength;
+
+    // Check if the tool call is now complete
+    const openIdx = allText.indexOf(openTag);
+    const closeIdx = allText.indexOf(closeTag, openIdx);
+    const isComplete = closeIdx !== -1;
+
+    // Extract partial content for display
+    const contentStart = openIdx + openTag.length;
+    const contentEnd = isComplete ? closeIdx : allText.length;
+    const partialContent = allText.slice(contentStart, contentEnd).trim();
+
+    // Update the widget UI
+    const statusEl = block.shadowRoot.querySelector('.bs-stream-status') as HTMLElement;
+    const previewEl = block.shadowRoot.querySelector('.bs-stream-preview') as HTMLElement;
+    const toolNameEl = block.shadowRoot.querySelector('.bs-stream-tool-name') as HTMLElement;
+
+    if (previewEl) {
+      // Show a truncated preview of what's being streamed
+      const preview = partialContent.length > 120
+        ? partialContent.slice(0, 120) + '…'
+        : partialContent;
+      previewEl.textContent = preview;
+    }
+
+    // Try to extract tool name from partial content
+    if (toolNameEl && partialContent.startsWith('{')) {
+      try {
+        // Try parsing partial JSON to extract the name field early
+        const nameMatch = partialContent.match(/"name"\s*:\s*"([^"]+)"/);
+        if (nameMatch) {
+          toolNameEl.textContent = nameMatch[1];
+        }
+      } catch {
+        // Partial JSON — will get it later
+      }
+    }
+
+    if (isComplete) {
+      block.isComplete = true;
+      // Transition to complete state
+      if (statusEl) {
+        statusEl.textContent = '✅ 完成';
+        statusEl.classList.remove('text-amber-500');
+        statusEl.classList.add('text-emerald-500');
+      }
+      // Clean up the streaming observer — will be finalized by aria-busy or directly
+      block.observer.disconnect();
+
+      // If aria-busy is already false, finalize immediately
+      const isBusy = block.markdownEl.getAttribute('aria-busy') === 'true';
+      if (!isBusy) {
+        this.finalizeStreamingBlock(block.modelResponse);
+      }
+    }
+  }
+
+  /**
+   * Mount a streaming widget for a tool call that is still being generated.
+   * Shows a "loading" state with a spinner and progressively reveals content.
+   */
+  private mountStreamingWidget(
+    modelResp: HTMLElement,
+    markdownEl: HTMLElement,
+    currentText: string,
+  ): StreamingToolBlock | null {
+    // Find where the tool call starts in the DOM
+    const paragraphs = Array.from(markdownEl.querySelectorAll('p'));
+    const openTag = `<${TOOL_CALL_TAG}>`;
+
+    let insertTarget: HTMLElement | null = null;
+    for (const p of paragraphs) {
+      if ((p.textContent || '').includes(openTag)) {
+        insertTarget = p;
+        break;
+      }
+    }
+
+    if (!insertTarget) {
+      // Fallback: insert before the markdown element itself
+      insertTarget = markdownEl;
+    }
+
+    // Create shadow host
+    const host = document.createElement('div');
+    host.className = 'bs-agent-shadow-host bs-streaming-tool';
+    host.setAttribute('data-streaming', 'true');
+    const parent = insertTarget.parentElement || markdownEl;
+    parent.insertBefore(host, insertTarget);
+
+    const shadow = host.attachShadow({ mode: 'open' });
+    applyShadowStyles(shadow, mainStyles + '\n' + RENDERER_CSS + '\n' + STREAMING_WIDGET_CSS);
+
+    const root = document.createElement('div');
+    root.className = 'shadow-body';
+    shadow.appendChild(root);
+    this.syncDarkMode(root);
+
+    // Try to extract tool name early
+    let earlyToolName = '…';
+    const nameMatch = currentText.match(/"name"\s*:\s*"([^"]+)"/);
+    if (nameMatch) {
+      earlyToolName = nameMatch[1];
+    }
+
+    root.innerHTML = `
+      <div class="bs-streaming-widget my-2 overflow-hidden rounded-lg border border-amber-500/30 bg-amber-500/5 transition-all duration-300">
+        <div class="flex items-center gap-2 px-3 py-2 text-xs">
+          <span class="bs-stream-spinner inline-block h-3 w-3 animate-spin rounded-full border-2 border-amber-500/30 border-t-amber-500"></span>
+          <span class="flex h-5 w-5 items-center justify-center rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px]">⚙</span>
+          <span class="bs-stream-tool-name font-mono font-medium text-amber-700 dark:text-amber-300 text-xs">${escapeHtml(earlyToolName)}</span>
+          <span class="bs-stream-status ml-auto text-[11px] text-amber-500">⏳ 流式生成中...</span>
+        </div>
+        <div class="bs-stream-preview border-t border-amber-500/15 px-3 py-1.5 text-[11px] text-muted-foreground font-mono whitespace-pre-wrap max-h-[80px] overflow-hidden opacity-70"></div>
+      </div>
+    `;
+
+    return {
+      modelResponse: modelResp,
+      markdownEl,
+      shadowHost: host,
+      shadowRoot: root,
+      observer: null!, // Will be set by caller
+      lastContentLength: currentText.length,
+      isComplete: false,
+      debounceTimer: null,
+      paragraphs: [],
+    };
+  }
+
+  /**
+   * Finalize a streaming block: remove the streaming widget and do the full render.
+   * Called when streaming completes (aria-busy="false" or closing tag detected with busy already false).
+   */
+  private finalizeStreamingBlock(modelResp: HTMLElement): void {
+    const block = this.streamingBlocks.get(modelResp);
+    if (!block) return;
+
+    // Clean up
+    block.observer?.disconnect();
+    if (block.debounceTimer) clearTimeout(block.debounceTimer);
+
+    // Remove the streaming widget
+    block.shadowHost.remove();
+    this.streamingBlocks.delete(modelResp);
+
+    // Now do the full render (same as before — processModelResponse logic)
+    if (!modelResp.classList.contains(TOOL_CALL_RENDERED_CLASS)) {
+      const markdownEl = modelResp.querySelector('.markdown') as HTMLElement;
+      if (markdownEl) {
+        const allText = markdownEl.textContent || '';
+        if (allText.includes(`<${TOOL_CALL_TAG}>`)) {
+          modelResp.classList.add(TOOL_CALL_RENDERED_CLASS);
+          modelResp.setAttribute(TOOL_CALL_ATTR, 'true');
+          this.renderToolCallWidgets(markdownEl);
+        }
+      }
+    }
   }
 
   // ─── Shadow DOM Widget Mount ───────────────────────────────────────
@@ -274,38 +582,69 @@ export class ConversationRenderer {
     const openTag = `<${TOOL_CALL_TAG}>`;
     const closeTag = `</${TOOL_CALL_TAG}>`;
 
-    // Find ALL <p> elements that contain tool call text.
-    // In Gemini's DOM, each tool call is typically in a single <p>.
+    // Strategy: Find all text content, locate tool call blocks, and render widgets.
+    // Gemini's DOM varies — tool calls may span multiple <p> elements or be in the same one.
+
+    // First pass: collect all paragraphs/block elements that contain tool call text
+    const blockElements = Array.from(markdownEl.querySelectorAll('p, pre, div, code'));
+    if (blockElements.length === 0) {
+      // Fallback: treat markdownEl children directly
+      blockElements.push(...Array.from(markdownEl.children) as HTMLElement[]);
+    }
+
+    // Build full text and find each tool call region
+    const allText = markdownEl.textContent || '';
+    const toolCallRegex = new RegExp(
+      `<${TOOL_CALL_TAG}>([\\s\\S]*?)<\\/${TOOL_CALL_TAG}>`,
+      'g',
+    );
+
+    let match: RegExpExecArray | null;
+    const toolCalls: Array<{ fullMatch: string; content: string }> = [];
+    while ((match = toolCallRegex.exec(allText)) !== null) {
+      toolCalls.push({ fullMatch: match[0], content: match[1].trim() });
+    }
+
+    if (toolCalls.length === 0) return;
+
+    // For each tool call, find the paragraphs that contain it and render a widget
+    // We work with <p> elements as the visual unit
     const paragraphs = Array.from(markdownEl.querySelectorAll('p'));
-    let i = 0;
+    let pIdx = 0;
 
-    while (i < paragraphs.length) {
-      const p = paragraphs[i] as HTMLElement;
-      const text = p.textContent || '';
+    for (const tc of toolCalls) {
+      // Find paragraphs belonging to this tool call
+      const belongingParagraphs: HTMLElement[] = [];
+      let found = false;
 
-      if (!text.includes(openTag)) {
-        i++;
-        continue;
-      }
+      for (let i = pIdx; i < paragraphs.length; i++) {
+        const pText = paragraphs[i].textContent || '';
 
-      // Collect paragraphs for this tool call block
-      const blockParagraphs: HTMLElement[] = [p];
+        if (!found && pText.includes(openTag.replace(/</g, '<'))) {
+          found = true;
+        }
+        // Also check raw text match (Gemini may render < as literal in textContent)
+        if (!found && pText.includes(`<${TOOL_CALL_TAG}>`)) {
+          found = true;
+        }
 
-      // If close tag is NOT in same paragraph, collect until we find it
-      if (!text.includes(closeTag)) {
-        let j = i + 1;
-        while (j < paragraphs.length) {
-          blockParagraphs.push(paragraphs[j] as HTMLElement);
-          if ((paragraphs[j].textContent || '').includes(closeTag)) break;
-          j++;
+        if (found) {
+          belongingParagraphs.push(paragraphs[i] as HTMLElement);
+          if (pText.includes(closeTag.replace(/</g, '<')) || pText.includes(`</${TOOL_CALL_TAG}>`)) {
+            pIdx = i + 1;
+            break;
+          }
         }
       }
 
-      const fullText = blockParagraphs.map((el) => el.textContent || '').join('\n');
-      const { toolName, description, query } = this.extractToolInfo(fullText);
+      // If we couldn't find paragraphs via iteration, use all remaining
+      if (belongingParagraphs.length === 0) {
+        // Fallback: just hide nothing extra, mount before first unused paragraph
+        continue;
+      }
 
-      this.mountToolCallShadow(blockParagraphs, toolName, description, query);
-      i += blockParagraphs.length;
+      const { toolName, description, query } = this.extractToolInfo(tc.fullMatch);
+      this.mountToolCallShadow(belongingParagraphs, toolName, description, query);
     }
   }
 
@@ -462,21 +801,28 @@ export class ConversationRenderer {
     return null;
   }
 
-  /** Fill tool execution result into the platform's input editor */
+  /** Fill tool execution result into the platform's input editor as a capsule */
   private fillResultToEditor(toolName: string, result: string): void {
     const wrappedResult = `<bs_agent_result>\n### ${toolName}\n${result}\n</bs_agent_result>`;
 
-    // Find the editor and insert text
+    // Find the editor and insert as capsule
     const editor = document.querySelector<HTMLElement>(
       'div.ql-editor[contenteditable="true"], .input-area [contenteditable="true"]',
     );
 
     if (editor) {
       editor.focus();
-      // Clear and set content
-      const p = document.createElement('p');
-      p.textContent = wrappedResult;
       editor.innerHTML = '';
+
+      const p = document.createElement('p');
+      const capsule = document.createElement('strong');
+      capsule.className = 'bs-agent-result-capsule';
+      capsule.setAttribute('data-result-content', wrappedResult);
+      capsule.contentEditable = 'false';
+      capsule.textContent = `📋 ${toolName}`;
+
+      p.appendChild(capsule);
+      p.appendChild(document.createTextNode('\u00A0'));
       editor.appendChild(p);
       editor.dispatchEvent(new Event('input', { bubbles: true }));
     }
