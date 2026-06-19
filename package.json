@@ -16,7 +16,6 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
-    "@emailjs/browser": "^4.4.1",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-context-menu": "^2.2.16",
     "@radix-ui/react-dialog": "^1.1.15",

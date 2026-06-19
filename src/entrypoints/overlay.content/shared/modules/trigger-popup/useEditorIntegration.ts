@@ -129,11 +129,27 @@ export function useEditorIntegration(config: EditorIntegrationConfig) {
           e.preventDefault();
           e.stopPropagation();
 
+          // Collect all capsule contents and merge into a single <bs_agent_result> block
+          const sections: string[] = [];
           resultCapsules.forEach((capsule) => {
             const content = capsule.getAttribute('data-result-content') || '';
-            const textNode = document.createTextNode(content);
-            capsule.parentNode?.replaceChild(textNode, capsule);
+            sections.push(content);
           });
+
+          // Build merged result text
+          const mergedContent = sections.join('\n\n---\n\n');
+          const wrappedResult = `<bs_agent_result>\n${mergedContent}\n</bs_agent_result>`;
+
+          // Replace all capsules with the merged text
+          const firstCapsule = resultCapsules[0];
+          const textNode = document.createTextNode(wrappedResult);
+          firstCapsule.parentNode?.replaceChild(textNode, firstCapsule);
+
+          // Remove remaining capsules
+          for (let k = 1; k < resultCapsules.length; k++) {
+            resultCapsules[k].parentNode?.removeChild(resultCapsules[k]);
+          }
+
           editor.dispatchEvent(new Event('input', { bubbles: true }));
 
           // After DOM settles, programmatically click the send button

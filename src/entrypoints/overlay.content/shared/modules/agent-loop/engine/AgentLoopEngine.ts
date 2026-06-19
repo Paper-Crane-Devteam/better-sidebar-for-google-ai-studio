@@ -322,9 +322,9 @@ export class AgentLoopEngine {
   }
 
   /**
-   * Insert the tool execution results into the editor wrapped in a capsule element.
-   * The capsule shows a summary pill; the full XML content is stored in a data attribute
-   * and expanded before sending.
+   * Insert the tool execution results into the editor as individual capsule elements.
+   * Each tool result gets its own capsule for clarity. On send, they are merged into
+   * a single <bs_agent_result> block.
    */
   private insertResultCapsule(resultText: string): void {
     const editor = this.adapter.getEditor();
@@ -334,49 +334,81 @@ export class AgentLoopEngine {
       return;
     }
 
-    // Wrap results in our result XML tag
-    const wrappedResult = `<bs_agent_result>\n${resultText}\n</bs_agent_result>`;
+    // Split results into individual tool sections (split on --- separator)
+    const sections = this.splitResultSections(resultText);
 
-    // Extract tool names from results for display
-    const toolLabels = this.extractToolLabelsFromResults(resultText);
-    const displayLabel = toolLabels.length > 0
-      ? `📋 ${toolLabels.join(', ')}`
-      : '📋 Tool Results';
-
-    // Clear editor and insert capsule
+    // Clear editor
     editor.innerHTML = '';
 
     const p = document.createElement('p');
-    const capsule = document.createElement('strong');
-    capsule.className = 'bs-agent-result-capsule';
-    capsule.setAttribute('data-result-content', wrappedResult);
-    capsule.contentEditable = 'false';
-    capsule.textContent = displayLabel;
 
-    p.appendChild(capsule);
-    // Add a space after for cursor placement
-    p.appendChild(document.createTextNode('\u00A0'));
+    if (sections.length === 0) {
+      // Fallback: single capsule
+      const wrappedResult = `<bs_agent_result>\n${resultText}\n</bs_agent_result>`;
+      const capsule = this.createResultCapsuleElement('📋 Tool Results', wrappedResult);
+      p.appendChild(capsule);
+      p.appendChild(document.createTextNode('\u00A0'));
+    } else {
+      // One capsule per tool result section
+      for (const section of sections) {
+        const capsule = this.createResultCapsuleElement(
+          `📋 ${section.label}`,
+          section.content,
+        );
+        p.appendChild(capsule);
+        p.appendChild(document.createTextNode(' '));
+      }
+    }
+
     editor.appendChild(p);
-
-    // Trigger input event
     editor.dispatchEvent(new Event('input', { bubbles: true }));
     editor.focus();
   }
 
-  /** Extract tool labels from formatted results text (### description_or_name\n...) */
-  private extractToolLabelsFromResults(resultText: string): string[] {
-    const matches = resultText.matchAll(/^### (.+)$/gm);
-    const countMap = new Map<string, number>();
-    for (const m of matches) {
-      const label = m[1].trim();
-      if (!label || label.startsWith('⚠️')) continue;
-      countMap.set(label, (countMap.get(label) || 0) + 1);
+  /** Create a single result capsule DOM element */
+  private createResultCapsuleElement(label: string, content: string): HTMLElement {
+    const capsule = document.createElement('strong');
+    capsule.className = 'bs-agent-result-capsule';
+    capsule.setAttribute('data-result-content', content);
+    capsule.contentEditable = 'false';
+    capsule.textContent = label;
+    return capsule;
+  }
+
+  /**
+   * Split formatted results text into individual sections.
+   * Format: "## Tool Execution Results\n\n### label\ncontent\n\n---\n\n### label\ncontent"
+   */
+  private splitResultSections(resultText: string): Array<{ label: string; content: string }> {
+    const sections: Array<{ label: string; content: string }> = [];
+
+    // Remove the "## Tool Execution Results" header
+    const body = resultText.replace(/^## Tool Execution Results\n\n/, '');
+
+    // Split on "---" separator
+    const parts = body.split(/\n\n---\n\n/);
+
+    for (const part of parts) {
+      const trimmed = part.trim();
+      if (!trimmed) continue;
+
+      // Extract label from ### heading
+      const headingMatch = trimmed.match(/^### (.+)\n([\s\S]*)$/);
+      if (headingMatch) {
+        sections.push({
+          label: headingMatch[1].trim(),
+          content: trimmed,
+        });
+      } else {
+        // No heading — use generic label
+        sections.push({
+          label: 'Result',
+          content: trimmed,
+        });
+      }
     }
-    const labels: string[] = [];
-    for (const [label, count] of countMap) {
-      labels.push(count > 1 ? `${label} ×${count}` : label);
-    }
-    return labels;
+
+    return sections;
   }
 
   /**
