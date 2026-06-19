@@ -9,10 +9,11 @@ export const conversationRepo = {
     const updatedAt = c.updated_at ?? Math.floor(Date.now() / 1000);
     await runCommand(
       `
-      INSERT INTO conversations (id, title, folder_id, external_id, external_url, model_name, type, platform, updated_at, created_at, last_active_at, prompt_metadata, deleted_at, gem_id, notebook_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
+      INSERT INTO conversations (id, title, description, folder_id, external_id, external_url, model_name, type, platform, updated_at, created_at, last_active_at, prompt_metadata, deleted_at, gem_id, notebook_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
+        description = COALESCE(excluded.description, conversations.description),
         folder_id = COALESCE(excluded.folder_id, conversations.folder_id),
         external_url = excluded.external_url,
         model_name = excluded.model_name,
@@ -29,6 +30,7 @@ export const conversationRepo = {
       [
         c.id,
         c.title,
+        c.description ?? '',
         c.folder_id,
         c.external_id,
         c.external_url,
@@ -85,6 +87,7 @@ export const conversationRepo = {
       Pick<
         Conversation,
         | 'title'
+        | 'description'
         | 'folder_id'
         | 'external_url'
         | 'model_name'
@@ -146,10 +149,11 @@ export const conversationRepo = {
       const updatedAt = c.updated_at ?? Math.floor(Date.now() / 1000);
       return {
         sql: `
-      INSERT INTO conversations (id, title, folder_id, external_id, external_url, model_name, type, platform, updated_at, created_at, last_active_at, prompt_metadata, deleted_at, gem_id, notebook_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
+      INSERT INTO conversations (id, title, description, folder_id, external_id, external_url, model_name, type, platform, updated_at, created_at, last_active_at, prompt_metadata, deleted_at, gem_id, notebook_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
+        description = COALESCE(excluded.description, conversations.description),
         folder_id = COALESCE(excluded.folder_id, conversations.folder_id),
         external_url = excluded.external_url,
         model_name = excluded.model_name,
@@ -172,6 +176,7 @@ export const conversationRepo = {
         bind: [
           c.id,
           c.title,
+          c.description ?? '',
           c.folder_id,
           c.external_id,
           c.external_url,

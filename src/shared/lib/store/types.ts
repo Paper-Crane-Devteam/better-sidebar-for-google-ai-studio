@@ -20,6 +20,7 @@ export interface Folder {
 export interface Conversation {
   id: string;
   title: string;
+  description?: string | null;
   folder_id: string | null;
   updated_at: number;
   created_at?: number;
@@ -141,6 +142,10 @@ export interface AppState {
     itemId: string,
     newName: string,
     type: 'folder' | 'file',
+  ) => Promise<void>;
+  updateConversationDescription: (
+    itemId: string,
+    description: string,
   ) => Promise<void>;
   createFolder: (
     name: string,

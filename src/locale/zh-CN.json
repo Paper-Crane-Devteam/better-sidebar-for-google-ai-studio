@@ -268,7 +268,7 @@
   },
   "tooltip": {
     "moreOptions": "更多选项",
-    "search": "按标题搜索",
+    "search": "按标题或描述搜索",
     "filterByTags": "按标签筛选",
     "filterAll": "筛选：全部",
     "filterNormalPrompts": "筛选：普通 Prompt",
@@ -321,6 +321,8 @@
     "folderNotEmptyNote": "只有空文件夹才能直接删除。请先使用批量选择功能删除文件夹内的对话。",
     "openInNewTab": "在新标签页打开",
     "moveTo": "移动到...",
+    "editDescription": "编辑描述",
+    "descriptionPlaceholder": "添加描述...",
     "export": "导出",
     "exportAsText": "导出为纯文本",
     "exportAsMarkdown": "导出为 Markdown",

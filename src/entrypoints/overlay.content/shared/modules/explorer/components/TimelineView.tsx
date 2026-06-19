@@ -269,7 +269,8 @@ export const TimelineView = forwardRef<ArboristTreeHandle, TimelineViewProps>(
           initialOpenState={initialOpenState}
           searchTerm={searchTerm}
           searchMatch={(node, term) =>
-            node.data.name.toLowerCase().includes(term.toLowerCase())
+            node.data.name.toLowerCase().includes(term.toLowerCase()) ||
+            (node.data.data?.description || '').toLowerCase().includes(term.toLowerCase())
           }
           disableDrag={true}
           disableDrop={true}

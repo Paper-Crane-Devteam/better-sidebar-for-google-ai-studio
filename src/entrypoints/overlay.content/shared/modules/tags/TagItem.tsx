@@ -6,10 +6,10 @@ import { Tag as TagIcon } from 'lucide-react';
 import { Input } from '@/entrypoints/overlay.content/shared/components/ui/input';
 import { cn } from '@/shared/lib/utils/utils';
 import {
-  ContextMenu,
   ContextMenuContent,
   ContextMenuTrigger,
 } from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
+import { ExclusiveContextMenu } from '@/entrypoints/overlay.content/shared/components/ui/exclusive-context-menu';
 import { modal } from '@/shared/lib/modal';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { NodeActionBar, renderMenuItems } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
@@ -99,7 +99,7 @@ export const TagItem = ({ tag }: TagItemProps) => {
   const isMenuActive = isContextMenuOpen || isDropdownOpen;
 
   return (
-    <ContextMenu onOpenChange={setIsContextMenuOpen} modal={false}>
+    <ExclusiveContextMenu onOpenChange={setIsContextMenuOpen}>
       <ContextMenuTrigger>
         <div style={{ height: rowHeight }} className="w-full px-1">
           <div
@@ -130,6 +130,6 @@ export const TagItem = ({ tag }: TagItemProps) => {
       <ContextMenuContent className="w-48">
         {renderMenuItems(menuItems, 'context')}
       </ContextMenuContent>
-    </ContextMenu>
+    </ExclusiveContextMenu>
   );
 };

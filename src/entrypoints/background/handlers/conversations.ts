@@ -51,11 +51,12 @@ export async function handleConversations(
       return { success: true };
     }
     case 'UPDATE_CONVERSATION': {
-      const { id, title, updated_at } = message.payload;
-      const updates: { title?: string; last_active_at: number } = {
+      const { id, title, description, updated_at } = message.payload;
+      const updates: { title?: string; description?: string; last_active_at: number } = {
         last_active_at: updated_at ?? Math.floor(Date.now() / 1000),
       };
       if (title) updates.title = title;
+      if (description !== undefined) updates.description = description;
       await conversationRepo.update(id, updates);
       await notifyDataUpdated();
       triggerAutoSync();

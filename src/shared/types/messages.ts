@@ -57,7 +57,7 @@ export type ExtensionMessage = (
     }
   | {
       type: 'UPDATE_CONVERSATION';
-      payload: { id: string; title?: string; updated_at?: number };
+      payload: { id: string; title?: string; description?: string; updated_at?: number };
     }
   | {
       type: 'CREATE_CONVERSATION';

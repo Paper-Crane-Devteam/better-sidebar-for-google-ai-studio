@@ -18,9 +18,9 @@ import {
   resolveImports,
 } from '@/shared/lib/prompt-variables';
 import {
-  ContextMenu,
   ContextMenuTrigger,
 } from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
+import { ExclusiveContextMenu } from '@/entrypoints/overlay.content/shared/components/ui/exclusive-context-menu';
 
 import { NodeProps } from './types';
 import { NodeContent } from './NodeContent';
@@ -343,7 +343,7 @@ export const Node = ({
   );
 
   return (
-    <ContextMenu onOpenChange={setIsContextMenuOpen} modal={false}>
+    <ExclusiveContextMenu onOpenChange={setIsContextMenuOpen}>
       <ContextMenuTrigger asChild disabled={isBatchMode}>
         {content}
       </ContextMenuTrigger>
@@ -365,6 +365,6 @@ export const Node = ({
           onEditPrompt={onEdit ? handleEdit : undefined}
         />
       )}
-    </ContextMenu>
+    </ExclusiveContextMenu>
   );
 };

@@ -9,11 +9,11 @@ import { PromptsTree, ArboristTreeHandle } from './components/PromptsTree';
 import { useStoreFilter } from '../../hooks/useStoreFilter';
 import { useI18n } from '@/shared/hooks/useI18n';
 import {
-  ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
 } from '../../components/ui/context-menu';
+import { ExclusiveContextMenu } from '../../components/ui/exclusive-context-menu';
 
 import { CreatePromptForm } from './components/CreatePromptForm';
 import { PromptPreviewContent } from './components/PromptPreviewContent';
@@ -232,7 +232,7 @@ export const PromptsTab = ({ menuActions }: PromptsTabProps) => {
       <FilterBar filter={filter} allTags={[]} />
 
       {/* Content */}
-      <ContextMenu modal={false}>
+      <ExclusiveContextMenu>
         <ContextMenuTrigger asChild>
           <div className="flex-1 overflow-hidden relative">
             {(() => {
@@ -281,7 +281,7 @@ export const PromptsTab = ({ menuActions }: PromptsTabProps) => {
             {t('sidebar.newFolder')}
           </ContextMenuItem>
         </ContextMenuContent>
-      </ContextMenu>
+      </ExclusiveContextMenu>
     </div>
   );
 };

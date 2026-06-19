@@ -268,7 +268,7 @@
   },
   "tooltip": {
     "moreOptions": "Más opciones",
-    "search": "Buscar por título",
+    "search": "Buscar por título o descripción",
     "filterByTags": "Filtrar por Etiquetas",
     "filterAll": "Filtro: Todos",
     "filterNormalPrompts": "Filtro: Prompts normales",
@@ -321,6 +321,8 @@
     "folderNotEmptyNote": "Las carpetas solo se pueden eliminar cuando están vacías. Usa la selección por lotes para eliminar las conversaciones dentro de la carpeta primero.",
     "openInNewTab": "Abrir en Nueva Pestaña",
     "moveTo": "Mover a...",
+    "editDescription": "Editar Descripción",
+    "descriptionPlaceholder": "Agregar una descripción...",
     "export": "Exportar",
     "exportAsText": "Exportar como texto",
     "exportAsMarkdown": "Exportar como Markdown",

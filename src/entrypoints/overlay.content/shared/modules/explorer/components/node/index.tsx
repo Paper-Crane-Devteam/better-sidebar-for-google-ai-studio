@@ -17,9 +17,9 @@ import { modal } from '@/shared/lib/modal';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useCurrentConversationId } from '../../../../hooks/useCurrentConversationId';
 import {
-  ContextMenu,
   ContextMenuTrigger,
 } from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
+import { ExclusiveContextMenu } from '@/entrypoints/overlay.content/shared/components/ui/exclusive-context-menu';
 
 import { NodeProps } from './types';
 import { NodeContent } from './NodeContent';
@@ -353,7 +353,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   );
 
   return (
-    <ContextMenu onOpenChange={setIsContextMenuOpen} modal={false}>
+    <ExclusiveContextMenu onOpenChange={setIsContextMenuOpen}>
       <ContextMenuTrigger asChild disabled={isTimeGroup || isBatchMode}>
         <div
           style={style}
@@ -458,6 +458,6 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
           preview={preview}
         />
       )}
-    </ContextMenu>
+    </ExclusiveContextMenu>
   );
 };

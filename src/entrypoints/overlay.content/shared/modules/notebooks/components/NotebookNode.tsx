@@ -19,10 +19,10 @@ import { useCurrentConversationId } from '../../../../shared/hooks/useCurrentCon
 import type { NodeRendererProps } from 'react-arborist';
 import type { FolderTreeNodeData } from '../../../components/folder-tree/types';
 import {
-  ContextMenu,
   ContextMenuContent,
   ContextMenuTrigger,
 } from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
+import { ExclusiveContextMenu } from '@/entrypoints/overlay.content/shared/components/ui/exclusive-context-menu';
 import { modal } from '@/shared/lib/modal';
 import { NodeContextMenu } from '../../explorer/components/node/NodeContextMenu';
 import { NodeActionBar } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
@@ -244,7 +244,7 @@ export const NotebookNode = ({
   );
 
   return (
-    <ContextMenu onOpenChange={setIsContextMenuOpen} modal={false}>
+    <ExclusiveContextMenu onOpenChange={setIsContextMenuOpen}>
       <ContextMenuTrigger asChild>
         <div
           style={style}
@@ -313,6 +313,6 @@ export const NotebookNode = ({
           preview={preview}
         />
       )}
-    </ContextMenu>
+    </ExclusiveContextMenu>
   );
 };

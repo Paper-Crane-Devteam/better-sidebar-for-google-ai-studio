@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS folders (
 CREATE TABLE IF NOT EXISTS conversations (
   id TEXT PRIMARY KEY,
   title TEXT,
+  description TEXT DEFAULT '',
   folder_id TEXT,
   external_id TEXT UNIQUE,
   external_url TEXT,

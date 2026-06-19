@@ -40,6 +40,7 @@ export function createDataActions(
   | 'moveItems'
   | 'moveItem'
   | 'renameItem'
+  | 'updateConversationDescription'
   | 'createFolder'
   | 'deleteItem'
   | 'deleteItems'
@@ -179,6 +180,18 @@ export function createDataActions(
         await get().fetchData(true);
       } catch (error) {
         console.error('Failed to rename item:', error);
+      }
+    },
+
+    updateConversationDescription: async (itemId: string, description: string) => {
+      try {
+        await browser.runtime.sendMessage({
+          type: 'UPDATE_CONVERSATION',
+          payload: { id: itemId, description },
+        });
+        await get().fetchData(true);
+      } catch (error) {
+        console.error('Failed to update conversation description:', error);
       }
     },
 

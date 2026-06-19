@@ -11,11 +11,11 @@ import { FilterBar } from '../../components/FilterBar';
 import { useStoreFilter } from '../../hooks/useStoreFilter';
 import { useI18n } from '@/shared/hooks/useI18n';
 import {
-  ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
 } from '../../components/ui/context-menu';
+import { ExclusiveContextMenu } from '../../components/ui/exclusive-context-menu';
 
 import type { ExplorerTypeFilter } from '../../types/filter';
 import type { SplitDropdownItem } from '@/shared/components/ui/split-icon-button';
@@ -405,7 +405,7 @@ export const ExplorerTab = ({
       <FilterBar filter={filter} allTags={allTags} />
 
       {/* Content */}
-      <ContextMenu modal={false}>
+      <ExclusiveContextMenu>
         <ContextMenuTrigger asChild>
           <div className="flex-1 overflow-hidden relative">
             {(() => {
@@ -449,7 +449,7 @@ export const ExplorerTab = ({
             </ContextMenuItem>
           </ContextMenuContent>
         )}
-      </ContextMenu>
+      </ExclusiveContextMenu>
     </div>
     </ExplorerContext.Provider>
   );

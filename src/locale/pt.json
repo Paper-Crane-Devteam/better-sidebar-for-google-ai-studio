@@ -268,7 +268,7 @@
   },
   "tooltip": {
     "moreOptions": "Mais opções",
-    "search": "Pesquisar por título",
+    "search": "Pesquisar por título ou descrição",
     "filterByTags": "Filtrar por Tags",
     "filterAll": "Filtro: Todos",
     "filterNormalPrompts": "Filtro: Prompts normais",
@@ -321,6 +321,8 @@
     "folderNotEmptyNote": "As pastas só podem ser excluídas quando estão vazias. Use a seleção em lote para excluir as conversas dentro da pasta primeiro.",
     "openInNewTab": "Abrir em Nova Aba",
     "moveTo": "Mover para...",
+    "editDescription": "Editar Descrição",
+    "descriptionPlaceholder": "Adicionar uma descrição...",
     "export": "Exportar",
     "exportAsText": "Exportar como texto",
     "exportAsMarkdown": "Exportar como Markdown",

@@ -268,7 +268,7 @@
   },
   "tooltip": {
     "moreOptions": "更多選項",
-    "search": "按標題搜尋",
+    "search": "按標題或描述搜尋",
     "filterByTags": "依標籤篩選",
     "filterAll": "篩選：全部",
     "filterNormalPrompts": "篩選：一般 Prompt",
@@ -321,6 +321,8 @@
     "folderNotEmptyNote": "只有空資料夾才能直接刪除。請先使用批量選取功能刪除資料夾內的對話。",
     "openInNewTab": "在新標籤頁開啟",
     "moveTo": "移動到...",
+    "editDescription": "編輯描述",
+    "descriptionPlaceholder": "新增描述...",
     "export": "匯出",
     "exportAsText": "匯出為純文字",
     "exportAsMarkdown": "匯出為 Markdown",

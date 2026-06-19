@@ -234,6 +234,16 @@ export const runMigrations = async (db: any) => {
       // Backfill from existing updated_at (which previously held the business timestamp)
       await db.run('UPDATE conversations SET last_active_at = COALESCE(updated_at, unixepoch())');
     }
+
+    // Migration: Add description to conversations if missing
+    await step('add description to conversations', async () => {
+      if (!(await hasColumn('conversations', 'description'))) {
+        console.log('Worker: Migrating conversations table - adding description');
+        await db.run(
+          "ALTER TABLE conversations ADD COLUMN description TEXT DEFAULT ''",
+        );
+      }
+    });
   } catch (err) {
     console.error('Worker: Migration failed:', err);
   }

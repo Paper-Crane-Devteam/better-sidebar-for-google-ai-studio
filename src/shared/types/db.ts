@@ -12,6 +12,7 @@ export interface Folder {
 export interface Conversation {
   id: string;
   title: string | null;
+  description: string | null;
   folder_id: string | null;
   external_id: string | null;
   external_url: string | null;

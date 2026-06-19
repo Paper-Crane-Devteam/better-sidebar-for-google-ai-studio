@@ -268,7 +268,7 @@
   },
   "tooltip": {
     "moreOptions": "More options",
-    "search": "Search by title",
+    "search": "Search by title or description",
     "filterByTags": "Filter by Tags",
     "filterAll": "Filter: All",
     "filterNormalPrompts": "Filter: Normal Prompts",
@@ -321,6 +321,8 @@
     "folderNotEmptyNote": "Folders can only be deleted when they are empty. Use batch selection to delete conversations inside the folder first.",
     "openInNewTab": "Open in New Tab",
     "moveTo": "Move to...",
+    "editDescription": "Edit Description",
+    "descriptionPlaceholder": "Add a description...",
     "export": "Export",
     "exportAsText": "Export as Text",
     "exportAsMarkdown": "Export as Markdown",

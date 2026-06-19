@@ -191,7 +191,8 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(
           const term = searchTerm.toLowerCase();
           const hasMatchingContent = (node: FolderTreeNodeData): boolean => {
             if (node.type === 'file')
-              return node.name.toLowerCase().includes(term);
+              return node.name.toLowerCase().includes(term) ||
+                (node.data?.description || '').toLowerCase().includes(term);
             if (!node.children || node.children.length === 0) return false;
             node.children = node.children.filter((child) =>
               hasMatchingContent(child),
@@ -279,7 +280,8 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(
           nodes.forEach((node) => {
             const matches =
               !searchTerm ||
-              node.name.toLowerCase().includes(searchTerm.toLowerCase());
+              node.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              (node.data?.description || '').toLowerCase().includes(searchTerm.toLowerCase());
             if (matches) ids.push(node.id);
             if (node.children) ids = ids.concat(getAllIds(node.children));
           });

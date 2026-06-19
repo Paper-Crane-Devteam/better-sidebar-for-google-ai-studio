@@ -26,6 +26,7 @@ import {
   Palette,
   Check,
   Settings,
+  TextCursorInput,
 } from 'lucide-react';
 import { modal } from '@/shared/lib/modal';
 import { MoveItemsDialog } from '../batch/MoveItemsDialog';
@@ -116,6 +117,30 @@ export function useExplorerMenuItems({
           node.select();
         }, 100);
       }
+    }
+  };
+
+  const handleEditDescription = async () => {
+    const currentDescription = node.data.data?.description || '';
+    let inputValue = currentDescription;
+    const confirmed = await modal.confirm({
+      title: t('node.editDescription'),
+      content: (
+        <textarea
+          className="w-full min-h-[80px] p-2 rounded-md border border-input bg-background text-sm resize-y"
+          defaultValue={currentDescription}
+          placeholder={t('node.descriptionPlaceholder')}
+          onChange={(e) => { inputValue = e.target.value; }}
+          autoFocus
+        />
+      ),
+      confirmText: t('common.save'),
+      cancelText: t('common.cancel'),
+    });
+    if (confirmed) {
+      await useAppStore
+        .getState()
+        .updateConversationDescription(node.data.id, inputValue);
     }
   };
 
@@ -212,6 +237,14 @@ export function useExplorerMenuItems({
       icon: <Edit2 className="h-4 w-4" />,
       label: t('node.rename'),
       onClick: () => node.edit(),
+    });
+
+    items.push({
+      type: 'item',
+      key: 'edit-description',
+      icon: <TextCursorInput className="h-4 w-4" />,
+      label: t('node.editDescription'),
+      onClick: () => void handleEditDescription(),
     });
 
     // Export submenu
