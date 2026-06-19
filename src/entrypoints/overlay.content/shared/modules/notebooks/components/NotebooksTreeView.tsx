@@ -125,6 +125,11 @@ export const NotebooksTreeView = forwardRef<
       : nodes;
 
     filteredNodes.sort((a, b) => {
+      // Pinned items always come first
+      const isAPinned = a.data?.is_pinned ? 1 : 0;
+      const isBPinned = b.data?.is_pinned ? 1 : 0;
+      if (isAPinned !== isBPinned) return isBPinned - isAPinned;
+
       if (sortOrder === 'date') {
         const dateA = a.data?.updated_at || a.data?.created_at || 0;
         const dateB = b.data?.updated_at || b.data?.created_at || 0;

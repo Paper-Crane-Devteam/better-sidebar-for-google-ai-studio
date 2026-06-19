@@ -15,6 +15,7 @@ export interface Folder {
   order_index: number;
   parent_id?: string | null;
   color?: string | null;
+  is_pinned?: number;
 }
 
 export interface Conversation {
@@ -268,6 +269,13 @@ export interface AppState {
   setNotebooksTags: (isOpen: boolean, selected?: string[]) => void;
   setNotebooksOnlyFavorites: (onlyFavorites: boolean) => void;
   setNotebooksSortOrder: (order: 'alpha' | 'date') => void;
+
+  // Pin
+  togglePin: (
+    id: string,
+    table: 'folders' | 'prompt_folders' | 'gems' | 'notebooks',
+    currentlyPinned: boolean,
+  ) => Promise<void>;
 }
 
 export type SetState = (

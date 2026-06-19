@@ -5,6 +5,7 @@ export interface Folder {
   platform: string;
   color: string | null;
   order_index: number;
+  is_pinned: number;
   created_at: number;
   updated_at: number;
 }
@@ -38,6 +39,7 @@ export interface Gem {
   description: string | null;
   platform: string;
   order_index: number;
+  is_pinned: number;
   is_deleted: number;
   created_at: number;
   updated_at: number;
@@ -52,6 +54,7 @@ export interface Notebook {
   description: string | null;
   platform: string;
   order_index: number;
+  is_pinned: number;
   is_deleted: number;
   created_at: number;
   updated_at: number;
@@ -80,6 +83,7 @@ export interface PromptFolder {
   name: string;
   parent_id: string | null;
   order_index: number;
+  is_pinned: number;
   created_at: number;
   updated_at: number;
 }

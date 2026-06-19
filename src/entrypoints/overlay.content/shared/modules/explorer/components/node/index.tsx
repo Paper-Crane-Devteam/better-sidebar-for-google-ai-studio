@@ -223,6 +223,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
     node,
     isFavorite,
     folderColor,
+    isPinned: !!node.data.data?.is_pinned,
     onDelete: handleDelete,
     onTagToggle: handleTagToggle,
     onColorChange: async (color: string | null) => {
@@ -231,6 +232,8 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
     onCreateFolder: handleCreateFolder,
     onToggleFavorite: (id: string, isFav: boolean) =>
       toggleFavorite(id, 'conversation', isFav),
+    onTogglePin: (id: string, isPinned: boolean) =>
+      useAppStore.getState().togglePin(id, 'folders', isPinned),
     onFolderSettings: !isFile && !isTimeGroup ? handleFolderSettings : undefined,
   });
 
@@ -342,6 +345,10 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
     isActive && !folderColor && 'node-item-selected',
     // Current conversation state: lighter highlight when not actively selected (lower priority)
     !isActive && isCurrentConversation && 'node-item-current',
+    // Pinned folder indicator
+    isFolder && node.data.data?.is_pinned && 'node-item-pinned',
+    // Favorited file indicator
+    isFile && isFavorite && 'node-item-favorited',
     // Expand right padding on hover to make room for action buttons (skip while renaming)
     hasHoverActions && !node.isEditing && 'group-hover:pr-8',
     // Drag-over state
@@ -451,7 +458,11 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
             await updateFolderColor(node.data.id, color);
           }}
           isFavorite={isFavorite}
+          isPinned={!!node.data.data?.is_pinned}
           folderColor={folderColor}
+          onTogglePin={(id: string, isPinned: boolean) =>
+            useAppStore.getState().togglePin(id, 'folders', isPinned)
+          }
           style={style}
           dragHandle={dragHandle}
           tree={tree}

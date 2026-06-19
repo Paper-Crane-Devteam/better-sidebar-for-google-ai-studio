@@ -57,7 +57,7 @@ export const folderRepo = {
   update: async (
     id: string,
     updates: Partial<
-      Pick<Folder, 'name' | 'parent_id' | 'order_index' | 'color'>
+      Pick<Folder, 'name' | 'parent_id' | 'order_index' | 'color' | 'is_pinned'>
     >,
   ): Promise<void> => {
     await updateWithTimestamp('folders', id, updates);

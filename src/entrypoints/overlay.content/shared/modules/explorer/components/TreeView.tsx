@@ -151,6 +151,11 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(
 
       const sortNodes = (nodes: FolderTreeNodeData[]) => {
         nodes.sort((a, b) => {
+          // Pinned items always come first
+          const isAPinned = a.data?.is_pinned ? 1 : 0;
+          const isBPinned = b.data?.is_pinned ? 1 : 0;
+          if (isAPinned !== isBPinned) return isBPinned - isAPinned;
+
           const isAFav = favoriteIds.has(a.id);
           const isBFav = favoriteIds.has(b.id);
           if (isAFav && !isBFav) return -1;

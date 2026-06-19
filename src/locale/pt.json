@@ -328,7 +328,9 @@
     "exportAsMarkdown": "Exportar como Markdown",
     "exportAsJson": "Exportar como JSON",
     "duplicate": "Duplicar",
-    "changeColor": "Alterar Cor"
+    "changeColor": "Alterar Cor",
+    "pinToTop": "Fixar no Topo",
+    "unpinFromTop": "Desafixar"
   },
   "pendingEntry": {
     "placeholder": "Título (opcional)",

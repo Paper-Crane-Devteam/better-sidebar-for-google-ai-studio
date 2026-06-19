@@ -39,7 +39,7 @@ export const promptFolderRepo = {
 
   update: async (
     id: string,
-    updates: Partial<Pick<PromptFolder, 'name' | 'parent_id' | 'order_index'>>
+    updates: Partial<Pick<PromptFolder, 'name' | 'parent_id' | 'order_index' | 'is_pinned'>>
   ): Promise<void> => {
     await updateWithTimestamp('prompt_folders', id, updates);
   },

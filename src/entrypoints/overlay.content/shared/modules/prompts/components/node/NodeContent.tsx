@@ -65,6 +65,7 @@ export const NodeContent = ({
       newName={newName}
       setNewName={setNewName}
       namePrefix={undefined}
+      isPinned={!isFile && !!node.data.data?.is_pinned}
     />
   );
 };

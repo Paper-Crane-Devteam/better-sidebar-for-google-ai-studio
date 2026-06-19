@@ -207,10 +207,13 @@ export const Node = ({
   const menuItems = usePromptsMenuItems({
     node,
     isFavorite,
+    isPinned: !!node.data.data?.is_pinned,
     onDelete: handleDelete,
     onCreateFolder: handleCreateFolder,
     onToggleFavorite: (id: string, isFav: boolean) =>
       toggleFavorite(id, 'prompt', isFav),
+    onTogglePin: (id: string, isPinned: boolean) =>
+      useAppStore.getState().togglePin(id, 'prompt_folders', isPinned),
     onCopy: handleCopy,
     onDuplicate: handleDuplicate,
     onEdit: onEdit ? handleEdit : undefined,
@@ -281,6 +284,7 @@ export const Node = ({
     !node.isEditing && (isFile ? 'group-hover:pr-14' : 'group-hover:pr-8'),
     !((node.isSelected && !isFile) || isBatchSelected) && 'hover:bg-accent/50',
     ((node.isSelected && !isFile) || isBatchSelected) && 'node-item-selected',
+    !isFile && node.data.data?.is_pinned && 'node-item-pinned',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
     isMenuActive && 'bg-accent/50',
     isMenuActive && (isFile ? 'pr-14' : 'pr-8'),

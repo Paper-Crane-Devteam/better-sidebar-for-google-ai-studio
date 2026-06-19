@@ -27,6 +27,8 @@ import {
   Check,
   Settings,
   TextCursorInput,
+  Pin,
+  PinOff,
 } from 'lucide-react';
 import { modal } from '@/shared/lib/modal';
 import { MoveItemsDialog } from '../batch/MoveItemsDialog';
@@ -41,11 +43,13 @@ interface UseExplorerMenuItemsParams {
   node: NodeRendererProps<FolderTreeNodeData>['node'];
   isFavorite: boolean;
   folderColor: string | null;
+  isPinned: boolean;
   onDelete: () => void;
   onTagToggle: (tagId: string, checked: boolean) => void;
   onColorChange: (color: string | null) => void;
   onCreateFolder: (parentId: string) => void;
   onToggleFavorite: (id: string, isFav: boolean) => void;
+  onTogglePin: (id: string, isPinned: boolean) => void;
   onFolderSettings?: () => void;
 }
 
@@ -53,11 +57,13 @@ export function useExplorerMenuItems({
   node,
   isFavorite,
   folderColor,
+  isPinned,
   onDelete,
   onTagToggle,
   onColorChange,
   onCreateFolder,
   onToggleFavorite,
+  onTogglePin,
   onFolderSettings,
 }: UseExplorerMenuItemsParams): MenuEntryDef[] {
   const { t } = useI18n();
@@ -157,6 +163,15 @@ export function useExplorerMenuItems({
         e?.stopPropagation();
         onCreateFolder(node.data.id);
       },
+    });
+    items.push({
+      type: 'item',
+      key: 'toggle-pin',
+      icon: isPinned
+        ? <PinOff className="h-4 w-4" />
+        : <Pin className="h-4 w-4 rotate-45" />,
+      label: isPinned ? t('node.unpinFromTop') : t('node.pinToTop'),
+      onClick: () => onTogglePin(node.data.id, isPinned),
     });
     items.push({ type: 'separator', key: 'sep-folder-top' });
   }

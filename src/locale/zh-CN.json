@@ -328,7 +328,9 @@
     "exportAsMarkdown": "导出为 Markdown",
     "exportAsJson": "导出为 JSON",
     "duplicate": "复制",
-    "changeColor": "更改颜色"
+    "changeColor": "更改颜色",
+    "pinToTop": "置顶",
+    "unpinFromTop": "取消置顶"
   },
   "pendingEntry": {
     "placeholder": "标题（选填）",

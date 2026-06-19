@@ -24,6 +24,10 @@ export interface OverflowTooltipProps {
   showDelay?: number;
   /** Optional external ref for hover detection (overflow check still uses the inner text element) */
   hoverRef?: React.RefObject<HTMLElement | null>;
+  /** Force tooltip to show on hover regardless of overflow state */
+  forceShow?: boolean;
+  /** Optional ref to use for tooltip position calculation instead of the trigger element */
+  positionRef?: React.RefObject<HTMLElement | null>;
 }
 
 /**
@@ -44,6 +48,8 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
   tooltipClassName,
   showDelay = 300,
   hoverRef,
+  forceShow = false,
+  positionRef,
 }) => {
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -86,7 +92,7 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
 
   // Calculate tooltip position based on placement — returns coords instead of setting state
   const calculatePosition = useCallback((): { top: number; left: number } | null => {
-    const triggerEl = triggerRef.current;
+    const triggerEl = positionRef?.current ?? triggerRef.current;
     const tooltipEl = tooltipRef.current;
     if (!triggerEl || !tooltipEl) return null;
 
@@ -129,7 +135,7 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
       left = viewportWidth - margin - tooltipRect.width;
 
     return { top, left };
-  }, [placement, offset]);
+  }, [placement, offset, positionRef]);
 
   // Recalculate position when tooltip becomes visible
   useEffect(() => {
@@ -150,7 +156,7 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
   }, [isVisible, calculatePosition]);
 
   const handleMouseEnter = () => {
-    if (!isOverflowing) return;
+    if (!isOverflowing && !forceShow) return;
 
     timeoutRef.current = setTimeout(() => {
       setIsVisible(true);
@@ -216,7 +222,7 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
       el.removeEventListener('mouseleave', onLeave);
       el.removeEventListener('mousemove', onMove);
     };
-  }, [hoverRef, isOverflowing]); // re-attach when overflow state changes
+  }, [hoverRef, isOverflowing, forceShow]); // re-attach when overflow state or forceShow changes
 
   const portalContainer = TooltipHelper.getInstance().getContainer();
 
@@ -233,7 +239,7 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
       </div>
 
       {isVisible &&
-        isOverflowing &&
+        (isOverflowing || forceShow) &&
         createPortal(
           <div
             ref={tooltipRef}

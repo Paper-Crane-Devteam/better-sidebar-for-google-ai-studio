@@ -329,7 +329,9 @@
     "exportAsMarkdown": "Markdownとしてエクスポート",
     "exportAsJson": "JSONとしてエクスポート",
     "duplicate": "複製",
-    "changeColor": "色を変更"
+    "changeColor": "色を変更",
+    "pinToTop": "上部に固定",
+    "unpinFromTop": "固定を解除"
   },
   "pendingEntry": {
     "placeholder": "タイトル（任意）",

@@ -33,7 +33,7 @@ export interface FolderTreeNodeContentProps {
   newName: string;
   setNewName: (name: string) => void;
 
-  /** Content rendered after the name (e.g. favorite star) */
+  /** Content rendered after the name (e.g. description icon) */
   nameAddon?: React.ReactNode;
 
   /** Content rendered before the name (e.g. favorite star indicator) */
@@ -41,6 +41,15 @@ export interface FolderTreeNodeContentProps {
 
   /** Optional external ref for hover detection on the OverflowTooltip */
   hoverRef?: React.RefObject<HTMLElement | null>;
+
+  /** Custom tooltip content (overrides default name-only tooltip) */
+  tooltipContent?: React.ReactNode;
+
+  /** Force tooltip to show on hover even if text doesn't overflow */
+  forceShowTooltip?: boolean;
+
+  /** Whether this item is pinned (kept for API compatibility, no longer rendered) */
+  isPinned?: boolean;
 }
 
 export const FolderTreeNodeContent = ({
@@ -56,6 +65,8 @@ export const FolderTreeNodeContent = ({
   nameAddon,
   namePrefix,
   hoverRef,
+  tooltipContent,
+  forceShowTooltip,
 }: FolderTreeNodeContentProps) => {
   const isFile = node.data.type === 'file';
   const isTimeGroup = node.data.data?.isTimeGroup;
@@ -100,33 +111,43 @@ export const FolderTreeNodeContent = ({
         </div>
       )}
 
-      <div className="flex-1 min-w-0 flex items-center gap-1 overflow-hidden">
-        {namePrefix}
-        {node.isEditing ? (
-          <RenameForm node={node} newName={newName} setNewName={setNewName} />
-        ) : isFile ? (
-          <OverflowTooltip
-            content={node.data.name}
-            placement="right"
-            offset={16}
-            className="text-sm select-none"
-            hoverRef={hoverRef}
-          >
-            {node.data.name}
-          </OverflowTooltip>
-        ) : (
-          <OverflowTooltip
-            content={node.data.name}
-            placement="right"
-            offset={16}
-            className="text-sm select-none"
-            style={folderColor ? { color: folderColor } : undefined}
-            hoverRef={hoverRef}
-          >
-            {node.data.name}
-          </OverflowTooltip>
+      <div className="flex-1 min-w-0 flex items-center justify-between overflow-hidden">
+        <div className="min-w-0 flex items-center gap-1 overflow-hidden">
+          {namePrefix}
+          {node.isEditing ? (
+            <RenameForm node={node} newName={newName} setNewName={setNewName} />
+          ) : isFile ? (
+            <OverflowTooltip
+              content={tooltipContent ?? node.data.name}
+              placement="right"
+              offset={16}
+              className="text-sm select-none"
+              hoverRef={hoverRef}
+              forceShow={forceShowTooltip}
+              positionRef={hoverRef}
+            >
+              {node.data.name}
+            </OverflowTooltip>
+          ) : (
+            <OverflowTooltip
+              content={tooltipContent ?? node.data.name}
+              placement="right"
+              offset={16}
+              className="text-sm select-none"
+              style={folderColor ? { color: folderColor } : undefined}
+              hoverRef={hoverRef}
+              forceShow={forceShowTooltip}
+              positionRef={hoverRef}
+            >
+              {node.data.name}
+            </OverflowTooltip>
+          )}
+        </div>
+        {nameAddon && (
+          <div className="shrink-0 flex items-center gap-0.5 ml-1">
+            {nameAddon}
+          </div>
         )}
-        {nameAddon}
       </div>
     </>
   );

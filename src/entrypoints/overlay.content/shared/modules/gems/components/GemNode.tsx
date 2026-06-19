@@ -9,6 +9,8 @@ import {
   ExternalLink,
   Star,
   MessageSquarePlus,
+  Pin,
+  PinOff,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { navigateToConversation, navigateToGem, navigate } from '@/shared/lib/navigation';
@@ -168,6 +170,18 @@ export const GemNode = ({
         navigateToGem(node.data.id);
       },
     },
+    // — Pin —
+    {
+      type: 'item' as const,
+      key: 'toggle-pin',
+      icon: node.data.data?.is_pinned
+        ? <PinOff className="h-4 w-4" />
+        : <Pin className="h-4 w-4 rotate-45" />,
+      label: node.data.data?.is_pinned ? t('node.unpinFromTop') : t('node.pinToTop'),
+      onClick: () => {
+        useAppStore.getState().togglePin(node.data.id, 'gems', !!node.data.data?.is_pinned);
+      },
+    },
     // — Navigation —
     {
       type: 'item' as const,
@@ -221,17 +235,18 @@ export const GemNode = ({
     },
   ] : [];
 
-  // Menu items for conversation files (reuse explorer menu items)
   const fileMenuItems = useExplorerMenuItems({
     node,
     isFavorite,
     folderColor: null,
+    isPinned: false,
     onDelete: handleDeleteConversation,
     onTagToggle: handleTagToggle,
     onColorChange: async () => {},
     onCreateFolder: async () => {},
     onToggleFavorite: (id: string, isFav: boolean) =>
       toggleFavorite(id, 'conversation', isFav),
+    onTogglePin: () => {},
   });
 
   const activeMenuItems = isGem ? gemMenuItems : isFile ? fileMenuItems : [];
@@ -245,6 +260,7 @@ export const GemNode = ({
     !isActive && !isCurrentConversation && 'hover:bg-accent/50',
     isActive && 'node-item-selected',
     !isActive && isCurrentConversation && 'node-item-current',
+    isGem && node.data.data?.is_pinned && 'node-item-pinned',
     hasHoverActions && 'group-hover:pr-8',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
     isMenuActive && 'bg-accent/50',
@@ -277,6 +293,7 @@ export const GemNode = ({
               newName={newName}
               setNewName={setNewName}
               hoverRef={nodeRowRef}
+              isPinned={isGem && !!node.data.data?.is_pinned}
             />
 
             {/* Action bar with three-dot menu */}

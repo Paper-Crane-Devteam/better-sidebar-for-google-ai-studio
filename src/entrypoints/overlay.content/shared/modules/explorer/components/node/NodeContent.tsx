@@ -1,4 +1,5 @@
 import React from 'react';
+import { Info } from 'lucide-react';
 import { NodeProps } from './types';
 import { FolderTreeNodeContent } from '../../../../components/folder-tree';
 
@@ -36,6 +37,23 @@ export const NodeContent = ({
   setNewName,
   hoverRef,
 }: NodeContentProps) => {
+  const isFile = node.data.type === 'file';
+  const description = isFile ? (node.data.data?.description || '') : '';
+  const hasDescription = description.length > 0;
+
+  // Build enriched tooltip content: title + description
+  const tooltipContent = hasDescription ? (
+    <div className="space-y-1">
+      <div className="font-medium">{node.data.name}</div>
+      <div className="text-[10px] opacity-80">{description}</div>
+    </div>
+  ) : undefined;
+
+  // Info icon indicator when description exists
+  const nameAddon = hasDescription ? (
+    <Info className="shrink-0 w-3 h-3 text-muted-foreground/60" />
+  ) : undefined;
+
   return (
     <FolderTreeNodeContent
       node={node}
@@ -58,7 +76,9 @@ export const NodeContent = ({
       newName={newName}
       setNewName={setNewName}
       namePrefix={undefined}
-      nameAddon={undefined}
+      nameAddon={nameAddon}
+      tooltipContent={tooltipContent}
+      forceShowTooltip={hasDescription}
     />
   );
 };

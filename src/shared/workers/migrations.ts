@@ -244,6 +244,46 @@ export const runMigrations = async (db: any) => {
         );
       }
     });
+
+    // Migration: Add is_pinned to folders if missing
+    await step('add is_pinned to folders', async () => {
+      if (!(await hasColumn('folders', 'is_pinned'))) {
+        console.log('Worker: Migrating folders table - adding is_pinned');
+        await db.run(
+          'ALTER TABLE folders ADD COLUMN is_pinned INTEGER DEFAULT 0',
+        );
+      }
+    });
+
+    // Migration: Add is_pinned to prompt_folders if missing
+    await step('add is_pinned to prompt_folders', async () => {
+      if (!(await hasColumn('prompt_folders', 'is_pinned'))) {
+        console.log('Worker: Migrating prompt_folders table - adding is_pinned');
+        await db.run(
+          'ALTER TABLE prompt_folders ADD COLUMN is_pinned INTEGER DEFAULT 0',
+        );
+      }
+    });
+
+    // Migration: Add is_pinned to gems if missing
+    await step('add is_pinned to gems', async () => {
+      if (!(await hasColumn('gems', 'is_pinned'))) {
+        console.log('Worker: Migrating gems table - adding is_pinned');
+        await db.run(
+          'ALTER TABLE gems ADD COLUMN is_pinned INTEGER DEFAULT 0',
+        );
+      }
+    });
+
+    // Migration: Add is_pinned to notebooks if missing
+    await step('add is_pinned to notebooks', async () => {
+      if (!(await hasColumn('notebooks', 'is_pinned'))) {
+        console.log('Worker: Migrating notebooks table - adding is_pinned');
+        await db.run(
+          'ALTER TABLE notebooks ADD COLUMN is_pinned INTEGER DEFAULT 0',
+        );
+      }
+    });
   } catch (err) {
     console.error('Worker: Migration failed:', err);
   }

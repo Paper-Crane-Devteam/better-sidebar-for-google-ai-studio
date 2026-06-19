@@ -6,6 +6,8 @@ import {
   ExternalLink,
   Star,
   Trash2,
+  Pin,
+  PinOff,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import {
@@ -180,6 +182,17 @@ export const NotebookNode = ({
     ? [
         {
           type: 'item' as const,
+          key: 'toggle-pin',
+          icon: node.data.data?.is_pinned
+            ? <PinOff className="h-4 w-4" />
+            : <Pin className="h-4 w-4 rotate-45" />,
+          label: node.data.data?.is_pinned ? t('node.unpinFromTop') : t('node.pinToTop'),
+          onClick: () => {
+            useAppStore.getState().togglePin(node.data.id, 'notebooks', !!node.data.data?.is_pinned);
+          },
+        },
+        {
+          type: 'item' as const,
           key: 'open-notebook',
           icon: <NotebookText className="h-4 w-4" />,
           label: t('notebooks.openNotebook'),
@@ -213,12 +226,14 @@ export const NotebookNode = ({
     node,
     isFavorite,
     folderColor: null,
+    isPinned: false,
     onDelete: handleDeleteConversation,
     onTagToggle: handleTagToggle,
     onColorChange: async () => {},
     onCreateFolder: async () => {},
     onToggleFavorite: (id: string, isFav: boolean) =>
       toggleFavorite(id, 'conversation', isFav),
+    onTogglePin: () => {},
   });
 
   const activeMenuItems = isNotebook
@@ -236,6 +251,7 @@ export const NotebookNode = ({
     !isActive && !isCurrentConversation && 'hover:bg-accent/50',
     isActive && 'node-item-selected',
     !isActive && isCurrentConversation && 'node-item-current',
+    isNotebook && node.data.data?.is_pinned && 'node-item-pinned',
     hasHoverActions && 'group-hover:pr-8',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
     isMenuActive && 'bg-accent/50',
@@ -268,6 +284,7 @@ export const NotebookNode = ({
               newName={newName}
               setNewName={setNewName}
               hoverRef={nodeRowRef}
+              isPinned={isNotebook && !!node.data.data?.is_pinned}
             />
 
             {hasHoverActions && (

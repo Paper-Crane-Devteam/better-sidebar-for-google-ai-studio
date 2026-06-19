@@ -11,7 +11,7 @@ export type ExtensionMessage = (
       payload: {
         id: string;
         updates: Partial<
-          Pick<Folder, 'name' | 'parent_id' | 'order_index' | 'color'>
+          Pick<Folder, 'name' | 'parent_id' | 'order_index' | 'color' | 'is_pinned'>
         >;
       };
     }
@@ -248,7 +248,7 @@ export type ExtensionMessage = (
       payload: {
         id: string;
         updates: Partial<
-          Pick<PromptFolder, 'name' | 'parent_id' | 'order_index'>
+          Pick<PromptFolder, 'name' | 'parent_id' | 'order_index' | 'is_pinned'>
         >;
       };
     }
@@ -357,7 +357,7 @@ export type ExtensionMessage = (
       type: 'UPDATE_GEM';
       payload: {
         id: string;
-        updates: Partial<{ name: string; description: string; icon_url: string }>;
+        updates: Partial<{ name: string; description: string; icon_url: string; is_pinned: number }>;
       };
     }
   | { type: 'GET_GEM_CONVERSATIONS'; payload: { gemId: string } }
@@ -394,7 +394,7 @@ export type ExtensionMessage = (
       type: 'UPDATE_NOTEBOOK';
       payload: {
         id: string;
-        updates: Partial<{ name: string; description: string; icon_url: string }>;
+        updates: Partial<{ name: string; description: string; icon_url: string; is_pinned: number }>;
       };
     }
   | { type: 'GET_NOTEBOOK_CONVERSATIONS'; payload: { notebookId: string } }

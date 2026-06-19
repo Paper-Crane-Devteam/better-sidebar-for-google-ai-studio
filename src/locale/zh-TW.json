@@ -328,7 +328,9 @@
     "exportAsMarkdown": "匯出為 Markdown",
     "exportAsJson": "匯出為 JSON",
     "duplicate": "複製",
-    "changeColor": "更改顏色"
+    "changeColor": "更改顏色",
+    "pinToTop": "置頂",
+    "unpinFromTop": "取消置頂"
   },
   "pendingEntry": {
     "placeholder": "標題（選填）",

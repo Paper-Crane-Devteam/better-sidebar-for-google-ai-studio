@@ -328,7 +328,9 @@
     "exportAsMarkdown": "Экспорт как Markdown",
     "exportAsJson": "Экспорт как JSON",
     "duplicate": "Дублировать",
-    "changeColor": "Изменить цвет"
+    "changeColor": "Изменить цвет",
+    "pinToTop": "Закрепить наверху",
+    "unpinFromTop": "Открепить"
   },
   "pendingEntry": {
     "placeholder": "Заголовок (необязательно)",

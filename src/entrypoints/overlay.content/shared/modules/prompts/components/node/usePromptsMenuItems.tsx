@@ -9,6 +9,8 @@ import {
   Copy,
   Files,
   Pencil,
+  Pin,
+  PinOff,
 } from 'lucide-react';
 import type { MenuEntryDef } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import type { NodeRendererProps } from 'react-arborist';
@@ -17,9 +19,11 @@ import type { FolderTreeNodeData } from '../../../../components/folder-tree/type
 interface UsePromptsMenuItemsParams {
   node: NodeRendererProps<FolderTreeNodeData>['node'];
   isFavorite: boolean;
+  isPinned: boolean;
   onDelete: () => void;
   onCreateFolder: (parentId: string) => void;
   onToggleFavorite: (id: string, isFav: boolean) => void;
+  onTogglePin: (id: string, isPinned: boolean) => void;
   onCopy: (e?: React.MouseEvent) => void;
   onDuplicate: () => void;
   onEdit?: (e?: React.MouseEvent) => void;
@@ -28,9 +32,11 @@ interface UsePromptsMenuItemsParams {
 export function usePromptsMenuItems({
   node,
   isFavorite,
+  isPinned,
   onDelete,
   onCreateFolder,
   onToggleFavorite,
+  onTogglePin,
   onCopy,
   onDuplicate,
   onEdit,
@@ -50,6 +56,15 @@ export function usePromptsMenuItems({
         e?.stopPropagation();
         onCreateFolder(node.data.id);
       },
+    });
+    items.push({
+      type: 'item',
+      key: 'toggle-pin',
+      icon: isPinned
+        ? <PinOff className="h-4 w-4" />
+        : <Pin className="h-4 w-4 rotate-45" />,
+      label: isPinned ? t('node.unpinFromTop') : t('node.pinToTop'),
+      onClick: () => onTogglePin(node.data.id, isPinned),
     });
     items.push({ type: 'separator', key: 'sep-folder-top' });
   }

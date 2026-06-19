@@ -46,6 +46,7 @@ export function createDataActions(
   | 'deleteItems'
   | 'toggleFavorite'
   | 'updateFolderColor'
+  | 'togglePin'
 > {
   return {
     setFolders: (folders) => set({ folders }),
@@ -399,6 +400,25 @@ export function createDataActions(
         await get().fetchData(true);
       } catch (error) {
         console.error('Failed to update folder color:', error);
+      }
+    },
+
+    togglePin: async (id, table, currentlyPinned) => {
+      try {
+        const newValue = currentlyPinned ? 0 : 1;
+        const messageTypeMap: Record<string, string> = {
+          folders: 'UPDATE_FOLDER',
+          prompt_folders: 'UPDATE_PROMPT_FOLDER',
+          gems: 'UPDATE_GEM',
+          notebooks: 'UPDATE_NOTEBOOK',
+        };
+        await browser.runtime.sendMessage({
+          type: messageTypeMap[table],
+          payload: { id, updates: { is_pinned: newValue } },
+        } as any);
+        await get().fetchData(true);
+      } catch (error) {
+        console.error('Failed to toggle pin:', error);
       }
     },
   };

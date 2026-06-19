@@ -97,6 +97,44 @@
     background-color: rgba(var(--foreground) / 0.04);
   }
 
+  /* Pinned item indicator */
+  .node-item-pinned {
+    position: relative;
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      border-radius: 1px;
+      background-color: rgb(var(--primary));
+      opacity: 0.7;
+    }
+  }
+
+  /* Favorited item indicator — same bar style but with yellow/amber color */
+  .node-item-favorited {
+    position: relative;
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      border-radius: 1px;
+      background-color: #eab308;
+      opacity: 0.7;
+    }
+  }
+
+  /* Pin icon displayed inline — uses muted-foreground for theme compatibility */
+  .pin-indicator {
+    @apply text-muted-foreground/60;
+    flex-shrink: 0;
+  }
+
   /* Colored Tag Item: hover uses the tag's own color at low opacity */
   .tag-item-colored {
     &:hover {

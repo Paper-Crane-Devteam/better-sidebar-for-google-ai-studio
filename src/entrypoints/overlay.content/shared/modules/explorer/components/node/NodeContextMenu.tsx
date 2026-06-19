@@ -8,12 +8,14 @@ import { NodeProps } from './types';
 
 interface NodeContextMenuProps extends NodeProps {
   isFavorite: boolean;
+  isPinned?: boolean;
   onDelete: () => void;
   onTagToggle: (tagId: string, checked: boolean) => void;
   onColorChange: (color: string | null) => void;
   folderColor: string | null;
   onCreateFolder: (parentId: string) => void;
   onToggleFavorite: (id: string, isFav: boolean) => void;
+  onTogglePin?: (id: string, isPinned: boolean) => void;
 }
 
 export const NodeContextMenu = ({
@@ -24,7 +26,9 @@ export const NodeContextMenu = ({
   onTagToggle,
   onColorChange,
   isFavorite,
+  isPinned,
   folderColor,
+  onTogglePin,
 }: NodeContextMenuProps) => {
   const shouldPreventRef = React.useRef(false);
 
@@ -32,11 +36,13 @@ export const NodeContextMenu = ({
     node,
     isFavorite,
     folderColor,
+    isPinned: isPinned ?? !!node.data.data?.is_pinned,
     onDelete,
     onTagToggle,
     onColorChange,
     onCreateFolder,
     onToggleFavorite,
+    onTogglePin: onTogglePin ?? (() => {}),
   });
 
   return (

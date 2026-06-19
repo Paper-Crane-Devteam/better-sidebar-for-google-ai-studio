@@ -4,6 +4,7 @@ import {
 } from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
 import { renderMenuItems } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import { usePromptsMenuItems } from './usePromptsMenuItems';
+import { useAppStore } from '@/shared/lib/store';
 import { NodeProps } from './types';
 
 interface NodeContextMenuProps extends NodeProps {
@@ -31,9 +32,12 @@ export const NodeContextMenu = ({
   const menuItems = usePromptsMenuItems({
     node,
     isFavorite,
+    isPinned: !!node.data.data?.is_pinned,
     onDelete,
     onCreateFolder,
     onToggleFavorite,
+    onTogglePin: (id: string, isPinned: boolean) =>
+      useAppStore.getState().togglePin(id, 'prompt_folders', isPinned),
     onCopy,
     onDuplicate,
     onEdit: onEditPrompt,

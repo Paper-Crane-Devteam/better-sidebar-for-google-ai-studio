@@ -30,7 +30,7 @@ export const conversationRepo = {
       [
         c.id,
         c.title,
-        c.description ?? '',
+        c.description || null,
         c.folder_id,
         c.external_id,
         c.external_url,
@@ -176,7 +176,7 @@ export const conversationRepo = {
         bind: [
           c.id,
           c.title,
-          c.description ?? '',
+          c.description || null,
           c.folder_id,
           c.external_id,
           c.external_url,
