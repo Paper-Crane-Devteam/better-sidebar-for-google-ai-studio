@@ -11,6 +11,7 @@ import { TooltipHelper } from '@/shared/lib/tooltip-helper';
 import { applyShadowStyles, querySelectorDeep, waitForElement } from '@/shared/lib/utils';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { initAiStudioThemeSync, bindAiStudioShadowRootToTheme } from '@/themes/platforms/aistudio';
+import { useExclusiveContextMenuStore } from '../shared/components/ui/exclusive-context-menu';
 
 export async function initAiStudioOverlay(mainStyles: string): Promise<void> {
   console.log('Better Sidebar: Overlay (AI Studio) Initialized');
@@ -115,7 +116,17 @@ export async function initAiStudioOverlay(mainStyles: string): Promise<void> {
   });
 
   // Prevent keyboard/mouse events from bubbling to AI Studio's native listeners
-  const stopPropagation = (e: Event) => e.stopPropagation();
+  const stopPropagation = (e: Event) => {
+    // Close context menu on pointerdown inside sidebar (since stopPropagation
+    // prevents Radix's document-level dismiss listener from firing)
+    if (e.type === 'pointerdown') {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-radix-menu-content]')) {
+        useExclusiveContextMenuStore.getState().closeAll();
+      }
+    }
+    e.stopPropagation();
+  };
   for (const evt of [
     'click',
     'mousedown',

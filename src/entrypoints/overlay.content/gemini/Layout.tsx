@@ -16,6 +16,7 @@ import {
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useAppStore } from '@/shared/lib/store';
 import { initGeminiThemeSync, bindShadowRootToTheme } from '@/themes/platforms/gemini';
+import { useExclusiveContextMenuStore } from '../shared/components/ui/exclusive-context-menu';
 
 export async function initGeminiOverlay(mainStyles: string): Promise<void> {
   console.log('Better Sidebar: Overlay (Gemini) Initialized');
@@ -250,7 +251,17 @@ async function mountDesktopLayout(
           wrapper.style.width = '100%';
           wrapper.style.overflow = 'hidden';
 
-          const stopPropagation = (e: Event) => e.stopPropagation();
+          const stopPropagation = (e: Event) => {
+            // Close context menu on pointerdown inside sidebar (since stopPropagation
+            // prevents Radix's document-level dismiss listener from firing)
+            if (e.type === 'pointerdown') {
+              const target = e.target as HTMLElement;
+              if (!target.closest('[data-radix-menu-content]')) {
+                useExclusiveContextMenuStore.getState().closeAll();
+              }
+            }
+            e.stopPropagation();
+          };
           for (const evt of [
             'click',
             'mousedown',

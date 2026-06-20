@@ -13,6 +13,7 @@ import { TooltipHelper } from '@/shared/lib/tooltip-helper';
 import { applyShadowStyles, waitForElement } from '@/shared/lib/utils';
 import { useAppStore } from '@/shared/lib/store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
+import { useExclusiveContextMenuStore } from '../shared/components/ui/exclusive-context-menu';
 
 const MOBILE_WRAPPER_ID =
   'better-sidebar-for-google-ai-studio-sidebar-wrapper-mobile';
@@ -46,7 +47,17 @@ export async function mountMobileLayout(
     wrapper.style.overflow = 'hidden';
 
     // Prevent events from bubbling to Gemini's native listeners
-    const stopPropagation = (e: Event) => e.stopPropagation();
+    const stopPropagation = (e: Event) => {
+      // Close context menu on pointerdown inside sidebar (since stopPropagation
+      // prevents Radix's document-level dismiss listener from firing)
+      if (e.type === 'pointerdown') {
+        const target = e.target as HTMLElement;
+        if (!target.closest('[data-radix-menu-content]')) {
+          useExclusiveContextMenuStore.getState().closeAll();
+        }
+      }
+      e.stopPropagation();
+    };
     for (const evt of [
       'click',
       'mousedown',
