@@ -1,16 +1,19 @@
 import { useEffect, useRef } from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
+import {
+  AISTUDIO_SELECTORS,
+  closeAIStudioRunSettings,
+} from '@/shared/lib/dom-selectors';
 
 /**
  * Auto-hide run settings panel for AI Studio.
  *
  * Logic:
- * - When enabled, continuously observe the document for
- *   `[aria-label="Close run settings panel"]` button appearances.
- *   If it appears (and not suspended), click it automatically.
- * - If the user manually clicks `[aria-label="Toggle run settings panel"]`,
+ * - When enabled, continuously observe the document for the close button
+ *   inside ms-run-settings. If it appears (and not suspended), click it automatically.
+ * - If the user manually clicks the toggle run-settings button,
  *   temporarily suspend auto-close (the user wants to see it).
- * - When the user manually clicks `[aria-label="Close run settings panel"]`,
+ * - When the user manually clicks the close button,
  *   resume auto-close logic.
  *
  * Uses a single MutationObserver on document.body (subtree) so it survives
@@ -77,9 +80,7 @@ export const AutoHideRunSettingsFeature = () => {
     // Listen for user clicking "Toggle run settings panel" to suspend auto-close
     const toggleListener = (e: Event) => {
       const target = e.target as HTMLElement;
-      const toggleBtn = target.closest(
-        '[aria-label="Toggle run settings panel"]',
-      );
+      const toggleBtn = target.closest(AISTUDIO_SELECTORS.toggleRunSettings);
       if (toggleBtn) {
         suspendedRef.current = true;
       }
@@ -88,9 +89,7 @@ export const AutoHideRunSettingsFeature = () => {
     // Listen for user clicking "Close run settings panel" to resume auto-close
     const closeListener = (e: Event) => {
       const target = e.target as HTMLElement;
-      const closeBtn = target.closest(
-        '[aria-label="Close run settings panel"]',
-      );
+      const closeBtn = target.closest(AISTUDIO_SELECTORS.closeRunSettings);
       if (closeBtn && suspendedRef.current) {
         suspendedRef.current = false;
       }
@@ -101,12 +100,7 @@ export const AutoHideRunSettingsFeature = () => {
 
     const tryAutoClose = () => {
       if (suspendedRef.current) return;
-      const closeBtn = document.querySelector(
-        'ms-right-side-panel [aria-label="Close run settings panel"]',
-      ) as HTMLElement | null;
-      if (closeBtn) {
-        closeBtn.click();
-      }
+      closeAIStudioRunSettings();
     };
 
     // Check immediately on mount
