@@ -41,7 +41,7 @@ Visualize your workflow with "Today", "Yesterday", and "Last Week" groupings.
 🗑️ Batch Delete
 Batch-delete conversations with real server-side removal. No more ghost chats.
 
-� Conversation Export
+📤 Conversation Export
 Export conversations as Markdown, Plain Text, or JSON for documentation or backup.
 
 ---
@@ -85,7 +85,7 @@ Automatically sync your settings, prompts, and config data to Google Drive in th
 🌟 Multi-Platform Support
 Manage conversations across both Gemini and Google AI Studio in one unified sidebar.
 
-� Multi-Account Profiles
+👤 Multi-Account Profiles
 Create separate profiles for work or personal use. Each maintains its own independent database.
 
 💾 Data Control
