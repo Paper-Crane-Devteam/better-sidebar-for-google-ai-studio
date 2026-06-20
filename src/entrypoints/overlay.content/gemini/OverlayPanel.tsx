@@ -57,6 +57,7 @@ import { BadgeDot } from '@/shared/components/ui/badge-dot';
 
 import { useHotkeyListener } from '@/shared/hooks/useHotkeyListener';
 import { HotkeyCheatsheet } from '../shared/components/HotkeyCheatsheet';
+import { toggleGeminiSidebar } from '@/shared/lib/dom-selectors';
 
 export const OverlayPanel = ({ className }: { className?: string }) => {
   const moduleConfig = useModuleConfig();
@@ -176,30 +177,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   };
 
   const handleMainMenuClick = () => {
-    // Desktop: separate Open/Close sidebar buttons
-    const closeBtn = document.querySelector(
-      'button[aria-label="Close sidebar"]',
-    ) as HTMLElement;
-    if (closeBtn) {
-      closeBtn.click();
-      return;
-    }
-    const openBtn = document.querySelector(
-      'button[aria-label="Open sidebar"]',
-    ) as HTMLElement;
-    if (openBtn) {
-      openBtn.click();
-      return;
-    }
-    // Mobile fallback
-    const menuBtn = document.querySelector(
-      'button[aria-label="Main menu"]',
-    ) as HTMLElement;
-    if (menuBtn) {
-      menuBtn.click();
-    } else {
-      console.warn('Sidebar toggle button not found');
-    }
+    toggleGeminiSidebar();
   };
 
   if (!isFeatureEnabled) {
