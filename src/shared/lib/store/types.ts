@@ -6,6 +6,8 @@ import {
   PromptFolder,
   Gem,
   Notebook,
+  Snippet,
+  SnippetFolder,
 } from '../../types/db';
 import type { Platform } from '../../types/platform';
 
@@ -49,7 +51,8 @@ export interface UIState {
       | 'search'
       | 'prompts'
       | 'gems'
-      | 'notebooks';
+      | 'notebooks'
+      | 'snippets';
     isSettingsOpen: boolean;
     isScanning: boolean;
     showSqlInterface: boolean;
@@ -113,6 +116,12 @@ export interface UIState {
     onlyFavorites: boolean;
     sortOrder: 'alpha' | 'date';
   };
+  snippets: {
+    search: { isOpen: boolean; query: string };
+    sortOrder: 'alpha' | 'date';
+    onlyFavorites: boolean;
+    batch: { isBatchMode: boolean; selectedIds: string[] };
+  };
 }
 
 export interface AppState {
@@ -125,6 +134,8 @@ export interface AppState {
   conversationTags: ConversationTag[];
   gems: Gem[];
   notebooks: Notebook[];
+  snippetFolders: SnippetFolder[];
+  snippets: Snippet[];
   isLoading: boolean;
   ui: UIState;
 
@@ -157,7 +168,7 @@ export interface AppState {
   updateFolderColor: (folderId: string, color: string | null) => Promise<void>;
   toggleFavorite: (
     targetId: string,
-    targetType: 'conversation' | 'message' | 'prompt',
+    targetType: 'conversation' | 'message' | 'prompt' | 'snippet',
     isFavorite: boolean,
   ) => Promise<void>;
 
@@ -191,7 +202,8 @@ export interface AppState {
       | 'search'
       | 'prompts'
       | 'gems'
-      | 'notebooks',
+      | 'notebooks'
+      | 'snippets',
   ) => void;
   setIsScanning: (isScanning: boolean) => void;
   setShowSqlInterface: (show: boolean) => void;
@@ -273,9 +285,47 @@ export interface AppState {
   // Pin
   togglePin: (
     id: string,
-    table: 'folders' | 'prompt_folders' | 'gems' | 'notebooks',
+    table: 'folders' | 'prompt_folders' | 'gems' | 'notebooks' | 'snippet_folders',
     currentlyPinned: boolean,
   ) => Promise<void>;
+
+  // Snippets
+  setSnippetFolders: (folders: SnippetFolder[]) => void;
+  setSnippets: (snippets: Snippet[]) => void;
+  createSnippetFolder: (
+    name: string,
+    parentId: string | null,
+  ) => Promise<string | null>;
+  createSnippet: (
+    title: string,
+    content: string,
+    sourceUrl: string | null,
+    sourcePlatform: string | null,
+    folderId: string | null,
+  ) => Promise<void>;
+  updateSnippet: (id: string, updates: Partial<Snippet>) => Promise<void>;
+  deleteSnippetItem: (itemId: string, type: 'folder' | 'file') => Promise<void>;
+  deleteSnippetItems: (itemIds: string[]) => Promise<void>;
+  moveSnippetItems: (
+    itemIds: string[],
+    newParentId: string | null,
+  ) => Promise<void>;
+  moveSnippetItem: (
+    itemId: string,
+    newParentId: string | null,
+    type: 'folder' | 'file',
+  ) => Promise<void>;
+  renameSnippetItem: (
+    itemId: string,
+    newName: string,
+    type: 'folder' | 'file',
+  ) => Promise<void>;
+  setSnippetsSearch: (isOpen: boolean, query?: string) => void;
+  setSnippetsSortOrder: (order: 'alpha' | 'date') => void;
+  setSnippetsOnlyFavorites: (onlyFavorites: boolean) => void;
+  setSnippetsBatchMode: (isBatchMode: boolean) => void;
+  setSnippetsBatchSelection: (selectedIds: string[]) => void;
+  toggleSnippetsBatchSelection: (id: string) => void;
 }
 
 export type SetState = (

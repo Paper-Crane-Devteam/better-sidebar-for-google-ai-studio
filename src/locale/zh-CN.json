@@ -24,7 +24,8 @@
     "feedback": "反馈",
     "settings": "设置",
     "gems": "Gems",
-    "notebooks": "笔记本"
+    "notebooks": "笔记本",
+    "snippets": "片段"
   },
   "sidebar": {
     "newConversation": "新建对话",
@@ -150,6 +151,22 @@
     "editPrompt": "编辑 Prompt",
     "noPrompts": "暂无 Prompt",
     "selectAnOption": "请选择"
+  },
+  "snippets": {
+    "createSnippet": "新建片段",
+    "editSnippet": "编辑片段",
+    "viewSnippet": "查看片段",
+    "noSnippets": "暂无片段。将重要的 AI 回复保存在这里，方便日后查阅。",
+    "title": "标题",
+    "titlePlaceholder": "片段标题",
+    "content": "内容",
+    "contentPlaceholder": "粘贴或输入片段内容...",
+    "copyContent": "复制内容",
+    "copiedToClipboard": "片段已复制到剪贴板",
+    "duplicate": "复制",
+    "rename": "重命名",
+    "source": "来源",
+    "createdAt": "创建时间"
   },
   "menu": {
     "newFolder": "新建文件夹",

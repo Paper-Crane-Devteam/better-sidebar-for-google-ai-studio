@@ -24,7 +24,8 @@
     "feedback": "意見回饋",
     "settings": "設定",
     "gems": "Gems",
-    "notebooks": "筆記本"
+    "notebooks": "筆記本",
+    "snippets": "片段"
   },
   "sidebar": {
     "newConversation": "新增對話",

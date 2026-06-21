@@ -67,6 +67,8 @@ export function createDataActions(
           promptsResponse,
           gemsResponse,
           notebooksResponse,
+          snippetFoldersResponse,
+          snippetsResponse,
         ] = await Promise.all([
           browser.runtime.sendMessage({ type: 'GET_FOLDERS' }),
           browser.runtime.sendMessage({ type: 'GET_CONVERSATIONS' }),
@@ -77,6 +79,8 @@ export function createDataActions(
           browser.runtime.sendMessage({ type: 'GET_PROMPTS' }),
           browser.runtime.sendMessage({ type: 'GET_GEMS' }),
           browser.runtime.sendMessage({ type: 'GET_NOTEBOOKS' }),
+          browser.runtime.sendMessage({ type: 'GET_SNIPPET_FOLDERS' }),
+          browser.runtime.sendMessage({ type: 'GET_SNIPPETS' }),
         ]);
         if (foldersResponse.success) set({ folders: foldersResponse.data });
         if (conversationsResponse.success)
@@ -92,6 +96,9 @@ export function createDataActions(
         if (gemsResponse.success) set({ gems: gemsResponse.data });
         if (notebooksResponse.success)
           set({ notebooks: notebooksResponse.data });
+        if (snippetFoldersResponse.success)
+          set({ snippetFolders: snippetFoldersResponse.data });
+        if (snippetsResponse.success) set({ snippets: snippetsResponse.data });
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
@@ -411,6 +418,7 @@ export function createDataActions(
           prompt_folders: 'UPDATE_PROMPT_FOLDER',
           gems: 'UPDATE_GEM',
           notebooks: 'UPDATE_NOTEBOOK',
+          snippet_folders: 'UPDATE_SNIPPET_FOLDER',
         };
         await browser.runtime.sendMessage({
           type: messageTypeMap[table],

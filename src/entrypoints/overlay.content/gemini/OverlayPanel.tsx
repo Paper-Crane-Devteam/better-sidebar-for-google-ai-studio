@@ -21,6 +21,7 @@ import {
   Gem,
   NotebookText,
   SquarePen,
+  ScrollText,
 } from 'lucide-react';
 import { SqlExecutor } from '../shared/components/menu/SqlExecutor';
 import { ExplorerTab } from '../shared/modules/explorer/ExplorerTab';
@@ -31,6 +32,7 @@ import { TagsTab } from '../shared/modules/tags/TagsTab';
 import { FeedbackTab } from '../shared/modules/feedback/FeedbackTab';
 import { GemsTab } from '../shared/modules/gems/GemsTab';
 import { NotebooksTab } from '../shared/modules/notebooks/NotebooksTab';
+import { SnippetsTab } from '../shared/modules/snippets/SnippetsTab';
 import { SettingsModal } from '../shared/modules/settings/SettingsModal';
 import { WhatsNewDialog } from '../shared/modules/whats-new/WhatsNewDialog';
 import { FirstInstallPrompt } from '../shared/modules/whats-new/FirstInstallPrompt';
@@ -167,7 +169,8 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       | 'search'
       | 'prompts'
       | 'gems'
-      | 'notebooks',
+      | 'notebooks'
+      | 'snippets',
   ) => {
     if (tab === 'settings') {
       setIsSettingsOpen(true);
@@ -313,6 +316,18 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             </SimpleTooltip>
           )}
 
+          <SimpleTooltip content={t('tabs.snippets')}>
+            <Button
+              variant={activeTab === 'snippets' ? 'secondary' : 'ghost'}
+              size="icon"
+              onClick={() => handleTabChange('snippets')}
+              className="sidebar-btn transition-all"
+              data-tour-id="tour-snippets"
+            >
+              <ScrollText className="sidebar-icon" />
+            </Button>
+          </SimpleTooltip>
+
           {((shortcuts?.gems ?? true) || (shortcuts?.notebooks ?? true) || (shortcuts?.myStuff ?? true)) && (
             <Separator className="w-8 my-1" />
           )}
@@ -447,6 +462,8 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           <GemsTab menuActions={moduleConfig.general.menuActions} />
         ) : activeTab === 'notebooks' ? (
           <NotebooksTab menuActions={moduleConfig.general.menuActions} />
+        ) : activeTab === 'snippets' ? (
+          <SnippetsTab menuActions={moduleConfig.general.menuActions} />
         ) : activeTab === 'feedback' ? (
           <FeedbackTab />
         ) : (

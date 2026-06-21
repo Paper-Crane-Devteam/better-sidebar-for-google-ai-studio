@@ -12,3 +12,5 @@ export * from './promptFolders';
 export * from './gems';
 export * from './notebooks';
 export * from './pin';
+export * from './snippets';
+export * from './snippetFolders';

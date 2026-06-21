@@ -16,6 +16,7 @@ import {
   LogOut,
   Search,
   Sparkles,
+  ScrollText,
 } from 'lucide-react';
 import { SqlExecutor } from '../shared/components/menu/SqlExecutor';
 import { ExplorerTab } from '../shared/modules/explorer/ExplorerTab';
@@ -24,6 +25,7 @@ import { SearchTab } from '../shared/modules/search/SearchTab';
 import { FavoritesTab } from '../shared/modules/favorites/FavoritesTab';
 import { TagsTab } from '../shared/modules/tags/TagsTab';
 import { FeedbackTab } from '../shared/modules/feedback/FeedbackTab';
+import { SnippetsTab } from '../shared/modules/snippets/SnippetsTab';
 import { SettingsModal } from '../shared/modules/settings/SettingsModal';
 import { WhatsNewDialog } from '../shared/modules/whats-new/WhatsNewDialog';
 import { FirstInstallPrompt } from '../shared/modules/whats-new/FirstInstallPrompt';
@@ -144,7 +146,8 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       | 'feedback'
       | 'settings'
       | 'search'
-      | 'prompts',
+      | 'prompts'
+      | 'snippets',
   ) => {
     if (tab === 'settings') {
       setIsSettingsOpen(true);
@@ -218,6 +221,16 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             </Button>
           </SimpleTooltip>
         )}
+        <SimpleTooltip content={t('tabs.snippets')}>
+          <Button
+            variant={activeTab === 'snippets' ? 'secondary' : 'ghost'}
+            size="icon"
+            onClick={() => handleTabChange('snippets')}
+            className="sidebar-btn transition-all"
+          >
+            <ScrollText className="sidebar-icon" />
+          </Button>
+        </SimpleTooltip>
         <SimpleTooltip content={t('tabs.tags')}>
           <Button
             variant={activeTab === 'tags' ? 'secondary' : 'ghost'}
@@ -334,6 +347,8 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           />
         ) : activeTab === 'favorites' ? (
           <FavoritesTab menuActions={moduleConfig.general.menuActions} />
+        ) : activeTab === 'snippets' ? (
+          <SnippetsTab menuActions={moduleConfig.general.menuActions} />
         ) : activeTab === 'tags' ? (
           <TagsTab menuActions={moduleConfig.general.menuActions} />
         ) : activeTab === 'feedback' ? (

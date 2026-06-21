@@ -406,6 +406,50 @@ export type ExtensionMessage = (
   | { type: 'GDRIVE_SYNC_DOWN' }
   | { type: 'GDRIVE_MERGE' }
   | { type: 'GDRIVE_CHECK_SUPPORT' }
+  // Snippets
+  | { type: 'GET_SNIPPET_FOLDERS' }
+  | {
+      type: 'CREATE_SNIPPET_FOLDER';
+      payload: { id: string; name: string; parentId?: string | null };
+    }
+  | {
+      type: 'UPDATE_SNIPPET_FOLDER';
+      payload: {
+        id: string;
+        updates: Partial<{ name: string; parent_id: string | null; order_index: number; is_pinned: number }>;
+      };
+    }
+  | { type: 'DELETE_SNIPPET_FOLDER'; payload: { id: string } }
+  | { type: 'GET_SNIPPETS'; payload?: { folderId?: string | null } }
+  | {
+      type: 'CREATE_SNIPPET';
+      payload: {
+        id: string;
+        title: string;
+        content?: string;
+        sourceUrl?: string | null;
+        sourcePlatform?: string | null;
+        folderId?: string | null;
+        orderIndex?: number;
+      };
+    }
+  | {
+      type: 'UPDATE_SNIPPET';
+      payload: {
+        id: string;
+        updates: Partial<{ title: string; content: string; source_url: string; source_platform: string; folder_id: string | null; order_index: number; is_pinned: number }>;
+      };
+    }
+  | { type: 'DELETE_SNIPPET'; payload: { id: string } }
+  | {
+      type: 'DELETE_SNIPPET_ITEMS';
+      payload: { snippetIds?: string[]; folderIds?: string[] };
+    }
+  | { type: 'MOVE_SNIPPET'; payload: { id: string; folderId: string | null } }
+  | {
+      type: 'MOVE_SNIPPETS';
+      payload: { ids: string[]; folderId: string | null };
+    }
 ) & { platform?: string };
 
 export interface ExtensionResponse {

@@ -9,8 +9,9 @@ export function useStoreFilter(
   slice: 'explorer' | 'favorites' | 'gems' | 'notebooks',
 ): FilterState<ExplorerTypeFilter>;
 export function useStoreFilter(slice: 'prompts'): FilterState<PromptsTypeFilter>;
+export function useStoreFilter(slice: 'snippets'): FilterState<ExplorerTypeFilter>;
 export function useStoreFilter(
-  slice: 'explorer' | 'favorites' | 'prompts' | 'gems' | 'notebooks',
+  slice: 'explorer' | 'favorites' | 'prompts' | 'gems' | 'notebooks' | 'snippets',
 ): FilterState<ExplorerTypeFilter> | FilterState<PromptsTypeFilter> {
   const store = useAppStore();
 
@@ -23,13 +24,16 @@ export function useStoreFilter(
           ? store.ui.gems
           : slice === 'notebooks'
             ? store.ui.notebooks
-            : store.ui.prompts;
+            : slice === 'snippets'
+              ? store.ui.snippets
+              : store.ui.prompts;
 
   const setIsSearchOpen = (isOpen: boolean) => {
     if (slice === 'explorer') store.setExplorerSearch(isOpen);
     else if (slice === 'favorites') store.setFavoritesSearch(isOpen);
     else if (slice === 'gems') store.setGemsSearch(isOpen);
     else if (slice === 'notebooks') store.setNotebooksSearch(isOpen);
+    else if (slice === 'snippets') store.setSnippetsSearch(isOpen);
     else store.setPromptsSearch(isOpen);
   };
 
@@ -38,6 +42,7 @@ export function useStoreFilter(
     else if (slice === 'favorites') store.setFavoritesSearch(true, query);
     else if (slice === 'gems') store.setGemsSearch(true, query);
     else if (slice === 'notebooks') store.setNotebooksSearch(true, query);
+    else if (slice === 'snippets') store.setSnippetsSearch(true, query);
     else store.setPromptsSearch(true, query);
   };
 
@@ -65,6 +70,7 @@ export function useStoreFilter(
     if (slice === 'explorer') store.setExplorerOnlyFavorites(value);
     else if (slice === 'gems') store.setGemsOnlyFavorites(value);
     else if (slice === 'notebooks') store.setNotebooksOnlyFavorites(value);
+    else if (slice === 'snippets') store.setSnippetsOnlyFavorites(value);
     else if (slice === 'prompts') store.setPromptsOnlyFavorites(value);
   };
 
@@ -93,9 +99,11 @@ export function useStoreFilter(
             ? store.ui.gems.onlyFavorites
             : slice === 'notebooks'
               ? store.ui.notebooks.onlyFavorites
-              : slice === 'prompts'
-                ? store.ui.prompts.onlyFavorites
-                : false,
+              : slice === 'snippets'
+                ? store.ui.snippets.onlyFavorites
+                : slice === 'prompts'
+                  ? store.ui.prompts.onlyFavorites
+                  : false,
       setValue: setOnlyFavorites,
     },
   } as FilterState<ExplorerTypeFilter> | FilterState<PromptsTypeFilter>;

@@ -155,4 +155,32 @@ CREATE TABLE IF NOT EXISTS notebooks (
 );
 
 CREATE INDEX IF NOT EXISTS idx_notebooks_platform ON notebooks(platform);
+
+CREATE TABLE IF NOT EXISTS snippet_folders (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  parent_id TEXT,
+  order_index INTEGER DEFAULT 0,
+  is_pinned INTEGER DEFAULT 0,
+  created_at INTEGER DEFAULT (unixepoch()),
+  updated_at INTEGER DEFAULT (unixepoch()),
+  FOREIGN KEY(parent_id) REFERENCES snippet_folders(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS snippets (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  content TEXT,
+  source_url TEXT,
+  source_platform TEXT,
+  folder_id TEXT,
+  order_index INTEGER DEFAULT 0,
+  is_pinned INTEGER DEFAULT 0,
+  created_at INTEGER DEFAULT (unixepoch()),
+  updated_at INTEGER DEFAULT (unixepoch()),
+  FOREIGN KEY(folder_id) REFERENCES snippet_folders(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_snippet_folders_parent ON snippet_folders(parent_id);
+CREATE INDEX IF NOT EXISTS idx_snippets_folder ON snippets(folder_id);
 `;

@@ -73,7 +73,7 @@ export interface Message {
 export interface Favorite {
   id: string;
   target_id: string;
-  target_type: 'conversation' | 'message' | 'prompt';
+  target_type: 'conversation' | 'message' | 'prompt' | 'snippet';
   note: string | null;
   created_at: number;
 }
@@ -111,4 +111,27 @@ export interface ConversationTag {
   conversation_id: string;
   tag_id: string;
   created_at: number;
+}
+
+export interface SnippetFolder {
+  id: string;
+  name: string;
+  parent_id: string | null;
+  order_index: number;
+  is_pinned: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface Snippet {
+  id: string;
+  title: string;
+  content: string | null;
+  source_url: string | null;
+  source_platform: string | null;
+  folder_id: string | null;
+  order_index: number;
+  is_pinned: number;
+  created_at: number;
+  updated_at: number;
 }

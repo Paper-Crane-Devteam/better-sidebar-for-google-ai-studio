@@ -24,7 +24,8 @@
     "feedback": "Feedback",
     "settings": "Settings",
     "gems": "Gems",
-    "notebooks": "Notebooks"
+    "notebooks": "Notebooks",
+    "snippets": "Snippets"
   },
   "sidebar": {
     "newConversation": "New Conversation",
@@ -150,6 +151,22 @@
     "editPrompt": "Edit Prompt",
     "noPrompts": "No prompts yet.",
     "selectAnOption": "Select an option"
+  },
+  "snippets": {
+    "createSnippet": "New Snippet",
+    "editSnippet": "Edit Snippet",
+    "viewSnippet": "View Snippet",
+    "noSnippets": "No snippets yet. Save important AI responses here for future reference.",
+    "title": "Title",
+    "titlePlaceholder": "Snippet title",
+    "content": "Content",
+    "contentPlaceholder": "Paste or type your snippet content...",
+    "copyContent": "Copy Content",
+    "copiedToClipboard": "Snippet copied to clipboard",
+    "duplicate": "Duplicate",
+    "rename": "Rename",
+    "source": "Source",
+    "createdAt": "Created"
   },
   "menu": {
     "newFolder": "New Folder",

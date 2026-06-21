@@ -39,6 +39,12 @@ export const initialUIState: UIState = {
     onlyFavorites: false,
     sortOrder: 'alpha',
   },
+  snippets: {
+    search: { isOpen: false, query: '' },
+    sortOrder: 'alpha',
+    onlyFavorites: false,
+    batch: { isBatchMode: false, selectedIds: [] },
+  },
   prompts: {
     search: { isOpen: false, query: '' },
     typeFilter: 'all',

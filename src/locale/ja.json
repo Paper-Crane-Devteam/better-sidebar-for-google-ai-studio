@@ -24,7 +24,8 @@
     "feedback": "フィードバック",
     "settings": "設定",
     "gems": "Gems",
-    "notebooks": "ノートブック"
+    "notebooks": "ノートブック",
+    "snippets": "スニペット"
   },
   "sidebar": {
     "newConversation": "新しい会話",

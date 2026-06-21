@@ -24,7 +24,8 @@
     "feedback": "Comentarios",
     "settings": "Configuración",
     "gems": "Gems",
-    "notebooks": "Notebooks"
+    "notebooks": "Notebooks",
+    "snippets": "Fragmentos"
   },
   "sidebar": {
     "newConversation": "Nueva Conversación",

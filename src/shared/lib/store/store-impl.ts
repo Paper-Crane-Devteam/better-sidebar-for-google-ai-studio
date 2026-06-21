@@ -13,6 +13,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   conversationTags: [],
   gems: [],
   notebooks: [],
+  snippetFolders: [],
+  snippets: [],
   isLoading: false,
   ui: initialUIState,
 

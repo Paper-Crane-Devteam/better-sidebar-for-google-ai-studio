@@ -24,7 +24,8 @@
     "feedback": "Обратная связь",
     "settings": "Настройки",
     "gems": "Gems",
-    "notebooks": "Блокноты"
+    "notebooks": "Блокноты",
+    "snippets": "Сниппеты"
   },
   "sidebar": {
     "newConversation": "Новый диалог",
