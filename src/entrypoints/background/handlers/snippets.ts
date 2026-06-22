@@ -6,6 +6,27 @@ import type {
 import type { MessageSender } from '../types';
 import { notifyDataUpdated } from '../notify';
 import { triggerAutoSync } from './gdrive-sync';
+import i18n from '@/locale/i18n';
+
+const SNIPPET_INBOX_ID = '__snippet_inbox__';
+
+/** Find or create the snippet inbox folder */
+async function resolveSnippetInbox(): Promise<string> {
+  const existing = await snippetFolderRepo.getById(SNIPPET_INBOX_ID);
+  if (existing) return SNIPPET_INBOX_ID;
+
+  // Check by name fallback
+  const all = await snippetFolderRepo.getAll();
+  const inboxName = i18n.t('snippets.inbox');
+  const byName = all.find(
+    (f) => f.name === inboxName || f.name === 'Inbox' || f.name === '收件箱',
+  );
+  if (byName) return byName.id;
+
+  // Create with deterministic ID
+  await snippetFolderRepo.create({ id: SNIPPET_INBOX_ID, name: inboxName });
+  return SNIPPET_INBOX_ID;
+}
 
 export async function handleSnippets(
   message: ExtensionMessage,
@@ -92,6 +113,10 @@ export async function handleSnippets(
       );
       triggerAutoSync();
       return { success: true };
+    }
+    case 'RESOLVE_SNIPPET_INBOX': {
+      const inboxId = await resolveSnippetInbox();
+      return { success: true, data: inboxId };
     }
     default:
       return null;

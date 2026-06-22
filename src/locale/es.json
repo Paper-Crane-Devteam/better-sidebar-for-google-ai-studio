@@ -152,6 +152,26 @@
     "noPrompts": "Aún no hay prompts.",
     "selectAnOption": "Selecciona una opción"
   },
+  "snippets": {
+    "createSnippet": "Nuevo Fragmento",
+    "editSnippet": "Editar Fragmento",
+    "viewSnippet": "Ver Fragmento",
+    "noSnippets": "Aún no hay fragmentos. Guarda respuestas importantes de IA aquí para referencia futura.",
+    "title": "Título",
+    "titlePlaceholder": "Título del fragmento",
+    "content": "Contenido",
+    "contentPlaceholder": "Pega o escribe el contenido del fragmento...",
+    "copyContent": "Copiar Contenido",
+    "copiedToClipboard": "Fragmento copiado al portapapeles",
+    "duplicate": "Duplicar",
+    "rename": "Renombrar",
+    "source": "Fuente",
+    "createdAt": "Creado",
+    "inbox": "Bandeja de entrada",
+    "saveSnippet": "Guardar como Fragmento",
+    "savedToInbox": "Guardado en Fragmentos",
+    "dragToFolder": "Arrastrar a carpeta"
+  },
   "menu": {
     "newFolder": "Nueva Carpeta",
     "collapseAll": "Contraer Todo",

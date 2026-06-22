@@ -152,6 +152,26 @@
     "noPrompts": "プロンプトがありません",
     "selectAnOption": "選択してください"
   },
+  "snippets": {
+    "createSnippet": "新規スニペット",
+    "editSnippet": "スニペットを編集",
+    "viewSnippet": "スニペットを表示",
+    "noSnippets": "スニペットはまだありません。重要なAIの回答をここに保存して、後で参照できます。",
+    "title": "タイトル",
+    "titlePlaceholder": "スニペットのタイトル",
+    "content": "内容",
+    "contentPlaceholder": "スニペットの内容を貼り付けまたは入力...",
+    "copyContent": "内容をコピー",
+    "copiedToClipboard": "スニペットをクリップボードにコピーしました",
+    "duplicate": "複製",
+    "rename": "名前を変更",
+    "source": "ソース",
+    "createdAt": "作成日",
+    "inbox": "受信トレイ",
+    "saveSnippet": "スニペットとして保存",
+    "savedToInbox": "スニペットに保存しました",
+    "dragToFolder": "フォルダにドラッグ"
+  },
   "menu": {
     "newFolder": "新しいフォルダ",
     "collapseAll": "すべて折りたたむ",

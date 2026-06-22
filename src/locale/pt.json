@@ -152,6 +152,26 @@
     "noPrompts": "Nenhum prompt ainda.",
     "selectAnOption": "Selecione uma opção"
   },
+  "snippets": {
+    "createSnippet": "Novo Trecho",
+    "editSnippet": "Editar Trecho",
+    "viewSnippet": "Ver Trecho",
+    "noSnippets": "Nenhum trecho ainda. Salve respostas importantes da IA aqui para referência futura.",
+    "title": "Título",
+    "titlePlaceholder": "Título do trecho",
+    "content": "Conteúdo",
+    "contentPlaceholder": "Cole ou digite o conteúdo do trecho...",
+    "copyContent": "Copiar Conteúdo",
+    "copiedToClipboard": "Trecho copiado para a área de transferência",
+    "duplicate": "Duplicar",
+    "rename": "Renomear",
+    "source": "Fonte",
+    "createdAt": "Criado",
+    "inbox": "Caixa de entrada",
+    "saveSnippet": "Salvar como Trecho",
+    "savedToInbox": "Salvo nos Trechos",
+    "dragToFolder": "Arrastar para pasta"
+  },
   "menu": {
     "newFolder": "Nova Pasta",
     "collapseAll": "Recolher Tudo",

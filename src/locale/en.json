@@ -166,7 +166,11 @@
     "duplicate": "Duplicate",
     "rename": "Rename",
     "source": "Source",
-    "createdAt": "Created"
+    "createdAt": "Created",
+    "inbox": "Inbox",
+    "saveSnippet": "Save as Snippet",
+    "savedToInbox": "Saved to Snippets",
+    "dragToFolder": "Drag to folder"
   },
   "menu": {
     "newFolder": "New Folder",

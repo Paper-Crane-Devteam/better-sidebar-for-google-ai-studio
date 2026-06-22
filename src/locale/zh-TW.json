@@ -152,6 +152,26 @@
     "noPrompts": "尚無 Prompt",
     "selectAnOption": "請選擇"
   },
+  "snippets": {
+    "createSnippet": "新增片段",
+    "editSnippet": "編輯片段",
+    "viewSnippet": "檢視片段",
+    "noSnippets": "尚無片段。將重要的 AI 回覆儲存在這裡，方便日後查閱。",
+    "title": "標題",
+    "titlePlaceholder": "片段標題",
+    "content": "內容",
+    "contentPlaceholder": "貼上或輸入片段內容...",
+    "copyContent": "複製內容",
+    "copiedToClipboard": "片段已複製到剪貼簿",
+    "duplicate": "複製",
+    "rename": "重新命名",
+    "source": "來源",
+    "createdAt": "建立時間",
+    "inbox": "收件匣",
+    "saveSnippet": "儲存為片段",
+    "savedToInbox": "已儲存到片段",
+    "dragToFolder": "拖曳到資料夾"
+  },
   "menu": {
     "newFolder": "新增資料夾",
     "collapseAll": "全部摺疊",

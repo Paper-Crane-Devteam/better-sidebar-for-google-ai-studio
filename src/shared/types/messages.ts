@@ -450,6 +450,7 @@ export type ExtensionMessage = (
       type: 'MOVE_SNIPPETS';
       payload: { ids: string[]; folderId: string | null };
     }
+  | { type: 'RESOLVE_SNIPPET_INBOX' }
 ) & { platform?: string };
 
 export interface ExtensionResponse {

@@ -8,6 +8,7 @@ import { QuickResendFeature } from './QuickResendFeature';
 import { AutoHideInputFeature } from './AutoHideInputFeature';
 import { SlashCommandFeature } from './SlashCommandFeature';
 import { AgentLoopFeature } from './AgentLoopFeature';
+import { SaveSnippetFeature } from './SaveSnippetFeature';
 import { GlobalModal } from '@/shared/components/GlobalModal';
 
 /**
@@ -29,6 +30,7 @@ export const GeminiEnhancedFeatures = () => {
       <AutoHideInputFeature />
       <SlashCommandFeature />
       <AgentLoopFeature />
+      <SaveSnippetFeature />
       <GlobalModal />
     </>
   );

@@ -166,7 +166,11 @@
     "duplicate": "复制",
     "rename": "重命名",
     "source": "来源",
-    "createdAt": "创建时间"
+    "createdAt": "创建时间",
+    "inbox": "收件箱",
+    "saveSnippet": "保存为片段",
+    "savedToInbox": "已保存到片段",
+    "dragToFolder": "拖拽到文件夹"
   },
   "menu": {
     "newFolder": "新建文件夹",
