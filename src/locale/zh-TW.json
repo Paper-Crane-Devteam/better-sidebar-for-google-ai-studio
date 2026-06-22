@@ -169,8 +169,9 @@
     "createdAt": "建立時間",
     "inbox": "收件匣",
     "saveSnippet": "儲存為片段",
+    "saveSnippetTooltip": "點擊儲存 · 長按拖曳",
     "savedToInbox": "已儲存到片段",
-    "dragToFolder": "拖曳到資料夾"
+    "dragToFolder": "拖放到資料夾以儲存"
   },
   "menu": {
     "newFolder": "新增資料夾",

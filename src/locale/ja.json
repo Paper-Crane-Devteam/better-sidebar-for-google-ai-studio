@@ -169,8 +169,9 @@
     "createdAt": "作成日",
     "inbox": "受信トレイ",
     "saveSnippet": "スニペットとして保存",
+    "saveSnippetTooltip": "クリックで保存 · 長押しでドラッグ",
     "savedToInbox": "スニペットに保存しました",
-    "dragToFolder": "フォルダにドラッグ"
+    "dragToFolder": "フォルダにドロップして保存"
   },
   "menu": {
     "newFolder": "新しいフォルダ",

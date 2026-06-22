@@ -1,15 +1,18 @@
 import { useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom/client';
 import { useAppStore } from '@/shared/lib/store';
 import { toast } from '@/shared/lib/toast';
 import i18n from '@/locale/i18n';
+import mainStyles from '@/index.scss?inline';
+import { applyShadowStyles } from '@/shared/lib/utils';
+import { SaveSnippetButton } from './SaveSnippetButton';
+import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 
-const BUTTON_ATTR = 'data-bs-snippet-btn';
 const PROCESSED_ATTR = 'data-bs-snippet-processed';
 
 /**
- * SaveSnippetFeature — injects a "save snippet" button next to each
- * model-response element in Gemini. Clicking saves to the inbox folder.
- * Holding mousedown switches sidebar to snippets tab and enables drag-to-folder.
+ * SaveSnippetFeature — injects a shadow-DOM "save snippet" button next to each
+ * model-response element in Gemini. Click = save to inbox. Hold = drag to sidebar (also saves to inbox).
  */
 export const SaveSnippetFeature = () => {
   const previousTabRef = useRef<string | null>(null);
@@ -17,6 +20,8 @@ export const SaveSnippetFeature = () => {
   const dragGhostRef = useRef<HTMLElement | null>(null);
   const dragDataRef = useRef<{ title: string; content: string } | null>(null);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didDragRef = useRef(false);
+  const reactRootsRef = useRef<ReactDOM.Root[]>([]);
 
   useEffect(() => {
     const injectButtons = () => {
@@ -25,94 +30,97 @@ export const SaveSnippetFeature = () => {
       );
 
       modelResponses.forEach((modelResponse) => {
-        // Skip if still streaming
         const markdown = modelResponse.querySelector('.markdown');
         if (markdown && markdown.getAttribute('aria-busy') === 'true') return;
 
         modelResponse.setAttribute(PROCESSED_ATTR, 'true');
 
-        // Create button container
-        const btnHost = document.createElement('div');
-        btnHost.setAttribute(BUTTON_ATTR, 'true');
-        btnHost.style.cssText =
-          'position:absolute;top:8px;left:-36px;z-index:10;opacity:0;transition:opacity 0.15s;';
-
-        // Button element
-        const btn = document.createElement('button');
-        btn.style.cssText =
-          'width:28px;height:28px;border-radius:6px;border:1px solid var(--gem-sys-color--outline-variant, #dadce0);background:var(--gem-sys-color--surface, #fff);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s,box-shadow 0.15s;';
-        btn.title = i18n.t('snippets.saveSnippet');
-        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>`;
-
-        btn.addEventListener('mouseenter', () => {
-          btn.style.background = 'var(--gem-sys-color--surface-container, #f1f3f4)';
-          btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-        });
-        btn.addEventListener('mouseleave', () => {
-          btn.style.background = 'var(--gem-sys-color--surface, #fff)';
-          btn.style.boxShadow = 'none';
-        });
-
-        // Show on hover of model-response
         const modelEl = modelResponse as HTMLElement;
-        // Ensure position relative for absolute button
         if (getComputedStyle(modelEl).position === 'static') {
           modelEl.style.position = 'relative';
         }
 
+        // Create shadow DOM host
+        const host = document.createElement('div');
+        host.className = 'bs-snippet-btn-host';
+        host.style.cssText =
+          'position:absolute;top:8px;left:-36px;z-index:10;opacity:0;transition:opacity 0.15s;';
+
+        const shadow = host.attachShadow({ mode: 'open' });
+        applyShadowStyles(shadow, mainStyles);
+
+        const rootContainer = document.createElement('div');
+        rootContainer.className = 'shadow-body';
+        shadow.appendChild(rootContainer);
+
+        // Sync dark mode
+        const syncTheme = () => {
+          const themeValue = localStorage.getItem('Bard-Color-Theme');
+          const isDark = themeValue
+            ? themeValue === 'Bard-Dark-Theme'
+            : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (isDark) rootContainer.classList.add('dark');
+          else rootContainer.classList.remove('dark');
+        };
+        syncTheme();
+
+        // Render React component inside shadow
+        const reactRoot = ReactDOM.createRoot(rootContainer);
+        reactRootsRef.current.push(reactRoot);
+
+        reactRoot.render(
+          <ShadowRootProvider container={rootContainer}>
+            <SaveSnippetButton
+              onSave={() => {
+                const data = extractSnippetData(modelEl);
+                if (data) saveToInbox(data.title, data.content);
+              }}
+              onDragStart={(e) => {
+                const data = extractSnippetData(modelEl);
+                if (data) {
+                  didDragRef.current = true;
+                  dragDataRef.current = data;
+                  startDragMode(e, data);
+                }
+              }}
+              onMouseDown={() => {
+                didDragRef.current = false;
+                longPressTimerRef.current = setTimeout(() => {
+                  // Will be handled by onDragStart
+                }, 300);
+              }}
+              getLongPressActive={() => !didDragRef.current}
+            />
+          </ShadowRootProvider>,
+        );
+
+        // Show/hide on model-response hover
         modelEl.addEventListener('mouseenter', () => {
-          btnHost.style.opacity = '1';
+          host.style.opacity = '1';
         });
         modelEl.addEventListener('mouseleave', () => {
           if (!isDraggingRef.current) {
-            btnHost.style.opacity = '0';
+            host.style.opacity = '0';
           }
         });
 
-        // Click handler: save to inbox immediately
-        btn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const data = extractSnippetData(modelEl);
-          if (data) {
-            saveToInbox(data.title, data.content);
-          }
-        });
-
-        // Mousedown: start long-press detection for drag mode
-        btn.addEventListener('mousedown', (e) => {
-          if (e.button !== 0) return;
-          const data = extractSnippetData(modelEl);
-          if (!data) return;
-          dragDataRef.current = data;
-
-          longPressTimerRef.current = setTimeout(() => {
-            startDragMode(e, data);
-          }, 300);
-        });
-
-        btn.addEventListener('mouseup', () => {
-          if (longPressTimerRef.current) {
-            clearTimeout(longPressTimerRef.current);
-            longPressTimerRef.current = null;
-          }
-        });
-
-        btnHost.appendChild(btn);
-        modelEl.appendChild(btnHost);
+        modelEl.appendChild(host);
       });
     };
 
-    // Extract title (user query) and content (AI response) from a model-response
+    function cleanTitle(raw: string): string {
+      let cleaned = raw.replace(/^(you said[:\s]*)/i, '').trim();
+      cleaned = cleaned.replace(/^["'"']/, '').replace(/["'"']$/, '');
+      return cleaned;
+    }
+
     function extractSnippetData(
       modelResponse: HTMLElement,
     ): { title: string; content: string } | null {
-      // Get AI response content
       const markdown = modelResponse.querySelector('.markdown');
       const content = markdown?.textContent?.trim() || '';
       if (!content) return null;
 
-      // Get paired user query (previous sibling or conversation-turn parent)
       let title = '';
       const turn = modelResponse.closest('.conversation-turn, [class*="turn"]');
       if (turn) {
@@ -122,7 +130,6 @@ export const SaveSnippetFeature = () => {
         }
       }
       if (!title) {
-        // Walk backwards in DOM to find preceding user-query
         let prev: Element | null = modelResponse.previousElementSibling;
         while (prev) {
           if (prev.matches('user-query') || prev.querySelector('user-query')) {
@@ -132,7 +139,6 @@ export const SaveSnippetFeature = () => {
             title = uq?.textContent?.trim() || '';
             break;
           }
-          // Also check for conversation-turn containing user-query
           const innerUq = prev.querySelector('user-query, user-query-content');
           if (innerUq) {
             title = innerUq.textContent?.trim() || '';
@@ -142,11 +148,10 @@ export const SaveSnippetFeature = () => {
         }
       }
 
+      title = cleanTitle(title);
       if (!title) {
         title = content.substring(0, 50) + (content.length > 50 ? '...' : '');
       }
-
-      // Truncate title to reasonable length
       if (title.length > 100) {
         title = title.substring(0, 100) + '...';
       }
@@ -154,7 +159,6 @@ export const SaveSnippetFeature = () => {
       return { title, content };
     }
 
-    // Save snippet to inbox folder
     async function saveToInbox(title: string, content: string) {
       try {
         const inboxRes = await browser.runtime.sendMessage({
@@ -174,7 +178,6 @@ export const SaveSnippetFeature = () => {
           },
         });
 
-        // Refresh store data
         useAppStore.getState().fetchData(true);
         toast.success(i18n.t('snippets.savedToInbox'), 1500);
       } catch (err) {
@@ -182,16 +185,45 @@ export const SaveSnippetFeature = () => {
       }
     }
 
-    // Start drag mode: switch tab, show ghost
-    function startDragMode(
-      e: MouseEvent,
-      data: { title: string; content: string },
-    ) {
+    async function saveToFolder(title: string, content: string, folderId: string | null) {
+      try {
+        // If no specific folder targeted, resolve inbox
+        let targetFolderId = folderId;
+        if (!targetFolderId) {
+          const inboxRes = await browser.runtime.sendMessage({
+            type: 'RESOLVE_SNIPPET_INBOX',
+          });
+          targetFolderId = inboxRes?.success ? inboxRes.data : null;
+        }
+
+        await browser.runtime.sendMessage({
+          type: 'CREATE_SNIPPET',
+          payload: {
+            id: crypto.randomUUID(),
+            title,
+            content,
+            sourceUrl: window.location.href,
+            sourcePlatform: 'gemini',
+            folderId: targetFolderId,
+          },
+        });
+
+        useAppStore.getState().fetchData(true);
+        toast.success(i18n.t('snippets.savedToInbox'), 1500);
+      } catch (err) {
+        console.error('[SaveSnippet] Failed to save:', err);
+      }
+    }
+
+    function startDragMode(e: MouseEvent | React.MouseEvent, data: { title: string; content: string }) {
       isDraggingRef.current = true;
 
-      // Remember current tab and switch to snippets
+      // Switch sidebar to snippets tab
       previousTabRef.current = useAppStore.getState().ui.overlay.activeTab;
       useAppStore.getState().setActiveTab('snippets');
+
+      // Notify sidebar that snippet drag is active
+      window.dispatchEvent(new CustomEvent('SNIPPET_DRAG_START'));
 
       // Create drag ghost
       const ghost = document.createElement('div');
@@ -203,12 +235,10 @@ export const SaveSnippetFeature = () => {
       document.body.appendChild(ghost);
       dragGhostRef.current = ghost;
 
-      // Toast hint
       toast.info(i18n.t('snippets.dragToFolder'), 2000);
 
-      // Listen for mouse move and up
-      document.addEventListener('mousemove', handleDragMove);
-      document.addEventListener('mouseup', handleDragEnd);
+      document.addEventListener('mousemove', handleDragMove, true);
+      document.addEventListener('mouseup', handleDragEnd, true);
     }
 
     function handleDragMove(e: MouseEvent) {
@@ -218,11 +248,10 @@ export const SaveSnippetFeature = () => {
       }
     }
 
-    function handleDragEnd(e: MouseEvent) {
-      document.removeEventListener('mousemove', handleDragMove);
-      document.removeEventListener('mouseup', handleDragEnd);
+    function handleDragEnd(_e: MouseEvent) {
+      document.removeEventListener('mousemove', handleDragMove, true);
+      document.removeEventListener('mouseup', handleDragEnd, true);
 
-      // Remove ghost
       if (dragGhostRef.current) {
         dragGhostRef.current.remove();
         dragGhostRef.current = null;
@@ -230,25 +259,29 @@ export const SaveSnippetFeature = () => {
 
       isDraggingRef.current = false;
 
-      // Check if dropped on a folder in the sidebar
-      // The sidebar tree uses react-arborist which handles drop via its own DnD.
-      // Since we can't integrate with react-arborist's internal DnD easily,
-      // we'll just save to inbox on drag-end and let the user move it after.
+      // Determine target folder: check if there's a pending drop target from the sidebar
+      const dropTargetId = (window as any).__snippetDropTargetFolderId || null;
+      (window as any).__snippetDropTargetFolderId = null;
+
+      // Dispatch event to end drag state in sidebar
+      window.dispatchEvent(new CustomEvent('SNIPPET_DRAG_END'));
+
       if (dragDataRef.current) {
-        saveToInbox(dragDataRef.current.title, dragDataRef.current.content);
+        saveToFolder(dragDataRef.current.title, dragDataRef.current.content, dropTargetId);
         dragDataRef.current = null;
       }
 
       // Restore previous tab
       if (previousTabRef.current) {
+        const prevTab = previousTabRef.current;
+        previousTabRef.current = null;
         setTimeout(() => {
-          useAppStore.getState().setActiveTab(previousTabRef.current as any);
-          previousTabRef.current = null;
-        }, 500);
+          useAppStore.getState().setActiveTab(prevTab as any);
+        }, 600);
       }
     }
 
-    // Observe for new model-response elements
+    // MutationObserver for new model-response elements
     const observer = new MutationObserver((mutations) => {
       let shouldCheck = false;
       for (const mutation of mutations) {
@@ -256,7 +289,6 @@ export const SaveSnippetFeature = () => {
           shouldCheck = true;
           break;
         }
-        // Also watch for aria-busy changes (streaming complete)
         if (
           mutation.type === 'attributes' &&
           mutation.attributeName === 'aria-busy'
@@ -271,12 +303,9 @@ export const SaveSnippetFeature = () => {
           }
         }
       }
-      if (shouldCheck) {
-        injectButtons();
-      }
+      if (shouldCheck) injectButtons();
     });
 
-    // Wait for chat container and start observing
     const startObserving = () => {
       const container = document.querySelector(
         'infinite-scroller.chat-history, .conversation-container, chat-window',
@@ -295,31 +324,24 @@ export const SaveSnippetFeature = () => {
     };
 
     if (!startObserving()) {
-      // Poll until container appears
       const pollInterval = setInterval(() => {
-        if (startObserving()) {
-          clearInterval(pollInterval);
-        }
+        if (startObserving()) clearInterval(pollInterval);
       }, 1000);
-
-      // Stop polling after 60s
       setTimeout(() => clearInterval(pollInterval), 60000);
     }
 
-    // Re-inject on URL changes (SPA navigation)
-    const handleUrlChange = () => {
-      setTimeout(injectButtons, 1000);
-    };
+    const handleUrlChange = () => setTimeout(injectButtons, 1000);
     window.addEventListener('popstate', handleUrlChange);
 
     return () => {
       observer.disconnect();
       window.removeEventListener('popstate', handleUrlChange);
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
-      }
-      document.removeEventListener('mousemove', handleDragMove);
-      document.removeEventListener('mouseup', handleDragEnd);
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+      document.removeEventListener('mousemove', handleDragMove, true);
+      document.removeEventListener('mouseup', handleDragEnd, true);
+      // Cleanup React roots
+      reactRootsRef.current.forEach((root) => root.unmount());
+      reactRootsRef.current = [];
     };
   }, []);
 

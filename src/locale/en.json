@@ -169,8 +169,9 @@
     "createdAt": "Created",
     "inbox": "Inbox",
     "saveSnippet": "Save as Snippet",
+    "saveSnippetTooltip": "Click to save · Hold to drag",
     "savedToInbox": "Saved to Snippets",
-    "dragToFolder": "Drag to folder"
+    "dragToFolder": "Drop on a folder to save"
   },
   "menu": {
     "newFolder": "New Folder",

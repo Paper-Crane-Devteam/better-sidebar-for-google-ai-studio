@@ -169,8 +169,9 @@
     "createdAt": "Criado",
     "inbox": "Caixa de entrada",
     "saveSnippet": "Salvar como Trecho",
+    "saveSnippetTooltip": "Clique para salvar · Segure para arrastar",
     "savedToInbox": "Salvo nos Trechos",
-    "dragToFolder": "Arrastar para pasta"
+    "dragToFolder": "Solte em uma pasta para salvar"
   },
   "menu": {
     "newFolder": "Nova Pasta",

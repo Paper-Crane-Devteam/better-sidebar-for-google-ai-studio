@@ -206,6 +206,16 @@ export const SnippetNode = ({
         'outline-none',
         'h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]',
       )}
+      onPointerEnter={() => {
+        if (!isFile) {
+          (window as any).__snippetDropTargetFolderId = node.data.id;
+        }
+      }}
+      onPointerLeave={() => {
+        if (!isFile && (window as any).__snippetDropTargetFolderId === node.data.id) {
+          (window as any).__snippetDropTargetFolderId = null;
+        }
+      }}
     >
       <div
         ref={dragHandle}

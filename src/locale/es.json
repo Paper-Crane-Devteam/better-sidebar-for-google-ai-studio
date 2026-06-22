@@ -169,8 +169,9 @@
     "createdAt": "Creado",
     "inbox": "Bandeja de entrada",
     "saveSnippet": "Guardar como Fragmento",
+    "saveSnippetTooltip": "Clic para guardar · Mantén para arrastrar",
     "savedToInbox": "Guardado en Fragmentos",
-    "dragToFolder": "Arrastrar a carpeta"
+    "dragToFolder": "Soltar en una carpeta para guardar"
   },
   "menu": {
     "newFolder": "Nueva Carpeta",
