@@ -9,10 +9,15 @@ import { SaveSnippetButton } from './SaveSnippetButton';
 import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 
 const PROCESSED_ATTR = 'data-bs-snippet-processed';
+const MARKDOWN_CACHE_ATTR = 'data-bs-markdown-content';
 
 /**
  * SaveSnippetFeature — injects a shadow-DOM "save snippet" button next to each
  * model-response element in Gemini. Click = save to inbox. Hold = drag to sidebar (also saves to inbox).
+ *
+ * Markdown content is captured from Gemini API intercepted events (BETTER_SIDEBAR_PROMPT_CREATE
+ * and GEMINI_CHAT_CONTENT_RESPONSE) and stored as a data attribute on model-response elements,
+ * so that saved snippets preserve the original markdown formatting.
  */
 export const SaveSnippetFeature = () => {
   const previousTabRef = useRef<string | null>(null);
@@ -22,6 +27,8 @@ export const SaveSnippetFeature = () => {
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didDragRef = useRef(false);
   const reactRootsRef = useRef<ReactDOM.Root[]>([]);
+  // Cache: maps model message content (rc_ id) to its markdown string
+  const markdownCacheRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
     const injectButtons = () => {
@@ -117,8 +124,14 @@ export const SaveSnippetFeature = () => {
     function extractSnippetData(
       modelResponse: HTMLElement,
     ): { title: string; content: string } | null {
-      const markdown = modelResponse.querySelector('.markdown');
-      const content = markdown?.textContent?.trim() || '';
+      // Prefer cached markdown from API response (stored via data attribute or cache map)
+      let content = modelResponse.getAttribute(MARKDOWN_CACHE_ATTR) || '';
+
+      // Fallback: try to get from the markdown element's textContent
+      if (!content) {
+        const markdown = modelResponse.querySelector('.markdown');
+        content = markdown?.textContent?.trim() || '';
+      }
       if (!content) return null;
 
       let title = '';
@@ -285,6 +298,79 @@ export const SaveSnippetFeature = () => {
       }
     }
 
+    // Listen for API-intercepted markdown content and cache it on model-response elements
+    function handleMarkdownEvent(e: Event) {
+      const detail = (e as CustomEvent).detail;
+      if (!detail?.messages) return;
+
+      const modelMessages = detail.messages.filter(
+        (m: any) => m.role === 'model' && m.content,
+      );
+      for (const msg of modelMessages) {
+        // Cache the markdown content by message ID
+        if (msg.id) {
+          markdownCacheRef.current.set(msg.id, msg.content);
+        }
+      }
+
+      // Try to stamp model-response elements with their markdown content
+      // Each model-response may have a matching rc_ id in the DOM or by order
+      requestAnimationFrame(() => {
+        stampMarkdownOnResponses();
+      });
+    }
+
+    function stampMarkdownOnResponses() {
+      const modelResponses = document.querySelectorAll('model-response');
+      const cache = markdownCacheRef.current;
+      if (cache.size === 0) return;
+
+      modelResponses.forEach((mr) => {
+        // Skip if already stamped
+        if (mr.getAttribute(MARKDOWN_CACHE_ATTR)) return;
+
+        // Try to find by message-content-id attribute on descendant elements
+        const messageContentEl = mr.querySelector('[data-content-id]');
+        if (messageContentEl) {
+          const contentId = messageContentEl.getAttribute('data-content-id');
+          if (contentId && cache.has(contentId)) {
+            mr.setAttribute(MARKDOWN_CACHE_ATTR, cache.get(contentId)!);
+            return;
+          }
+        }
+
+        // Fallback: match by the latest cache entry if only one response is untagged
+        // This handles the "just generated" case where the most recent response matches the last cache entry
+      });
+    }
+
+    // Also stamp when content finishes generating (aria-busy -> false)
+    function stampLatestResponse() {
+      const cache = markdownCacheRef.current;
+      if (cache.size === 0) return;
+
+      // Get the last cached markdown (most recently generated)
+      const entries = Array.from(cache.entries());
+      const lastEntry = entries[entries.length - 1];
+      if (!lastEntry) return;
+
+      // Find the last model-response that doesn't have a stamp yet
+      const allResponses = document.querySelectorAll('model-response');
+      for (let i = allResponses.length - 1; i >= 0; i--) {
+        const mr = allResponses[i];
+        if (!mr.getAttribute(MARKDOWN_CACHE_ATTR)) {
+          const markdown = mr.querySelector('.markdown');
+          if (markdown && markdown.getAttribute('aria-busy') !== 'true') {
+            mr.setAttribute(MARKDOWN_CACHE_ATTR, lastEntry[1]);
+            break;
+          }
+        }
+      }
+    }
+
+    window.addEventListener('BETTER_SIDEBAR_PROMPT_CREATE', handleMarkdownEvent);
+    window.addEventListener('GEMINI_CHAT_CONTENT_RESPONSE', handleMarkdownEvent);
+
     // MutationObserver for new model-response elements
     const observer = new MutationObserver((mutations) => {
       let shouldCheck = false;
@@ -303,6 +389,8 @@ export const SaveSnippetFeature = () => {
             if (modelResp) {
               modelResp.removeAttribute(PROCESSED_ATTR);
               shouldCheck = true;
+              // Stamp markdown content from cache when generation finishes
+              stampLatestResponse();
             }
           }
         }
@@ -340,6 +428,8 @@ export const SaveSnippetFeature = () => {
     return () => {
       observer.disconnect();
       window.removeEventListener('popstate', handleUrlChange);
+      window.removeEventListener('BETTER_SIDEBAR_PROMPT_CREATE', handleMarkdownEvent);
+      window.removeEventListener('GEMINI_CHAT_CONTENT_RESPONSE', handleMarkdownEvent);
       if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
       document.removeEventListener('mousemove', handleDragMove, true);
       document.removeEventListener('mouseup', handleDragEnd, true);

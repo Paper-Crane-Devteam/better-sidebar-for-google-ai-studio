@@ -121,6 +121,11 @@ export interface UIState {
     sortOrder: 'alpha' | 'date';
     onlyFavorites: boolean;
     batch: { isBatchMode: boolean; selectedIds: string[] };
+    readerDrawer: {
+      isOpen: boolean;
+      folderId: string | null;
+      activeSnippetId: string | null;
+    };
   };
 }
 
@@ -326,6 +331,8 @@ export interface AppState {
   setSnippetsBatchMode: (isBatchMode: boolean) => void;
   setSnippetsBatchSelection: (selectedIds: string[]) => void;
   toggleSnippetsBatchSelection: (id: string) => void;
+  openSnippetReaderDrawer: (folderId: string | null, snippetId: string) => void;
+  closeSnippetReaderDrawer: () => void;
 }
 
 export type SetState = (

@@ -21,6 +21,8 @@ export function createSnippetsActions(
   | 'setSnippetsBatchMode'
   | 'setSnippetsBatchSelection'
   | 'toggleSnippetsBatchSelection'
+  | 'openSnippetReaderDrawer'
+  | 'closeSnippetReaderDrawer'
 > {
   return {
     setSnippetFolders: (snippetFolders) => set({ snippetFolders }),
@@ -294,5 +296,35 @@ export function createSnippetsActions(
           },
         };
       }),
+
+    openSnippetReaderDrawer: (folderId, snippetId) =>
+      set((state) => ({
+        ui: {
+          ...state.ui,
+          snippets: {
+            ...state.ui.snippets,
+            readerDrawer: {
+              isOpen: true,
+              folderId,
+              activeSnippetId: snippetId,
+            },
+          },
+        },
+      })),
+
+    closeSnippetReaderDrawer: () =>
+      set((state) => ({
+        ui: {
+          ...state.ui,
+          snippets: {
+            ...state.ui.snippets,
+            readerDrawer: {
+              isOpen: false,
+              folderId: null,
+              activeSnippetId: null,
+            },
+          },
+        },
+      })),
   };
 }

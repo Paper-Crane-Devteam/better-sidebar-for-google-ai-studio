@@ -15,7 +15,7 @@ export function mountEnhancedFeatures(mainStyles: string) {
     const enhancedWrapper = document.createElement('div');
     enhancedWrapper.id = 'better-sidebar-enhanced-features';
     enhancedWrapper.style.position = 'relative';
-    // Keep below overlay modals (z-50 = 50) but above normal page content
+    // Keep below sidebar reader drawer (z-9998) but above normal page content
     enhancedWrapper.style.zIndex = '40';
     document.body.appendChild(enhancedWrapper);
 

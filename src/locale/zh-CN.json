@@ -8,6 +8,8 @@
     "hide": "隐藏",
     "edit": "编辑",
     "save": "保存",
+    "saved": "已保存",
+    "copy": "复制",
     "close": "关闭",
     "loading": "加载中...",
     "settings": "设置",
@@ -171,7 +173,10 @@
     "saveSnippet": "保存为片段",
     "saveSnippetTooltip": "点击保存 · 长按拖拽",
     "savedToInbox": "已保存到片段",
-    "dragToFolder": "拖放到文件夹以保存"
+    "dragToFolder": "拖放到文件夹以保存",
+    "goToSource": "跳转到来源",
+    "allSnippets": "全部片段",
+    "items": "项"
   },
   "menu": {
     "newFolder": "新建文件夹",

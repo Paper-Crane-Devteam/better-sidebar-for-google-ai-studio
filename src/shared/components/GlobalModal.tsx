@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { cn } from '@/shared/lib/utils/utils';
 
-const BASE_Z = 100;
+const BASE_Z = 10000;
 
 export const GlobalModal = () => {
   const { t } = useI18n();

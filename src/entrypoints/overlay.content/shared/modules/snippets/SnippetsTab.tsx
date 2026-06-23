@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '@/shared/lib/store';
 import { useModalStore } from '@/shared/lib/modal';
 import { Button } from '../../components/ui/button';
@@ -15,7 +15,7 @@ import {
 } from '../../components/ui/context-menu';
 import { ExclusiveContextMenu } from '../../components/ui/exclusive-context-menu';
 import { CreateSnippetForm } from './components/CreateSnippetForm';
-import { SnippetPreviewContent } from './components/SnippetPreviewContent';
+import { SnippetReaderDrawer } from './components/SnippetReaderDrawer';
 
 interface SnippetsTabProps {
   menuActions?: {
@@ -33,11 +33,10 @@ export const SnippetsTab = ({ menuActions }: SnippetsTabProps) => {
     createSnippetFolder,
     createSnippet,
     updateSnippet,
-    ui,
+    openSnippetReaderDrawer,
   } = useAppStore();
 
   const filter = useStoreFilter('snippets');
-  const { query: searchTerm } = ui.snippets.search;
 
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const selectedNodeRef = useRef(selectedNode);
@@ -48,23 +47,8 @@ export const SnippetsTab = ({ menuActions }: SnippetsTabProps) => {
   const treeRef = useRef<SnippetsTreeHandle>(null);
 
   const openPreviewModal = (snippet: any) => {
-    useModalStore.getState().open({
-      type: 'confirm',
-      title: (
-        <span className="flex items-center gap-2 min-w-0">
-          <span className="break-words">{snippet.title}</span>
-        </span>
-      ),
-      content: <SnippetPreviewContent snippet={snippet} />,
-      confirmText: t('common.close'),
-      cancelText: t('common.edit'),
-      onConfirm: () => useModalStore.getState().close(),
-      onCancel: () => {
-        useModalStore.getState().close();
-        openEditModal(snippet);
-      },
-      modalClassName: 'max-w-2xl',
-    });
+    // Open the reader drawer instead of a modal
+    openSnippetReaderDrawer(snippet.folder_id, snippet.id);
   };
 
   const openEditModal = (snippet: any) => {
@@ -280,6 +264,9 @@ export const SnippetsTab = ({ menuActions }: SnippetsTabProps) => {
           </ContextMenuItem>
         </ContextMenuContent>
       </ExclusiveContextMenu>
+
+      {/* Reader Drawer */}
+      <SnippetReaderDrawer />
     </div>
   );
 };

@@ -8,6 +8,8 @@
     "hide": "Hide",
     "edit": "Edit",
     "save": "Save",
+    "saved": "Saved",
+    "copy": "Copy",
     "close": "Close",
     "loading": "Loading...",
     "move": "Move",
@@ -171,7 +173,10 @@
     "saveSnippet": "Save as Snippet",
     "saveSnippetTooltip": "Click to save · Hold to drag",
     "savedToInbox": "Saved to Snippets",
-    "dragToFolder": "Drop on a folder to save"
+    "dragToFolder": "Drop on a folder to save",
+    "goToSource": "Go to Source",
+    "allSnippets": "All Snippets",
+    "items": "items"
   },
   "menu": {
     "newFolder": "New Folder",

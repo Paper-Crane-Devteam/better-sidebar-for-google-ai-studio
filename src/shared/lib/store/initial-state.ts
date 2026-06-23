@@ -44,6 +44,7 @@ export const initialUIState: UIState = {
     sortOrder: 'alpha',
     onlyFavorites: false,
     batch: { isBatchMode: false, selectedIds: [] },
+    readerDrawer: { isOpen: false, folderId: null, activeSnippetId: null },
   },
   prompts: {
     search: { isOpen: false, query: '' },
