@@ -13,13 +13,14 @@ import type { Snippet } from '@/shared/types/db';
 interface SnippetCardProps {
   snippet: Snippet;
   isActive: boolean;
+  onSelect: (snippet: Snippet) => void;
   onCopy: (snippet: Snippet) => void;
   onEdit: (snippet: Snippet) => void;
   onNavigate: (snippet: Snippet) => void;
   cardRef?: (el: HTMLDivElement | null) => void;
 }
 
-const SnippetCard = ({ snippet, isActive, onCopy, onEdit, onNavigate, cardRef }: SnippetCardProps) => {
+const SnippetCard = ({ snippet, isActive, onSelect, onCopy, onEdit, onNavigate, cardRef }: SnippetCardProps) => {
   const { t } = useI18n();
 
   const formatDate = (timestamp: number) => {
@@ -33,11 +34,12 @@ const SnippetCard = ({ snippet, isActive, onCopy, onEdit, onNavigate, cardRef }:
       ref={cardRef}
       data-snippet-id={snippet.id}
       className={cn(
-        'border rounded-lg p-5 transition-all',
+        'border rounded-lg p-5 transition-all cursor-pointer',
         isActive
           ? 'border-primary/50 bg-primary/5 ring-1 ring-primary/20'
-          : 'border-border bg-card',
+          : 'border-border bg-card hover:border-border/80',
       )}
+      onClick={() => onSelect(snippet)}
     >
       {/* Card Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -62,7 +64,7 @@ const SnippetCard = ({ snippet, isActive, onCopy, onEdit, onNavigate, cardRef }:
           variant="ghost"
           size="sm"
           className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-          onClick={() => onCopy(snippet)}
+          onClick={(e) => { e.stopPropagation(); onSelect(snippet); onCopy(snippet); }}
         >
           <Copy className="h-3.5 w-3.5" />
           {t('common.copy')}
@@ -71,7 +73,7 @@ const SnippetCard = ({ snippet, isActive, onCopy, onEdit, onNavigate, cardRef }:
           variant="ghost"
           size="sm"
           className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-          onClick={() => onEdit(snippet)}
+          onClick={(e) => { e.stopPropagation(); onSelect(snippet); onEdit(snippet); }}
         >
           <Pencil className="h-3.5 w-3.5" />
           {t('common.edit')}
@@ -81,7 +83,7 @@ const SnippetCard = ({ snippet, isActive, onCopy, onEdit, onNavigate, cardRef }:
             variant="ghost"
             size="sm"
             className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-            onClick={() => onNavigate(snippet)}
+            onClick={(e) => { e.stopPropagation(); onSelect(snippet); onNavigate(snippet); }}
           >
             <ExternalLink className="h-3.5 w-3.5" />
             {t('snippets.goToSource')}
@@ -205,6 +207,17 @@ export const SnippetReaderDrawer = () => {
     }
   }, [isOpen, isVisible, activeSnippetId, scrollToSnippet]);
 
+  // Scroll to snippet when activeSnippetId changes while drawer is already open
+  const prevActiveSnippetIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (isOpen && isVisible && activeSnippetId && hasScrolledRef.current) {
+      if (prevActiveSnippetIdRef.current && prevActiveSnippetIdRef.current !== activeSnippetId) {
+        setTimeout(() => scrollToSnippet(activeSnippetId, 'smooth'), 50);
+      }
+    }
+    prevActiveSnippetIdRef.current = activeSnippetId;
+  }, [isOpen, isVisible, activeSnippetId, scrollToSnippet]);
+
   // ESC key to close
   useEffect(() => {
     if (!isOpen) return;
@@ -260,6 +273,10 @@ export const SnippetReaderDrawer = () => {
       window.open(snippet.source_url, '_blank');
     }
   }, []);
+
+  const handleSelect = useCallback((snippet: Snippet) => {
+    useAppStore.getState().openSnippetReaderDrawer(folderId, snippet.id);
+  }, [folderId]);
 
   // Navigate between snippets
   const currentIndex = useMemo(() => {
@@ -325,7 +342,7 @@ export const SnippetReaderDrawer = () => {
       }}
     >
       {/* Left border to separate from sidebar */}
-      <div className="absolute left-0 top-0 bottom-0 w-px bg-border" />
+      <div className="absolute left-0 top-0 bottom-0 w-px bg-border z-10" />
 
       {/* Backdrop */}
       <div
@@ -371,6 +388,7 @@ export const SnippetReaderDrawer = () => {
                 key={snippet.id}
                 snippet={snippet}
                 isActive={snippet.id === activeSnippetId}
+                onSelect={handleSelect}
                 onCopy={handleCopy}
                 onEdit={handleEdit}
                 onNavigate={handleNavigate}
@@ -388,24 +406,24 @@ export const SnippetReaderDrawer = () => {
 
         {/* Floating navigation buttons - bottom right */}
         {folderSnippets.length > 1 && (
-          <div className="absolute bottom-6 right-6 flex flex-col gap-1 z-10">
+          <div className="absolute bottom-10 right-10 flex flex-col gap-3 z-10">
             <Button
               variant="outline"
               size="sm"
-              className="h-9 w-9 p-0 rounded-full shadow-md bg-background/90 backdrop-blur-sm"
+              className="h-11 w-11 p-0 rounded-full shadow-md bg-background/90 backdrop-blur-sm"
               onClick={handlePrev}
               disabled={currentIndex <= 0}
             >
-              <ChevronUp className="h-4 w-4" />
+              <ChevronUp className="h-5 w-5" />
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="h-9 w-9 p-0 rounded-full shadow-md bg-background/90 backdrop-blur-sm"
+              className="h-11 w-11 p-0 rounded-full shadow-md bg-background/90 backdrop-blur-sm"
               onClick={handleNext}
               disabled={currentIndex >= folderSnippets.length - 1}
             >
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-5 w-5" />
             </Button>
           </div>
         )}

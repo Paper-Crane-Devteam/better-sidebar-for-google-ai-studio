@@ -173,6 +173,7 @@
     "saveSnippet": "保存为片段",
     "saveSnippetTooltip": "点击保存 · 长按拖拽",
     "savedToInbox": "已保存到片段",
+    "savedToFolder": "已保存到「{{folderName}}」",
     "dragToFolder": "拖放到文件夹以保存",
     "goToSource": "跳转到来源",
     "allSnippets": "全部片段",

@@ -35,4 +35,6 @@ export const toast = {
   error: (msg: string, duration?: number) => useToastStore.getState().addToast(msg, 'error', duration),
   info: (msg: string, duration?: number) => useToastStore.getState().addToast(msg, 'info', duration),
   warning: (msg: string, duration?: number) => useToastStore.getState().addToast(msg, 'warning', duration),
+  /** Dismiss all current toasts */
+  dismissAll: () => useToastStore.setState({ toasts: [] }),
 };

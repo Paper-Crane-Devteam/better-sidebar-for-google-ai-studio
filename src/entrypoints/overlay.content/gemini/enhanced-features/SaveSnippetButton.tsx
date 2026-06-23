@@ -1,5 +1,5 @@
 import React, { useRef, useCallback } from 'react';
-import { FileText } from 'lucide-react';
+import { ScrollText } from 'lucide-react';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { Button } from '@/shared/components/ui/button';
@@ -58,7 +58,7 @@ export const SaveSnippetButton = ({
         className="h-7 w-7 cursor-grab active:cursor-grabbing border-border/60 bg-background hover:bg-accent"
         onMouseDown={handleMouseDown}
       >
-        <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+        <ScrollText className="h-3.5 w-3.5 text-muted-foreground" />
       </Button>
     </SimpleTooltip>
   );

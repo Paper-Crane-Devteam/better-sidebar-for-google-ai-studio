@@ -98,7 +98,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in-0" style={{ backgroundColor: 'var(--overlay-bg)', backdropFilter: 'var(--overlay-blur)', WebkitBackdropFilter: 'var(--overlay-blur)' }}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center animate-in fade-in-0" style={{ backgroundColor: 'var(--overlay-bg)', backdropFilter: 'var(--overlay-blur)', WebkitBackdropFilter: 'var(--overlay-blur)' }}>
             <div className="relative w-[800px] h-[600px] max-h-[90vh] border rounded-lg shadow-lg flex overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4" style={{ backgroundColor: 'var(--panel-bg)', backdropFilter: 'var(--panel-blur)', WebkitBackdropFilter: 'var(--panel-blur)' }}>
                 {/* Close Button */}
                 <Button

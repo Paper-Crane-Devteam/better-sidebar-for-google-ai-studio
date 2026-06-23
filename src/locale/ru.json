@@ -171,6 +171,7 @@
     "saveSnippet": "Сохранить как фрагмент",
     "saveSnippetTooltip": "Нажмите, чтобы сохранить · Удерживайте для перетаскивания",
     "savedToInbox": "Сохранено во фрагменты",
+    "savedToFolder": "Сохранено в «{{folderName}}»",
     "dragToFolder": "Перетащите в папку для сохранения",
     "goToSource": "Перейти к источнику",
     "allSnippets": "Все фрагменты",

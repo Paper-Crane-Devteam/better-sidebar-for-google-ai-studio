@@ -171,6 +171,7 @@
     "saveSnippet": "Guardar como Fragmento",
     "saveSnippetTooltip": "Clic para guardar · Mantén para arrastrar",
     "savedToInbox": "Guardado en Fragmentos",
+    "savedToFolder": "Guardado en \"{{folderName}}\"",
     "dragToFolder": "Soltar en una carpeta para guardar",
     "goToSource": "Ir a la fuente",
     "allSnippets": "Todos los fragmentos",

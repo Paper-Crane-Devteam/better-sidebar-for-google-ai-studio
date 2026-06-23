@@ -171,6 +171,7 @@
     "saveSnippet": "スニペットとして保存",
     "saveSnippetTooltip": "クリックで保存 · 長押しでドラッグ",
     "savedToInbox": "スニペットに保存しました",
+    "savedToFolder": "「{{folderName}}」に保存しました",
     "dragToFolder": "フォルダにドロップして保存",
     "goToSource": "ソースに移動",
     "allSnippets": "すべてのスニペット",

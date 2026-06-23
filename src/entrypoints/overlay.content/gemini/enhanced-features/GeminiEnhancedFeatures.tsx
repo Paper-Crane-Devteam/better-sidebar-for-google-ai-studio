@@ -9,6 +9,7 @@ import { AutoHideInputFeature } from './AutoHideInputFeature';
 import { SlashCommandFeature } from './SlashCommandFeature';
 import { AgentLoopFeature } from './AgentLoopFeature';
 import { SaveSnippetFeature } from './SaveSnippetFeature';
+import { SnippetDragDrawer } from '@/entrypoints/overlay.content/shared/modules/snippets/components/SnippetDragFolderView';
 import { GlobalModal } from '@/shared/components/GlobalModal';
 
 /**
@@ -31,6 +32,7 @@ export const GeminiEnhancedFeatures = () => {
       <SlashCommandFeature />
       <AgentLoopFeature />
       <SaveSnippetFeature />
+      <SnippetDragDrawer />
       <GlobalModal />
     </>
   );

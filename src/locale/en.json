@@ -173,6 +173,7 @@
     "saveSnippet": "Save as Snippet",
     "saveSnippetTooltip": "Click to save · Hold to drag",
     "savedToInbox": "Saved to Snippets",
+    "savedToFolder": "Saved to \"{{folderName}}\"",
     "dragToFolder": "Drop on a folder to save",
     "goToSource": "Go to Source",
     "allSnippets": "All Snippets",

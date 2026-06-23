@@ -171,6 +171,7 @@
     "saveSnippet": "儲存為片段",
     "saveSnippetTooltip": "點擊儲存 · 長按拖曳",
     "savedToInbox": "已儲存到片段",
+    "savedToFolder": "已儲存到「{{folderName}}」",
     "dragToFolder": "拖放到資料夾以儲存",
     "goToSource": "前往來源",
     "allSnippets": "所有片段",

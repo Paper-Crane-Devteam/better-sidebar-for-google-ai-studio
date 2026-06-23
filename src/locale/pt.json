@@ -171,6 +171,7 @@
     "saveSnippet": "Salvar como Trecho",
     "saveSnippetTooltip": "Clique para salvar · Segure para arrastar",
     "savedToInbox": "Salvo nos Trechos",
+    "savedToFolder": "Salvo em \"{{folderName}}\"",
     "dragToFolder": "Solte em uma pasta para salvar",
     "goToSource": "Ir para a fonte",
     "allSnippets": "Todos os trechos",

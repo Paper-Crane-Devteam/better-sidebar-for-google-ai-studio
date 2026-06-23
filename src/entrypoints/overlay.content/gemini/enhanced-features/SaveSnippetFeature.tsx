@@ -7,6 +7,7 @@ import mainStyles from '@/index.scss?inline';
 import { applyShadowStyles } from '@/shared/lib/utils';
 import { SaveSnippetButton } from './SaveSnippetButton';
 import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
+import { snippetDragBus } from '@/entrypoints/overlay.content/shared/modules/snippets/snippet-drag-bus';
 
 const PROCESSED_ATTR = 'data-bs-snippet-processed';
 const MARKDOWN_CACHE_ATTR = 'data-bs-markdown-content';
@@ -20,7 +21,6 @@ const MARKDOWN_CACHE_ATTR = 'data-bs-markdown-content';
  * so that saved snippets preserve the original markdown formatting.
  */
 export const SaveSnippetFeature = () => {
-  const previousTabRef = useRef<string | null>(null);
   const isDraggingRef = useRef(false);
   const dragGhostRef = useRef<HTMLElement | null>(null);
   const dragDataRef = useRef<{ title: string; content: string } | null>(null);
@@ -198,7 +198,7 @@ export const SaveSnippetFeature = () => {
       }
     }
 
-    async function saveToFolder(title: string, content: string, folderId: string | null) {
+    async function saveToFolder(title: string, content: string, folderId: string | null, folderName?: string) {
       try {
         // If no specific folder targeted, resolve inbox
         let targetFolderId = folderId;
@@ -222,7 +222,12 @@ export const SaveSnippetFeature = () => {
         });
 
         useAppStore.getState().fetchData(true);
-        toast.success(i18n.t('snippets.savedToInbox'), 1500);
+
+        if (folderName) {
+          toast.success(i18n.t('snippets.savedToFolder', { folderName }), 1500);
+        } else {
+          toast.success(i18n.t('snippets.savedToInbox'), 1500);
+        }
       } catch (err) {
         console.error('[SaveSnippet] Failed to save:', err);
       }
@@ -231,18 +236,14 @@ export const SaveSnippetFeature = () => {
     function startDragMode(e: MouseEvent | React.MouseEvent, data: { title: string; content: string }) {
       isDraggingRef.current = true;
 
-      // Switch sidebar to snippets tab
-      previousTabRef.current = useAppStore.getState().ui.overlay.activeTab;
-      useAppStore.getState().setActiveTab('snippets');
+      // Notify the drag drawer to appear
+      snippetDragBus.emit('drag:start', undefined);
 
-      // Notify sidebar that snippet drag is active
-      window.dispatchEvent(new CustomEvent('SNIPPET_DRAG_START'));
-
-      // Create drag ghost
+      // Create drag ghost (title only)
       const ghost = document.createElement('div');
       ghost.style.cssText =
-        'position:fixed;pointer-events:none;z-index:99999;padding:6px 12px;background:var(--gem-sys-color--surface, #fff);border:1px solid var(--gem-sys-color--outline-variant, #dadce0);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:0.9;';
-      ghost.textContent = `📋 ${data.title.substring(0, 30)}`;
+        'position:fixed;pointer-events:none;z-index:99999;padding:5px 10px;background:var(--gem-sys-color--surface, #fff);border:1px solid var(--gem-sys-color--outline-variant, #dadce0);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:0.9;';
+      ghost.textContent = data.title.substring(0, 30);
       ghost.style.left = `${e.clientX + 10}px`;
       ghost.style.top = `${e.clientY + 10}px`;
       document.body.appendChild(ghost);
@@ -272,29 +273,26 @@ export const SaveSnippetFeature = () => {
 
       isDraggingRef.current = false;
 
-      // Determine target folder: check if there's a pending drop target from the sidebar
-      const dropTargetId = (window as any).__snippetDropTargetFolderId || null;
-      (window as any).__snippetDropTargetFolderId = null;
+      // Dismiss the "drag to folder" toast before showing result
+      toast.dismissAll();
+
+      // Determine target folder from the event bus
+      const dropTarget = snippetDragBus.currentDropTarget;
+      snippetDragBus.clearDropTarget();
 
       // Dispatch event to end drag state in sidebar
-      window.dispatchEvent(new CustomEvent('SNIPPET_DRAG_END'));
+      snippetDragBus.emit('drag:end', undefined);
 
-      // Only save if dropped inside the sidebar area (i.e. a folder target was hovered)
-      if (dragDataRef.current && dropTargetId) {
-        saveToFolder(dragDataRef.current.title, dragDataRef.current.content, dropTargetId);
+      // Save if a drop target was hovered (string = folder, null = inbox)
+      if (dragDataRef.current && dropTarget !== undefined) {
+        const folderName = dropTarget
+          ? useAppStore.getState().snippetFolders.find((f) => f.id === dropTarget)?.name
+          : undefined;
+        saveToFolder(dragDataRef.current.title, dragDataRef.current.content, dropTarget, folderName);
         dragDataRef.current = null;
       } else {
-        // Dropped outside sidebar — discard
+        // Dropped outside — discard
         dragDataRef.current = null;
-      }
-
-      // Restore previous tab
-      if (previousTabRef.current) {
-        const prevTab = previousTabRef.current;
-        previousTabRef.current = null;
-        setTimeout(() => {
-          useAppStore.getState().setActiveTab(prevTab as any);
-        }, 600);
       }
     }
 
@@ -398,17 +396,28 @@ export const SaveSnippetFeature = () => {
       if (shouldCheck) injectButtons();
     });
 
+    const CHAT_CONTAINER_SELECTOR =
+      'infinite-scroller.chat-history, .conversation-container, chat-window';
+
+    let currentContainer: Element | null = null;
+
     const startObserving = () => {
-      const container = document.querySelector(
-        'infinite-scroller.chat-history, .conversation-container, chat-window',
-      );
-      if (container) {
+      const container = document.querySelector(CHAT_CONTAINER_SELECTOR);
+      if (container && container !== currentContainer) {
+        // Disconnect previous observer before re-attaching
+        observer.disconnect();
+        currentContainer = container;
         observer.observe(container, {
           childList: true,
           subtree: true,
           attributes: true,
           attributeFilter: ['aria-busy'],
         });
+        injectButtons();
+        return true;
+      }
+      if (container && container === currentContainer) {
+        // Already observing the same container, just re-inject buttons
         injectButtons();
         return true;
       }
@@ -422,11 +431,42 @@ export const SaveSnippetFeature = () => {
       setTimeout(() => clearInterval(pollInterval), 60000);
     }
 
-    const handleUrlChange = () => setTimeout(injectButtons, 1000);
+    // High-level MutationObserver on document.body to detect chat container replacement
+    // (e.g. when Gemini swaps out the entire conversation DOM on chat switch)
+    const bodyObserver = new MutationObserver(() => {
+      const container = document.querySelector(CHAT_CONTAINER_SELECTOR);
+      if (container && container !== currentContainer) {
+        startObserving();
+      }
+    });
+    bodyObserver.observe(document.body, { childList: true, subtree: true });
+
+    // Intercept pushState/replaceState for SPA navigation detection
+    const originalPushState = history.pushState.bind(history);
+    const originalReplaceState = history.replaceState.bind(history);
+
+    const handleUrlChange = () => {
+      // Give Gemini DOM time to render, then re-check
+      setTimeout(() => startObserving(), 500);
+      setTimeout(() => startObserving(), 1500);
+    };
+
+    history.pushState = function (...args) {
+      originalPushState(...args);
+      handleUrlChange();
+    };
+    history.replaceState = function (...args) {
+      originalReplaceState(...args);
+      handleUrlChange();
+    };
+
     window.addEventListener('popstate', handleUrlChange);
 
     return () => {
       observer.disconnect();
+      bodyObserver.disconnect();
+      history.pushState = originalPushState;
+      history.replaceState = originalReplaceState;
       window.removeEventListener('popstate', handleUrlChange);
       window.removeEventListener('BETTER_SIDEBAR_PROMPT_CREATE', handleMarkdownEvent);
       window.removeEventListener('GEMINI_CHAT_CONTENT_RESPONSE', handleMarkdownEvent);

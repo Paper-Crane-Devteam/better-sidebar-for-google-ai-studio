@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Folder as FolderIcon,
-  FileText,
   ChevronRight,
   ChevronDown,
-  Eye,
   Star,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
@@ -25,6 +23,7 @@ import { SnippetMoveDialog } from '../SnippetMoveDialog';
 import { NodeActionBar } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import type { ActionButtonDef } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import { useSnippetMenuItems } from './useSnippetMenuItems';
+import { snippetDragBus } from '../../snippet-drag-bus';
 import type { NodeRendererProps } from '../../../../components/folder-tree/types';
 import type { FolderTreeNodeData } from '../../../../components/folder-tree/types';
 
@@ -97,15 +96,7 @@ export const SnippetNode = ({
     ) : null;
 
   const folderIcon = <FolderIcon className="w-4 h-4 text-foreground/80" />;
-  const fileIcon = <FileText className="w-4 h-4" />;
-
-  const handleView = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    e?.preventDefault();
-    if (onPreview) {
-      onPreview(node.data.data);
-    }
-  };
+  const fileIcon = null;
 
   const handleEdit = (e?: React.MouseEvent) => {
     e?.stopPropagation();
@@ -175,13 +166,6 @@ export const SnippetNode = ({
       className: 'text-yellow-400 hover:text-yellow-500',
     });
   }
-  if (isFile && onPreview) {
-    quickActions.push({
-      icon: <Eye className="h-3.5 w-3.5" />,
-      tooltip: t('snippets.viewSnippet'),
-      onClick: handleView,
-    });
-  }
 
   const innerContent = (
     <>
@@ -215,8 +199,8 @@ export const SnippetNode = ({
   const commonClasses = cn(
     'flex items-center gap-1.5 px-1 cursor-pointer group relative pr-2 h-full no-underline outline-none text-density rounded-sm font-medium text-foreground/80',
     !node.isEditing && 'group-hover:pr-8',
-    !((node.isSelected && !isFile) || isBatchSelected) && 'hover:bg-accent/50',
-    ((node.isSelected && !isFile) || isBatchSelected) && 'node-item-selected',
+    !(node.isSelected || isBatchSelected) && 'hover:bg-accent/50',
+    (node.isSelected || isBatchSelected) && 'node-item-selected',
     !isFile && node.data.data?.is_pinned && 'node-item-pinned',
     isFile && isFavorite && 'node-item-favorited',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
@@ -242,12 +226,12 @@ export const SnippetNode = ({
       }}
       onPointerEnter={() => {
         if (!isFile) {
-          (window as any).__snippetDropTargetFolderId = node.data.id;
+          snippetDragBus.setDropTarget(node.data.id);
         }
       }}
       onPointerLeave={() => {
-        if (!isFile && (window as any).__snippetDropTargetFolderId === node.data.id) {
-          (window as any).__snippetDropTargetFolderId = null;
+        if (!isFile && snippetDragBus.currentDropTarget === node.data.id) {
+          snippetDragBus.clearDropTarget();
         }
       }}
     >

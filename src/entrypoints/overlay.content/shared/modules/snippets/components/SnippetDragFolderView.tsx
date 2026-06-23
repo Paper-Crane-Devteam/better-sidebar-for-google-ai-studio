@@ -1,0 +1,140 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Folder as FolderIcon, ChevronDown } from 'lucide-react';
+import { cn } from '@/shared/lib/utils/utils';
+import { useAppStore } from '@/shared/lib/store';
+import { useI18n } from '@/shared/hooks/useI18n';
+import { snippetDragBus } from '../snippet-drag-bus';
+import type { SnippetFolder } from '@/shared/types/db';
+
+interface FolderNodeProps {
+  folder: SnippetFolder;
+  children: SnippetFolder[];
+  allFolders: SnippetFolder[];
+  depth: number;
+}
+
+const FolderNode = ({ folder, children, allFolders, depth }: FolderNodeProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div>
+      <div
+        className={cn(
+          'flex items-center gap-1.5 px-2 py-1.5 rounded-sm cursor-default transition-colors',
+          isHovered && 'bg-primary/15 ring-1 ring-primary/40',
+        )}
+        style={{ paddingLeft: `${depth * 16 + 8}px` }}
+        onPointerEnter={() => {
+          setIsHovered(true);
+          snippetDragBus.setDropTarget(folder.id);
+        }}
+        onPointerLeave={() => {
+          setIsHovered(false);
+          if (snippetDragBus.currentDropTarget === folder.id) {
+            snippetDragBus.clearDropTarget();
+          }
+        }}
+      >
+        <ChevronDown className="w-3 h-3 text-muted-foreground" />
+        <FolderIcon className="w-4 h-4 text-foreground/80" />
+        <span className="text-sm truncate">{folder.name}</span>
+      </div>
+      {children.map((child) => (
+        <FolderNode
+          key={child.id}
+          folder={child}
+          children={allFolders.filter((f) => f.parent_id === child.id)}
+          allFolders={allFolders}
+          depth={depth + 1}
+        />
+      ))}
+    </div>
+  );
+};
+
+/**
+ * Floating drawer that appears during snippet drag.
+ * Overlays the sidebar area, showing only the folder tree for drop targets.
+ * Hides the real sidebar while active to avoid visual conflict.
+ */
+export const SnippetDragDrawer = () => {
+  const { t } = useI18n();
+  const { snippetFolders } = useAppStore();
+  const [isActive, setIsActive] = useState(snippetDragBus.isDragging);
+  const sidebarRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const unsubStart = snippetDragBus.on('drag:start', () => setIsActive(true));
+    const unsubEnd = snippetDragBus.on('drag:end', () => setIsActive(false));
+    return () => {
+      unsubStart();
+      unsubEnd();
+    };
+  }, []);
+
+  // Hide/show sidebar when drawer is active
+  useEffect(() => {
+    const sidebar = document.querySelector('bard-sidenav') as HTMLElement;
+    sidebarRef.current = sidebar;
+
+    if (isActive && sidebar) {
+      sidebar.style.visibility = 'hidden';
+    }
+    return () => {
+      if (sidebar) {
+        sidebar.style.visibility = '';
+      }
+    };
+  }, [isActive]);
+
+  if (!isActive) return null;
+
+  const rootFolders = snippetFolders.filter((f) => !f.parent_id);
+
+  // Always use the sidebar's *open* width for the drawer,
+  // regardless of current sidebar collapsed/expanded state.
+  const sidebar = sidebarRef.current;
+  const openWidth =
+    sidebar
+      ? getComputedStyle(sidebar).getPropertyValue('--bard-sidenav-open-width').trim() || '360px'
+      : '360px';
+  const left = sidebar ? sidebar.getBoundingClientRect().left : 0;
+
+  return (
+    <div
+      className="fixed z-[9999] bg-background border border-border rounded-lg shadow-xl overflow-hidden flex flex-col"
+      style={{
+        left: `${left}px`,
+        width: openWidth,
+        top: '50%',
+        transform: 'translateY(-50%)',
+        maxHeight: '60vh',
+      }}
+    >
+      {/* Header */}
+      <div className="px-3 py-2 border-b border-border/50 bg-muted/30">
+        <p className="text-xs text-muted-foreground">
+          {t('snippets.dragToFolder')}
+        </p>
+      </div>
+
+      {/* Folder list */}
+      <div className="flex-1 overflow-y-auto py-2 px-1">
+        {rootFolders.map((folder) => (
+          <FolderNode
+            key={folder.id}
+            folder={folder}
+            children={snippetFolders.filter((f) => f.parent_id === folder.id)}
+            allFolders={snippetFolders}
+            depth={0}
+          />
+        ))}
+        {rootFolders.length === 0 && (
+          <p className="text-xs text-muted-foreground text-center py-4">
+            {t('snippets.noFolders') || 'No folders'}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
