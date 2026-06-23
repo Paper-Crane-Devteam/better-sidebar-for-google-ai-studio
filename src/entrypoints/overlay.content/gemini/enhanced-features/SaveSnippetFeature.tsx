@@ -249,8 +249,6 @@ export const SaveSnippetFeature = () => {
       document.body.appendChild(ghost);
       dragGhostRef.current = ghost;
 
-      toast.info(i18n.t('snippets.dragToFolder'), 2000);
-
       document.addEventListener('mousemove', handleDragMove, true);
       document.addEventListener('mouseup', handleDragEnd, true);
     }
@@ -272,9 +270,6 @@ export const SaveSnippetFeature = () => {
       }
 
       isDraggingRef.current = false;
-
-      // Dismiss the "drag to folder" toast before showing result
-      toast.dismissAll();
 
       // Determine target folder from the event bus
       const dropTarget = snippetDragBus.currentDropTarget;
