@@ -54,6 +54,9 @@ type ContextMenuRootProps = React.ComponentPropsWithoutRef<
  * Drop-in replacement for Radix <ContextMenu>.
  * Accepts the same props (children, modal, onOpenChange, etc.)
  * and ensures exclusivity automatically.
+ *
+ * Uses modal={true} to ensure reliable click handling inside shadow DOM.
+ * Exclusivity (only one menu open at a time) is handled via the zustand store.
  */
 export const ExclusiveContextMenu = ({
   children,
@@ -110,7 +113,6 @@ export const ExclusiveContextMenu = ({
   return (
     <ContextMenuPrimitive.Root
       {...rest}
-      modal={false}
       open={isOpen}
       onOpenChange={handleOpenChange}
     >

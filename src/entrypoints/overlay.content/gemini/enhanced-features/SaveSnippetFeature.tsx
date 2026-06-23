@@ -266,8 +266,12 @@ export const SaveSnippetFeature = () => {
       // Dispatch event to end drag state in sidebar
       window.dispatchEvent(new CustomEvent('SNIPPET_DRAG_END'));
 
-      if (dragDataRef.current) {
+      // Only save if dropped inside the sidebar area (i.e. a folder target was hovered)
+      if (dragDataRef.current && dropTargetId) {
         saveToFolder(dragDataRef.current.title, dragDataRef.current.content, dropTargetId);
+        dragDataRef.current = null;
+      } else {
+        // Dropped outside sidebar — discard
         dragDataRef.current = null;
       }
 

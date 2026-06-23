@@ -39,6 +39,7 @@ export async function handleSnippets(
     }
     case 'CREATE_SNIPPET_FOLDER': {
       await snippetFolderRepo.create(message.payload);
+      await notifyDataUpdated();
       triggerAutoSync();
       return { success: true };
     }
@@ -47,6 +48,7 @@ export async function handleSnippets(
         message.payload.id,
         message.payload.updates,
       );
+      await notifyDataUpdated();
       triggerAutoSync();
       return { success: true };
     }

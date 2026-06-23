@@ -5,7 +5,7 @@ import {
   ChevronRight,
   ChevronDown,
   Eye,
-  Copy,
+  Star,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { useAppStore } from '@/shared/lib/store';
@@ -20,6 +20,8 @@ import { NodeContextMenu } from './NodeContextMenu';
 import { useDeleteHandler } from '../../hooks/useDeleteHandler';
 
 import { toast } from '@/shared/lib/toast';
+import { modal } from '@/shared/lib/modal';
+import { SnippetMoveDialog } from '../SnippetMoveDialog';
 import { NodeActionBar } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import type { ActionButtonDef } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import { useSnippetMenuItems } from './useSnippetMenuItems';
@@ -45,6 +47,9 @@ export const SnippetNode = ({
     ui,
     toggleSnippetsBatchSelection,
     createSnippetFolder,
+    favorites,
+    toggleFavorite,
+    moveSnippetItem,
   } = useAppStore();
   const { handleDelete: deleteHandler } = useDeleteHandler();
   const [newName, setNewName] = useState(node.data.name);
@@ -54,8 +59,13 @@ export const SnippetNode = ({
   const { isBatchMode, selectedIds: batchSelectedIds } = ui.snippets.batch;
   const isBatchSelected = batchSelectedIds.includes(node.data.id);
 
+  const isFile = node.data.type === 'file';
+  const isFavorite = isFile && favorites.some(
+    (f) => f.target_id === node.data.id && f.target_type === 'snippet',
+  );
+
   const handleCreateFolder = async (parentId: string) => {
-    const newFolderId = await createSnippetFolder(t('sidebar.newFolder'), parentId);
+    const newFolderId = await createSnippetFolder(t('node.newFolderName'), parentId);
     if (newFolderId) {
       tree.open(parentId);
       setTimeout(() => {
@@ -76,8 +86,6 @@ export const SnippetNode = ({
   const handleDelete = async () => {
     await deleteHandler([node.data.id]);
   };
-
-  const isFile = node.data.type === 'file';
 
   const toggleIcon =
     node.data.type === 'folder' ? (
@@ -117,44 +125,61 @@ export const SnippetNode = ({
     }
   };
 
-  const handleDuplicate = async () => {
-    const { title, content, source_url, source_platform, folder_id } = node.data.data;
-    await useAppStore.getState().createSnippet(
-      `${title} (copy)`,
-      content || '',
-      source_url,
-      source_platform,
-      folder_id,
-    );
+  const handleMoveTo = async () => {
+    let targetFolderId: string | null = null;
+    const confirmed = await modal.confirm({
+      title: t('batch.moveTitle'),
+      content: (
+        <SnippetMoveDialog
+          selectedIds={[node.data.id]}
+          onSelect={(id) => (targetFolderId = id)}
+        />
+      ),
+      modalClassName: 'max-w-xl',
+      confirmText: t('common.move'),
+      cancelText: t('common.cancel'),
+    });
+
+    if (confirmed) {
+      await moveSnippetItem(node.data.id, targetFolderId, node.data.type);
+    }
   };
 
   const menuItems = useSnippetMenuItems({
     node,
     isPinned: !!node.data.data?.is_pinned,
+    isFavorite,
     onDelete: handleDelete,
     onCreateFolder: handleCreateFolder,
     onTogglePin: (id: string, isPinned: boolean) =>
       useAppStore.getState().togglePin(id, 'snippet_folders', isPinned),
+    onToggleFavorite: (id: string, isFav: boolean) =>
+      toggleFavorite(id, 'snippet', isFav),
+    onMoveTo: handleMoveTo,
     onCopy: handleCopy,
-    onDuplicate: handleDuplicate,
     onEdit: onEdit ? handleEdit : undefined,
   });
 
   const isMenuActive = isContextMenuOpen || isDropdownOpen;
 
   const quickActions: ActionButtonDef[] = [];
+  if (isFile && isFavorite) {
+    quickActions.push({
+      icon: <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />,
+      tooltip: t('node.removeFromFavorites'),
+      onClick: (e) => {
+        e?.stopPropagation();
+        e?.preventDefault();
+        toggleFavorite(node.data.id, 'snippet', true);
+      },
+      className: 'text-yellow-400 hover:text-yellow-500',
+    });
+  }
   if (isFile && onPreview) {
     quickActions.push({
       icon: <Eye className="h-3.5 w-3.5" />,
       tooltip: t('snippets.viewSnippet'),
       onClick: handleView,
-    });
-  }
-  if (isFile) {
-    quickActions.push({
-      icon: <Copy className="h-3.5 w-3.5" />,
-      tooltip: t('snippets.copyContent'),
-      onClick: handleCopy,
     });
   }
 
@@ -189,13 +214,14 @@ export const SnippetNode = ({
 
   const commonClasses = cn(
     'flex items-center gap-1.5 px-1 cursor-pointer group relative pr-2 h-full no-underline outline-none text-density rounded-sm font-medium text-foreground/80',
-    !node.isEditing && (isFile ? 'group-hover:pr-14' : 'group-hover:pr-8'),
+    !node.isEditing && 'group-hover:pr-8',
     !((node.isSelected && !isFile) || isBatchSelected) && 'hover:bg-accent/50',
     ((node.isSelected && !isFile) || isBatchSelected) && 'node-item-selected',
     !isFile && node.data.data?.is_pinned && 'node-item-pinned',
+    isFile && isFavorite && 'node-item-favorited',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
     isMenuActive && 'bg-accent/50',
-    isMenuActive && (isFile ? 'pr-14' : 'pr-8'),
+    isMenuActive && 'pr-8',
     isMenuActive && 'node-menu-active',
   );
 
@@ -206,6 +232,14 @@ export const SnippetNode = ({
         'outline-none',
         'h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]',
       )}
+      onContextMenu={(e) => {
+        // Stop propagation to prevent the outer SnippetsTab ExclusiveContextMenu
+        // from intercepting the event and closing this node's context menu
+        if (isBatchMode) {
+          e.preventDefault();
+        }
+        e.stopPropagation();
+      }}
       onPointerEnter={() => {
         if (!isFile) {
           (window as any).__snippetDropTargetFolderId = node.data.id;
@@ -222,12 +256,6 @@ export const SnippetNode = ({
         role="button"
         tabIndex={0}
         className={commonClasses}
-        onContextMenu={(e) => {
-          if (isBatchMode) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        }}
         onClick={(e) => {
           if (isBatchMode) {
             e.preventDefault();
@@ -273,9 +301,17 @@ export const SnippetNode = ({
           node={node}
           onCreateFolder={handleCreateFolder}
           onDelete={handleDelete}
-          onDuplicate={handleDuplicate}
           onCopy={handleCopy}
           onEditSnippet={onEdit ? handleEdit : undefined}
+          isFavorite={isFavorite}
+          isPinned={!!node.data.data?.is_pinned}
+          onToggleFavorite={(id: string, isFav: boolean) =>
+            toggleFavorite(id, 'snippet', isFav)
+          }
+          onTogglePin={(id: string, isPinned: boolean) =>
+            useAppStore.getState().togglePin(id, 'snippet_folders', isPinned)
+          }
+          onMoveTo={handleMoveTo}
         />
       )}
     </ExclusiveContextMenu>

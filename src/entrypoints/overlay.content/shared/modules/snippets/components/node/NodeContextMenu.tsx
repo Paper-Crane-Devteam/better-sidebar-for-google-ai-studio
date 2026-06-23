@@ -1,17 +1,9 @@
 import React from 'react';
 import {
   ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
 } from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
-import {
-  Copy,
-  Edit,
-  FolderPlus,
-  Trash2,
-  ClipboardCopy,
-} from 'lucide-react';
-import { useI18n } from '@/shared/hooks/useI18n';
+import { renderMenuItems } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
+import { useSnippetMenuItems } from './useSnippetMenuItems';
 import type { NodeApi } from '../../../../components/folder-tree/types';
 import type { FolderTreeNodeData } from '../../../../components/folder-tree/types';
 
@@ -19,59 +11,53 @@ interface NodeContextMenuProps {
   node: NodeApi<FolderTreeNodeData>;
   onCreateFolder: (parentId: string) => void;
   onDelete: () => void;
-  onDuplicate: () => void;
   onCopy: (e?: React.MouseEvent) => void;
   onEditSnippet?: (e?: React.MouseEvent) => void;
+  isFavorite?: boolean;
+  isPinned?: boolean;
+  onToggleFavorite?: (id: string, isFav: boolean) => void;
+  onTogglePin?: (id: string, isPinned: boolean) => void;
+  onMoveTo?: () => void;
 }
 
 export const NodeContextMenu = ({
   node,
   onCreateFolder,
   onDelete,
-  onDuplicate,
   onCopy,
   onEditSnippet,
+  isFavorite,
+  isPinned,
+  onToggleFavorite,
+  onTogglePin,
+  onMoveTo,
 }: NodeContextMenuProps) => {
-  const { t } = useI18n();
-  const isFile = node.data.type === 'file';
-  const isFolder = node.data.type === 'folder';
+  const shouldPreventRef = React.useRef(false);
+
+  const menuItems = useSnippetMenuItems({
+    node,
+    isPinned: !!isPinned,
+    isFavorite: !!isFavorite,
+    onDelete,
+    onCreateFolder,
+    onTogglePin: onTogglePin ?? (() => {}),
+    onToggleFavorite,
+    onMoveTo,
+    onCopy,
+    onEdit: onEditSnippet,
+  });
 
   return (
-    <ContextMenuContent className="w-48">
-      {isFile && onEditSnippet && (
-        <ContextMenuItem onClick={onEditSnippet}>
-          <Edit className="mr-2 h-4 w-4" />
-          {t('common.edit')}
-        </ContextMenuItem>
-      )}
-      {isFile && (
-        <ContextMenuItem onClick={onCopy}>
-          <ClipboardCopy className="mr-2 h-4 w-4" />
-          {t('snippets.copyContent')}
-        </ContextMenuItem>
-      )}
-      {isFile && (
-        <ContextMenuItem onClick={onDuplicate}>
-          <Copy className="mr-2 h-4 w-4" />
-          {t('snippets.duplicate')}
-        </ContextMenuItem>
-      )}
-      {isFile && <ContextMenuSeparator />}
-      {isFolder && (
-        <ContextMenuItem onClick={() => onCreateFolder(node.data.id)}>
-          <FolderPlus className="mr-2 h-4 w-4" />
-          {t('menu.newFolder')}
-        </ContextMenuItem>
-      )}
-      <ContextMenuItem onClick={() => node.edit()}>
-        <Edit className="mr-2 h-4 w-4" />
-        {t('snippets.rename')}
-      </ContextMenuItem>
-      <ContextMenuSeparator />
-      <ContextMenuItem onClick={onDelete} className="text-destructive">
-        <Trash2 className="mr-2 h-4 w-4" />
-        {t('common.delete')}
-      </ContextMenuItem>
+    <ContextMenuContent
+      className="w-48"
+      onCloseAutoFocus={(e) => {
+        if (shouldPreventRef.current) {
+          e.preventDefault();
+          shouldPreventRef.current = false;
+        }
+      }}
+    >
+      {renderMenuItems(menuItems, 'context')}
     </ContextMenuContent>
   );
 };

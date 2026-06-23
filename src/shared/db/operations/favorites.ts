@@ -4,7 +4,7 @@ import type { Favorite } from '../../types/db';
 export const favoriteRepo = {
   add: async (
     targetId: string,
-    targetType: 'conversation' | 'message' | 'prompt',
+    targetType: 'conversation' | 'message' | 'prompt' | 'snippet',
     note?: string
   ): Promise<void> => {
     await runCommand(
@@ -15,7 +15,7 @@ export const favoriteRepo = {
 
   remove: async (
     targetId: string,
-    targetType: 'conversation' | 'message' | 'prompt'
+    targetType: 'conversation' | 'message' | 'prompt' | 'snippet'
   ): Promise<void> => {
     await runCommand(
       'DELETE FROM favorites WHERE target_id = ? AND target_type = ?',
@@ -31,7 +31,7 @@ export const favoriteRepo = {
 
   isFavorite: async (
     targetId: string,
-    targetType: 'conversation' | 'message' | 'prompt'
+    targetType: 'conversation' | 'message' | 'prompt' | 'snippet'
   ): Promise<boolean> => {
     const result = await runQuery(
       'SELECT 1 FROM favorites WHERE target_id = ? AND target_type = ? LIMIT 1',

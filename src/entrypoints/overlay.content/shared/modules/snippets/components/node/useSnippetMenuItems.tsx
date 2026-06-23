@@ -1,10 +1,12 @@
 import React from 'react';
 import {
-  Copy,
   Edit,
   FolderPlus,
+  FolderInput,
   Pin,
   PinOff,
+  Star,
+  StarOff,
   Trash2,
   ClipboardCopy,
 } from 'lucide-react';
@@ -16,22 +18,26 @@ import type { MenuEntryDef } from '../../../../components/node-action-bar';
 interface UseSnippetMenuItemsParams {
   node: NodeApi<FolderTreeNodeData>;
   isPinned: boolean;
+  isFavorite?: boolean;
   onDelete: () => void;
   onCreateFolder: (parentId: string) => void;
   onTogglePin: (id: string, isPinned: boolean) => void;
+  onToggleFavorite?: (id: string, isFav: boolean) => void;
+  onMoveTo?: () => void;
   onCopy: (e?: React.MouseEvent) => void;
-  onDuplicate: () => void;
   onEdit?: (e?: React.MouseEvent) => void;
 }
 
 export function useSnippetMenuItems({
   node,
   isPinned,
+  isFavorite,
   onDelete,
   onCreateFolder,
   onTogglePin,
+  onToggleFavorite,
+  onMoveTo,
   onCopy,
-  onDuplicate,
   onEdit,
 }: UseSnippetMenuItemsParams): MenuEntryDef[] {
   const { t } = useI18n();
@@ -58,14 +64,35 @@ export function useSnippetMenuItems({
       label: t('snippets.copyContent'),
       onClick: () => onCopy?.(),
     });
+    items.push({ type: 'separator', key: 'sep-file' });
+  }
+
+  // Favorite toggle for files
+  if (isFile && onToggleFavorite) {
     items.push({
       type: 'item',
-      key: 'duplicate',
-      icon: <Copy className="h-4 w-4" />,
-      label: t('snippets.duplicate'),
-      onClick: () => onDuplicate(),
+      key: 'toggle-favorite',
+      icon: isFavorite
+        ? <StarOff className="h-4 w-4" />
+        : <Star className="h-4 w-4" />,
+      label: isFavorite ? t('node.removeFromFavorites') : t('node.addToFavorites'),
+      onClick: () => onToggleFavorite(node.data.id, !!isFavorite),
     });
-    items.push({ type: 'separator', key: 'sep-file' });
+  }
+
+  // Move to for files
+  if (isFile && onMoveTo) {
+    items.push({
+      type: 'item',
+      key: 'move-to',
+      icon: <FolderInput className="h-4 w-4" />,
+      label: t('node.moveTo'),
+      onClick: () => onMoveTo(),
+    });
+  }
+
+  if (isFile && (onToggleFavorite || onMoveTo)) {
+    items.push({ type: 'separator', key: 'sep-organize' });
   }
 
   if (isFolder) {
@@ -73,7 +100,7 @@ export function useSnippetMenuItems({
       type: 'item',
       key: 'newFolder',
       icon: <FolderPlus className="h-4 w-4" />,
-      label: t('menu.newFolder'),
+      label: t('node.newFolder'),
       onClick: () => onCreateFolder(node.data.id),
     });
     items.push({

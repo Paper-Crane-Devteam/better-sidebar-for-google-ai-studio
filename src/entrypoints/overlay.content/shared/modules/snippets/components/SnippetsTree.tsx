@@ -115,12 +115,26 @@ export const SnippetsTree = forwardRef<SnippetsTreeHandle, SnippetsTreeProps>(
         }
       });
 
+      const favoriteIds = new Set(
+        favorites
+          .filter((f) => f.target_type === 'snippet')
+          .map((f) => f.target_id),
+      );
+
       const sortNodes = (nodes: FolderTreeNodeData[]) => {
         nodes.sort((a, b) => {
           // Pinned items always come first
           const isAPinned = a.data?.is_pinned ? 1 : 0;
           const isBPinned = b.data?.is_pinned ? 1 : 0;
           if (isAPinned !== isBPinned) return isBPinned - isAPinned;
+
+          // Favorited files come next
+          if (a.type === 'file' && b.type === 'file') {
+            const isAFav = favoriteIds.has(a.id);
+            const isBFav = favoriteIds.has(b.id);
+            if (isAFav && !isBFav) return -1;
+            if (!isAFav && isBFav) return 1;
+          }
 
           if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
 
@@ -139,9 +153,28 @@ export const SnippetsTree = forwardRef<SnippetsTreeHandle, SnippetsTreeProps>(
         });
       };
 
+      // Search filtering: prune nodes that don't match search term (by title)
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const hasMatchingContent = (node: FolderTreeNodeData): boolean => {
+          if (node.type === 'file')
+            return node.name.toLowerCase().includes(term);
+          if (!node.children || node.children.length === 0) return false;
+          node.children = node.children.filter((child) =>
+            hasMatchingContent(child),
+          );
+          return node.children.length > 0;
+        };
+        const prunedRootNodes = rootNodes.filter((node) =>
+          hasMatchingContent(node),
+        );
+        sortNodes(prunedRootNodes);
+        return prunedRootNodes;
+      }
+
       sortNodes(rootNodes);
       return rootNodes;
-    }, [snippetFolders, snippets, sortOrder, favorites, onlyFavorites, t]);
+    }, [snippetFolders, snippets, sortOrder, favorites, onlyFavorites, searchTerm, t]);
 
     return (
       <FolderTree

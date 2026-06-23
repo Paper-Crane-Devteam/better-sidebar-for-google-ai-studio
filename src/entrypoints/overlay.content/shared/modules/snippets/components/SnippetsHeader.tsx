@@ -23,6 +23,7 @@ import { useAppStore } from '@/shared/lib/store';
 import { useModalStore } from '@/shared/lib/modal';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { modal } from '@/shared/lib/modal';
+import { SnippetMoveDialog } from './SnippetMoveDialog';
 import type { FilterState, ExplorerTypeFilter } from '../../../types/filter';
 
 interface SnippetsHeaderProps {
@@ -52,6 +53,7 @@ export const SnippetsHeader = ({
     setSnippetsBatchMode,
     setSnippetsBatchSelection,
     deleteSnippetItems,
+    moveSnippetItems,
   } = useAppStore();
 
   const { sortOrder } = ui.snippets;
@@ -75,6 +77,35 @@ export const SnippetsHeader = ({
 
     if (confirmed) {
       await deleteSnippetItems(selectedIds);
+      setSnippetsBatchSelection([]);
+      setSnippetsBatchMode(false);
+    }
+  };
+
+  const handleBatchMove = async () => {
+    if (selectedIds.length === 0) return;
+
+    let targetFolderId: string | null = null;
+
+    const confirmed = await modal.confirm({
+      title: t('batch.moveTitle'),
+      content: (
+        <SnippetMoveDialog
+          selectedIds={selectedIds}
+          onSelect={(id) => (targetFolderId = id)}
+        />
+      ),
+      modalClassName: 'max-w-xl',
+      confirmText: t('common.move'),
+      cancelText: t('common.cancel'),
+    });
+
+    if (confirmed) {
+      const state = useAppStore.getState();
+      const filesToMove = selectedIds.filter(id =>
+        state.snippets.some(s => s.id === id),
+      );
+      await moveSnippetItems(filesToMove, targetFolderId);
       setSnippetsBatchSelection([]);
       setSnippetsBatchMode(false);
     }
@@ -222,6 +253,18 @@ export const SnippetsHeader = ({
                 onClick={handleBatchDelete}
               >
                 <Trash2 className="h-4 w-4" />
+              </Button>
+            </SimpleTooltip>
+
+            <SimpleTooltip content={t('batch.moveSelected')}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                disabled={selectedIds.length === 0}
+                onClick={handleBatchMove}
+              >
+                <FolderInput className="h-4 w-4" />
               </Button>
             </SimpleTooltip>
 
