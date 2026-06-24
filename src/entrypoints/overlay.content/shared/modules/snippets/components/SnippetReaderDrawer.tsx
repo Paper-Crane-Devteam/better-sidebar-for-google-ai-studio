@@ -310,13 +310,14 @@ export const SnippetReaderDrawer = () => {
     };
   }, []);
 
-  // Compute the sidebar width from the actual bard-sidenav element
+  // Compute the sidebar width from the actual sidebar element (Gemini or AI Studio)
   const [sidebarWidth, setSidebarWidth] = useState(360);
   useEffect(() => {
     if (!isOpen) return;
-    const bardSidenav = document.querySelector('bard-sidenav') as HTMLElement;
-    if (bardSidenav) {
-      const rect = bardSidenav.getBoundingClientRect();
+    const sidebarEl = (document.querySelector('bard-sidenav') ||
+      document.getElementById('better-sidebar-for-google-ai-studio-sidebar-wrapper')) as HTMLElement | null;
+    if (sidebarEl) {
+      const rect = sidebarEl.getBoundingClientRect();
       setSidebarWidth(rect.width);
 
       const resizeObserver = new ResizeObserver((entries) => {
@@ -324,7 +325,7 @@ export const SnippetReaderDrawer = () => {
           setSidebarWidth(entry.contentRect.width);
         }
       });
-      resizeObserver.observe(bardSidenav);
+      resizeObserver.observe(sidebarEl);
       return () => resizeObserver.disconnect();
     }
   }, [isOpen]);

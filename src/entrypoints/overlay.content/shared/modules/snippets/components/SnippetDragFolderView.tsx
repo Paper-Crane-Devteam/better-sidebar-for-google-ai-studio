@@ -74,7 +74,8 @@ export const SnippetDragDrawer = () => {
 
   // Hide/show sidebar when drawer is active
   useEffect(() => {
-    const sidebar = document.querySelector('bard-sidenav') as HTMLElement;
+    const sidebar = (document.querySelector('bard-sidenav') ||
+      document.getElementById('better-sidebar-for-google-ai-studio-sidebar-wrapper')) as HTMLElement | null;
     sidebarRef.current = sidebar;
 
     if (isActive && sidebar) {
@@ -91,14 +92,24 @@ export const SnippetDragDrawer = () => {
 
   const rootFolders = snippetFolders.filter((f) => !f.parent_id);
 
-  // Always use the sidebar's *open* width for the drawer,
-  // regardless of current sidebar collapsed/expanded state.
+  // Determine drawer position based on the sidebar element (Gemini or AI Studio)
   const sidebar = sidebarRef.current;
-  const openWidth =
-    sidebar
-      ? getComputedStyle(sidebar).getPropertyValue('--bard-sidenav-open-width').trim() || '360px'
-      : '360px';
-  const left = sidebar ? sidebar.getBoundingClientRect().left : 0;
+  let openWidth = '360px';
+  let left = 0;
+
+  if (sidebar) {
+    if (sidebar.tagName === 'BARD-SIDENAV') {
+      // Gemini: use CSS variable for open width
+      openWidth =
+        getComputedStyle(sidebar).getPropertyValue('--bard-sidenav-open-width').trim() || '360px';
+      left = sidebar.getBoundingClientRect().left;
+    } else {
+      // AI Studio: use the wrapper's actual width
+      const rect = sidebar.getBoundingClientRect();
+      openWidth = `${rect.width}px`;
+      left = rect.left;
+    }
+  }
 
   return (
     <div

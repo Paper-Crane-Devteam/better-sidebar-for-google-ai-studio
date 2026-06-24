@@ -179,22 +179,47 @@ export async function initAiStudioOverlay(mainStyles: string): Promise<void> {
   );
 
   // Mount enhanced features independently (CSS-based features that work on the native page)
-  mountAIStudioEnhancedFeatures();
+  mountAIStudioEnhancedFeatures(mainStyles);
 }
 
 /**
- * Mount AI Studio enhanced features (auto-hide input, etc.)
- * These inject CSS into the main document and don't need a shadow DOM.
+ * Mount AI Studio enhanced features (auto-hide input, snippet save, etc.)
+ * Uses a shadow DOM container so visual features (SnippetDragDrawer) render properly.
  */
-function mountAIStudioEnhancedFeatures() {
+function mountAIStudioEnhancedFeatures(mainStyles: string) {
   try {
     const enhancedWrapper = document.createElement('div');
     enhancedWrapper.id = 'better-sidebar-aistudio-enhanced-features';
-    enhancedWrapper.style.display = 'none';
+    enhancedWrapper.style.position = 'relative';
+    enhancedWrapper.style.zIndex = '40';
     document.body.appendChild(enhancedWrapper);
 
-    const enhancedRoot = ReactDOM.createRoot(enhancedWrapper);
-    enhancedRoot.render(<AIStudioEnhancedFeatures />);
+    const enhancedShadow = enhancedWrapper.attachShadow({ mode: 'open' });
+    applyShadowStyles(enhancedShadow, mainStyles);
+
+    const enhancedRoot = document.createElement('div');
+    enhancedRoot.classList.add('shadow-body', 'theme-aistudio');
+
+    const syncEnhancedTheme = () => {
+      const isDark = document.body.classList.contains('dark-theme');
+      if (isDark) enhancedRoot.classList.add('dark');
+      else enhancedRoot.classList.remove('dark');
+    };
+    syncEnhancedTheme();
+    new MutationObserver(syncEnhancedTheme).observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    enhancedShadow.appendChild(enhancedRoot);
+    bindAiStudioShadowRootToTheme(enhancedRoot);
+
+    const reactRoot = ReactDOM.createRoot(enhancedRoot);
+    reactRoot.render(
+      <ShadowRootProvider container={enhancedRoot}>
+        <AIStudioEnhancedFeatures />
+      </ShadowRootProvider>,
+    );
 
     console.log('Better Sidebar: AI Studio enhanced features mounted');
   } catch (e) {
