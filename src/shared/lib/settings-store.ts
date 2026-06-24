@@ -174,8 +174,8 @@ export const useSettingsStore = create<SettingsState>()(
         gemini: {
           defaultModel: 'default',
           sidebarWidth: 360,
-          chatWidth: -1,
-          inputWidth: -1,
+          chatWidth: 46,
+          inputWidth: 42,
           hideBrand: false,
           hideDisclaimer: false,
           hideUpgrade: false,
@@ -271,8 +271,8 @@ export const useSettingsStore = create<SettingsState>()(
             gemini: {
               defaultModel: oldEnhanced.defaultModel || 'default',
               sidebarWidth: persistedState.customSidebarWidth || 360,
-              chatWidth: -1,
-              inputWidth: -1,
+              chatWidth: 46,
+              inputWidth: 42,
               hideBrand: false,
               hideDisclaimer: false,
               hideUpgrade: false,

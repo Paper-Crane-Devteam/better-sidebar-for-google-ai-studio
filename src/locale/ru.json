@@ -173,6 +173,7 @@
     "savedToInbox": "Сохранено во фрагменты",
     "savedToFolder": "Сохранено в «{{folderName}}»",
     "dragToFolder": "Перетащите в папку для сохранения",
+    "selectFolder": "Сохранить фрагмент",
     "goToSource": "Перейти к источнику",
     "allSnippets": "Все фрагменты",
     "items": "элементов"

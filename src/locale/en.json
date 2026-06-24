@@ -175,6 +175,7 @@
     "savedToInbox": "Saved to Snippets",
     "savedToFolder": "Saved to \"{{folderName}}\"",
     "dragToFolder": "Drop on a folder to save",
+    "selectFolder": "Save Snippet",
     "goToSource": "Go to Source",
     "allSnippets": "All Snippets",
     "items": "items"

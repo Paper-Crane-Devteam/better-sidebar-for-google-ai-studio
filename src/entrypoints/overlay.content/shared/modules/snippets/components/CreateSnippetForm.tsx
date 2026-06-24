@@ -51,7 +51,7 @@ export const CreateSnippetForm = ({
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring min-h-[160px] resize-y"
+          className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring min-h-[280px] resize-y"
           placeholder={t('snippets.contentPlaceholder')}
         />
       </div>

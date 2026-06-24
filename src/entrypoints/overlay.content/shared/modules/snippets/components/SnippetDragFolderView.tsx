@@ -124,6 +124,9 @@ export const SnippetDragDrawer = () => {
     >
       {/* Header */}
       <div className="px-3 py-2 border-b border-border/50 bg-muted/30">
+        <h3 className="text-sm font-medium text-foreground">
+          {t('snippets.selectFolder')}
+        </h3>
         <p className="text-xs text-muted-foreground">
           {t('snippets.dragToFolder')}
         </p>

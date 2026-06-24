@@ -173,6 +173,7 @@
     "savedToInbox": "Salvo nos Trechos",
     "savedToFolder": "Salvo em \"{{folderName}}\"",
     "dragToFolder": "Solte em uma pasta para salvar",
+    "selectFolder": "Salvar Trecho",
     "goToSource": "Ir para a fonte",
     "allSnippets": "Todos os trechos",
     "items": "itens"

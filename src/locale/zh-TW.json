@@ -173,6 +173,7 @@
     "savedToInbox": "已儲存到片段",
     "savedToFolder": "已儲存到「{{folderName}}」",
     "dragToFolder": "拖放到資料夾以儲存",
+    "selectFolder": "儲存片段",
     "goToSource": "前往來源",
     "allSnippets": "所有片段",
     "items": "項"

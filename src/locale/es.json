@@ -173,6 +173,7 @@
     "savedToInbox": "Guardado en Fragmentos",
     "savedToFolder": "Guardado en \"{{folderName}}\"",
     "dragToFolder": "Soltar en una carpeta para guardar",
+    "selectFolder": "Guardar Fragmento",
     "goToSource": "Ir a la fuente",
     "allSnippets": "Todos los fragmentos",
     "items": "elementos"

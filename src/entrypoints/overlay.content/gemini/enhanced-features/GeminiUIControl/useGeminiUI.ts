@@ -153,31 +153,36 @@ export const useGeminiUI = () => {
       }
     `;
 
-    if (storeChatWidth > 0) {
-      css += `
-      /* Chat Content Control */
-      #chat-history .conversation-container {
-        max-width: ${storeChatWidth}% !important;
-        width: 100% !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
+    if (storeChatWidth > 0 || storeInputWidth > 0) {
+      css += `@media (min-width: 960px) {\n`;
+      if (storeChatWidth > 0) {
+        css += `
+        /* Chat Content Control */
+        #chat-history .conversation-container {
+          max-width: ${storeChatWidth}% !important;
+          min-width: 724px !important;
+          width: 100% !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+        }
+        #chat-history .conversation-container user-query {
+          max-width: none !important;
+        }
+        `;
       }
-      #chat-history .conversation-container user-query {
-        max-width: none !important;
+      if (storeInputWidth > 0) {
+        css += `
+        /* Input Box Control */
+        input-container > fieldset {
+          max-width: ${storeInputWidth}% !important;
+          min-width: 660px !important;
+          width: 100% !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+        }
+        `;
       }
-      `;
-    }
-
-    if (storeInputWidth > 0) {
-      css += `
-      /* Input Box Control */
-      input-container > fieldset {
-        max-width: ${storeInputWidth}% !important;
-        width: 100% !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
-      }
-      `;
+      css += `}\n`;
     }
 
     if (zenMode) {
