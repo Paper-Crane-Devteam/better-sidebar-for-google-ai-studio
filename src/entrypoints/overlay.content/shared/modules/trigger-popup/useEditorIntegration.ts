@@ -140,25 +140,29 @@ export function useEditorIntegration(config: EditorIntegrationConfig) {
           const mergedContent = sections.join('\n\n---\n\n');
           const wrappedResult = `<bs_agent_result>\n${mergedContent}\n</bs_agent_result>`;
 
-          // Replace all capsules with the merged text
-          const firstCapsule = resultCapsules[0];
-          const textNode = document.createTextNode(wrappedResult);
-          firstCapsule.parentNode?.replaceChild(textNode, firstCapsule);
-
-          // Remove remaining capsules
-          for (let k = 1; k < resultCapsules.length; k++) {
-            resultCapsules[k].parentNode?.removeChild(resultCapsules[k]);
+          // Quill maintains its own internal Delta model. Direct DOM manipulation
+          // (replaceChild/removeChild) does NOT sync back to Quill's model, so when
+          // the send button is clicked, Quill sends its stale model content (the
+          // capsule display text) instead of the replaced DOM text.
+          //
+          // Fix: completely rewrite the editor content via innerHTML + paragraph
+          // structure that Quill recognizes, then dispatch input to sync Quill.
+          editor.innerHTML = '';
+          const lines = wrappedResult.split('\n');
+          for (const line of lines) {
+            const p = document.createElement('p');
+            p.textContent = line || '\u200B';
+            editor.appendChild(p);
           }
-
           editor.dispatchEvent(new Event('input', { bubbles: true }));
 
-          // After DOM settles, programmatically click the send button
+          // After Quill processes the new content, click the send button
           setTimeout(() => {
             const sendBtn = document.querySelector<HTMLButtonElement>(
               'button.send-button, button[aria-label="Send message"], button[data-testid="send-button"]',
             );
             sendBtn?.click();
-          }, 50);
+          }, 150);
           return;
         }
 

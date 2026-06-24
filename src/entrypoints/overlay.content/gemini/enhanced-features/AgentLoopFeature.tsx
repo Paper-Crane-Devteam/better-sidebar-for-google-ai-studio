@@ -12,9 +12,9 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useModalStore } from '@/shared/lib/modal';
+import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
 import {
   AgentCommandPopup,
-  AgentLoopStatusBar,
   AgentLoopConfirmDialog,
   AgentLoopEngine,
   useAgentTrigger,
@@ -64,7 +64,6 @@ export const AgentLoopFeature: React.FC = () => {
     getSelectedPrompt,
   } = useAgentTrigger(isSlashCommandActive);
 
-  const loopStatus = useAgentLoopStore((s) => s.status);
 
   const handleCapsuleClick = useCallback((info: CapsuleClickInfo) => {
     const displayContent = info.content.length > 2000
@@ -92,6 +91,8 @@ export const AgentLoopFeature: React.FC = () => {
 
   // ─── Initialize renderer ────────────────────────────────────────────
 
+  const conversationId = useCurrentConversationId();
+
   useEffect(() => {
     injectRendererStyles();
     const renderer = new ConversationRenderer();
@@ -99,6 +100,17 @@ export const AgentLoopFeature: React.FC = () => {
     rendererRef.current = renderer;
     return () => renderer.stop();
   }, []);
+
+  // ─── Reattach renderer on conversation switch ───────────────────────
+
+  useEffect(() => {
+    if (!rendererRef.current) return;
+    // Small delay to let Gemini finish DOM swap
+    const timer = setTimeout(() => {
+      rendererRef.current?.reattach();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [conversationId]);
 
   // ─── Result capsule click handler (shows content in modal) ──────────
 
@@ -244,11 +256,6 @@ export const AgentLoopFeature: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  // ─── Engine controls ────────────────────────────────────────────────
-
-  const handleStop = useCallback(() => { engineRef.current?.stop(); }, []);
-  const handleRetry = useCallback(() => { engineRef.current?.resume(); }, []);
-
   if (!slashCommandEnabled) return null;
 
   return (
@@ -271,9 +278,7 @@ export const AgentLoopFeature: React.FC = () => {
         />
       )}
 
-      {loopStatus !== 'idle' && (
-        <AgentLoopStatusBar onStop={handleStop} onRetry={handleRetry} />
-      )}
+
 
       <AgentLoopConfirmDialog />
     </>

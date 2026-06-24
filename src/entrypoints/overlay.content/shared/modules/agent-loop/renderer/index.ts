@@ -1,5 +1,5 @@
 export { ConversationRenderer } from './ConversationRenderer';
-export { injectRendererStyles, RENDERER_CSS } from './renderer-styles';
+export { injectRendererStyles } from './renderer-styles';
 export {
   buildPromptMarker,
   extractPromptId,
