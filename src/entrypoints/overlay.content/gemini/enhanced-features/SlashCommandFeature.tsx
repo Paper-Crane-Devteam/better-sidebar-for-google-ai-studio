@@ -1,7 +1,7 @@
 import React, { useRef, useCallback } from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { useModalStore } from '@/shared/lib/modal';
+import { showCapsuleDetailModal } from '@/entrypoints/overlay.content/shared/lib/capsule-modal';
 import {
   useSlashCommand,
   SlashCommandPopup,
@@ -18,6 +18,7 @@ import {
   insertCapsule,
 } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
 import type { TriggerPopupItem, CapsuleClickInfo } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
+import { useModalStore } from '@/shared/lib/modal';
 
 function getEditor(): HTMLElement | null {
   return document.querySelector('rich-textarea .ql-editor[contenteditable="true"]');
@@ -45,22 +46,7 @@ export const SlashCommandFeature: React.FC = () => {
   getSelectedPromptRef.current = getSelectedPrompt;
 
   const handleCapsuleClick = useCallback((info: CapsuleClickInfo) => {
-    const displayContent = info.content.length > 2000
-      ? info.content.slice(0, 2000) + '…'
-      : info.content;
-
-    useModalStore.getState().open({
-      type: 'info',
-      title: t('slashCommand.promptInserted'),
-      content: (
-        <pre className="text-xs whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[400px] overflow-y-auto">
-          {displayContent}
-        </pre>
-      ),
-      confirmText: t('common.close'),
-      onConfirm: () => useModalStore.getState().close(),
-      onCancel: () => {},
-    });
+    showCapsuleDetailModal(t('slashCommand.promptInserted'), info.content);
   }, [t]);
 
   function doInsertPrompt(prompt: Prompt) {

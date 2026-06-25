@@ -11,8 +11,8 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
-import { useModalStore } from '@/shared/lib/modal';
 import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
+import { showCapsuleDetailModal } from '@/entrypoints/overlay.content/shared/lib/capsule-modal';
 import {
   AgentCommandPopup,
   AgentLoopConfirmDialog,
@@ -67,22 +67,7 @@ export const AgentLoopFeature: React.FC = () => {
 
 
   const handleCapsuleClick = useCallback((info: CapsuleClickInfo) => {
-    const displayContent = info.content.length > 2000
-      ? info.content.slice(0, 2000) + '…'
-      : info.content;
-
-    useModalStore.getState().open({
-      type: 'info',
-      title: 'Prompt Content',
-      content: (
-        <pre className="text-xs whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[400px] overflow-y-auto">
-          {displayContent}
-        </pre>
-      ),
-      confirmText: 'Close',
-      onConfirm: () => useModalStore.getState().close(),
-      onCancel: () => {},
-    });
+    showCapsuleDetailModal('Prompt Content', info.content);
   }, []);
 
   const triggerStateRef = useRef(triggerState);
@@ -125,22 +110,7 @@ export const AgentLoopFeature: React.FC = () => {
       e.stopPropagation();
 
       const content = target.getAttribute('data-result-content') || '';
-      const displayContent = content.length > 3000
-        ? content.slice(0, 3000) + '…'
-        : content;
-
-      useModalStore.getState().open({
-        type: 'info',
-        title: 'Tool Results',
-        content: (
-          <pre className="text-xs whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[400px] overflow-y-auto">
-            {displayContent}
-          </pre>
-        ),
-        confirmText: 'Close',
-        onConfirm: () => useModalStore.getState().close(),
-        onCancel: () => {},
-      });
+      showCapsuleDetailModal('Tool Results', content);
     };
 
     document.addEventListener('click', handleResultCapsuleClick);

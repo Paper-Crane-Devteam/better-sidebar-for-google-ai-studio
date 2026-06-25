@@ -23,10 +23,10 @@ The user will describe what they want to accomplish. Help them by querying and m
 
 /** All registered built-in prompts */
 const BUILT_IN_PROMPTS: BuiltInPrompt[] = [
-  freeFormPrompt,
   autoClassifyPrompt,
   findEmptyChatsPrompt,
   exportChatsPrompt,
+  freeFormPrompt,
 ];
 
 /**

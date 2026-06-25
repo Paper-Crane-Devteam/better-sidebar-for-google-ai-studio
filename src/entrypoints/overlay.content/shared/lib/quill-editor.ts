@@ -12,6 +12,8 @@
  * to add formatting (like wrapping in <strong>).
  */
 
+import i18n from '@/locale/i18n';
+
 // ─── Editor Selector ─────────────────────────────────────────────────────────
 
 const EDITOR_SELECTOR = 'rich-textarea .ql-editor[contenteditable="true"]';
@@ -36,7 +38,43 @@ export interface CapsuleAttrs {
   nonEditable?: boolean;
 }
 
+// ─── Capsule Display Text Helpers ────────────────────────────────────────────
+
+/**
+ * Build displayText for a prompt capsule.
+ * Format: `>title` (matches trigger char + title shown in editor input).
+ */
+export function buildPromptCapsuleText(title: string): string {
+  return `>${title}`;
+}
+
+/**
+ * Build displayText for a result capsule.
+ * Format: `${prefix}: ${label}` where prefix is i18n "Result"/"结果".
+ */
+export function buildResultCapsuleText(label: string): string {
+  const prefix = i18n.t('agentLoop.resultCapsulePrefix');
+  return `${prefix}: ${label}`;
+}
+
 // ─── Core Methods ────────────────────────────────────────────────────────────
+
+/**
+ * Create a standalone <strong> capsule element (not inserted into any editor).
+ * Useful for rendering capsules outside the Quill editor (e.g. user-query display).
+ */
+export function createCapsuleElement(displayText: string, attrs: CapsuleAttrs): HTMLElement {
+  const strong = document.createElement('strong');
+  strong.className = attrs.className;
+  for (const [key, value] of Object.entries(attrs.dataAttrs)) {
+    strong.setAttribute(key, value);
+  }
+  if (attrs.nonEditable) {
+    strong.contentEditable = 'false';
+  }
+  strong.textContent = displayText;
+  return strong;
+}
 
 /**
  * Get the Quill editor DOM element.

@@ -10,15 +10,18 @@
  * 2. Streaming: Real-time detection via MutationObserver during AI generation
  */
 
-import React from 'react';
 import ReactDOM from 'react-dom/client';
-import i18n from '@/locale/i18n';
 import mainStyles from '@/index.scss?inline';
 import { applyShadowStyles } from '@/shared/lib/utils';
+import { createClickableCapsule } from '@/entrypoints/overlay.content/shared/lib/capsule-modal';
 import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 import {
   getEditor as quillGetEditor,
   appendCapsule,
+  buildPromptCapsuleText,
+  buildResultCapsuleText,
+  CAPSULE_CLASS,
+  CAPSULE_ATTR_CONTENT,
   RESULT_CAPSULE_CLASS,
   RESULT_CAPSULE_ATTR_CONTENT,
 } from '@/entrypoints/overlay.content/shared/lib/quill-editor';
@@ -35,7 +38,6 @@ import {
 import { getBuiltInPromptById } from '../prompts/built-in-registry';
 import { ToolCallWidget } from './components/ToolCallWidget';
 import { StreamingToolWidget } from './components/StreamingToolWidget';
-import { PromptWidget } from './components/PromptWidget';
 import type { ParsedToolCall } from '../types';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -259,24 +261,146 @@ export class ConversationRenderer {
     if (textLines.length === 0) return;
 
     const firstLine = textLines[0]?.textContent?.trim() || '';
-
-    if (firstLine.startsWith(PROMPT_MARKER_PREFIX)) {
-      const promptId = extractPromptId(firstLine);
-      if (!promptId) return;
-      el.classList.add(PROMPT_RENDERED_CLASS);
-      el.setAttribute(PROMPT_ID_ATTR, promptId);
-      const prompt = getBuiltInPromptById(promptId);
-      const title = prompt?.title || promptId;
-      const rawText = Array.from(textLines).map((l) => l.textContent || '').join('\n');
-      this.mountPromptWidget(el, textLines, 'prompt', title, rawText);
-      return;
-    }
-
     const fullText = Array.from(textLines).map((l) => l.textContent || '').join('\n');
-    if (fullText.includes(`<${RESULT_TAG}>`)) {
-      el.classList.add(PROMPT_RENDERED_CLASS);
-      this.mountPromptWidget(el, textLines, 'result', 'Tool Results', fullText);
+
+    const hasPromptMarker = firstLine.startsWith(PROMPT_MARKER_PREFIX);
+    const hasResult = fullText.includes(`<${RESULT_TAG}>`);
+
+    if (!hasPromptMarker && !hasResult) return;
+
+    el.classList.add(PROMPT_RENDERED_CLASS);
+
+    if (hasPromptMarker) {
+      this.renderPromptUserQuery(el, textLines, fullText);
+    } else {
+      this.renderResultUserQuery(el, textLines, fullText);
     }
+  }
+
+  /**
+   * Render a prompt-type user query:
+   * - Marker line + base prompt + prompt content → collapsed into a single capsule
+   * - "## User Request" section → displayed as plain text
+   */
+  private renderPromptUserQuery(
+    el: HTMLElement,
+    textLines: NodeListOf<Element>,
+    fullText: string,
+  ): void {
+    const firstLine = textLines[0]?.textContent?.trim() || '';
+    const promptId = extractPromptId(firstLine);
+    if (!promptId) return;
+
+    el.setAttribute(PROMPT_ID_ATTR, promptId);
+    const prompt = getBuiltInPromptById(promptId);
+    const title = prompt?.title || promptId;
+
+    // Split at "## User Request" to separate capsule content from user text
+    const userRequestSeparator = '## User Request';
+    const separatorIdx = fullText.indexOf(userRequestSeparator);
+
+    let capsuleContent: string;
+    let userText: string | null = null;
+
+    if (separatorIdx !== -1) {
+      capsuleContent = fullText.slice(0, separatorIdx).trim();
+      userText = fullText.slice(separatorIdx + userRequestSeparator.length).trim();
+    } else {
+      capsuleContent = fullText;
+    }
+
+    // Hide all original text lines
+    textLines.forEach((line) => {
+      (line as HTMLElement).style.display = 'none';
+    });
+
+    const insertTarget = textLines[0]?.parentElement || el;
+
+    // Create prompt capsule
+    const displayText = buildPromptCapsuleText(title);
+    const capsuleEl = createClickableCapsule(displayText, {
+      className: CAPSULE_CLASS,
+      dataAttrs: { [CAPSULE_ATTR_CONTENT]: capsuleContent } as Record<string, string>,
+      nonEditable: true,
+    }, capsuleContent);
+
+    const wrapper = document.createElement('div');
+    wrapper.appendChild(capsuleEl);
+
+    // Show user text after capsule if present
+    if (userText) {
+      const userTextEl = document.createElement('div');
+      userTextEl.className = 'query-text-line';
+      userTextEl.textContent = userText;
+      wrapper.appendChild(userTextEl);
+    }
+
+    insertTarget.insertBefore(wrapper, insertTarget.firstChild);
+  }
+
+  /**
+   * Render a result-type user query:
+   * - Each <bs_agent_result>...</bs_agent_result> → individual capsule
+   * - Text outside result tags → displayed as plain text
+   */
+  private renderResultUserQuery(
+    el: HTMLElement,
+    textLines: NodeListOf<Element>,
+    fullText: string,
+  ): void {
+    // Hide all original text lines
+    textLines.forEach((line) => {
+      (line as HTMLElement).style.display = 'none';
+    });
+
+    const insertTarget = textLines[0]?.parentElement || el;
+    const wrapper = document.createElement('div');
+
+    // Parse and render each segment (result blocks + plain text between them)
+    const resultRegex = new RegExp(
+      `<${RESULT_TAG}>([\\s\\S]*?)<\\/${RESULT_TAG}>`,
+      'g',
+    );
+
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = resultRegex.exec(fullText)) !== null) {
+      // Plain text before this result block
+      const beforeText = fullText.slice(lastIndex, match.index).trim();
+      if (beforeText) {
+        const textEl = document.createElement('div');
+        textEl.className = 'query-text-line';
+        textEl.textContent = beforeText;
+        wrapper.appendChild(textEl);
+      }
+
+      // Create result capsule
+      const resultContent = match[1].trim();
+      const headingMatch = resultContent.match(/^### (.+)/m);
+      const label = headingMatch ? headingMatch[1].trim() : 'Tool Result';
+
+      const displayText = buildResultCapsuleText(label);
+      const capsuleEl = createClickableCapsule(displayText, {
+        className: RESULT_CAPSULE_CLASS,
+        dataAttrs: { [RESULT_CAPSULE_ATTR_CONTENT]: resultContent } as Record<string, string>,
+        nonEditable: true,
+      }, resultContent);
+      wrapper.appendChild(capsuleEl);
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Remaining plain text after last result block
+    const afterText = fullText.slice(lastIndex).trim();
+    if (afterText) {
+      const textEl = document.createElement('div');
+      textEl.className = 'query-text-line';
+      textEl.textContent = afterText;
+      wrapper.appendChild(textEl);
+    }
+
+    insertTarget.insertBefore(wrapper, insertTarget.firstChild);
   }
 
   // ─── Model Response ────────────────────────────────────────────────
@@ -525,44 +649,6 @@ export class ConversationRenderer {
     }
   }
 
-  // ─── Prompt Widget ─────────────────────────────────────────────────
-
-  private mountPromptWidget(
-    userQuery: HTMLElement,
-    textLines: NodeListOf<Element>,
-    type: 'prompt' | 'result',
-    title: string,
-    rawText: string,
-  ): void {
-    // Hide original text lines
-    textLines.forEach((line) => {
-      (line as HTMLElement).style.display = 'none';
-    });
-
-    const insertTarget = textLines[0]?.parentElement || userQuery;
-
-    const host = document.createElement('div');
-    host.className = SHADOW_HOST_CLASS;
-    insertTarget.insertBefore(host, insertTarget.firstChild);
-
-    const shadow = host.attachShadow({ mode: 'open' });
-    applyShadowStyles(shadow, mainStyles);
-
-    const rootContainer = document.createElement('div');
-    rootContainer.className = 'shadow-body';
-    shadow.appendChild(rootContainer);
-    this.syncDarkMode(rootContainer);
-
-    const reactRoot = ReactDOM.createRoot(rootContainer);
-    this.reactRoots.push(reactRoot);
-
-    reactRoot.render(
-      <ShadowRootProvider container={rootContainer}>
-        <PromptWidget type={type} title={title} rawText={rawText} />
-      </ShadowRootProvider>,
-    );
-  }
-
   // ─── Tool Execution Helpers ────────────────────────────────────────
 
   private parseToolCallFromText(text: string): ParsedToolCall | null {
@@ -613,8 +699,7 @@ export class ConversationRenderer {
     if (!editor) return;
 
     const content = `### ${toolName}\n${result}`;
-    const prefix = i18n.t('agentLoop.resultCapsulePrefix');
-    const displayText = `${prefix}: ${toolName}`;
+    const displayText = buildResultCapsuleText(toolName);
 
     appendCapsule(editor, displayText, {
       className: RESULT_CAPSULE_CLASS,

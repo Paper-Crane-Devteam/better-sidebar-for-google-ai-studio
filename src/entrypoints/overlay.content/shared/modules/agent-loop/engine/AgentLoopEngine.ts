@@ -21,9 +21,9 @@ import { executeToolCall } from '../tools/tool-registry';
 import { CircuitBreaker } from './circuit-breaker';
 import { agentEventBus } from '../event-bus';
 import { COMPLETE_TASK_SIGNAL } from '../tools/complete-task';
-import i18n from '@/locale/i18n';
 import {
   insertMultipleCapsules,
+  buildResultCapsuleText,
   RESULT_CAPSULE_CLASS,
   RESULT_CAPSULE_ATTR_CONTENT,
 } from '@/entrypoints/overlay.content/shared/lib/quill-editor';
@@ -343,7 +343,6 @@ export class AgentLoopEngine {
 
     // Split results into individual tool sections (split on --- separator)
     const sections = this.splitResultSections(resultText);
-    const prefix = i18n.t('agentLoop.resultCapsulePrefix');
 
     // Build capsule data
     const capsuleData: Array<{ displayText: string; attrs: CapsuleAttrs }> = [];
@@ -351,7 +350,7 @@ export class AgentLoopEngine {
     if (sections.length === 0) {
       const wrappedResult = `<bs_agent_result>\n${resultText}\n</bs_agent_result>`;
       capsuleData.push({
-        displayText: `${prefix}: Tool Results`,
+        displayText: buildResultCapsuleText('Tool Results'),
         attrs: {
           className: RESULT_CAPSULE_CLASS,
           dataAttrs: { [RESULT_CAPSULE_ATTR_CONTENT]: wrappedResult },
@@ -361,7 +360,7 @@ export class AgentLoopEngine {
     } else {
       for (const section of sections) {
         capsuleData.push({
-          displayText: `${prefix}: ${section.label}`,
+          displayText: buildResultCapsuleText(section.label),
           attrs: {
             className: RESULT_CAPSULE_CLASS,
             dataAttrs: { [RESULT_CAPSULE_ATTR_CONTENT]: section.content },

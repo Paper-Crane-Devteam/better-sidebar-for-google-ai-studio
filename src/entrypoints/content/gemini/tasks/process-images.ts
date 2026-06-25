@@ -1,5 +1,6 @@
 import { WatermarkEngine } from '@/shared/lib/utils/watermark-remover';
 import { getPegasusStoreReady, usePegasusStore } from '@/shared/lib/pegasus-store';
+import { waitForElement } from '@/shared/lib/utils';
 
 const IMAGE_URL_PATTERN = /lh3\.googleusercontent\.com\/rd-gg(?:-dl)?\//;
 
@@ -44,24 +45,34 @@ async function processImg(img: HTMLImageElement): Promise<void> {
 }
 
 export function startImageProcessor(): () => void {
-  const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      for (const node of mutation.addedNodes) {
-        if (node instanceof HTMLImageElement) {
-          processImg(node);
-        } else if (node instanceof HTMLElement) {
-          node.querySelectorAll<HTMLImageElement>('img').forEach(processImg);
+  let disconnected = false;
+  let observer: MutationObserver | null = null;
+
+  waitForElement('body', 10000).then((body) => {
+    if (disconnected || !body) return;
+
+    observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node instanceof HTMLImageElement) {
+            processImg(node);
+          } else if (node instanceof HTMLElement) {
+            node.querySelectorAll<HTMLImageElement>('img').forEach(processImg);
+          }
         }
       }
-    }
+    });
+
+    observer.observe(body, { childList: true, subtree: true });
+
+    // Process existing images
+    body.querySelectorAll<HTMLImageElement>('img').forEach(processImg);
   });
 
-  observer.observe(document.body, { childList: true, subtree: true });
-
-  // Process existing images
-  document.querySelectorAll<HTMLImageElement>('img').forEach(processImg);
-
-  return () => observer.disconnect();
+  return () => {
+    disconnected = true;
+    observer?.disconnect();
+  };
 }
 
 export async function initImageProcessor(): Promise<() => void> {
