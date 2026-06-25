@@ -878,5 +878,8 @@
     "hide": "隐藏此图标",
     "hideTitle": "隐藏快捷键助手？",
     "hideConfirm": "你可以在 设置 → 界面控制 → 元素可见性 中重新开启。"
+  },
+  "agentLoop": {
+    "resultCapsulePrefix": "结果"
   }
 }

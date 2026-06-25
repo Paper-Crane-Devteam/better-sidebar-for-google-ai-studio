@@ -46,7 +46,7 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
       }
 
       const result = await executeToolCall(parsed);
-      fillResultToEditor(parsed.name, result);
+      fillResultToEditor(parsed.description || parsed.name, result);
     } catch (err) {
       console.error('[ToolCallWidget] Execute error:', err);
       setError('执行失败');

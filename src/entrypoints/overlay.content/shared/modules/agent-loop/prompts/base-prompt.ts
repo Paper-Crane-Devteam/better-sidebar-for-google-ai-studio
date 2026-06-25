@@ -83,17 +83,27 @@ Export conversations to downloadable files.
 - \`format\` (required): One of "markdown", "plaintext", "json".
 
 ### 4. complete_task
-Signal that the task is finished. You MUST call this when your work is done.
+Signal that the **entire user request** has been fully accomplished. This is a termination signal — calling it ends the agent loop.
 
 **Parameters:**
 - \`summary\` (required): A concise summary of what was accomplished (1-3 sentences).
+
+**When to call:**
+- ONLY after ALL steps of the user's request are finished (all queries executed, all data modified, all results reported).
+- If the task requires multiple tool calls across multiple rounds, do NOT call complete_task until the very last step is done.
+- Do NOT call complete_task in the same response where you still have pending work or are waiting for results.
+
+**When NOT to call:**
+- You still need to execute more SQL queries to finish the task.
+- You just queried data and still need to process/modify/organize it.
+- You explained a plan but haven't executed it yet.
 
 **Example:**
 <bs_agent_tool>
 {"name": "complete_task", "description": "任务完成，报告结果", "params": {"summary": "Created 3 folders (Coding, Research, Casual) and organized 15 conversations into them based on their titles."}}
 </bs_agent_tool>
 
-**IMPORTANT:** Always end with complete_task when your task is done. Do NOT just stop outputting tools — that will be treated as an error.
+**IMPORTANT:** You must eventually call complete_task when the entire request is fulfilled — not calling it at all will be treated as an error. But calling it prematurely (before the work is actually done) is equally wrong.
 `;
 }
 
@@ -112,7 +122,7 @@ function getRules(): string {
 8. **Tags** — Create tags in the \`tags\` table first, then link via \`conversation_tags\` junction table.
 9. **Folders** — Support nesting via \`parent_id\`. Remember to set \`platform\` when creating folders.
 10. **Message search** — Use \`messages_fts\` table for full-text search: \`SELECT * FROM messages_fts WHERE content MATCH 'search term'\`.
-11. **End with complete_task** — When the task is done, you MUST call complete_task with a summary. Never just stop without it.
+11. **End with complete_task only when fully done** — Call complete_task ONLY after the entire user request is fulfilled. If you still have more steps to execute (more queries, more modifications), do NOT call complete_task yet — continue working. Premature completion is a bug.
 12. **Error recovery** — If a tool returns an error, analyze it and try a corrected approach. Do NOT repeat the exact same failing query.
 13. **Maximum 5 tool calls per response** — If a task needs more steps, call up to 5 tools, then wait for results before continuing.
 14. **No repetitive patterns** — If you've called the same tool with identical arguments before, try a different approach.

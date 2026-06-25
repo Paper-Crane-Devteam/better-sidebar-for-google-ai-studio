@@ -12,9 +12,16 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import i18n from '@/locale/i18n';
 import mainStyles from '@/index.scss?inline';
 import { applyShadowStyles } from '@/shared/lib/utils';
 import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
+import {
+  getEditor as quillGetEditor,
+  appendCapsule,
+  RESULT_CAPSULE_CLASS,
+  RESULT_CAPSULE_ATTR_CONTENT,
+} from '@/entrypoints/overlay.content/shared/lib/quill-editor';
 import {
   PROMPT_MARKER_PREFIX,
   PROMPT_RENDERED_CLASS,
@@ -602,22 +609,18 @@ export class ConversationRenderer {
   }
 
   private fillResultToEditor(toolName: string, result: string): void {
-    const wrappedResult = `<bs_agent_result>\n### ${toolName}\n${result}\n</bs_agent_result>`;
-    const editor = document.querySelector<HTMLElement>(
-      'div.ql-editor[contenteditable="true"], rich-textarea .ql-editor[contenteditable="true"]',
-    );
+    const editor = quillGetEditor();
+    if (!editor) return;
 
-    if (editor) {
-      editor.focus();
-      editor.innerHTML = '';
-      const lines = wrappedResult.split('\n');
-      for (const line of lines) {
-        const p = document.createElement('p');
-        p.textContent = line || '\u200B';
-        editor.appendChild(p);
-      }
-      editor.dispatchEvent(new Event('input', { bubbles: true }));
-    }
+    const content = `### ${toolName}\n${result}`;
+    const prefix = i18n.t('agentLoop.resultCapsulePrefix');
+    const displayText = `${prefix}: ${toolName}`;
+
+    appendCapsule(editor, displayText, {
+      className: RESULT_CAPSULE_CLASS,
+      dataAttrs: { [RESULT_CAPSULE_ATTR_CONTENT]: content },
+      nonEditable: true,
+    });
   }
 
   // ─── Helpers ───────────────────────────────────────────────────────

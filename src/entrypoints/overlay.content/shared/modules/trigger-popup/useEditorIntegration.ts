@@ -16,10 +16,20 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { EditorIntegrationConfig, TriggerPopupItem, CapsuleClickInfo } from './types';
-
-const CAPSULE_CLASS = 'bs-prompt-capsule';
-const CAPSULE_ATTR_CONTENT = 'data-prompt-content';
-const CAPSULE_ATTR_ID = 'data-prompt-id';
+import {
+  CAPSULE_CLASS,
+  CAPSULE_ATTR_CONTENT,
+  CAPSULE_ATTR_ID,
+  RESULT_CAPSULE_CLASS,
+  RESULT_CAPSULE_ATTR_CONTENT,
+  insertCapsuleAtRange,
+  findCapsuleAtCursor,
+  removeCapsule,
+  expandCapsules,
+  hasCapsules,
+  replaceAllContent,
+  triggerSend,
+} from '@/entrypoints/overlay.content/shared/lib/quill-editor';
 
 export interface PopupPosition {
   bottom: number;
@@ -108,12 +118,14 @@ export function useEditorIntegration(config: EditorIntegrationConfig) {
 
       // ─── Backspace: delete entire capsule if cursor is inside one ─────
       if (e.key === 'Backspace' && !state.isOpen) {
-        const capsule = findCapsuleAtCursor(configRef.current.getEditor(), capsuleClass);
+        const editor = configRef.current.getEditor();
+        if (!editor) return;
+        const capsule = findCapsuleAtCursor(editor, capsuleClass);
         if (capsule) {
           e.preventDefault();
           e.stopPropagation();
           removeCapsule(capsule);
-          configRef.current.getEditor()?.dispatchEvent(new Event('input', { bubbles: true }));
+          editor.dispatchEvent(new Event('input', { bubbles: true }));
           return;
         }
       }
@@ -124,7 +136,7 @@ export function useEditorIntegration(config: EditorIntegrationConfig) {
         if (!editor) return;
 
         // First: expand any result capsules (bs-agent-result-capsule)
-        const resultCapsules = editor.querySelectorAll('.bs-agent-result-capsule');
+        const resultCapsules = editor.querySelectorAll(`.${RESULT_CAPSULE_CLASS}`);
         if (resultCapsules.length > 0) {
           e.preventDefault();
           e.stopPropagation();
@@ -132,7 +144,7 @@ export function useEditorIntegration(config: EditorIntegrationConfig) {
           // Collect all capsule contents and merge into a single <bs_agent_result> block
           const sections: string[] = [];
           resultCapsules.forEach((capsule) => {
-            const content = capsule.getAttribute('data-result-content') || '';
+            const content = capsule.getAttribute(RESULT_CAPSULE_ATTR_CONTENT) || '';
             sections.push(content);
           });
 
@@ -140,34 +152,16 @@ export function useEditorIntegration(config: EditorIntegrationConfig) {
           const mergedContent = sections.join('\n\n---\n\n');
           const wrappedResult = `<bs_agent_result>\n${mergedContent}\n</bs_agent_result>`;
 
-          // Quill maintains its own internal Delta model. Direct DOM manipulation
-          // (replaceChild/removeChild) does NOT sync back to Quill's model, so when
-          // the send button is clicked, Quill sends its stale model content (the
-          // capsule display text) instead of the replaced DOM text.
-          //
-          // Fix: completely rewrite the editor content via innerHTML + paragraph
-          // structure that Quill recognizes, then dispatch input to sync Quill.
-          editor.innerHTML = '';
-          const lines = wrappedResult.split('\n');
-          for (const line of lines) {
-            const p = document.createElement('p');
-            p.textContent = line || '\u200B';
-            editor.appendChild(p);
-          }
-          editor.dispatchEvent(new Event('input', { bubbles: true }));
+          // Rewrite editor content via helper (handles Quill sync)
+          replaceAllContent(editor, wrappedResult);
 
           // After Quill processes the new content, click the send button
-          setTimeout(() => {
-            const sendBtn = document.querySelector<HTMLButtonElement>(
-              'button.send-button, button[aria-label="Send message"], button[data-testid="send-button"]',
-            );
-            sendBtn?.click();
-          }, 150);
+          triggerSend();
           return;
         }
 
         const triggerChar = configRef.current.triggerChar;
-        if (hasOwnCapsules(editor, capsuleClass, triggerChar)) {
+        if (hasCapsules(editor, capsuleClass, triggerChar)) {
           // Let consumer handle sending if they want to
           if (configRef.current.onBeforeSend) {
             const handled = configRef.current.onBeforeSend(editor);
@@ -178,7 +172,7 @@ export function useEditorIntegration(config: EditorIntegrationConfig) {
             }
           }
           // Default: expand only our own capsules in-place, let platform handle the send
-          expandOwnCapsules(editor, capsuleClass, triggerChar);
+          expandCapsules(editor, capsuleClass, triggerChar);
         }
       }
     };
@@ -260,7 +254,7 @@ export function useEditorIntegration(config: EditorIntegrationConfig) {
 
 /**
  * Insert a capsule into the editor, replacing text from triggerPos to cursorPos.
- * Uses execCommand('insertText') for Quill compatibility, then wraps in <strong>.
+ * Delegates to quill-editor helper's insertCapsuleAtRange.
  */
 export function insertCapsule(
   editor: HTMLElement,
@@ -270,153 +264,14 @@ export function insertCapsule(
   triggerChar: string,
 ): void {
   const displayText = `${triggerChar}${item.title}`;
-
-  // Walk text nodes to select the trigger+query range
-  const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
-  let offset = 0;
-  let startNode: Node | null = null;
-  let startOffset = 0;
-  let endNode: Node | null = null;
-  let endOffset = 0;
-
-  while (walker.nextNode()) {
-    const node = walker.currentNode;
-    const nodeLen = node.textContent?.length || 0;
-
-    if (!startNode && offset + nodeLen > triggerPos) {
-      startNode = node;
-      startOffset = triggerPos - offset;
-    }
-    if (!endNode && offset + nodeLen >= cursorPos) {
-      endNode = node;
-      endOffset = cursorPos - offset;
-      break;
-    }
-    offset += nodeLen;
-  }
-
-  if (!startNode || !endNode) return;
-
-  // Select and replace via execCommand (Quill-safe)
-  const range = document.createRange();
-  range.setStart(startNode, startOffset);
-  range.setEnd(endNode, endOffset);
-  const sel = window.getSelection();
-  sel?.removeAllRanges();
-  sel?.addRange(range);
-
-  document.execCommand('insertText', false, displayText + '\u00A0');
-
-  // After Quill processes, wrap in <strong>
-  requestAnimationFrame(() => {
-    wrapTextInCapsule(editor, displayText, item.id, item.content, triggerChar);
+  insertCapsuleAtRange(editor, triggerPos, cursorPos, displayText, {
+    className: CAPSULE_CLASS,
+    dataAttrs: {
+      [CAPSULE_ATTR_ID]: item.id,
+      [CAPSULE_ATTR_CONTENT]: item.content,
+      'data-trigger': triggerChar,
+    },
   });
-}
-
-/** Find displayText in the editor and wrap it in a <strong> capsule */
-function wrapTextInCapsule(
-  editor: HTMLElement,
-  displayText: string,
-  promptId: string,
-  promptContent: string,
-  triggerChar: string,
-): void {
-  const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
-  while (walker.nextNode()) {
-    const node = walker.currentNode;
-    const text = node.textContent || '';
-    const idx = text.indexOf(displayText);
-    if (idx === -1) continue;
-
-    const parent = node.parentNode;
-    if (!parent) continue;
-    if ((parent as HTMLElement).classList?.contains(CAPSULE_CLASS)) continue;
-
-    const before = text.slice(0, idx);
-    const after = text.slice(idx + displayText.length);
-
-    const strong = document.createElement('strong');
-    strong.className = CAPSULE_CLASS;
-    strong.setAttribute(CAPSULE_ATTR_ID, promptId);
-    strong.setAttribute(CAPSULE_ATTR_CONTENT, promptContent);
-    strong.setAttribute('data-trigger', triggerChar);
-    strong.textContent = displayText;
-
-    const frag = document.createDocumentFragment();
-    if (before) frag.appendChild(document.createTextNode(before));
-    frag.appendChild(strong);
-    if (after) frag.appendChild(document.createTextNode(after));
-
-    parent.replaceChild(frag, node);
-
-    // Place cursor after capsule
-    const sel = window.getSelection();
-    if (sel) {
-      const afterNode = strong.nextSibling;
-      if (afterNode) {
-        const r = document.createRange();
-        r.setStartAfter(afterNode);
-        r.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(r);
-      }
-    }
-    return;
-  }
-}
-
-/** Check if cursor is currently inside a capsule element */
-function findCapsuleAtCursor(editor: HTMLElement | null, capsuleClass: string): HTMLElement | null {
-  if (!editor) return null;
-  const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) return null;
-
-  const range = sel.getRangeAt(0);
-  let node: Node | null = range.startContainer;
-  while (node && node !== editor) {
-    if (
-      node.nodeType === Node.ELEMENT_NODE &&
-      (node as HTMLElement).classList?.contains(capsuleClass)
-    ) {
-      return node as HTMLElement;
-    }
-    node = node.parentNode;
-  }
-  return null;
-}
-
-/** Remove a capsule element and its trailing nbsp */
-function removeCapsule(capsule: HTMLElement): void {
-  const next = capsule.nextSibling;
-  if (next?.nodeType === Node.TEXT_NODE) {
-    const text = next.textContent || '';
-    if (text[0] === '\u00A0' || text[0] === ' ') {
-      next.textContent = text.slice(1);
-      if (!next.textContent) next.parentNode?.removeChild(next);
-    }
-  }
-  capsule.remove();
-}
-
-/** Check if editor has any capsules */
-function hasCapsules(editor: HTMLElement, capsuleClass: string): boolean {
-  return editor.querySelector(`.${capsuleClass}`) !== null;
-}
-
-/** Check if editor has capsules belonging to a specific trigger character */
-function hasOwnCapsules(editor: HTMLElement, capsuleClass: string, triggerChar: string): boolean {
-  return editor.querySelector(`.${capsuleClass}[data-trigger="${triggerChar}"]`) !== null;
-}
-
-/** Expand only capsules belonging to a specific trigger character */
-function expandOwnCapsules(editor: HTMLElement, capsuleClass: string, triggerChar: string): void {
-  const capsules = editor.querySelectorAll(`.${capsuleClass}[data-trigger="${triggerChar}"]`);
-  capsules.forEach((capsule) => {
-    const content = capsule.getAttribute(CAPSULE_ATTR_CONTENT) || '';
-    const textNode = document.createTextNode(content);
-    capsule.parentNode?.replaceChild(textNode, capsule);
-  });
-  editor.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 /**
@@ -424,18 +279,11 @@ function expandOwnCapsules(editor: HTMLElement, capsuleClass: string, triggerCha
  * Returns the full expanded text content of the editor.
  */
 export function expandAllCapsules(editor: HTMLElement, capsuleClass: string = CAPSULE_CLASS): string {
-  const capsules = editor.querySelectorAll(`.${capsuleClass}`);
-  capsules.forEach((capsule) => {
-    const content = capsule.getAttribute(CAPSULE_ATTR_CONTENT) || '';
-    const textNode = document.createTextNode(content);
-    capsule.parentNode?.replaceChild(textNode, capsule);
-  });
-  editor.dispatchEvent(new Event('input', { bubbles: true }));
-  return editor.textContent || '';
+  return expandCapsules(editor, capsuleClass);
 }
 
 /** Get cursor offset in editor (plain text character count before cursor) */
-function getCursorPosition(editor: HTMLElement): number {
+function getLocalCursorPosition(editor: HTMLElement): number {
   const sel = window.getSelection();
   if (!sel || sel.rangeCount === 0) return 0;
 
@@ -467,7 +315,6 @@ function getTextExcludingCapsules(
   const walk = (node: Node) => {
     if (node.nodeType === Node.TEXT_NODE) {
       const nodeText = node.textContent || '';
-      // Check if cursor is in this text node
       if (!cursorFound && cursorRange && cursorRange.startContainer === node) {
         cursorPos = text.length + cursorRange.startOffset;
         cursorFound = true;
@@ -479,13 +326,11 @@ function getTextExcludingCapsules(
     if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as HTMLElement;
 
-      // If this is a capsule belonging to our trigger, replace with neutral placeholder
       if (
         el.classList.contains(capsuleClass) &&
         el.getAttribute('data-trigger') === triggerChar
       ) {
-        const placeholder = '\u200B'.repeat(el.textContent?.length || 1); // zero-width spaces
-        // Check if cursor is inside this capsule
+        const placeholder = '\u200B'.repeat(el.textContent?.length || 1);
         if (!cursorFound && cursorRange && el.contains(cursorRange.startContainer)) {
           cursorPos = text.length + placeholder.length;
           cursorFound = true;
@@ -514,9 +359,8 @@ function getTextExcludingCapsules(
     walk(child);
   }
 
-  // Fallback: if cursor not found in walk, use plain method
   if (!cursorFound) {
-    cursorPos = getCursorPosition(editor);
+    cursorPos = getLocalCursorPosition(editor);
   }
 
   return { text, cursorPos };

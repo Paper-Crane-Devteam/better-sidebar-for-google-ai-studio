@@ -878,5 +878,8 @@
     "hide": "Hide this icon",
     "hideTitle": "Hide Shortcut Helper?",
     "hideConfirm": "You can re-enable it in Settings → UI Controls → Element Visibility."
+  },
+  "agentLoop": {
+    "resultCapsulePrefix": "Result"
   }
 }

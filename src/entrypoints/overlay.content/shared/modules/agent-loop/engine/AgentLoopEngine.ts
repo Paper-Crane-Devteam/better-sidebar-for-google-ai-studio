@@ -21,6 +21,13 @@ import { executeToolCall } from '../tools/tool-registry';
 import { CircuitBreaker } from './circuit-breaker';
 import { agentEventBus } from '../event-bus';
 import { COMPLETE_TASK_SIGNAL } from '../tools/complete-task';
+import i18n from '@/locale/i18n';
+import {
+  insertMultipleCapsules,
+  RESULT_CAPSULE_CLASS,
+  RESULT_CAPSULE_ATTR_CONTENT,
+} from '@/entrypoints/overlay.content/shared/lib/quill-editor';
+import type { CapsuleAttrs } from '@/entrypoints/overlay.content/shared/lib/quill-editor';
 
 export class AgentLoopEngine {
   private adapter: AgentPlatformAdapter;
@@ -336,43 +343,35 @@ export class AgentLoopEngine {
 
     // Split results into individual tool sections (split on --- separator)
     const sections = this.splitResultSections(resultText);
+    const prefix = i18n.t('agentLoop.resultCapsulePrefix');
 
-    // Clear editor
-    editor.innerHTML = '';
-
-    const p = document.createElement('p');
+    // Build capsule data
+    const capsuleData: Array<{ displayText: string; attrs: CapsuleAttrs }> = [];
 
     if (sections.length === 0) {
-      // Fallback: single capsule
       const wrappedResult = `<bs_agent_result>\n${resultText}\n</bs_agent_result>`;
-      const capsule = this.createResultCapsuleElement('📋 Tool Results', wrappedResult);
-      p.appendChild(capsule);
-      p.appendChild(document.createTextNode('\u00A0'));
+      capsuleData.push({
+        displayText: `${prefix}: Tool Results`,
+        attrs: {
+          className: RESULT_CAPSULE_CLASS,
+          dataAttrs: { [RESULT_CAPSULE_ATTR_CONTENT]: wrappedResult },
+          nonEditable: true,
+        },
+      });
     } else {
-      // One capsule per tool result section
       for (const section of sections) {
-        const capsule = this.createResultCapsuleElement(
-          `📋 ${section.label}`,
-          section.content,
-        );
-        p.appendChild(capsule);
-        p.appendChild(document.createTextNode(' '));
+        capsuleData.push({
+          displayText: `${prefix}: ${section.label}`,
+          attrs: {
+            className: RESULT_CAPSULE_CLASS,
+            dataAttrs: { [RESULT_CAPSULE_ATTR_CONTENT]: section.content },
+            nonEditable: true,
+          },
+        });
       }
     }
 
-    editor.appendChild(p);
-    editor.dispatchEvent(new Event('input', { bubbles: true }));
-    editor.focus();
-  }
-
-  /** Create a single result capsule DOM element */
-  private createResultCapsuleElement(label: string, content: string): HTMLElement {
-    const capsule = document.createElement('strong');
-    capsule.className = 'bs-agent-result-capsule';
-    capsule.setAttribute('data-result-content', content);
-    capsule.contentEditable = 'false';
-    capsule.textContent = label;
-    return capsule;
+    insertMultipleCapsules(editor, capsuleData);
   }
 
   /**

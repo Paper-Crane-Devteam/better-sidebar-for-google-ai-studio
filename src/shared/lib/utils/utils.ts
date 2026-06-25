@@ -37,12 +37,21 @@ export function stripMarkdown(md: string): string {
   return s.replace(/\n{3,}/g, '\n\n').trim();
 }
 
+// Cache: reuse a single CSSStyleSheet instance for identical CSS strings.
+// This avoids parsing the same (often large) stylesheet N times when injecting
+// into many shadow DOMs (e.g. one per AI response for snippet buttons).
+const styleSheetCache = new Map<string, CSSStyleSheet>();
+
 // Helper to safely apply styles to shadow root (compatible with Firefox Xray wrappers)
 export function applyShadowStyles(shadow: ShadowRoot, css: string) {
   try {
-    const styleSheet = new CSSStyleSheet();
-    styleSheet.replaceSync(css);
-    shadow.adoptedStyleSheets = [styleSheet];
+    let sheet = styleSheetCache.get(css);
+    if (!sheet) {
+      sheet = new CSSStyleSheet();
+      sheet.replaceSync(css);
+      styleSheetCache.set(css, sheet);
+    }
+    shadow.adoptedStyleSheets = [sheet];
   } catch (e) {
     console.warn(
       'Better Sidebar: Failed to use adoptedStyleSheets, falling back to <style>',

@@ -860,5 +860,14 @@
     "helpRecording": "💡 Clique em um botão de atalho e pressione a combinação de teclas desejada.",
     "helpUnbind": "⌫ Pressione Backspace ou Delete durante a gravação para desvincular.",
     "helpEscape": "⎋ Pressione Escape para cancelar a gravação."
+  },
+  "hotkeyHelper": {
+    "title": "Atalhos de Teclado",
+    "hide": "Ocultar este ícone",
+    "hideTitle": "Ocultar Ajuda de Atalhos?",
+    "hideConfirm": "Você pode reativá-lo em Configurações → Controles de Interface → Visibilidade dos Elementos."
+  },
+  "agentLoop": {
+    "resultCapsulePrefix": "Resultado"
   }
 }

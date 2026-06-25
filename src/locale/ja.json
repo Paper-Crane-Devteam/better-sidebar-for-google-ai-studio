@@ -861,5 +861,14 @@
     "helpRecording": "💡 ショートカットボタンをクリックし、目的のキーの組み合わせを押してください。",
     "helpUnbind": "⌫ 録音中に Backspace または Delete を押すと解除されます。",
     "helpEscape": "⎋ Escape を押すと録音をキャンセルします。"
+  },
+  "hotkeyHelper": {
+    "title": "キーボードショートカット",
+    "hide": "このアイコンを非表示",
+    "hideTitle": "ショートカットヘルパーを非表示にしますか？",
+    "hideConfirm": "設定 → UI コントロール → 要素の表示 で再度有効にできます。"
+  },
+  "agentLoop": {
+    "resultCapsulePrefix": "結果"
   }
 }

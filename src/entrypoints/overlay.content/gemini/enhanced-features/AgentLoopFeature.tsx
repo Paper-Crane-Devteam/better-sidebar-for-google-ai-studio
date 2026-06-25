@@ -36,6 +36,7 @@ import {
   CAPSULE_CLASS,
 } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
 import type { TriggerPopupItem, CapsuleClickInfo } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
+import { installSendButtonInterceptor } from '@/entrypoints/overlay.content/shared/lib/quill-editor';
 
 export const AgentLoopFeature: React.FC = () => {
   const slashCommandEnabled = useSettingsStore(
@@ -95,6 +96,7 @@ export const AgentLoopFeature: React.FC = () => {
 
   useEffect(() => {
     injectRendererStyles();
+    installSendButtonInterceptor();
     const renderer = new ConversationRenderer();
     renderer.start();
     rendererRef.current = renderer;

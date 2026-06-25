@@ -4,52 +4,26 @@
  */
 
 import type { AgentPlatformAdapter } from './types';
+import {
+  getEditor as quillGetEditor,
+  getCursorPosition as quillGetCursorPosition,
+  replaceAllContent,
+  triggerSend as quillTriggerSend,
+} from '@/entrypoints/overlay.content/shared/lib/quill-editor';
 
 export class GeminiAgentAdapter implements AgentPlatformAdapter {
   getEditor(): HTMLElement | null {
-    return document.querySelector('rich-textarea .ql-editor[contenteditable="true"]');
+    return quillGetEditor();
   }
 
   insertText(text: string): void {
     const editor = this.getEditor();
     if (!editor) return;
-
-    // Clear existing content
-    editor.innerHTML = '';
-
-    // Insert text (handle newlines as separate paragraphs for Quill)
-    const lines = text.split('\n');
-    for (const line of lines) {
-      const p = document.createElement('p');
-      p.textContent = line || '\u200B'; // Zero-width space for empty lines
-      editor.appendChild(p);
-    }
-
-    // Trigger input event so Quill/Gemini detects the change
-    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    replaceAllContent(editor, text);
   }
 
   async triggerSend(): Promise<void> {
-    // Allow Gemini to process the input change
-    await new Promise((r) => setTimeout(r, 150));
-
-    const sendBtn = document.querySelector(
-      'button.send-button, button[aria-label="Send message"], button[data-at-shortcutkeys]'
-    ) as HTMLButtonElement | null;
-
-    if (sendBtn && !sendBtn.disabled) {
-      sendBtn.click();
-    } else {
-      // Fallback: try finding by mat-icon content
-      const buttons = document.querySelectorAll('button');
-      for (const btn of buttons) {
-        if (btn.querySelector('mat-icon')?.textContent?.trim() === 'send') {
-          (btn as HTMLButtonElement).click();
-          return;
-        }
-      }
-      console.warn('[AgentLoop] Could not find send button');
-    }
+    await quillTriggerSend();
   }
 
   getText(): string {
@@ -57,17 +31,9 @@ export class GeminiAgentAdapter implements AgentPlatformAdapter {
   }
 
   getCursorPosition(): number {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return 0;
-
     const editor = this.getEditor();
     if (!editor) return 0;
-
-    const range = sel.getRangeAt(0);
-    const preRange = document.createRange();
-    preRange.selectNodeContents(editor);
-    preRange.setEnd(range.startContainer, range.startOffset);
-    return preRange.toString().length;
+    return quillGetCursorPosition(editor);
   }
 
   observeAIResponseComplete(timeoutMs: number): Promise<HTMLElement> {

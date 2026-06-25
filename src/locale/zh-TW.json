@@ -860,5 +860,14 @@
     "helpRecording": "💡 點擊快捷鍵按鈕，然後按下想要的組合鍵。",
     "helpUnbind": "⌫ 錄製時按 Backspace 或 Delete 可解除綁定。",
     "helpEscape": "⎋ 按 Escape 取消錄製。"
+  },
+  "hotkeyHelper": {
+    "title": "快捷鍵速查",
+    "hide": "隱藏此圖示",
+    "hideTitle": "隱藏快捷鍵助手？",
+    "hideConfirm": "你可以在 設定 → 介面控制 → 元素可見性 中重新開啟。"
+  },
+  "agentLoop": {
+    "resultCapsulePrefix": "結果"
   }
 }
