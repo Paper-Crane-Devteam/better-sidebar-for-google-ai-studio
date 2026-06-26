@@ -1,6 +1,7 @@
 import React from 'react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
+import { useSettingsStore } from '@/shared/lib/settings-store';
 import { toast } from '@/shared/lib/toast';
 import {
   fetchMessagesForExport,
@@ -129,6 +130,12 @@ export function useExplorerMenuItems({
   };
 
   const handleExportNotion = async () => {
+    const { integrations } = useSettingsStore.getState();
+    if (!integrations.notion.apiKey || !integrations.notion.parentPageId) {
+      toast.error(t('integrations.notionNotConfigured'));
+      return;
+    }
+
     const conversationId = node.data.id;
     const messages = await fetchMessagesForExport(conversationId);
     if (!messages?.length) {
@@ -140,8 +147,16 @@ export function useExplorerMenuItems({
       return;
     }
     const md = buildExportMarkdown(messages);
-    navigator.clipboard.writeText(md);
-    toast.success(t('export.copiedForNotion'));
+    const title = node.data.name || conversationId;
+    toast.info(t('integrations.exportingToNotion'));
+
+    const { createNotionPage } = await import('@/entrypoints/overlay.content/shared/features/export/notion');
+    const result = await createNotionPage({ id: conversationId, title, content: md });
+    if (result.ok) {
+      toast.success(t('integrations.exportedToNotion'));
+    } else {
+      toast.error(result.error || 'Export failed');
+    }
   };
 
   const handleMove = async () => {

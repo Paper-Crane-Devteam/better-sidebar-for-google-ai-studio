@@ -8,7 +8,7 @@ import { changelog as ru } from './ru';
 import { changelog as es } from './es';
 import { changelog as pt } from './pt';
 
-export { CURRENT_VERSION } from './types';
+export { CURRENT_VERSION, changelogItemToMarkdown } from './types';
 export type { ChangeLogItem } from './types';
 
 const changelogMap: Record<string, ChangeLogItem[]> = {

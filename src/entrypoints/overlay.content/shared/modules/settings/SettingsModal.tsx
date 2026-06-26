@@ -131,7 +131,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
                     
                     <div className="h-px bg-border my-2 mx-2" />
                     
-                    <NavButton id="supportpack" label={t('supportPack.title')} icon={Sparkles} activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <NavButton id="supportpack" label={t('packs.title')} icon={Sparkles} activeSection={activeSection} setActiveSection={setActiveSection} />
                     <NavButton id="sponsor" label={t('settings.sponsor')} icon={Heart} activeSection={activeSection} setActiveSection={setActiveSection} />
                     
                     <div className="flex-1" />

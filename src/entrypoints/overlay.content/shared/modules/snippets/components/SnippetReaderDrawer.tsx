@@ -1,6 +1,7 @@
 import { useEffect, useRef, useMemo, useState, useCallback } from 'react';
 import { useAppStore } from '@/shared/lib/store';
 import { useModalStore } from '@/shared/lib/modal';
+import { useLayerStore } from '@/shared/lib/layer-store';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { X, Copy, Pencil, ExternalLink, ChevronUp, ChevronDown, Download } from 'lucide-react';
@@ -168,23 +169,17 @@ export const SnippetReaderDrawer = () => {
       requestAnimationFrame(() => {
         setIsVisible(true);
       });
-      // Lower enhanced features z-index so drawer renders on top
-      const enhancedEl = document.getElementById('better-sidebar-enhanced-features');
-      if (enhancedEl) {
-        enhancedEl.style.zIndex = '0';
-      }
+      // Suppress enhanced features z-index so drawer renders on top
+      useLayerStore.getState().suppress();
     } else {
       setIsVisible(false);
       // Restore enhanced features z-index
-      const enhancedEl = document.getElementById('better-sidebar-enhanced-features');
-      if (enhancedEl) {
-        enhancedEl.style.zIndex = '';
-      }
+      useLayerStore.getState().restore();
     }
     return () => {
-      const enhancedEl = document.getElementById('better-sidebar-enhanced-features');
-      if (enhancedEl) {
-        enhancedEl.style.zIndex = '';
+      // Safety: restore on unmount if still open
+      if (isOpen) {
+        useLayerStore.getState().restore();
       }
     };
   }, [isOpen]);

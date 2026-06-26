@@ -1,10 +1,14 @@
 import React from 'react';
 import { Separator } from '../../../components/ui/separator';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Sparkles } from 'lucide-react';
+import { Button } from '../../../components/ui/button';
+import { useWhatsNewStore } from '../../whats-new/whats-new-store';
 
 export const AboutSettings = () => {
     const { t } = useI18n();
+    const openWhatsNew = useWhatsNewStore((s) => s.open);
+
     return (
       <div className="space-y-6">
         <div className="space-y-2">
@@ -22,6 +26,21 @@ export const AboutSettings = () => {
               <p className="text-sm text-muted-foreground">
                 {t('about.developerName')}
               </p>
+            </div>
+
+            <Separator className="my-2" />
+
+            {/* View Changelog button */}
+            <div className="grid gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-fit flex items-center gap-2"
+                onClick={openWhatsNew}
+              >
+                <Sparkles className="h-4 w-4 text-yellow-500" />
+                {t('about.viewChangelog')}
+              </Button>
             </div>
 
             <Separator className="my-2" />

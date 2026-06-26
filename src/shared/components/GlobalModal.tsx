@@ -1,15 +1,36 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useModalStore } from '@/shared/lib/modal';
+import { useLayerStore } from '@/shared/lib/layer-store';
 import { Button } from './ui/button';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { cn } from '@/shared/lib/utils/utils';
 
 const BASE_Z = 10000;
 
-export const GlobalModal = () => {
+export const GlobalModal = ({ suppressEnhancedLayer = false }: { suppressEnhancedLayer?: boolean }) => {
   const { t } = useI18n();
   const stack = useModalStore((state) => state.stack);
   const close = useModalStore((state) => state.close);
+
+  // Suppress enhanced features z-index when modal is open (opt-in for sidebar context)
+  const wasSuppressedRef = useRef(false);
+  useEffect(() => {
+    if (!suppressEnhancedLayer) return;
+    const hasModals = stack.length > 0;
+    if (hasModals && !wasSuppressedRef.current) {
+      useLayerStore.getState().suppress();
+      wasSuppressedRef.current = true;
+    } else if (!hasModals && wasSuppressedRef.current) {
+      useLayerStore.getState().restore();
+      wasSuppressedRef.current = false;
+    }
+    return () => {
+      if (wasSuppressedRef.current) {
+        useLayerStore.getState().restore();
+        wasSuppressedRef.current = false;
+      }
+    };
+  }, [stack.length, suppressEnhancedLayer]);
 
   if (stack.length === 0) return null;
 

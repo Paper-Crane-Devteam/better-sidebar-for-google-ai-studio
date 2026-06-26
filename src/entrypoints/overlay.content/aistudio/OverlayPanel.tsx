@@ -426,7 +426,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       <WhatsNewDialog />
       <FirstInstallPrompt />
       <RatingPromptDialog />
-      <GlobalModal />
+      <GlobalModal suppressEnhancedLayer />
       <ProfilePickerDialog />
       <GlobalToast />
       <HotkeyCheatsheet />

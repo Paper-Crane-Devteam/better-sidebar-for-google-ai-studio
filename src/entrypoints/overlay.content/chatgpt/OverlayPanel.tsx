@@ -362,7 +362,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       <SettingsModal open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
       <WhatsNewDialog />
       <FirstInstallPrompt />
-      <GlobalModal />
+      <GlobalModal suppressEnhancedLayer />
       <ProfilePickerDialog />
       <RatingPromptDialog />
       <GlobalToast />

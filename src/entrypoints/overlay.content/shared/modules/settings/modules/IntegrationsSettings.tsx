@@ -109,6 +109,9 @@ export const IntegrationsSettings = () => {
 
       {/* Step 1: API Key */}
       <div className="space-y-3">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+          {t('integrations.step1')}
+        </p>
         <label className="text-sm font-medium">{t('integrations.notionApiKey')}</label>
         <p className="text-xs text-muted-foreground">
           {t('integrations.notionApiKeyHint')}{' '}
@@ -164,6 +167,9 @@ export const IntegrationsSettings = () => {
         <>
           <Separator />
           <div className="space-y-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              {t('integrations.step2')}
+            </p>
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium">{t('integrations.notionParentPage')}</label>
               <Button
@@ -212,9 +218,12 @@ export const IntegrationsSettings = () => {
                 </SelectContent>
               </Select>
             ) : (
-              <p className="text-xs text-muted-foreground py-2">
-                {t('integrations.noPagesFound')}
-              </p>
+              <div className="text-xs text-muted-foreground py-2 space-y-1">
+                <p>{t('integrations.noPagesFound')}</p>
+                <p className="text-amber-600 dark:text-amber-400">
+                  {t('integrations.noPagesPermissionHint')}
+                </p>
+              </div>
             )}
           </div>
         </>

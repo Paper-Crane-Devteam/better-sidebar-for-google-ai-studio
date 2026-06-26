@@ -11,11 +11,16 @@ import {
   KeyRound,
   Infinity,
   Monitor,
-  Heart,
   Wand2,
+  Zap,
+  Bot,
+  DatabaseZap,
+  Clock,
+  Share2,
+  Crown,
 } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { useLicenseStore, isLicenseValid } from '@/shared/lib/license-store';
+import { useLicenseStore, isLicenseValid, type LicenseTier } from '@/shared/lib/license-store';
 import { activateLicense, identifyTokenSource } from '@/shared/lib/license-api';
 import { openPurchasePage, getPurchaseLinks } from '@/shared/lib/license-links';
 
@@ -29,14 +34,17 @@ export const SupportPackSettings = () => {
       {/* Header */}
       <div className="space-y-2">
         <h3 className="text-lg font-medium flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
-          {t('supportPack.title')}
+          <Crown className="h-5 w-5 text-primary" />
+          {t('packs.title')}
         </h3>
+        <p className="text-sm text-muted-foreground">
+          {t('packs.subtitle')}
+        </p>
         <Separator />
       </div>
 
       {hasLicense ? (
-        <ActivatedView t={t} />
+        <ActivatedView t={t} tier={licenseState.tier} />
       ) : (
         <PurchaseView t={t} />
       )}
@@ -45,8 +53,11 @@ export const SupportPackSettings = () => {
 };
 
 /** View shown when the user already has an active license */
-function ActivatedView({ t }: { t: (key: string) => string }) {
-  const { tier, token, deactivate } = useLicenseStore();
+function ActivatedView({ t, tier }: { t: (key: string) => string; tier: LicenseTier }) {
+  const { token, deactivate } = useLicenseStore();
+
+  const tierLabel = tier === 'pro' ? 'Pro' : tier === 'power_pack' ? 'Power Pack' : 'Support Pack';
+  const isPowerOrPro = tier === 'power_pack' || tier === 'pro';
 
   return (
     <div className="space-y-6">
@@ -58,17 +69,41 @@ function ActivatedView({ t }: { t: (key: string) => string }) {
           </div>
           <div>
             <p className="font-semibold text-primary">
-              {t('supportPack.activatedTitle')}
+              {tierLabel} {t('packs.active')}
             </p>
             <p className="text-xs text-muted-foreground">
-              {tier === 'pro' ? 'Pro' : 'Support Pack'} • {token?.slice(0, 12)}...
+              {token?.slice(0, 12)}...
             </p>
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          {t('supportPack.activatedDescription')}
+          {isPowerOrPro
+            ? t('packs.activatedDescriptionPower')
+            : t('packs.activatedDescriptionSupport')}
         </p>
       </div>
+
+      {/* If only support pack, show upgrade prompt */}
+      {tier === 'support_pack' && (
+        <div className="rounded-xl border border-dashed border-amber-500/40 bg-amber-500/5 p-5">
+          <div className="flex items-start gap-3">
+            <Zap className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+            <div className="space-y-2">
+              <p className="text-sm font-medium">{t('packs.upgradePrompt')}</p>
+              <p className="text-xs text-muted-foreground">{t('packs.upgradePromptDesc')}</p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-2 gap-1.5"
+                onClick={() => openPurchasePage()}
+              >
+                <Zap className="h-3.5 w-3.5" />
+                {t('packs.upgradeToPower')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Deactivate */}
       <div className="flex justify-end">
@@ -85,78 +120,130 @@ function ActivatedView({ t }: { t: (key: string) => string }) {
   );
 }
 
-/** View shown when the user hasn't purchased yet — designed for conversion */
+/** View shown when the user hasn't purchased yet */
 function PurchaseView({ t }: { t: (key: string) => string }) {
   const links = getPurchaseLinks();
 
   return (
     <div className="space-y-6">
-      {/* Hero section — uses theme tokens for colors */}
-      <div className="rounded-xl border bg-accent/30 p-6 text-center">
-        <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-primary/15 flex items-center justify-center">
-          <Palette className="h-7 w-7 text-primary" />
+      {/* Two-pack layout */}
+      <div className="grid gap-4">
+        {/* Support Pack Card */}
+        <div className="rounded-xl border bg-accent/20 p-5">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Palette className="h-4.5 w-4.5 text-primary" />
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold">{t('packs.supportPackTitle')}</h4>
+              <p className="text-xs text-muted-foreground">{t('packs.supportPackTagline')}</p>
+            </div>
+          </div>
+          <div className="space-y-2 ml-0.5">
+            <FeatureItem
+              icon={<Palette className="h-3.5 w-3.5 text-primary" />}
+              text={t('packs.spFeature1')}
+            />
+            <FeatureItem
+              icon={<Infinity className="h-3.5 w-3.5 text-primary" />}
+              text={t('packs.spFeature2')}
+            />
+            <FeatureItem
+              icon={<Wand2 className="h-3.5 w-3.5 text-primary" />}
+              text={t('packs.spFeature3')}
+            />
+            <FeatureItem
+              icon={<Monitor className="h-3.5 w-3.5 text-primary" />}
+              text={t('packs.spFeature4')}
+            />
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-4 gap-2"
+            onClick={() => openPurchasePage()}
+          >
+            <ShoppingCart className="h-3.5 w-3.5" />
+            {t('packs.getSupportPack')}
+          </Button>
         </div>
-        <h4 className="text-lg font-semibold mb-2">
-          {t('supportPack.heroTitle')}
-        </h4>
-        <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-          {t('supportPack.heroDescription')}
-        </p>
+
+        {/* Power Pack Card — featured/highlighted with bold gradient */}
+        <div className="rounded-xl border-2 border-violet-500/50 bg-gradient-to-br from-violet-500/10 via-purple-500/5 to-fuchsia-500/10 p-5 relative overflow-hidden">
+          {/* Decorative glow */}
+          <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-violet-500/10 blur-2xl pointer-events-none" />
+          <div className="absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-fuchsia-500/10 blur-2xl pointer-events-none" />
+
+          {/* Popular badge */}
+          <div className="absolute top-3 right-3">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-500/20 text-violet-600 dark:text-violet-300 border border-violet-500/30">
+              <Zap className="h-2.5 w-2.5" />
+              {t('packs.popular')}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2.5 mb-3 relative">
+            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-violet-500/25 to-purple-500/25 flex items-center justify-center ring-1 ring-violet-500/20">
+              <Zap className="h-4.5 w-4.5 text-violet-500" />
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold">{t('packs.powerPackTitle')}</h4>
+              <p className="text-xs text-muted-foreground">{t('packs.powerPackTagline')}</p>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3 relative">
+            {t('packs.powerPackDescription')}
+          </p>
+          <div className="space-y-2 ml-0.5 relative">
+            <FeatureItem
+              icon={<Palette className="h-3.5 w-3.5 text-violet-500" />}
+              text={t('packs.ppFeatureThemes')}
+            />
+            <FeatureItem
+              icon={<Bot className="h-3.5 w-3.5 text-violet-500" />}
+              text={t('packs.ppFeatureAgent')}
+            />
+            <FeatureItem
+              icon={<DatabaseZap className="h-3.5 w-3.5 text-violet-500" />}
+              text={t('packs.ppFeatureWrite')}
+            />
+            <FeatureItem
+              icon={<Clock className="h-3.5 w-3.5 text-violet-500" />}
+              text={t('packs.ppFeatureHistory')}
+            />
+            <FeatureItem
+              icon={<Share2 className="h-3.5 w-3.5 text-violet-500" />}
+              text={t('packs.ppFeatureExport')}
+            />
+          </div>
+          <Button
+            className="w-full mt-4 gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md shadow-violet-500/20 border-0"
+            onClick={() => openPurchasePage()}
+          >
+            <Zap className="h-3.5 w-3.5" />
+            {t('packs.getPowerPack')}
+          </Button>
+        </div>
       </div>
 
-      {/* Features list */}
-      <div className="space-y-3">
-        <FeatureItem
-          icon={<Palette className="h-4 w-4 text-primary" />}
-          text={t('supportPack.feature1')}
-        />
-        <FeatureItem
-          icon={<Infinity className="h-4 w-4 text-primary" />}
-          text={t('supportPack.feature2')}
-        />
-        <FeatureItem
-          icon={<Wand2 className="h-4 w-4 text-primary" />}
-          text={t('supportPack.feature5')}
-        />
-        <FeatureItem
-          icon={<Monitor className="h-4 w-4 text-primary" />}
-          text={t('supportPack.feature3')}
-        />
-        <FeatureItem
-          icon={<Heart className="h-4 w-4 text-primary" />}
-          text={t('supportPack.feature4')}
-        />
-      </div>
-
-      {/* Purchase button + platform switcher */}
-      <div className="space-y-2">
-        <Button
-          className="w-full h-10 gap-2"
-          onClick={() => openPurchasePage()}
+      {/* Platform switcher */}
+      <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+        <span>{t('supportPack.otherPlatform')}</span>
+        <button
+          className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-foreground transition-colors"
+          onClick={() => window.open(links.gumroad, '_blank')}
         >
-          <ShoppingCart className="h-4 w-4" />
-          {t('supportPack.buyButton')}
-        </Button>
-
-        {/* Small platform switcher */}
-        <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
-          <span>{t('supportPack.otherPlatform')}</span>
-          <button
-            className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-foreground transition-colors"
-            onClick={() => window.open(links.gumroad, '_blank')}
-          >
-            Gumroad
-            <ExternalLink className="h-3 w-3" />
-          </button>
-          <span>|</span>
-          <button
-            className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-foreground transition-colors"
-            onClick={() => window.open(links.afdian, '_blank')}
-          >
-            {t('supportPack.afdian')}
-            <ExternalLink className="h-3 w-3" />
-          </button>
-        </div>
+          Gumroad
+          <ExternalLink className="h-3 w-3" />
+        </button>
+        <span>|</span>
+        <button
+          className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-foreground transition-colors"
+          onClick={() => window.open(links.afdian, '_blank')}
+        >
+          {t('supportPack.afdian')}
+          <ExternalLink className="h-3 w-3" />
+        </button>
       </div>
 
       <Separator />
@@ -261,9 +348,9 @@ function ActivationInput({ t }: { t: (key: string) => string }) {
 /** A single feature bullet point */
 function FeatureItem({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
-    <div className="flex items-center gap-3 px-1">
+    <div className="flex items-center gap-2.5 py-0.5">
       <div className="shrink-0">{icon}</div>
-      <span className="text-sm">{text}</span>
+      <span className="text-xs">{text}</span>
     </div>
   );
 }
