@@ -15,6 +15,10 @@ export function buildFrontmatter(item: ExportItem): string {
 
   lines.push(`title: "${item.title.replace(/"/g, '\\"')}"`);
 
+  if (item.description) {
+    lines.push(`description: "${item.description.replace(/"/g, '\\"')}"`);
+  }
+
   if (item.sourceUrl) {
     lines.push(`source: "${item.sourceUrl}"`);
   }

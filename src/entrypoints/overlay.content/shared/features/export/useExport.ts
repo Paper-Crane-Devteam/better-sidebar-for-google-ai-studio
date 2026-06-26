@@ -77,8 +77,9 @@ export function useExport(options: UseExportOptions = {}) {
           break;
         }
         case 'obsidian': {
-          openInObsidian(item, obsidianVault, obsidianFolder);
-          toast.success(t('export.openedInObsidian'));
+          void openInObsidian(item, obsidianVault, obsidianFolder).then(() => {
+            toast.success(t('export.openedInObsidian'));
+          });
           break;
         }
         case 'notion': {
@@ -213,8 +214,9 @@ export function useExport(options: UseExportOptions = {}) {
               .join('\n\n---\n\n'),
             createdAt: Math.floor(Date.now() / 1000),
           };
-          openInObsidian(combined, obsidianVault, obsidianFolder);
-          toast.success(t('export.openedInObsidian'));
+          void openInObsidian(combined, obsidianVault, obsidianFolder).then(() => {
+            toast.success(t('export.openedInObsidian'));
+          });
           break;
         }
         case 'notion': {

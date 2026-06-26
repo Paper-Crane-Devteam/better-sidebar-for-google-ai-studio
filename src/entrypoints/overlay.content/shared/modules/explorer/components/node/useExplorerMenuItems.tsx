@@ -121,12 +121,13 @@ export function useExplorerMenuItems({
     const itemTags = tagIds.length > 0
       ? tags.filter(tag => tagIds.includes(tag.id)).map(tag => tag.name)
       : undefined;
-    openInObsidian(
-      { id: conversationId, title, content: md, tags: itemTags },
+    void openInObsidian(
+      { id: conversationId, title, content: md, tags: itemTags, description: node.data.data?.description || undefined },
       undefined,
       'Conversations',
-    );
-    toast.success(t('export.openedInObsidian'));
+    ).then(() => {
+      toast.success(t('export.openedInObsidian'));
+    });
   };
 
   const handleExportNotion = async () => {

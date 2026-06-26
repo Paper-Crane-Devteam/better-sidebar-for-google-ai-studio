@@ -7,6 +7,8 @@ export interface ExportItem {
   title: string;
   /** Markdown content */
   content: string;
+  /** Optional description / summary */
+  description?: string | null;
   /** Optional source URL */
   sourceUrl?: string | null;
   /** Optional creation timestamp (unix seconds) */
