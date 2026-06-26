@@ -5,7 +5,6 @@ import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 import { applyShadowStyles } from '@/shared/lib/utils';
 import { bindShadowRootToTheme } from '@/themes';
 import { useSettingsStore } from '@/shared/lib/settings-store';
-import { useLayerStore } from '@/shared/lib/layer-store';
 
 /**
  * Independent mounting of Gemini enhanced features (like Default Model selector)
@@ -19,12 +18,6 @@ export function mountEnhancedFeatures(mainStyles: string) {
     // Keep below sidebar reader drawer (z-9998) but above normal page content
     enhancedWrapper.style.zIndex = '40';
     document.body.appendChild(enhancedWrapper);
-
-    // Subscribe to layer store — suppress z-index when overlays are active
-    const DEFAULT_Z = '40';
-    useLayerStore.subscribe((state) => {
-      enhancedWrapper.style.zIndex = state.isSuppressed ? '0' : DEFAULT_Z;
-    });
 
     const enhancedShadow = enhancedWrapper.attachShadow({ mode: 'open' });
     applyShadowStyles(enhancedShadow, mainStyles);

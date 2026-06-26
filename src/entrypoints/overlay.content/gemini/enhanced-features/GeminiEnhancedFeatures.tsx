@@ -11,6 +11,10 @@ import { AgentLoopFeature } from './AgentLoopFeature';
 import { SaveSnippetFeature } from './SaveSnippetFeature';
 import { SnippetDragDrawer } from '@/entrypoints/overlay.content/shared/modules/snippets/components/SnippetDragFolderView';
 import { GlobalModal } from '@/shared/components/GlobalModal';
+import { SnippetReaderDrawer } from '@/entrypoints/overlay.content/shared/modules/snippets/components/SnippetReaderDrawer';
+import { SettingsModal } from '@/entrypoints/overlay.content/shared/modules/settings/SettingsModal';
+import { WhatsNewDialog } from '@/entrypoints/overlay.content/shared/modules/whats-new/WhatsNewDialog';
+import { useAppStore } from '@/shared/lib/store';
 
 /**
  * Container for all Gemini enhanced features.
@@ -18,6 +22,9 @@ import { GlobalModal } from '@/shared/components/GlobalModal';
  * active even when the overlay is disabled.
  */
 export const GeminiEnhancedFeatures = () => {
+  const isSettingsOpen = useAppStore((s) => s.ui.overlay.isSettingsOpen);
+  const setIsSettingsOpen = useAppStore((s) => s.setSettingsOpen);
+
   return (
     <>
       {/* [DEPRECATED] DefaultModelFeature - removed due to Gemini UI redesign */}
@@ -33,6 +40,9 @@ export const GeminiEnhancedFeatures = () => {
       <AgentLoopFeature />
       <SaveSnippetFeature />
       <SnippetDragDrawer />
+      <SnippetReaderDrawer />
+      <SettingsModal open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
+      <WhatsNewDialog />
       <GlobalModal />
     </>
   );

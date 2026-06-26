@@ -15,7 +15,6 @@ import {
 } from '../../components/ui/context-menu';
 import { ExclusiveContextMenu } from '../../components/ui/exclusive-context-menu';
 import { CreateSnippetForm } from './components/CreateSnippetForm';
-import { SnippetReaderDrawer } from './components/SnippetReaderDrawer';
 
 interface SnippetsTabProps {
   menuActions?: {
@@ -264,9 +263,6 @@ export const SnippetsTab = ({ menuActions }: SnippetsTabProps) => {
           </ContextMenuItem>
         </ContextMenuContent>
       </ExclusiveContextMenu>
-
-      {/* Reader Drawer */}
-      <SnippetReaderDrawer />
     </div>
   );
 };
