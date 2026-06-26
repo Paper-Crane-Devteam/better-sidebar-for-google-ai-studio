@@ -110,14 +110,14 @@ export const ExplorerHeader = ({
 
               <div className="h-4 w-[1px] bg-border mx-1" />
 
-              <SimpleTooltip content={t('menu.collapseAll')}>
+              <SimpleTooltip content={t('batch.batchSelection')}>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
-                  onClick={onCollapseAll}
+                  className={`h-7 w-7 ${isBatchMode ? 'bg-primary/15 text-primary' : ''}`}
+                  onClick={() => setExplorerBatchMode(!isBatchMode)}
                 >
-                  <ListCollapse className="h-4 w-4" />
+                  <ListChecks className="h-4 w-4" />
                 </Button>
               </SimpleTooltip>
 
@@ -142,14 +142,14 @@ export const ExplorerHeader = ({
                 </Button>
               </SimpleTooltip>
 
-              <SimpleTooltip content={t('batch.batchSelection')}>
+              <SimpleTooltip content={t('menu.collapseAll')}>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`h-7 w-7 ${isBatchMode ? 'bg-primary/15 text-primary' : ''}`}
-                  onClick={() => setExplorerBatchMode(!isBatchMode)}
+                  className="h-7 w-7"
+                  onClick={onCollapseAll}
                 >
-                  <ListChecks className="h-4 w-4" />
+                  <ListCollapse className="h-4 w-4" />
                 </Button>
               </SimpleTooltip>
 

@@ -403,7 +403,27 @@
   "export": {
     "roleUser": "User",
     "roleModel": "Model",
-    "defaultFilename": "export"
+    "defaultFilename": "export",
+    "export": "Export",
+    "exportAs": "Export as...",
+    "exportAsText": "Export as Text",
+    "exportAsMarkdown": "Export as Markdown",
+    "exportAsJson": "Export as JSON",
+    "exportToObsidian": "Open in Obsidian",
+    "exportToNotion": "Copy for Notion",
+    "exported": "Exported successfully",
+    "exportedCount": "Exported {{count}} items",
+    "openedInObsidian": "Opened in Obsidian",
+    "openedInObsidianCount": "Opening {{count}} notes in Obsidian...",
+    "copiedForNotion": "Copied to clipboard (paste in Notion)",
+    "noContent": "No content to export",
+    "noItems": "No items selected",
+    "exportFolder": "Export Folder",
+    "descMarkdown": "Download as .md file with frontmatter",
+    "descText": "Plain text without formatting",
+    "descJson": "Structured data format",
+    "descObsidian": "Create note directly in Obsidian",
+    "descNotion": "Copy markdown to clipboard for pasting"
   },
   "batch": {
     "deleteConfirmTitle": "Delete {{count}} Items",

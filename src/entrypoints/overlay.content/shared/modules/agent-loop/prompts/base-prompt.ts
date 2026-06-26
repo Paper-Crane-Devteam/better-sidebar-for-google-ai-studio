@@ -114,7 +114,7 @@ function getRules(): string {
 
 1. **Start with SELECT** — Always query existing data before making changes.
 2. **Explain before writing** — Tell the user what you plan to do before executing INSERT/UPDATE/DELETE.
-3. **IDs are UUIDs** — Use random UUID format (e.g., 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx') when inserting new records.
+3. **IDs** — When inserting new records, use the literal placeholder \`__NEW_UUID__\` as the id value. Each occurrence will be automatically replaced with a real cryptographically-random UUID before execution. Use one \`__NEW_UUID__\` per row. Do NOT try to invent UUID strings yourself.
 4. **Timestamps** — All timestamps are Unix epoch in seconds. Use \`unixepoch()\` for current time in INSERT/UPDATE.
 5. **external_id** — Maps to the platform's native conversation ID (the URL path component).
 6. **Soft deletes** — Conversations use \`deleted_at\` field. NULL = active, non-null = soft-deleted.

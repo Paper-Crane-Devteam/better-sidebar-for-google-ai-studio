@@ -3,12 +3,16 @@ import { useAppStore } from '@/shared/lib/store';
 import { useModalStore } from '@/shared/lib/modal';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
-import { X, Copy, Pencil, ExternalLink, ChevronUp, ChevronDown } from 'lucide-react';
+import { X, Copy, Pencil, ExternalLink, ChevronUp, ChevronDown, Download } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { CreateSnippetForm } from './CreateSnippetForm';
 import { toast } from '@/shared/lib/toast';
 import { cn } from '@/shared/lib/utils/utils';
+import { useExport } from '../../../features/export';
+import { openExportDialog } from '../../../features/export/ExportFormatDialog';
+import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import type { Snippet } from '@/shared/types/db';
+import type { ExportFormat } from '../../../features/export/types';
 
 interface SnippetCardProps {
   snippet: Snippet;
@@ -112,6 +116,7 @@ export const SnippetReaderDrawer = () => {
   const hasScrolledRef = useRef(false);
   const [isVisible, setIsVisible] = useState(false);
   const editFormRef = useRef<HTMLFormElement>(null);
+  const { exportItems } = useExport();
 
   // Build favorite IDs set
   const favoriteIds = useMemo(() => {
@@ -274,6 +279,18 @@ export const SnippetReaderDrawer = () => {
     }
   }, []);
 
+  const handleFolderExport = useCallback((format: ExportFormat) => {
+    const items = folderSnippets.map((s) => ({
+      id: s.id,
+      title: s.title || t('common.untitled'),
+      content: s.content || '',
+      sourceUrl: s.source_url,
+      createdAt: s.created_at,
+      updatedAt: s.updated_at,
+    }));
+    exportItems(items, format);
+  }, [folderSnippets, exportItems, t]);
+
   const handleSelect = useCallback((snippet: Snippet) => {
     useAppStore.getState().openSnippetReaderDrawer(folderId, snippet.id);
   }, [folderId]);
@@ -368,14 +385,27 @@ export const SnippetReaderDrawer = () => {
               {folderSnippets.length} {t('snippets.items')}
             </span>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={closeSnippetReaderDrawer}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <SimpleTooltip content={t('export.exportFolder')}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                disabled={folderSnippets.length === 0}
+                onClick={() => openExportDialog(handleFolderExport)}
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </SimpleTooltip>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={closeSnippetReaderDrawer}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Scrollable Content */}

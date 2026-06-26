@@ -401,7 +401,27 @@
   "export": {
     "roleUser": "用戶",
     "roleModel": "模型",
-    "defaultFilename": "export"
+    "defaultFilename": "export",
+    "export": "匯出",
+    "exportAs": "匯出為...",
+    "exportAsText": "匯出為純文字",
+    "exportAsMarkdown": "匯出為 Markdown",
+    "exportAsJson": "匯出為 JSON",
+    "exportToObsidian": "在 Obsidian 中開啟",
+    "exportToNotion": "複製到 Notion",
+    "exported": "匯出成功",
+    "exportedCount": "已匯出 {{count}} 項",
+    "openedInObsidian": "已在 Obsidian 中開啟",
+    "openedInObsidianCount": "正在 Obsidian 中開啟 {{count}} 個筆記...",
+    "copiedForNotion": "已複製到剪貼簿（貼到 Notion）",
+    "noContent": "沒有可匯出的內容",
+    "noItems": "未選取任何項目",
+    "exportFolder": "匯出資料夾",
+    "descMarkdown": "下載為帶 frontmatter 的 .md 檔案",
+    "descText": "無格式純文字",
+    "descJson": "結構化資料格式",
+    "descObsidian": "直接在 Obsidian 中建立筆記",
+    "descNotion": "複製 Markdown 至剪貼簿以貼上"
   },
   "batch": {
     "deleteConfirmTitle": "刪除 {{count}} 個項目",

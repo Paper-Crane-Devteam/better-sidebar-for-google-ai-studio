@@ -9,11 +9,16 @@ import {
   StarOff,
   Trash2,
   ClipboardCopy,
+  Download,
+  FileCode,
+  MessageSquare,
+  Braces,
 } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import type { NodeApi } from '../../../../components/folder-tree/types';
 import type { FolderTreeNodeData } from '../../../../components/folder-tree/types';
 import type { MenuEntryDef } from '../../../../components/node-action-bar';
+import { ObsidianIcon, NotionIcon } from '../../../../features/export/icons';
 
 interface UseSnippetMenuItemsParams {
   node: NodeApi<FolderTreeNodeData>;
@@ -26,6 +31,7 @@ interface UseSnippetMenuItemsParams {
   onMoveTo?: () => void;
   onCopy: (e?: React.MouseEvent) => void;
   onEdit?: (e?: React.MouseEvent) => void;
+  onExport?: (format: 'markdown' | 'text' | 'json' | 'obsidian' | 'notion') => void;
 }
 
 export function useSnippetMenuItems({
@@ -39,6 +45,7 @@ export function useSnippetMenuItems({
   onMoveTo,
   onCopy,
   onEdit,
+  onExport,
 }: UseSnippetMenuItemsParams): MenuEntryDef[] {
   const { t } = useI18n();
   const isFile = node.data.type === 'file';
@@ -93,6 +100,56 @@ export function useSnippetMenuItems({
 
   if (isFile && (onToggleFavorite || onMoveTo)) {
     items.push({ type: 'separator', key: 'sep-organize' });
+  }
+
+  // Export submenu for files
+  if (isFile && onExport) {
+    items.push({
+      type: 'sub',
+      key: 'export',
+      icon: <Download className="h-4 w-4" />,
+      label: t('export.export'),
+      contentClassName: 'w-48',
+      children: [
+        {
+          type: 'item' as const,
+          key: 'export-text',
+          icon: <MessageSquare className="h-4 w-4" />,
+          label: t('export.exportAsText'),
+          onClick: () => onExport('text'),
+        },
+        {
+          type: 'item' as const,
+          key: 'export-md',
+          icon: <FileCode className="h-4 w-4" />,
+          label: t('export.exportAsMarkdown'),
+          onClick: () => onExport('markdown'),
+        },
+        {
+          type: 'item' as const,
+          key: 'export-json',
+          icon: <Braces className="h-4 w-4" />,
+          label: t('export.exportAsJson'),
+          onClick: () => onExport('json'),
+        },
+        { type: 'separator' as const, key: 'sep-export-apps' },
+        {
+          type: 'item' as const,
+          key: 'export-obsidian',
+          icon: <ObsidianIcon className="h-4 w-4" />,
+          label: t('export.exportToObsidian'),
+          onClick: () => onExport('obsidian'),
+        },
+        {
+          type: 'item' as const,
+          key: 'export-notion',
+          icon: <NotionIcon className="h-4 w-4" />,
+          label: t('export.exportToNotion'),
+          onClick: () => onExport('notion'),
+        },
+      ],
+    });
+    items.push({ type: 'separator', key: 'sep-export' });
   }
 
   if (isFolder) {

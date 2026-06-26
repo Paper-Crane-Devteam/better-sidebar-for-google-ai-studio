@@ -403,7 +403,27 @@
   "export": {
     "roleUser": "用户",
     "roleModel": "模型",
-    "defaultFilename": "export"
+    "defaultFilename": "export",
+    "export": "导出",
+    "exportAs": "导出为...",
+    "exportAsText": "导出为纯文本",
+    "exportAsMarkdown": "导出为 Markdown",
+    "exportAsJson": "导出为 JSON",
+    "exportToObsidian": "在 Obsidian 中打开",
+    "exportToNotion": "复制到 Notion",
+    "exported": "导出成功",
+    "exportedCount": "已导出 {{count}} 项",
+    "openedInObsidian": "已在 Obsidian 中打开",
+    "openedInObsidianCount": "正在 Obsidian 中打开 {{count}} 个笔记...",
+    "copiedForNotion": "已复制到剪贴板（粘贴到 Notion）",
+    "noContent": "没有可导出的内容",
+    "noItems": "未选择任何项目",
+    "exportFolder": "导出文件夹",
+    "descMarkdown": "下载为带 frontmatter 的 .md 文件",
+    "descText": "无格式的纯文本",
+    "descJson": "结构化数据格式",
+    "descObsidian": "直接在 Obsidian 中创建笔记",
+    "descNotion": "复制 Markdown 到剪贴板后粘贴"
   },
   "batch": {
     "deleteConfirmTitle": "删除 {{count}} 个项目",

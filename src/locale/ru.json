@@ -401,7 +401,27 @@
   "export": {
     "roleUser": "Пользователь",
     "roleModel": "Модель",
-    "defaultFilename": "export"
+    "defaultFilename": "export",
+    "export": "Экспорт",
+    "exportAs": "Экспортировать как...",
+    "exportAsText": "Экспортировать как текст",
+    "exportAsMarkdown": "Экспортировать как Markdown",
+    "exportAsJson": "Экспортировать как JSON",
+    "exportToObsidian": "Открыть в Obsidian",
+    "exportToNotion": "Копировать для Notion",
+    "exported": "Экспорт выполнен успешно",
+    "exportedCount": "Экспортировано {{count}} элементов",
+    "openedInObsidian": "Открыто в Obsidian",
+    "openedInObsidianCount": "Открытие {{count}} заметок в Obsidian...",
+    "copiedForNotion": "Скопировано в буфер обмена (вставьте в Notion)",
+    "noContent": "Нет содержимого для экспорта",
+    "noItems": "Элементы не выбраны",
+    "exportFolder": "Экспортировать папку",
+    "descMarkdown": "Скачать как .md файл с frontmatter",
+    "descText": "Обычный текст без форматирования",
+    "descJson": "Структурированный формат данных",
+    "descObsidian": "Создать заметку прямо в Obsidian",
+    "descNotion": "Скопировать markdown в буфер обмена для вставки"
   },
   "batch": {
     "deleteConfirmTitle": "Удалить {{count}} элементов",

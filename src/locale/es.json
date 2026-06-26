@@ -401,7 +401,27 @@
   "export": {
     "roleUser": "Usuario",
     "roleModel": "Modelo",
-    "defaultFilename": "export"
+    "defaultFilename": "export",
+    "export": "Exportar",
+    "exportAs": "Exportar como...",
+    "exportAsText": "Exportar como texto",
+    "exportAsMarkdown": "Exportar como Markdown",
+    "exportAsJson": "Exportar como JSON",
+    "exportToObsidian": "Abrir en Obsidian",
+    "exportToNotion": "Copiar para Notion",
+    "exported": "Exportado correctamente",
+    "exportedCount": "{{count}} elementos exportados",
+    "openedInObsidian": "Abierto en Obsidian",
+    "openedInObsidianCount": "Abriendo {{count}} notas en Obsidian...",
+    "copiedForNotion": "Copiado al portapapeles (pegar en Notion)",
+    "noContent": "No hay contenido para exportar",
+    "noItems": "No hay elementos seleccionados",
+    "exportFolder": "Exportar carpeta",
+    "descMarkdown": "Descargar como archivo .md con frontmatter",
+    "descText": "Texto sin formato",
+    "descJson": "Formato de datos estructurado",
+    "descObsidian": "Crear nota directamente en Obsidian",
+    "descNotion": "Copiar markdown al portapapeles para pegar"
   },
   "batch": {
     "deleteConfirmTitle": "Eliminar {{count}} Elementos",

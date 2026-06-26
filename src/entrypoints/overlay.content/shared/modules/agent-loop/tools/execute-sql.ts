@@ -22,6 +22,14 @@ const SELECT_PATTERN = /^\s*SELECT\b/i;
 /** Maximum rows returned for SELECT queries */
 const MAX_RESULT_ROWS = 1000;
 
+/** Placeholder that AI uses instead of generating random UUIDs */
+const UUID_PLACEHOLDER = /__NEW_UUID__/g;
+
+/** Replace all __NEW_UUID__ placeholders with real crypto UUIDs */
+function hydrateUuids(sql: string): string {
+  return sql.replace(UUID_PLACEHOLDER, () => crypto.randomUUID());
+}
+
 export interface ExecuteSqlParams {
   query: string;
 }
@@ -79,9 +87,12 @@ export async function executeSql(params: ExecuteSqlParams): Promise<string> {
     }
   }
 
-  // 4. Execute
+  // 4. Hydrate UUID placeholders
+  const hydratedQuery = hydrateUuids(query);
+
+  // 5. Execute
   try {
-    const result = await executeSqlViaBackground(query);
+    const result = await executeSqlViaBackground(hydratedQuery);
 
     if (isSelect) {
       const rows = Array.isArray(result) ? result : [];

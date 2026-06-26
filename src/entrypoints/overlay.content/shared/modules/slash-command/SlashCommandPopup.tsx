@@ -4,7 +4,7 @@ import { cn } from '@/shared/lib/utils/utils';
 import type { SlashCommandMatch } from './types';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { PromptIconDisplay } from '@/entrypoints/overlay.content/shared/modules/prompts/lib/prompt-icons';
-import { PopupFooterHints } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
+import { PopupFooterHints } from '@/entrypoints/overlay.content/shared/features/trigger-popup';
 
 interface SlashCommandPopupProps {
   matches: SlashCommandMatch[];

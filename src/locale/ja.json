@@ -402,7 +402,27 @@
   "export": {
     "roleUser": "ユーザー",
     "roleModel": "モデル",
-    "defaultFilename": "export"
+    "defaultFilename": "export",
+    "export": "エクスポート",
+    "exportAs": "形式を選んでエクスポート...",
+    "exportAsText": "テキストとしてエクスポート",
+    "exportAsMarkdown": "Markdownとしてエクスポート",
+    "exportAsJson": "JSONとしてエクスポート",
+    "exportToObsidian": "Obsidianで開く",
+    "exportToNotion": "Notion用にコピー",
+    "exported": "エクスポート成功",
+    "exportedCount": "{{count}} 件をエクスポートしました",
+    "openedInObsidian": "Obsidianで開きました",
+    "openedInObsidianCount": "Obsidianで {{count}} 件のノートを開いています...",
+    "copiedForNotion": "クリップボードにコピーしました（Notionに貼り付け）",
+    "noContent": "エクスポートするコンテンツがありません",
+    "noItems": "項目が選択されていません",
+    "exportFolder": "フォルダをエクスポート",
+    "descMarkdown": "frontmatter 付きの .md ファイルとしてダウンロード",
+    "descText": "書式なしのプレーンテキスト",
+    "descJson": "構造化データ形式",
+    "descObsidian": "Obsidian にノートを直接作成",
+    "descNotion": "Markdown をクリップボードにコピーして貼り付け"
   },
   "batch": {
     "deleteConfirmTitle": "{{count}} 個の項目を削除",

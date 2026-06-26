@@ -6,6 +6,7 @@ import { renderMenuItems } from '@/entrypoints/overlay.content/shared/components
 import { useSnippetMenuItems } from './useSnippetMenuItems';
 import type { NodeApi } from '../../../../components/folder-tree/types';
 import type { FolderTreeNodeData } from '../../../../components/folder-tree/types';
+import type { ExportFormat } from '../../../../features/export/types';
 
 interface NodeContextMenuProps {
   node: NodeApi<FolderTreeNodeData>;
@@ -18,6 +19,7 @@ interface NodeContextMenuProps {
   onToggleFavorite?: (id: string, isFav: boolean) => void;
   onTogglePin?: (id: string, isPinned: boolean) => void;
   onMoveTo?: () => void;
+  onExport?: (format: ExportFormat) => void;
 }
 
 export const NodeContextMenu = ({
@@ -31,6 +33,7 @@ export const NodeContextMenu = ({
   onToggleFavorite,
   onTogglePin,
   onMoveTo,
+  onExport,
 }: NodeContextMenuProps) => {
   const shouldPreventRef = React.useRef(false);
 
@@ -45,6 +48,7 @@ export const NodeContextMenu = ({
     onMoveTo,
     onCopy,
     onEdit: onEditSnippet,
+    onExport,
   });
 
   return (

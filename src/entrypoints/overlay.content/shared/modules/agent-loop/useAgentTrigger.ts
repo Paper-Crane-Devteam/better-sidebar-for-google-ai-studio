@@ -5,8 +5,8 @@
 
 import type { AgentTriggerState, BuiltInPrompt } from './types';
 import { getBuiltInPrompts } from './prompts/built-in-registry';
-import { useTriggerPopup } from '../trigger-popup';
-import type { TriggerPopupMatch } from '../trigger-popup';
+import { useTriggerPopup } from '../../features/trigger-popup';
+import type { TriggerPopupMatch } from '../../features/trigger-popup';
 
 /**
  * @param isSlashCommandActive - When true, `>` trigger is suppressed

@@ -34,8 +34,8 @@ import {
   insertCapsule,
   expandAllCapsules,
   CAPSULE_CLASS,
-} from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
-import type { TriggerPopupItem, CapsuleClickInfo } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
+} from '@/entrypoints/overlay.content/shared/features/trigger-popup';
+import type { TriggerPopupItem, CapsuleClickInfo } from '@/entrypoints/overlay.content/shared/features/trigger-popup';
 import { installSendButtonInterceptor } from '@/entrypoints/overlay.content/shared/lib/quill-editor';
 
 export const AgentLoopFeature: React.FC = () => {

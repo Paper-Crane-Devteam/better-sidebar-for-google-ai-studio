@@ -23,9 +23,11 @@ import { SnippetMoveDialog } from '../SnippetMoveDialog';
 import { NodeActionBar } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import type { ActionButtonDef } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import { useSnippetMenuItems } from './useSnippetMenuItems';
+import { useExport } from '../../../../features/export';
 import { snippetDragBus } from '../../snippet-drag-bus';
 import type { NodeRendererProps } from '../../../../components/folder-tree/types';
 import type { FolderTreeNodeData } from '../../../../components/folder-tree/types';
+import type { ExportFormat } from '../../../../features/export/types';
 
 interface SnippetNodeProps extends NodeRendererProps<FolderTreeNodeData> {
   onPreview?: (snippet: any) => void;
@@ -51,6 +53,7 @@ export const SnippetNode = ({
     moveSnippetItem,
   } = useAppStore();
   const { handleDelete: deleteHandler } = useDeleteHandler();
+  const { exportItem } = useExport();
   const [newName, setNewName] = useState(node.data.name);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -136,6 +139,21 @@ export const SnippetNode = ({
     }
   };
 
+  const handleExport = (format: ExportFormat) => {
+    const snippet = node.data.data;
+    exportItem(
+      {
+        id: snippet.id,
+        title: snippet.title || t('common.untitled'),
+        content: snippet.content || '',
+        sourceUrl: snippet.source_url,
+        createdAt: snippet.created_at,
+        updatedAt: snippet.updated_at,
+      },
+      format,
+    );
+  };
+
   const menuItems = useSnippetMenuItems({
     node,
     isPinned: !!node.data.data?.is_pinned,
@@ -149,6 +167,7 @@ export const SnippetNode = ({
     onMoveTo: handleMoveTo,
     onCopy: handleCopy,
     onEdit: onEdit ? handleEdit : undefined,
+    onExport: isFile ? handleExport : undefined,
   });
 
   const isMenuActive = isContextMenuOpen || isDropdownOpen;
@@ -296,6 +315,7 @@ export const SnippetNode = ({
             useAppStore.getState().togglePin(id, 'snippet_folders', isPinned)
           }
           onMoveTo={handleMoveTo}
+          onExport={isFile ? handleExport : undefined}
         />
       )}
     </ExclusiveContextMenu>

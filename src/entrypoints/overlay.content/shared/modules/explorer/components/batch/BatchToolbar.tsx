@@ -1,12 +1,18 @@
-import React from 'react';
 import { Button } from '@/shared/components/ui/button';
-import { Trash2, FolderInput, Tag as TagIcon, CheckSquare, X } from 'lucide-react';
+import { Trash2, FolderInput, Tag as TagIcon, CheckSquare, X, Download } from 'lucide-react';
 import { useAppStore } from '@/shared/lib/store';
 import { modal } from '@/shared/lib/modal';
 import { MoveItemsDialog } from './MoveItemsDialog';
 import { AddTagsDialog } from './AddTagsDialog';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
+import { openExportDialog } from '../../../../features/export/ExportFormatDialog';
+import { useExport } from '../../../../features/export';
+import {
+  fetchMessagesForExport,
+  buildExportMarkdown,
+} from '../../lib/exportConversation';
+import type { ExportFormat, ExportItem } from '../../../../features/export/types';
 
 interface BatchToolbarProps {
   onSelectAll: () => void;
@@ -16,6 +22,11 @@ export const BatchToolbar = ({ onSelectAll }: BatchToolbarProps) => {
   const { t } = useI18n();
   const { ui, setExplorerBatchMode, setExplorerBatchSelection, deleteItems } = useAppStore();
   const { selectedIds } = ui.explorer.batch;
+  const { exportItems } = useExport({
+    multiFileZip: true,
+    obsidianFolder: 'Conversations',
+    batchPrefix: 'conversations',
+  });
 
   const handleDelete = async () => {
     const state = useAppStore.getState();
@@ -101,6 +112,30 @@ export const BatchToolbar = ({ onSelectAll }: BatchToolbarProps) => {
     }
   };
 
+  const handleExport = async (format: ExportFormat) => {
+    if (selectedIds.length === 0) return;
+    const state = useAppStore.getState();
+    const conversationIds = selectedIds.filter(id =>
+      state.conversations.some(c => c.id === id),
+    );
+    if (conversationIds.length === 0) return;
+
+    // Build ExportItem[] from conversations by fetching their messages
+    const items: ExportItem[] = [];
+    for (const id of conversationIds) {
+      const messages = await fetchMessagesForExport(id);
+      if (messages?.length) {
+        const convo = state.conversations.find(c => c.id === id);
+        const title = convo?.title || id;
+        const md = buildExportMarkdown(messages);
+        items.push({ id, title, content: md });
+      }
+    }
+    if (items.length === 0) return;
+
+    exportItems(items, format);
+  };
+
   return (
     <div className="px-3 py-1.5 flex items-center justify-between border-t bg-muted/30">
       <span className="text-xs text-muted-foreground">
@@ -132,6 +167,18 @@ export const BatchToolbar = ({ onSelectAll }: BatchToolbarProps) => {
         <SimpleTooltip content={t('batch.addTag')}>
           <Button variant="ghost" size="icon" className="h-7 w-7" disabled={selectedIds.length === 0} onClick={handleTag}>
             <TagIcon className="h-4 w-4" />
+          </Button>
+        </SimpleTooltip>
+
+        <SimpleTooltip content={t('export.export')}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            disabled={selectedIds.length === 0}
+            onClick={() => openExportDialog(handleExport)}
+          >
+            <Download className="h-4 w-4" />
           </Button>
         </SimpleTooltip>
 

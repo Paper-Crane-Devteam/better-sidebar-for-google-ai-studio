@@ -5,7 +5,7 @@
 
 import React from 'react';
 import type { BuiltInPrompt } from './types';
-import { PopupFooterHints } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
+import { PopupFooterHints } from '@/entrypoints/overlay.content/shared/features/trigger-popup';
 
 interface AgentCommandPopupProps {
   matches: BuiltInPrompt[];

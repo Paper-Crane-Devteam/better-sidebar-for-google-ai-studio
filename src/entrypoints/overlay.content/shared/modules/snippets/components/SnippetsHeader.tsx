@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import {
@@ -14,6 +13,7 @@ import {
   Trash2,
   FolderInput,
   CheckSquare,
+  Download,
 } from 'lucide-react';
 import { SidePanelMenu } from '@/entrypoints/overlay.content/shared/components/menu/SidePanelMenu';
 import { FilterActions } from '../../../components/FilterActions';
@@ -24,6 +24,9 @@ import { useModalStore } from '@/shared/lib/modal';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { modal } from '@/shared/lib/modal';
 import { SnippetMoveDialog } from './SnippetMoveDialog';
+import { useExport } from '../../../features/export';
+import { openExportDialog } from '../../../features/export/ExportFormatDialog';
+import type { ExportFormat } from '../../../features/export/types';
 import type { FilterState, ExplorerTypeFilter } from '../../../types/filter';
 
 interface SnippetsHeaderProps {
@@ -59,6 +62,7 @@ export const SnippetsHeader = ({
   const { sortOrder } = ui.snippets;
   const { isBatchMode, selectedIds } = ui.snippets.batch;
   const { gdriveSyncing } = usePegasusStore();
+  const { exportItems } = useExport({ batchPrefix: 'snippets' });
 
   const handleSort = () => {
     const newOrder = sortOrder === 'alpha' ? 'date' : 'alpha';
@@ -111,6 +115,23 @@ export const SnippetsHeader = ({
     }
   };
 
+  const handleBatchExport = (format: ExportFormat) => {
+    if (selectedIds.length === 0) return;
+    const state = useAppStore.getState();
+    const items = selectedIds
+      .map((id) => state.snippets.find((s) => s.id === id))
+      .filter(Boolean)
+      .map((s) => ({
+        id: s!.id,
+        title: s!.title || t('common.untitled'),
+        content: s!.content || '',
+        sourceUrl: s!.source_url,
+        createdAt: s!.created_at,
+        updatedAt: s!.updated_at,
+      }));
+    exportItems(items, format);
+  };
+
   return (
     <div className="flex flex-col border-b bg-background">
       {/* Row 1: Title + actions */}
@@ -148,14 +169,14 @@ export const SnippetsHeader = ({
 
           <div className="h-4 w-[1px] bg-border mx-1" />
 
-          <SimpleTooltip content={t('menu.collapseAll')}>
+          <SimpleTooltip content={t('batch.batchSelection')}>
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
-              onClick={onCollapseAll}
+              className={`h-7 w-7 ${isBatchMode ? 'bg-primary/15 text-primary' : ''}`}
+              onClick={() => setSnippetsBatchMode(!isBatchMode)}
             >
-              <ListCollapse className="h-4 w-4" />
+              <ListChecks className="h-4 w-4" />
             </Button>
           </SimpleTooltip>
 
@@ -180,14 +201,14 @@ export const SnippetsHeader = ({
             </Button>
           </SimpleTooltip>
 
-          <SimpleTooltip content={t('batch.batchSelection')}>
+          <SimpleTooltip content={t('menu.collapseAll')}>
             <Button
               variant="ghost"
               size="icon"
-              className={`h-7 w-7 ${isBatchMode ? 'bg-primary/15 text-primary' : ''}`}
-              onClick={() => setSnippetsBatchMode(!isBatchMode)}
+              className="h-7 w-7"
+              onClick={onCollapseAll}
             >
-              <ListChecks className="h-4 w-4" />
+              <ListCollapse className="h-4 w-4" />
             </Button>
           </SimpleTooltip>
 
@@ -265,6 +286,18 @@ export const SnippetsHeader = ({
                 onClick={handleBatchMove}
               >
                 <FolderInput className="h-4 w-4" />
+              </Button>
+            </SimpleTooltip>
+
+            <SimpleTooltip content={t('export.export')}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                disabled={selectedIds.length === 0}
+                onClick={() => openExportDialog(handleBatchExport)}
+              >
+                <Download className="h-4 w-4" />
               </Button>
             </SimpleTooltip>
 

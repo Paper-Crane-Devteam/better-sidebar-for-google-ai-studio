@@ -6,8 +6,8 @@
 import { useAppStore } from '@/shared/lib/store/store-impl';
 import type { Prompt } from '@/shared/types/db';
 import type { SlashCommandState, SlashCommandMatch } from './types';
-import { useTriggerPopup } from '../trigger-popup';
-import type { TriggerPopupMatch } from '../trigger-popup';
+import { useTriggerPopup } from '../../features/trigger-popup';
+import type { TriggerPopupMatch } from '../../features/trigger-popup';
 
 export function useSlashCommand() {
   const prompts = useAppStore((s) => s.prompts);

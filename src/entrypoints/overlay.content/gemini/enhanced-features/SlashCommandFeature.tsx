@@ -16,8 +16,8 @@ import type { Prompt } from '@/shared/types/db';
 import {
   useEditorIntegration,
   insertCapsule,
-} from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
-import type { TriggerPopupItem, CapsuleClickInfo } from '@/entrypoints/overlay.content/shared/modules/trigger-popup';
+} from '@/entrypoints/overlay.content/shared/features/trigger-popup';
+import type { TriggerPopupItem, CapsuleClickInfo } from '@/entrypoints/overlay.content/shared/features/trigger-popup';
 import { useModalStore } from '@/shared/lib/modal';
 
 function getEditor(): HTMLElement | null {
