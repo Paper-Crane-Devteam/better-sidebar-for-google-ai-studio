@@ -128,7 +128,14 @@ export const BatchToolbar = ({ onSelectAll }: BatchToolbarProps) => {
         const convo = state.conversations.find(c => c.id === id);
         const title = convo?.title || id;
         const md = buildExportMarkdown(messages);
-        items.push({ id, title, content: md });
+        // Get tags for this conversation
+        const tagIds = state.conversationTags
+          .filter(ct => ct.conversation_id === id)
+          .map(ct => ct.tag_id);
+        const tags = tagIds.length > 0
+          ? state.tags.filter(t => tagIds.includes(t.id)).map(t => t.name)
+          : undefined;
+        items.push({ id, title, content: md, tags });
       }
     }
     if (items.length === 0) return;

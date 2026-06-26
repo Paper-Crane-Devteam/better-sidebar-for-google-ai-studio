@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '../../components/ui/button';
-import { X, Settings, Heart, Info, LayoutTemplate, Database, SlidersHorizontal, Palette, Sparkles, Keyboard } from 'lucide-react';
+import { X, Settings, Heart, Info, LayoutTemplate, Database, SlidersHorizontal, Palette, Sparkles, Keyboard, Plug } from 'lucide-react';
 import { GeneralSettings } from './modules/GeneralSettings';
 import { ThemeSettings } from './modules/ThemeSettings';
 import { ExplorerSettings } from './modules/ExplorerSettings';
@@ -10,6 +10,7 @@ import { SponsorSettings } from './modules/SponsorSettings';
 import { SupportPackSettings } from './modules/SupportPackSettings';
 import { PlatformSettings } from './modules/PlatformSettings';
 import { HotkeySettings } from './modules/HotkeySettings';
+import { IntegrationsSettings } from './modules/IntegrationsSettings';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 import { useBadgeStore } from '@/shared/lib/badge-store';
@@ -20,7 +21,7 @@ interface SettingsModalProps {
     onOpenChange: (open: boolean) => void;
 }
 
-type Section = 'general' | 'theme' | 'explorer' | 'data' | 'hotkeys' | 'platform' | 'supportpack' | 'sponsor' | 'about';
+type Section = 'general' | 'theme' | 'explorer' | 'data' | 'hotkeys' | 'platform' | 'integrations' | 'supportpack' | 'sponsor' | 'about';
 
 /**
  * NavButton automatically shows a red dot if `settings.{id}` is an active badge.
@@ -86,6 +87,8 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
                 return <DataSettings />;
             case 'hotkeys':
                 return <HotkeySettings />;
+            case 'integrations':
+                return <IntegrationsSettings />;
             case 'supportpack':
                 return <SupportPackSettings />;
             case 'sponsor':
@@ -124,6 +127,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
                     )}
                     <NavButton id="data" label={t('settings.dataStorage')} icon={Database} activeSection={activeSection} setActiveSection={setActiveSection} />
                     <NavButton id="hotkeys" label={t('hotkeys.title')} icon={Keyboard} activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <NavButton id="integrations" label={t('integrations.title')} icon={Plug} activeSection={activeSection} setActiveSection={setActiveSection} />
                     
                     <div className="h-px bg-border my-2 mx-2" />
                     

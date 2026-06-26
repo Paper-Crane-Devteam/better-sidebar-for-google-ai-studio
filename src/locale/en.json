@@ -423,7 +423,29 @@
     "descText": "Plain text without formatting",
     "descJson": "Structured data format",
     "descObsidian": "Create note directly in Obsidian",
-    "descNotion": "Copy markdown to clipboard for pasting"
+    "descNotion": "Export directly to Notion page"
+  },
+  "integrations": {
+    "title": "Integrations",
+    "notionDescription": "Connect to Notion to export snippets and conversations directly as pages.",
+    "notionApiKey": "API Key (Integration Token)",
+    "notionApiKeyHint": "Create an internal integration at",
+    "notionParentPage": "Target Page",
+    "notionParentPageHint": "Select a page where exported content will be created as sub-pages. The integration must be connected to that page.",
+    "searchPages": "Search pages...",
+    "filterPages": "Filter pages...",
+    "refresh": "Refresh",
+    "selectPage": "Select a page...",
+    "noPagesFound": "No pages found. Make sure the integration is connected to at least one page in Notion.",
+    "connected": "Connected",
+    "connectionFailed": "Connection failed",
+    "disconnect": "Disconnect",
+    "notionNotConfigured": "Notion not configured. Set up in Settings → Integrations.",
+    "exportingToNotion": "Exporting to Notion...",
+    "exportedToNotion": "Exported to Notion",
+    "exportedToNotionCount": "Exported {{count}} pages to Notion",
+    "notionProgress": "Exporting to Notion ({{current}}/{{total}})...",
+    "notionCancelled": "Export cancelled ({{count}} pages exported)"
   },
   "batch": {
     "deleteConfirmTitle": "Delete {{count}} Items",

@@ -421,7 +421,29 @@
     "descText": "無格式純文字",
     "descJson": "結構化資料格式",
     "descObsidian": "直接在 Obsidian 中建立筆記",
-    "descNotion": "複製 Markdown 至剪貼簿以貼上"
+    "descNotion": "直接匯出到 Notion 頁面"
+  },
+  "integrations": {
+    "title": "整合",
+    "notionDescription": "連接 Notion，將片段和對話直接匯出為頁面。",
+    "notionApiKey": "API Key（Integration Token）",
+    "notionApiKeyHint": "在以下網址建立內部整合：",
+    "notionParentPage": "目標頁面",
+    "notionParentPageHint": "選擇一個頁面，匯出的內容將作為子頁面建立。整合必須已連接到該頁面。",
+    "searchPages": "搜尋頁面...",
+    "filterPages": "篩選頁面...",
+    "refresh": "重新整理",
+    "selectPage": "選擇一個頁面...",
+    "noPagesFound": "未找到頁面。請確保 Integration 已連接到 Notion 中的至少一個頁面。",
+    "connected": "已連線",
+    "connectionFailed": "連線失敗",
+    "disconnect": "中斷連線",
+    "notionNotConfigured": "Notion 未設定。請前往 設定 → 整合 進行設定。",
+    "exportingToNotion": "正在匯出到 Notion...",
+    "exportedToNotion": "已匯出到 Notion",
+    "exportedToNotionCount": "已匯出 {{count}} 個頁面到 Notion",
+    "notionProgress": "正在匯出到 Notion（{{current}}/{{total}}）...",
+    "notionCancelled": "已取消匯出（已匯出 {{count}} 個頁面）"
   },
   "batch": {
     "deleteConfirmTitle": "刪除 {{count}} 個項目",

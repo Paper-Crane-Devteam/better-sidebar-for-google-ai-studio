@@ -421,7 +421,29 @@
     "descText": "Обычный текст без форматирования",
     "descJson": "Структурированный формат данных",
     "descObsidian": "Создать заметку прямо в Obsidian",
-    "descNotion": "Скопировать markdown в буфер обмена для вставки"
+    "descNotion": "Экспортировать напрямую на страницу Notion"
+  },
+  "integrations": {
+    "title": "Интеграции",
+    "notionDescription": "Подключитесь к Notion для экспорта фрагментов и диалогов непосредственно как страницы.",
+    "notionApiKey": "API-ключ (токен интеграции)",
+    "notionApiKeyHint": "Создайте внутреннюю интеграцию на",
+    "notionParentPage": "Целевая страница",
+    "notionParentPageHint": "Выберите страницу, на которой экспортируемый контент будет создан как подстраницы. Интеграция должна быть подключена к этой странице.",
+    "searchPages": "Поиск страниц...",
+    "filterPages": "Фильтр страниц...",
+    "refresh": "Обновить",
+    "selectPage": "Выберите страницу...",
+    "noPagesFound": "Страницы не найдены. Убедитесь, что интеграция подключена хотя бы к одной странице в Notion.",
+    "connected": "Подключено",
+    "connectionFailed": "Ошибка подключения",
+    "disconnect": "Отключить",
+    "notionNotConfigured": "Notion не настроен. Настройте в Настройки → Интеграции.",
+    "exportingToNotion": "Экспорт в Notion...",
+    "exportedToNotion": "Экспортировано в Notion",
+    "exportedToNotionCount": "Экспортировано {{count}} страниц в Notion",
+    "notionProgress": "Экспорт в Notion ({{current}}/{{total}})...",
+    "notionCancelled": "Экспорт отменён (экспортировано {{count}} страниц)"
   },
   "batch": {
     "deleteConfirmTitle": "Удалить {{count}} элементов",

@@ -421,7 +421,29 @@
     "descText": "Texto simples sem formatação",
     "descJson": "Formato de dados estruturado",
     "descObsidian": "Criar nota diretamente no Obsidian",
-    "descNotion": "Copiar markdown para a área de transferência"
+    "descNotion": "Exportar diretamente para uma página do Notion"
+  },
+  "integrations": {
+    "title": "Integrações",
+    "notionDescription": "Conecte-se ao Notion para exportar trechos e conversas diretamente como páginas.",
+    "notionApiKey": "API Key (Token de integração)",
+    "notionApiKeyHint": "Crie uma integração interna em",
+    "notionParentPage": "Página de destino",
+    "notionParentPageHint": "Selecione uma página onde o conteúdo exportado será criado como subpáginas. A integração deve estar conectada a essa página.",
+    "searchPages": "Pesquisar páginas...",
+    "filterPages": "Filtrar páginas...",
+    "refresh": "Atualizar",
+    "selectPage": "Selecione uma página...",
+    "noPagesFound": "Nenhuma página encontrada. Certifique-se de que a integração esteja conectada a pelo menos uma página no Notion.",
+    "connected": "Conectado",
+    "connectionFailed": "Falha na conexão",
+    "disconnect": "Desconectar",
+    "notionNotConfigured": "Notion não configurado. Configure em Configurações → Integrações.",
+    "exportingToNotion": "Exportando para o Notion...",
+    "exportedToNotion": "Exportado para o Notion",
+    "exportedToNotionCount": "{{count}} páginas exportadas para o Notion",
+    "notionProgress": "Exportando para o Notion ({{current}}/{{total}})...",
+    "notionCancelled": "Exportação cancelada ({{count}} páginas exportadas)"
   },
   "batch": {
     "deleteConfirmTitle": "Excluir {{count}} Itens",

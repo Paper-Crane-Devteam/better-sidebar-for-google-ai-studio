@@ -9,6 +9,7 @@ export function safeFilename(name: string, maxLen = 80): string {
 }
 
 /** Build YAML frontmatter for Obsidian/markdown export. */
+/** Build YAML frontmatter for Obsidian/markdown export. */
 export function buildFrontmatter(item: ExportItem): string {
   const lines: string[] = ['---'];
 
@@ -26,7 +27,10 @@ export function buildFrontmatter(item: ExportItem): string {
     lines.push(`updated: ${new Date(item.updatedAt * 1000).toISOString()}`);
   }
 
-  lines.push(`tags: [snippet]`);
+  if (item.tags && item.tags.length > 0) {
+    lines.push(`tags: [${item.tags.join(', ')}]`);
+  }
+
   lines.push('---');
   lines.push('');
 

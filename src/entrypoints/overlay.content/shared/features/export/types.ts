@@ -15,4 +15,11 @@ export interface ExportItem {
   updatedAt?: number;
   /** Optional folder path segments for nested export */
   folderPath?: string[];
+  /** Optional tags for frontmatter */
+  tags?: string[];
+}
+
+export interface ExportItemsOptions {
+  /** Custom batch name for the combined file/note (e.g. folder name). Falls back to batchPrefix. */
+  batchName?: string;
 }

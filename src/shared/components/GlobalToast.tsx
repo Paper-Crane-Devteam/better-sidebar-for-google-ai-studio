@@ -43,6 +43,14 @@ export const GlobalToast = () => {
         >
           {icons[toast.type]}
           <div className="flex-1 text-sm font-medium">{toast.message}</div>
+          {toast.action && (
+            <button
+              onClick={() => toast.action!.onClick()}
+              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {toast.action.label}
+            </button>
+          )}
           <button
             onClick={() => removeToast(toast.id)}
             className="text-muted-foreground hover:text-foreground transition-colors"

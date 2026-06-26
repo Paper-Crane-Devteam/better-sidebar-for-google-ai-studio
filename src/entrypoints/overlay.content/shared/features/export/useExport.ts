@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { toast } from '@/shared/lib/toast';
 import { useI18n } from '@/shared/hooks/useI18n';
-import type { ExportFormat, ExportItem } from './types';
+import type { ExportFormat, ExportItem, ExportItemsOptions } from './types';
 import {
   safeFilename,
   buildExportText,
@@ -10,6 +10,8 @@ import {
   downloadBlob,
 } from './utils';
 import { openInObsidian } from './obsidian';
+import { exportToNotion, createNotionPage } from './notion';
+import { useSettingsStore } from '@/shared/lib/settings-store';
 
 interface UseExportOptions {
   /** Obsidian vault name (optional, uses last-opened vault if omitted) */
@@ -80,9 +82,19 @@ export function useExport(options: UseExportOptions = {}) {
           break;
         }
         case 'notion': {
-          const md = item.content || '';
-          navigator.clipboard.writeText(md);
-          toast.success(t('export.copiedForNotion'));
+          const { integrations } = useSettingsStore.getState();
+          if (!integrations.notion.apiKey || !integrations.notion.parentPageId) {
+            toast.error(t('integrations.notionNotConfigured'));
+            return;
+          }
+          toast.success(t('integrations.exportingToNotion'));
+          void createNotionPage(item).then((result) => {
+            if (result.ok) {
+              toast.success(t('integrations.exportedToNotion'));
+            } else {
+              toast.error(result.error || 'Export failed');
+            }
+          });
           break;
         }
       }
@@ -94,19 +106,19 @@ export function useExport(options: UseExportOptions = {}) {
    * Export multiple items as a zip (one file per item).
    */
   const exportItemsAsZip = useCallback(
-    async (items: ExportItem[], format: 'text' | 'markdown' | 'json') => {
+    async (items: ExportItem[], format: 'text' | 'markdown' | 'json', zipName: string) => {
       const { zipSync, strToU8 } = await import('fflate');
       const files: Record<string, Uint8Array> = {};
       const usedNames = new Set<string>();
 
       for (const item of items) {
-        let name = safeFilename(item.title);
-        if (usedNames.has(name)) {
+        let fname = safeFilename(item.title);
+        if (usedNames.has(fname)) {
           let counter = 2;
-          while (usedNames.has(`${name} (${counter})`)) counter++;
-          name = `${name} (${counter})`;
+          while (usedNames.has(`${fname} (${counter})`)) counter++;
+          fname = `${fname} (${counter})`;
         }
-        usedNames.add(name);
+        usedNames.add(fname);
 
         let content: string;
         let ext: string;
@@ -120,24 +132,22 @@ export function useExport(options: UseExportOptions = {}) {
           content = buildExportJson([item]);
           ext = 'json';
         }
-        files[`${name}.${ext}`] = strToU8(content);
+        files[`${fname}.${ext}`] = strToU8(content);
       }
 
       const zipData = zipSync(files, { level: 6 });
       const blob = new Blob([zipData], { type: 'application/zip' });
-      downloadBlob(blob, `${batchPrefix}-${items.length}.zip`);
+      downloadBlob(blob, `${zipName}.zip`);
       toast.success(t('export.exportedCount', { count: items.length }));
     },
-    [t, batchPrefix],
+    [t],
   );
 
   /**
    * Export multiple items merged into a single file.
    */
   const exportItemsMerged = useCallback(
-    (items: ExportItem[], format: 'text' | 'markdown' | 'json') => {
-      const filename = `${batchPrefix}-${items.length}`;
-
+    (items: ExportItem[], format: 'text' | 'markdown' | 'json', filename: string) => {
       if (format === 'text') {
         const text = items
           .map((item) => `# ${item.title}\n\n${buildExportText(item)}`)
@@ -159,14 +169,14 @@ export function useExport(options: UseExportOptions = {}) {
       }
       toast.success(t('export.exportedCount', { count: items.length }));
     },
-    [t, batchPrefix],
+    [t],
   );
 
   /**
    * Export multiple items in the specified format.
    */
   const exportItems = useCallback(
-    (items: ExportItem[], format: ExportFormat) => {
+    (items: ExportItem[], format: ExportFormat, options?: ExportItemsOptions) => {
       if (items.length === 0) {
         toast.error(t('export.noItems'));
         return;
@@ -178,14 +188,18 @@ export function useExport(options: UseExportOptions = {}) {
         return;
       }
 
+      const name = options?.batchName || batchPrefix;
+      const timestamp = new Date().toISOString().slice(0, 10);
+
       switch (format) {
         case 'text':
         case 'markdown':
         case 'json': {
+          const filename = `${safeFilename(name)}-${timestamp}`;
           if (multiFileZip) {
-            void exportItemsAsZip(items, format);
+            void exportItemsAsZip(items, format, filename);
           } else {
-            exportItemsMerged(items, format);
+            exportItemsMerged(items, format, filename);
           }
           break;
         }
@@ -193,7 +207,7 @@ export function useExport(options: UseExportOptions = {}) {
           // Always combine into a single Obsidian note
           const combined: ExportItem = {
             id: 'batch-export',
-            title: `${batchPrefix} (${items.length})`,
+            title: name,
             content: items
               .map((item) => `## ${item.title}\n\n${item.content || ''}`)
               .join('\n\n---\n\n'),
@@ -204,11 +218,48 @@ export function useExport(options: UseExportOptions = {}) {
           break;
         }
         case 'notion': {
-          const md = items
-            .map((item) => `# ${item.title}\n\n${item.content || ''}`)
-            .join('\n\n---\n\n');
-          navigator.clipboard.writeText(md);
-          toast.success(t('export.copiedForNotion'));
+          const { integrations } = useSettingsStore.getState();
+          if (!integrations.notion.apiKey || !integrations.notion.parentPageId) {
+            toast.error(t('integrations.notionNotConfigured'));
+            return;
+          }
+
+          // For 2+ items, show progress toast with cancel button
+          if (items.length > 2) {
+            let cancelled = false;
+            const toastId = toast.withAction(
+              t('integrations.notionProgress', { current: 0, total: items.length }),
+              'info',
+              { label: t('common.cancel'), onClick: () => { cancelled = true; } },
+            );
+
+            void exportToNotion(items, {
+              onProgress: (completed, total) => {
+                toast.update(toastId, {
+                  message: t('integrations.notionProgress', { current: completed, total }),
+                });
+              },
+              shouldCancel: () => cancelled,
+            }).then((result) => {
+              toast.dismiss(toastId);
+              if (result.cancelled) {
+                toast.info(t('integrations.notionCancelled', { count: result.count }));
+              } else if (result.ok) {
+                toast.success(t('integrations.exportedToNotionCount', { count: result.count }));
+              } else {
+                toast.error(result.error || 'Export failed');
+              }
+            });
+          } else {
+            toast.info(t('integrations.exportingToNotion'));
+            void exportToNotion(items).then((result) => {
+              if (result.ok) {
+                toast.success(t('integrations.exportedToNotionCount', { count: result.count }));
+              } else {
+                toast.error(result.error || 'Export failed');
+              }
+            });
+          }
           break;
         }
       }

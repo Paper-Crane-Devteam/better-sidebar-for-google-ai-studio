@@ -288,8 +288,8 @@ export const SnippetReaderDrawer = () => {
       createdAt: s.created_at,
       updatedAt: s.updated_at,
     }));
-    exportItems(items, format);
-  }, [folderSnippets, exportItems, t]);
+    exportItems(items, format, { batchName: folderName });
+  }, [folderSnippets, exportItems, t, folderName]);
 
   const handleSelect = useCallback((snippet: Snippet) => {
     useAppStore.getState().openSnippetReaderDrawer(folderId, snippet.id);

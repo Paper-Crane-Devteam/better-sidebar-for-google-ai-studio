@@ -422,7 +422,29 @@
     "descText": "書式なしのプレーンテキスト",
     "descJson": "構造化データ形式",
     "descObsidian": "Obsidian にノートを直接作成",
-    "descNotion": "Markdown をクリップボードにコピーして貼り付け"
+    "descNotion": "Notion ページに直接エクスポート"
+  },
+  "integrations": {
+    "title": "連携",
+    "notionDescription": "Notion に接続して、スニペットや会話をページとして直接エクスポートします。",
+    "notionApiKey": "API キー（インテグレーショントークン）",
+    "notionApiKeyHint": "以下で内部インテグレーションを作成してください",
+    "notionParentPage": "対象ページ",
+    "notionParentPageHint": "エクスポートしたコンテンツがサブページとして作成されるページを選択してください。インテグレーションがそのページに接続されている必要があります。",
+    "searchPages": "ページを検索...",
+    "filterPages": "ページを絞り込み...",
+    "refresh": "更新",
+    "selectPage": "ページを選択...",
+    "noPagesFound": "ページが見つかりません。インテグレーションが Notion の少なくとも1つのページに接続されていることを確認してください。",
+    "connected": "接続済み",
+    "connectionFailed": "接続に失敗しました",
+    "disconnect": "切断",
+    "notionNotConfigured": "Notion が設定されていません。設定 → 連携 で設定してください。",
+    "exportingToNotion": "Notion にエクスポート中...",
+    "exportedToNotion": "Notion にエクスポートしました",
+    "exportedToNotionCount": "{{count}} ページを Notion にエクスポートしました",
+    "notionProgress": "Notion にエクスポート中（{{current}}/{{total}}）...",
+    "notionCancelled": "エクスポートがキャンセルされました（{{count}} ページエクスポート済み）"
   },
   "batch": {
     "deleteConfirmTitle": "{{count}} 個の項目を削除",

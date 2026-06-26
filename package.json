@@ -30,6 +30,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@subframe7536/sqlite-wasm": "^0.5.8",
     "@tailwindcss/typography": "^0.5.19",
+    "@tryfabric/martian": "^1.2.4",
     "@types/webextension-polyfill": "^0.12.4",
     "@webext-pegasus/store-zustand": "^0.3.6",
     "@webext-pegasus/transport": "^0.3.6",

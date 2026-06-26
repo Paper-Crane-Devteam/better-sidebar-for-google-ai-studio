@@ -451,6 +451,11 @@ export type ExtensionMessage = (
       payload: { ids: string[]; folderId: string | null };
     }
   | { type: 'RESOLVE_SNIPPET_INBOX' }
+  // Notion API proxy
+  | {
+      type: 'NOTION_API_REQUEST';
+      payload: { endpoint: string; method: string; body?: any; apiKey: string };
+    }
 ) & { platform?: string };
 
 export interface ExtensionResponse {

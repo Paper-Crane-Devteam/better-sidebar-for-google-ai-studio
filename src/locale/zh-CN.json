@@ -423,7 +423,29 @@
     "descText": "无格式的纯文本",
     "descJson": "结构化数据格式",
     "descObsidian": "直接在 Obsidian 中创建笔记",
-    "descNotion": "复制 Markdown 到剪贴板后粘贴"
+    "descNotion": "直接导出到 Notion 页面"
+  },
+  "integrations": {
+    "title": "集成",
+    "notionDescription": "连接 Notion，将片段和对话直接导出为页面。",
+    "notionApiKey": "API Key（Integration Token）",
+    "notionApiKeyHint": "在以下地址创建内部集成：",
+    "notionParentPage": "目标页面",
+    "notionParentPageHint": "选择一个页面，导出的内容将作为子页面创建。集成必须已连接到该页面。",
+    "searchPages": "搜索页面...",
+    "filterPages": "筛选页面...",
+    "refresh": "刷新",
+    "selectPage": "选择一个页面...",
+    "noPagesFound": "未找到页面。请确保 Integration 已连接到 Notion 中的至少一个页面。",
+    "connected": "已连接",
+    "connectionFailed": "连接失败",
+    "disconnect": "断开连接",
+    "notionNotConfigured": "Notion 未配置。请前往 设置 → 集成 进行设置。",
+    "exportingToNotion": "正在导出到 Notion...",
+    "exportedToNotion": "已导出到 Notion",
+    "exportedToNotionCount": "已导出 {{count}} 个页面到 Notion",
+    "notionProgress": "正在导出到 Notion（{{current}}/{{total}}）...",
+    "notionCancelled": "已取消导出（已导出 {{count}} 个页面）"
   },
   "batch": {
     "deleteConfirmTitle": "删除 {{count}} 个项目",

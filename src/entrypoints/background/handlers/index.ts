@@ -12,3 +12,4 @@ export { handleGdriveSync } from './gdrive-sync';
 export { handleGems } from './gems';
 export { handleNotebooks } from './notebooks';
 export { handleSnippets } from './snippets';
+export { handleNotionProxy } from './notion-proxy';

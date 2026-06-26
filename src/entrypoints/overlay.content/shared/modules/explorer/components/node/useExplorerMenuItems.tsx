@@ -113,8 +113,15 @@ export function useExplorerMenuItems({
     }
     const md = buildExportMarkdown(messages);
     const title = node.data.name || conversationId;
+    // Get tags for this conversation
+    const tagIds = conversationTags
+      .filter(ct => ct.conversation_id === conversationId)
+      .map(ct => ct.tag_id);
+    const itemTags = tagIds.length > 0
+      ? tags.filter(tag => tagIds.includes(tag.id)).map(tag => tag.name)
+      : undefined;
     openInObsidian(
-      { id: conversationId, title, content: md },
+      { id: conversationId, title, content: md, tags: itemTags },
       undefined,
       'Conversations',
     );

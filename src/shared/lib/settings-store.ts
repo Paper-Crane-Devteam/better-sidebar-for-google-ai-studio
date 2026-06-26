@@ -67,6 +67,13 @@ interface SettingsState {
     gemini: GeminiEnhancedFeatures;
     aistudio: AIStudioEnhancedFeatures;
   };
+  integrations: {
+    notion: {
+      apiKey: string;
+      parentPageId: string;
+      parentPageTitle: string;
+    };
+  };
 
   // Actions
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
@@ -93,6 +100,7 @@ interface SettingsState {
     value: AIStudioEnhancedFeatures[K],
   ) => void;
   setLastSelectedGemId: (id: string | null) => void;
+  setNotionConfig: (config: Partial<SettingsState['integrations']['notion']>) => void;
 }
 
 const storage: StateStorage = {
@@ -195,6 +203,13 @@ export const useSettingsStore = create<SettingsState>()(
           slashCommand: true,
         },
       },
+      integrations: {
+        notion: {
+          apiKey: '',
+          parentPageId: '',
+          parentPageTitle: '',
+        },
+      },
 
       setTheme: (theme) => {
         set({ theme });
@@ -259,6 +274,13 @@ export const useSettingsStore = create<SettingsState>()(
           },
         })),
       setLastSelectedGemId: (id) => set({ lastSelectedGemId: id }),
+      setNotionConfig: (config) =>
+        set((state) => ({
+          integrations: {
+            ...state.integrations,
+            notion: { ...state.integrations.notion, ...config },
+          },
+        })),
     }),
     {
       name: getStorageName(),

@@ -21,6 +21,7 @@ import {
   handleGems,
   handleNotebooks,
   handleSnippets,
+  handleNotionProxy,
 } from './handlers';
 
 const handlers = [
@@ -36,6 +37,7 @@ const handlers = [
   handleGems,
   handleNotebooks,
   handleSnippets,
+  handleNotionProxy,
   handleMisc,
   handleGdriveSync,
 ];
