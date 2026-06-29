@@ -4,6 +4,7 @@ import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { debounce } from 'lodash';
 import { useAppStore } from '@/shared/lib/store';
 import { waitForElement } from '@/shared/lib/utils';
+import { useUrl } from '@/shared/hooks/useUrl';
 
 export const useGeminiUI = () => {
   const geminiSettings = useSettingsStore((s) => s.enhancedFeatures.gemini);
@@ -25,7 +26,12 @@ export const useGeminiUI = () => {
     hideUpgrade,
     zenMode,
     showSmartScrollbar,
-  } = geminiSettings;  const isSidebarExpanded = useAppStore((s) => s.ui.overlay.isSidebarExpanded);
+  } = geminiSettings;
+
+  const { path } = useUrl();
+  const isGemsCreatePage = path.includes('/gems/create');
+
+  const isSidebarExpanded = useAppStore((s) => s.ui.overlay.isSidebarExpanded);
 
   const [showUpgradeOption, setShowUpgradeOption] = useState(false);
 
@@ -74,7 +80,9 @@ export const useGeminiUI = () => {
       }
 
       if (storeInputWidth < 0) {
-        // Input field may not be inside #chat-history, search from document
+        // Skip measurement on gems creation page
+        if (isGemsCreatePage) return;
+
         const inputField = document.querySelector(
           'input-container > fieldset',
         );
@@ -92,7 +100,7 @@ export const useGeminiUI = () => {
     measure();
     const timer = setTimeout(measure, 1500);
     return () => clearTimeout(timer);
-  }, [storeChatWidth, storeInputWidth, setGeminiFeature]);
+  }, [storeChatWidth, storeInputWidth, setGeminiFeature, isGemsCreatePage]);
 
   // Sync local state when store changes (e.g., from another instance or initial load)
   useEffect(() => {
@@ -170,7 +178,7 @@ export const useGeminiUI = () => {
         }
         `;
       }
-      if (storeInputWidth > 0) {
+      if (storeInputWidth > 0 && !isGemsCreatePage) {
         css += `
         /* Input Box Control */
         input-container > fieldset {
@@ -211,6 +219,7 @@ export const useGeminiUI = () => {
     storeInputWidth,
     // [DEPRECATED] geminiSettings.showTopBarTag,
     zenMode,
+    isGemsCreatePage,
   ]);
 
   // Handle elements that need to react to sidebar expanded/collapsed state separately
