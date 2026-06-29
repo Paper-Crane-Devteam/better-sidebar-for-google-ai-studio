@@ -12,6 +12,7 @@ import {
 import { openInObsidian } from './obsidian';
 import { exportToNotion, createNotionPage } from './notion';
 import { useSettingsStore } from '@/shared/lib/settings-store';
+import { showPowerPackPaywall } from '@/shared/lib/powerpack-paywall';
 
 interface UseExportOptions {
   /** Obsidian vault name (optional, uses last-opened vault if omitted) */
@@ -77,21 +78,33 @@ export function useExport(options: UseExportOptions = {}) {
           break;
         }
         case 'obsidian': {
+          if (!showPowerPackPaywall('Export to Obsidian')) return;
           void openInObsidian(item, obsidianVault, obsidianFolder).then(() => {
             toast.success(t('export.openedInObsidian'));
           });
           break;
         }
         case 'notion': {
+          if (!showPowerPackPaywall('Export to Notion')) return;
           const { integrations } = useSettingsStore.getState();
           if (!integrations.notion.apiKey || !integrations.notion.parentPageId) {
             toast.error(t('integrations.notionNotConfigured'));
             return;
           }
-          toast.success(t('integrations.exportingToNotion'));
+          const loadingId = toast.info(t('integrations.exportingToNotion'), Infinity);
           void createNotionPage(item).then((result) => {
+            toast.dismiss(loadingId);
             if (result.ok) {
-              toast.success(t('integrations.exportedToNotion'));
+              if (result.url) {
+                toast.withAction(
+                  t('integrations.exportedToNotion'),
+                  'success',
+                  { label: t('common.view'), onClick: () => window.open(result.url, '_blank') },
+                  6000,
+                );
+              } else {
+                toast.success(t('integrations.exportedToNotion'));
+              }
             } else {
               toast.error(result.error || 'Export failed');
             }
@@ -205,6 +218,7 @@ export function useExport(options: UseExportOptions = {}) {
           break;
         }
         case 'obsidian': {
+          if (!showPowerPackPaywall('Export to Obsidian')) return;
           // Always combine into a single Obsidian note
           const combined: ExportItem = {
             id: 'batch-export',
@@ -220,6 +234,7 @@ export function useExport(options: UseExportOptions = {}) {
           break;
         }
         case 'notion': {
+          if (!showPowerPackPaywall('Export to Notion')) return;
           const { integrations } = useSettingsStore.getState();
           if (!integrations.notion.apiKey || !integrations.notion.parentPageId) {
             toast.error(t('integrations.notionNotConfigured'));
@@ -247,16 +262,37 @@ export function useExport(options: UseExportOptions = {}) {
               if (result.cancelled) {
                 toast.info(t('integrations.notionCancelled', { count: result.count }));
               } else if (result.ok) {
-                toast.success(t('integrations.exportedToNotionCount', { count: result.count }));
+                const lastUrl = result.urls[result.urls.length - 1];
+                if (lastUrl) {
+                  toast.withAction(
+                    t('integrations.exportedToNotionCount', { count: result.count }),
+                    'success',
+                    { label: t('common.view'), onClick: () => window.open(lastUrl, '_blank') },
+                    6000,
+                  );
+                } else {
+                  toast.success(t('integrations.exportedToNotionCount', { count: result.count }));
+                }
               } else {
                 toast.error(result.error || 'Export failed');
               }
             });
           } else {
-            toast.info(t('integrations.exportingToNotion'));
+            const loadingId = toast.info(t('integrations.exportingToNotion'), Infinity);
             void exportToNotion(items).then((result) => {
+              toast.dismiss(loadingId);
               if (result.ok) {
-                toast.success(t('integrations.exportedToNotionCount', { count: result.count }));
+                const lastUrl = result.urls[result.urls.length - 1];
+                if (lastUrl) {
+                  toast.withAction(
+                    t('integrations.exportedToNotionCount', { count: result.count }),
+                    'success',
+                    { label: t('common.view'), onClick: () => window.open(lastUrl, '_blank') },
+                    6000,
+                  );
+                } else {
+                  toast.success(t('integrations.exportedToNotionCount', { count: result.count }));
+                }
               } else {
                 toast.error(result.error || 'Export failed');
               }

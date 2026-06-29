@@ -13,7 +13,8 @@
     "settings": "Configurações",
     "preferences": "Preferências",
     "untitled": "Sem título",
-    "move": "Mover"
+    "move": "Mover",
+    "view": "Ver"
   },
   "tabs": {
     "files": "Arquivos",
@@ -876,6 +877,14 @@
     "ppFeatureExport": "Exporte conversas e snippets para Obsidian e Notion",
     "getPowerPack": "Obter Power Pack",
     "popular": "POPULAR"
+  },
+  "paywall": {
+    "title": "Power Pack Necessário",
+    "subtitle": "Este recurso faz parte do Power Pack",
+    "requiresPowerPack": "requer Power Pack para uso.",
+    "includedFeatures": "O que está incluído",
+    "getPowerPack": "Obter Power Pack",
+    "dismissHint": "Pressione Esc ou clique fora para fechar"
   },
   "supportPack": {
     "title": "Pacote de Suporte",

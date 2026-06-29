@@ -113,22 +113,24 @@ export async function exportToNotion(
     onProgress?: (completed: number, total: number) => void;
     shouldCancel?: () => boolean;
   },
-): Promise<{ ok: boolean; count: number; cancelled?: boolean; error?: string }> {
+): Promise<{ ok: boolean; count: number; cancelled?: boolean; error?: string; urls: string[] }> {
   let count = 0;
   const total = items.length;
+  const urls: string[] = [];
 
   for (const item of items) {
     // Check for cancellation before each request
     if (options?.shouldCancel?.()) {
-      return { ok: true, count, cancelled: true };
+      return { ok: true, count, cancelled: true, urls };
     }
 
     const result = await createNotionPage(item);
     if (!result.ok) {
-      return { ok: false, count, error: result.error };
+      return { ok: false, count, error: result.error, urls };
     }
+    if (result.url) urls.push(result.url);
     count++;
     options?.onProgress?.(count, total);
   }
-  return { ok: true, count };
+  return { ok: true, count, urls };
 }

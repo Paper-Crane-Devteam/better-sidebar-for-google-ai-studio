@@ -31,6 +31,7 @@ import { RatingPromptDialog } from '../shared/modules/feedback/RatingPromptDialo
 import '@/index.scss';
 import { ProfilePickerDialog } from '../shared/components/ProfilePickerDialog';
 import { GlobalToast } from '@/shared/components/GlobalToast';
+import { PowerPackPaywall } from '@/shared/components/PowerPackPaywall';
 import { useAppInit } from '../shared/hooks/useAppInit';
 import { OverlayToggle } from '../shared/components/OverlayToggle';
 import { toast } from '@/shared/lib/toast';
@@ -424,6 +425,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
 
       <ProfilePickerDialog />
       <GlobalToast />
+      <PowerPackPaywall />
       <HotkeyCheatsheet />
       {showSqlInterface && <SqlExecutor onClose={() => setShowSqlInterface(false)} />}
     </div>

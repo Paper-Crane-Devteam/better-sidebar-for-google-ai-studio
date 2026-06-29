@@ -18,7 +18,8 @@ import { useI18n } from '@/shared/hooks/useI18n';
 import type { NodeApi } from '../../../../components/folder-tree/types';
 import type { FolderTreeNodeData } from '../../../../components/folder-tree/types';
 import type { MenuEntryDef } from '../../../../components/node-action-bar';
-import { ObsidianIcon, NotionIcon } from '../../../../features/export/icons';
+import obsidianIcon from '@/assets/icons/obsidian.svg';
+import notionIcon from '@/assets/icons/notion.svg';
 
 interface UseSnippetMenuItemsParams {
   node: NodeApi<FolderTreeNodeData>;
@@ -136,14 +137,14 @@ export function useSnippetMenuItems({
         {
           type: 'item' as const,
           key: 'export-obsidian',
-          icon: <ObsidianIcon className="h-4 w-4" />,
+          icon: <img src={obsidianIcon} alt="Obsidian" className="h-4 w-4" />,
           label: t('export.exportToObsidian'),
           onClick: () => onExport('obsidian'),
         },
         {
           type: 'item' as const,
           key: 'export-notion',
-          icon: <NotionIcon className="h-4 w-4" />,
+          icon: <img src={notionIcon} alt="Notion" className="h-4 w-4" />,
           label: t('export.exportToNotion'),
           onClick: () => onExport('notion'),
         },

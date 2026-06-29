@@ -1,7 +1,8 @@
 import React from 'react';
 import { MessageSquare, FileCode, Braces } from 'lucide-react';
 import { useModalStore } from '@/shared/lib/modal';
-import { ObsidianIcon, NotionIcon } from './icons';
+import obsidianIcon from '@/assets/icons/obsidian.svg';
+import notionIcon from '@/assets/icons/notion.svg';
 import type { ExportFormat } from './types';
 import i18n from '@/locale/i18n';
 
@@ -34,13 +35,13 @@ function getFormatOptions(): FormatOption[] {
     },
     {
       format: 'obsidian',
-      icon: <ObsidianIcon className="h-5 w-5" />,
+      icon: <img src={obsidianIcon} alt="Obsidian" className="h-5 w-5" />,
       label: i18n.t('export.exportToObsidian'),
       description: i18n.t('export.descObsidian'),
     },
     {
       format: 'notion',
-      icon: <NotionIcon className="h-5 w-5" />,
+      icon: <img src={notionIcon} alt="Notion" className="h-5 w-5" />,
       label: i18n.t('export.exportToNotion'),
       description: i18n.t('export.descNotion'),
     },

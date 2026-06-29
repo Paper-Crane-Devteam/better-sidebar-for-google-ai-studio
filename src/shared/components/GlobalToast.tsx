@@ -43,10 +43,10 @@ export const GlobalToast = () => {
         >
           {icons[toast.type]}
           <div className="flex-1 text-sm font-medium">{toast.message}</div>
-          {toast.action && (
+          {toast.action && toast.action.label && (
             <button
               onClick={() => toast.action!.onClick()}
-              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="text-xs font-semibold px-2 py-0.5 rounded text-primary hover:text-primary/80 hover:bg-primary/10 underline underline-offset-2 transition-colors"
             >
               {toast.action.label}
             </button>

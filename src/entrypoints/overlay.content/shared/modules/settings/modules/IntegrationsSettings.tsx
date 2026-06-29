@@ -16,81 +16,109 @@ import {
   testNotionConnection,
   searchNotionPages,
 } from '../../../features/export/notion';
-import { NotionIcon } from '../../../features/export/icons';
+import notionIcon from '@/assets/icons/notion.svg';
 
 export const IntegrationsSettings = () => {
   const { t } = useI18n();
   const { integrations, setNotionConfig } = useSettingsStore();
-  const { apiKey, parentPageId, parentPageTitle } = integrations.notion;
+  const {
+    apiKey,
+    parentPageId,
+    connectionStatus,
+    connectionName,
+    connectionError,
+    cachedPages,
+    lastFetchedAt,
+  } = integrations.notion;
 
   const [apiKeyInput, setApiKeyInput] = useState(apiKey);
   const [testing, setTesting] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'ok' | 'error'>('idle');
-  const [connectionName, setConnectionName] = useState('');
-  const [connectionError, setConnectionError] = useState('');
-
   const [loadingPages, setLoadingPages] = useState(false);
-  const [pages, setPages] = useState<{ id: string; title: string }[]>([]);
 
-  const loadPages = useCallback(async () => {
+  const pages = cachedPages;
+
+  const fetchConnectionAndPages = useCallback(async () => {
+    setLoadingPages(true);
+    const result = await testNotionConnection();
+    if (result.ok) {
+      try {
+        const results = await searchNotionPages();
+        setNotionConfig({
+          connectionStatus: 'ok',
+          connectionName: result.name || '',
+          connectionError: '',
+          cachedPages: results,
+          lastFetchedAt: Date.now(),
+        });
+      } catch {
+        setNotionConfig({
+          connectionStatus: 'ok',
+          connectionName: result.name || '',
+          connectionError: '',
+          cachedPages: [],
+          lastFetchedAt: Date.now(),
+        });
+      }
+    } else {
+      setNotionConfig({
+        connectionStatus: 'error',
+        connectionName: '',
+        connectionError: result.error || 'Unknown error',
+        cachedPages: [],
+        lastFetchedAt: Date.now(),
+      });
+    }
+    setLoadingPages(false);
+  }, [setNotionConfig]);
+
+  // On mount: use cache if available, otherwise fetch
+  useEffect(() => {
+    if (!apiKey) return;
+    if (lastFetchedAt && connectionStatus !== 'idle') return;
+    void fetchConnectionAndPages();
+  }, [apiKey, lastFetchedAt, connectionStatus, fetchConnectionAndPages]);
+
+  const handleRefreshPages = useCallback(async () => {
     setLoadingPages(true);
     try {
       const results = await searchNotionPages();
-      setPages(results);
+      setNotionConfig({ cachedPages: results, lastFetchedAt: Date.now() });
     } catch {
-      setPages([]);
+      setNotionConfig({ cachedPages: [] });
     }
     setLoadingPages(false);
-  }, []);
-
-  // Auto-test connection when apiKey is already saved
-  useEffect(() => {
-    if (apiKey) {
-      void (async () => {
-        const result = await testNotionConnection();
-        if (result.ok) {
-          setConnectionStatus('ok');
-          setConnectionName(result.name || '');
-          setConnectionError('');
-          // Auto-load pages
-          void loadPages();
-        } else {
-          setConnectionStatus('error');
-          setConnectionError(result.error || 'Unknown error');
-        }
-      })();
-    }
-  }, [apiKey, loadPages]);
+  }, [setNotionConfig]);
 
   const handleSaveApiKey = async () => {
     const trimmed = apiKeyInput.trim();
-    setNotionConfig({ apiKey: trimmed });
+    setNotionConfig({
+      apiKey: trimmed,
+      connectionStatus: 'idle',
+      connectionName: '',
+      connectionError: '',
+      cachedPages: [],
+      lastFetchedAt: null,
+    });
     setTesting(true);
-    setConnectionStatus('idle');
 
-    // Need to wait a tick for the store to update before testing
+    // Wait a tick for the store to update before testing
     await new Promise((r) => setTimeout(r, 50));
-    const result = await testNotionConnection();
+    await fetchConnectionAndPages();
     setTesting(false);
-
-    if (result.ok) {
-      setConnectionStatus('ok');
-      setConnectionName(result.name || '');
-      setConnectionError('');
-      void loadPages();
-    } else {
-      setConnectionStatus('error');
-      setConnectionName('');
-      setConnectionError(result.error || 'Unknown error');
-    }
   };
 
   const handleClearApiKey = () => {
-    setNotionConfig({ apiKey: '', parentPageId: '', parentPageTitle: '' });
+    setNotionConfig({
+      apiKey: '',
+      parentPageId: '',
+      parentPageTitle: '',
+      connectionStatus: 'idle',
+      connectionName: '',
+      connectionError: '',
+      cachedPages: [],
+      lastFetchedAt: null,
+    });
     setApiKeyInput('');
-    setConnectionStatus('idle');
-    setConnectionName('');
-    setPages([]);
   };
 
   return (
@@ -98,7 +126,7 @@ export const IntegrationsSettings = () => {
       {/* Notion */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <NotionIcon className="h-5 w-5" />
+          <img src={notionIcon} alt="Notion" className="h-5 w-5" />
           <h3 className="text-lg font-medium">Notion</h3>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -176,7 +204,7 @@ export const IntegrationsSettings = () => {
                 size="sm"
                 variant="ghost"
                 className="h-7 px-2 text-xs"
-                onClick={loadPages}
+                onClick={handleRefreshPages}
                 disabled={loadingPages}
               >
                 {loadingPages ? (

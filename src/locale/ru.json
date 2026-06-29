@@ -13,7 +13,8 @@
     "move": "Переместить",
     "settings": "Настройки",
     "preferences": "Предпочтения",
-    "untitled": "Без названия"
+    "untitled": "Без названия",
+    "view": "Просмотр"
   },
   "tabs": {
     "files": "Файлы",
@@ -876,6 +877,14 @@
     "ppFeatureExport": "Экспорт бесед и сниппетов в Obsidian и Notion",
     "getPowerPack": "Получить Power Pack",
     "popular": "ПОПУЛЯРНЫЙ"
+  },
+  "paywall": {
+    "title": "Требуется Power Pack",
+    "subtitle": "Эта функция входит в Power Pack",
+    "requiresPowerPack": "для использования необходим Power Pack.",
+    "includedFeatures": "Что включено",
+    "getPowerPack": "Получить Power Pack",
+    "dismissHint": "Нажмите Esc или кликните за пределами для закрытия"
   },
   "supportPack": {
     "title": "Пакет поддержки",

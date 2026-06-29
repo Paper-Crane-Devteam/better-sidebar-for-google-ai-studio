@@ -15,7 +15,8 @@
     "settings": "设置",
     "preferences": "偏好设置",
     "untitled": "未命名",
-    "move": "移动"
+    "move": "移动",
+    "view": "查看"
   },
   "tabs": {
     "files": "文件",
@@ -888,6 +889,14 @@
     "ppFeatureExport": "对话和片段一键导出到 Obsidian 和 Notion",
     "getPowerPack": "获取 Power Pack",
     "popular": "热门"
+  },
+  "paywall": {
+    "title": "需要 Power Pack",
+    "subtitle": "此功能属于 Power Pack 付费内容",
+    "requiresPowerPack": "需要 Power Pack 才能使用。",
+    "includedFeatures": "包含功能",
+    "getPowerPack": "获取 Power Pack",
+    "dismissHint": "按 Esc 或点击外部区域关闭"
   },
   "supportPack": {
     "title": "支持包",

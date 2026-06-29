@@ -13,7 +13,8 @@
     "settings": "設定",
     "preferences": "設定",
     "untitled": "無題",
-    "move": "動く"
+    "move": "動く",
+    "view": "表示"
   },
   "tabs": {
     "files": "ファイル",
@@ -877,6 +878,14 @@
     "ppFeatureExport": "会話とスニペットを Obsidian・Notion にエクスポート",
     "getPowerPack": "Power Pack を入手",
     "popular": "人気"
+  },
+  "paywall": {
+    "title": "Power Pack が必要です",
+    "subtitle": "この機能は Power Pack に含まれています",
+    "requiresPowerPack": "ご利用には Power Pack が必要です。",
+    "includedFeatures": "含まれる機能",
+    "getPowerPack": "Power Pack を入手",
+    "dismissHint": "Esc キーまたは外側をクリックで閉じます"
   },
   "supportPack": {
     "title": "サポートパック",

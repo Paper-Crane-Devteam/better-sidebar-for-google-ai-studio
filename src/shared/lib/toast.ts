@@ -47,8 +47,8 @@ export const toast = {
   info: (msg: string, duration?: number) => useToastStore.getState().addToast(msg, 'info', duration),
   warning: (msg: string, duration?: number) => useToastStore.getState().addToast(msg, 'warning', duration),
   /** Show a persistent toast with an action button. Returns the toast ID for later update/dismiss. */
-  withAction: (msg: string, type: ToastType, action: ToastAction) =>
-    useToastStore.getState().addToast(msg, type, Infinity, action),
+  withAction: (msg: string, type: ToastType, action: ToastAction, duration = Infinity) =>
+    useToastStore.getState().addToast(msg, type, duration, action),
   /** Update an existing toast's message/type/action. */
   update: (id: string, updates: Partial<Pick<Toast, 'message' | 'type' | 'action' | 'duration'>>) =>
     useToastStore.getState().updateToast(id, updates),

@@ -72,6 +72,14 @@ interface SettingsState {
       apiKey: string;
       parentPageId: string;
       parentPageTitle: string;
+      /** Cached connection status */
+      connectionStatus: 'idle' | 'ok' | 'error';
+      connectionName: string;
+      connectionError: string;
+      /** Cached pages list */
+      cachedPages: { id: string; title: string }[];
+      /** Timestamp of last successful fetch */
+      lastFetchedAt: number | null;
     };
   };
 
@@ -208,6 +216,11 @@ export const useSettingsStore = create<SettingsState>()(
           apiKey: '',
           parentPageId: '',
           parentPageTitle: '',
+          connectionStatus: 'idle',
+          connectionName: '',
+          connectionError: '',
+          cachedPages: [],
+          lastFetchedAt: null,
         },
       },
 

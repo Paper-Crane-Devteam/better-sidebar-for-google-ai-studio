@@ -15,7 +15,8 @@
     "move": "Move",
     "settings": "Settings",
     "preferences": "Preferences",
-    "untitled": "Untitled"
+    "untitled": "Untitled",
+    "view": "View"
   },
   "tabs": {
     "files": "Files",
@@ -888,6 +889,14 @@
     "ppFeatureExport": "Export conversations & snippets to Obsidian and Notion",
     "getPowerPack": "Get Power Pack",
     "popular": "POPULAR"
+  },
+  "paywall": {
+    "title": "Power Pack Required",
+    "subtitle": "This feature is part of the Power Pack",
+    "requiresPowerPack": "requires Power Pack to use.",
+    "includedFeatures": "What's included",
+    "getPowerPack": "Get Power Pack",
+    "dismissHint": "Press Esc or click outside to dismiss"
   },
   "supportPack": {
     "title": "Support Pack",

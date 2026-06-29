@@ -1,15 +1,10 @@
 import React from 'react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
-import { useSettingsStore } from '@/shared/lib/settings-store';
 import { toast } from '@/shared/lib/toast';
 import {
   fetchMessagesForExport,
-  buildExportText,
   buildExportMarkdown,
-  buildExportJson,
-  downloadBlob,
-  safeFilename,
 } from '../../lib/exportConversation';
 import {
   FolderPlus,
@@ -36,8 +31,10 @@ import { MoveItemsDialog } from '../batch/MoveItemsDialog';
 import { detectPlatform, PLATFORM_CONFIG } from '@/shared/types/platform';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { FOLDER_COLOR_PRESETS } from '@/shared/lib/folder-colors';
-import { ObsidianIcon, NotionIcon } from '@/entrypoints/overlay.content/shared/features/export/icons';
-import { openInObsidian } from '@/entrypoints/overlay.content/shared/features/export/obsidian';
+import obsidianIcon from '@/assets/icons/obsidian.svg';
+import notionIcon from '@/assets/icons/notion.svg';
+import { useExport } from '@/entrypoints/overlay.content/shared/features/export/useExport';
+import type { ExportFormat } from '@/entrypoints/overlay.content/shared/features/export/types';
 import type { MenuEntryDef } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import type { NodeRendererProps } from 'react-arborist';
 import type { FolderTreeNodeData } from '../../../../components/folder-tree/types';
@@ -71,37 +68,14 @@ export function useExplorerMenuItems({
 }: UseExplorerMenuItemsParams): MenuEntryDef[] {
   const { t } = useI18n();
   const { tags, conversationTags } = useAppStore();
+  const { exportItem } = useExport({ obsidianFolder: 'Conversations' });
 
   const isFile = node.data.type === 'file';
 
-  const handleExportAs = async (format: 'text' | 'markdown' | 'json') => {
-    const conversationId = node.data.id;
-    const messages = await fetchMessagesForExport(conversationId);
-    if (!messages?.length) {
-      toast.error(
-        t('toast.noContentToExport', {
-          platform: PLATFORM_CONFIG[detectPlatform()].name,
-        }),
-      );
-      return;
-    }
-    const baseName = safeFilename(node.data.name || conversationId);
-    if (format === 'text') {
-      const text = buildExportText(messages);
-      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-      downloadBlob(blob, `${baseName}.txt`);
-    } else if (format === 'markdown') {
-      const md = buildExportMarkdown(messages);
-      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
-      downloadBlob(blob, `${baseName}.md`);
-    } else {
-      const json = buildExportJson(messages);
-      const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
-      downloadBlob(blob, `${baseName}.json`);
-    }
-  };
-
-  const handleExportObsidian = async () => {
+  /**
+   * Unified export handler: fetches messages, builds ExportItem (with tags), delegates to exportItem.
+   */
+  const handleExport = async (format: ExportFormat) => {
     const conversationId = node.data.id;
     const messages = await fetchMessagesForExport(conversationId);
     if (!messages?.length) {
@@ -121,43 +95,17 @@ export function useExplorerMenuItems({
     const itemTags = tagIds.length > 0
       ? tags.filter(tag => tagIds.includes(tag.id)).map(tag => tag.name)
       : undefined;
-    void openInObsidian(
-      { id: conversationId, title, content: md, tags: itemTags, description: node.data.data?.description || undefined },
-      undefined,
-      'Conversations',
-    ).then(() => {
-      toast.success(t('export.openedInObsidian'));
-    });
-  };
 
-  const handleExportNotion = async () => {
-    const { integrations } = useSettingsStore.getState();
-    if (!integrations.notion.apiKey || !integrations.notion.parentPageId) {
-      toast.error(t('integrations.notionNotConfigured'));
-      return;
-    }
-
-    const conversationId = node.data.id;
-    const messages = await fetchMessagesForExport(conversationId);
-    if (!messages?.length) {
-      toast.error(
-        t('toast.noContentToExport', {
-          platform: PLATFORM_CONFIG[detectPlatform()].name,
-        }),
-      );
-      return;
-    }
-    const md = buildExportMarkdown(messages);
-    const title = node.data.name || conversationId;
-    toast.info(t('integrations.exportingToNotion'));
-
-    const { createNotionPage } = await import('@/entrypoints/overlay.content/shared/features/export/notion');
-    const result = await createNotionPage({ id: conversationId, title, content: md });
-    if (result.ok) {
-      toast.success(t('integrations.exportedToNotion'));
-    } else {
-      toast.error(result.error || 'Export failed');
-    }
+    exportItem(
+      {
+        id: conversationId,
+        title,
+        content: md,
+        tags: itemTags,
+        description: node.data.data?.description || undefined,
+      },
+      format,
+    );
   };
 
   const handleMove = async () => {
@@ -337,36 +285,36 @@ export function useExplorerMenuItems({
           key: 'export-text',
           icon: <MessageSquare className="h-4 w-4" />,
           label: t('node.exportAsText'),
-          onClick: () => void handleExportAs('text'),
+          onClick: () => void handleExport('text'),
         },
         {
           type: 'item' as const,
           key: 'export-md',
           icon: <FileCode className="h-4 w-4" />,
           label: t('node.exportAsMarkdown'),
-          onClick: () => void handleExportAs('markdown'),
+          onClick: () => void handleExport('markdown'),
         },
         {
           type: 'item' as const,
           key: 'export-json',
           icon: <Braces className="h-4 w-4" />,
           label: t('node.exportAsJson'),
-          onClick: () => void handleExportAs('json'),
+          onClick: () => void handleExport('json'),
         },
         { type: 'separator' as const, key: 'sep-export-apps' },
         {
           type: 'item' as const,
           key: 'export-obsidian',
-          icon: <ObsidianIcon className="h-4 w-4" />,
+          icon: <img src={obsidianIcon} alt="Obsidian" className="h-4 w-4" />,
           label: t('export.exportToObsidian'),
-          onClick: () => void handleExportObsidian(),
+          onClick: () => void handleExport('obsidian'),
         },
         {
           type: 'item' as const,
           key: 'export-notion',
-          icon: <NotionIcon className="h-4 w-4" />,
+          icon: <img src={notionIcon} alt="Notion" className="h-4 w-4" />,
           label: t('export.exportToNotion'),
-          onClick: () => void handleExportNotion(),
+          onClick: () => void handleExport('notion'),
         },
       ],
     });
