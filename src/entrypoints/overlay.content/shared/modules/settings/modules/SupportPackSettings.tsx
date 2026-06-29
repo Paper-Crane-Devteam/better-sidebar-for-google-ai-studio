@@ -85,7 +85,7 @@ function ActivatedView({ t, tier }: { t: (key: string) => string; tier: LicenseT
                 size="sm"
                 variant="outline"
                 className="mt-2 gap-1.5"
-                onClick={() => openPurchasePage()}
+                onClick={() => openPurchasePage('power_pack')}
               >
                 <Icon icon="fluent-color:star-24" width={14} height={14} />
                 {t('packs.upgradeToPower')}
@@ -149,7 +149,7 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
             variant="outline"
             size="sm"
             className="w-full mt-4 gap-2"
-            onClick={() => openPurchasePage()}
+            onClick={() => openPurchasePage('support_pack')}
           >
             <ShoppingCart className="h-3.5 w-3.5" />
             {t('packs.getSupportPack')}
@@ -204,7 +204,7 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
           </div>
           <Button
             className="w-full mt-4 gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md shadow-violet-500/20 border-0"
-            onClick={() => openPurchasePage()}
+            onClick={() => openPurchasePage('power_pack')}
           >
             <Icon icon="fluent-color:star-24" width={14} height={14} />
             {t('packs.getPowerPack')}
@@ -212,24 +212,48 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
         </div>
       </div>
 
-      {/* Platform switcher */}
-      <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
-        <span>{t('supportPack.otherPlatform')}</span>
-        <button
-          className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-foreground transition-colors"
-          onClick={() => window.open(links.gumroad, '_blank')}
-        >
-          Gumroad
-          <ExternalLink className="h-3 w-3" />
-        </button>
-        <span>|</span>
-        <button
-          className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-foreground transition-colors"
-          onClick={() => window.open(links.afdian, '_blank')}
-        >
-          {t('supportPack.afdian')}
-          <ExternalLink className="h-3 w-3" />
-        </button>
+      {/* Platform links by product */}
+      <div className="space-y-2 text-xs text-muted-foreground">
+        <div className="flex items-center justify-center gap-3">
+          <span>Power Pack:</span>
+          <button
+            className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-foreground transition-colors"
+            onClick={() => window.open(links.gumroadPp, '_blank')}
+          >
+            Gumroad
+            <ExternalLink className="h-3 w-3" />
+          </button>
+          {links.afdianPp && (
+            <>
+              <span>|</span>
+              <button
+                className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-foreground transition-colors"
+                onClick={() => window.open(links.afdianPp, '_blank')}
+              >
+                {t('supportPack.afdian')}
+                <ExternalLink className="h-3 w-3" />
+              </button>
+            </>
+          )}
+        </div>
+        <div className="flex items-center justify-center gap-3">
+          <span>Support Pack:</span>
+          <button
+            className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-foreground transition-colors"
+            onClick={() => window.open(links.gumroadSp, '_blank')}
+          >
+            Gumroad
+            <ExternalLink className="h-3 w-3" />
+          </button>
+          <span>|</span>
+          <button
+            className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-foreground transition-colors"
+            onClick={() => window.open(links.afdianSp, '_blank')}
+          >
+            {t('supportPack.afdian')}
+            <ExternalLink className="h-3 w-3" />
+          </button>
+        </div>
       </div>
 
       <Separator />

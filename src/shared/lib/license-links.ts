@@ -1,39 +1,51 @@
 /**
- * Purchase link utilities for the Support Pack.
+ * Purchase link utilities for Support Pack & Power Pack.
  *
  * Abstracts the purchase URLs so they can be updated in one place.
  */
 
-/** Gumroad product page (international) */
-const GUMROAD_URL = 'https://papercranedev.gumroad.com/l/support-pack';
+/** Gumroad — Power Pack (international) */
+const GUMROAD_PP_URL = 'https://papercranedev.gumroad.com/l/power-pack';
 
-/** 爱发电 product page (China) */
-const AFDIAN_URL = 'https://afdian.com/item/9f96a3ca5a5e11f1950152540025c377';
+/** Gumroad — Support Pack (international) */
+const GUMROAD_SP_URL = 'https://papercranedev.gumroad.com/l/support-pack';
+
+/** 爱发电 — Support Pack (China) */
+const AFDIAN_SP_URL = 'https://afdian.com/item/9f96a3ca5a5e11f1950152540025c377';
+
+/** 爱发电 — Power Pack (China) */
+const AFDIAN_PP_URL = 'https://afdian.com/item/cf5531a073b111f18c9c5254001e7c00';
 
 /**
  * Open the purchase page based on user locale.
- * Chinese locale → 爱发电, otherwise → Gumroad.
+ * Chinese locale → 爱发电 (Support Pack), otherwise → Gumroad (Power Pack).
  */
-export function openPurchasePage(): void {
-  const url = getDefaultPurchaseUrl();
+export function openPurchasePage(product: 'power_pack' | 'support_pack' = 'power_pack'): void {
+  const url = getDefaultPurchaseUrl(product);
   window.open(url, '_blank');
 }
 
 /**
- * Get the default purchase URL based on locale.
+ * Get the default purchase URL based on locale and product.
  */
-export function getDefaultPurchaseUrl(): string {
+export function getDefaultPurchaseUrl(product: 'power_pack' | 'support_pack' = 'power_pack'): string {
   const lang = navigator.language || '';
   const isChinese = lang.startsWith('zh');
-  return isChinese ? AFDIAN_URL : GUMROAD_URL;
+
+  if (product === 'power_pack') {
+    return isChinese && AFDIAN_PP_URL ? AFDIAN_PP_URL : GUMROAD_PP_URL;
+  }
+  return isChinese ? AFDIAN_SP_URL : GUMROAD_SP_URL;
 }
 
 /**
- * Get both purchase URLs for display in the UI.
+ * Get all purchase URLs for display in the UI.
  */
 export function getPurchaseLinks() {
   return {
-    gumroad: GUMROAD_URL,
-    afdian: AFDIAN_URL,
+    gumroadPp: GUMROAD_PP_URL,
+    gumroadSp: GUMROAD_SP_URL,
+    afdianSp: AFDIAN_SP_URL,
+    afdianPp: AFDIAN_PP_URL,
   };
 }

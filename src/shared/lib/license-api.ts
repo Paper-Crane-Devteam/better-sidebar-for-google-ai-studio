@@ -24,12 +24,14 @@ export interface ActivationResult {
 /**
  * Identify the token source based on format.
  * - BS-SP-XXXXXXXX → afdian support pack
+ * - BS-PP-XXXXXXXX → afdian power pack
  * - BS-PRO-XXXXXXXX → afdian pro
  * - XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX → Gumroad license key
  */
-export function identifyTokenSource(token: string): 'afdian_sp' | 'afdian_pro' | 'gumroad' | 'unknown' {
+export function identifyTokenSource(token: string): 'afdian_sp' | 'afdian_pp' | 'afdian_pro' | 'gumroad' | 'unknown' {
   const trimmed = token.trim().toUpperCase();
   if (/^BS-SP-[A-Z0-9]{6,12}$/.test(trimmed)) return 'afdian_sp';
+  if (/^BS-PP-[A-Z0-9]{6,12}$/.test(trimmed)) return 'afdian_pp';
   if (/^BS-PRO-[A-Z0-9]{6,12}$/.test(trimmed)) return 'afdian_pro';
   // Gumroad format: 8 hex chars separated by dashes (case insensitive)
   if (/^[A-F0-9]{8}(-[A-F0-9]{8}){3}$/.test(trimmed)) return 'gumroad';
@@ -95,7 +97,8 @@ export async function activateLicense(
     }
 
     const tier: LicenseTier =
-      data.tier === 'pro' ? 'pro' : 'support_pack';
+      data.tier === 'pro' ? 'pro' :
+      data.tier === 'power_pack' ? 'power_pack' : 'support_pack';
 
     return {
       success: true,
