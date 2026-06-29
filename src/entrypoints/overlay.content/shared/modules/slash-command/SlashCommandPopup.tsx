@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Zap } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { cn } from '@/shared/lib/utils/utils';
 import type { SlashCommandMatch } from './types';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -47,7 +47,7 @@ export const SlashCommandPopup: React.FC<SlashCommandPopupProps> = ({
     >
       {/* Header */}
       <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border/50 bg-muted/30">
-        <Zap className="h-3 w-3 text-primary" />
+        <Icon icon="fluent-color:bot-sparkle-24" width={12} height={12} />
         <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
           {t('slashCommand.promptLibrary')}
         </span>

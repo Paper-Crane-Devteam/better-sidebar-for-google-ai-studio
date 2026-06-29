@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../../components/ui/button';
-import { X, Settings, Heart, Info, LayoutTemplate, Database, SlidersHorizontal, Palette, Sparkles, Keyboard, Plug } from 'lucide-react';
+import { X, Settings, Heart, Info, LayoutTemplate, Database, SlidersHorizontal, Palette, Keyboard, Plug } from 'lucide-react';
+import { Icon as IconifyIcon } from '@iconify/react';
 import { GeneralSettings } from './modules/GeneralSettings';
 import { ThemeSettings } from './modules/ThemeSettings';
 import { ExplorerSettings } from './modules/ExplorerSettings';
@@ -15,6 +16,13 @@ import { useI18n } from '@/shared/hooks/useI18n';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 import { useBadgeStore } from '@/shared/lib/badge-store';
 import { BadgeDot } from '@/shared/components/ui/badge-dot';
+
+/** Wrapper to use a fluent-color iconify icon as a NavButton icon component */
+const PacksIcon = ({ className }: { className?: string }) => (
+  <span className={className}>
+    <IconifyIcon icon="fluent-color:trophy-24" width="1em" height="1em" />
+  </span>
+);
 
 interface SettingsModalProps {
     open: boolean;
@@ -131,7 +139,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
                     
                     <div className="h-px bg-border my-2 mx-2" />
                     
-                    <NavButton id="supportpack" label={t('packs.title')} icon={Sparkles} activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <NavButton id="supportpack" label={t('packs.title')} icon={PacksIcon} activeSection={activeSection} setActiveSection={setActiveSection} />
                     <NavButton id="sponsor" label={t('settings.sponsor')} icon={Heart} activeSection={activeSection} setActiveSection={setActiveSection} />
                     
                     <div className="flex-1" />

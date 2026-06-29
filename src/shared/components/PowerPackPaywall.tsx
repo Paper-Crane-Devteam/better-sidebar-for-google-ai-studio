@@ -16,10 +16,10 @@ import { useI18n } from '@/shared/hooks/useI18n';
 import { cn } from '@/shared/lib/utils/utils';
 
 const FEATURES = [
-  { icon: 'fluent-color:bot-24', key: 'ppFeatureAgent' },
-  { icon: 'fluent-color:database-lightning-20', key: 'ppFeatureWrite' },
+  { icon: 'fluent-color:bot-sparkle-24', key: 'ppFeatureAgent' },
+  { icon: 'fluent-color:database-24', key: 'ppFeatureWrite' },
   { icon: 'fluent-color:history-24', key: 'ppFeatureHistory' },
-  { icon: 'fluent-color:share-24', key: 'ppFeatureExport' },
+  { icon: 'fluent-color:share-android-24', key: 'ppFeatureExport' },
 ] as const;
 
 export const PowerPackPaywall = () => {
@@ -78,9 +78,7 @@ export const PowerPackPaywall = () => {
         <div className="relative p-6 space-y-5">
           {/* Header */}
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-violet-500/25 to-purple-500/25 flex items-center justify-center ring-1 ring-violet-500/30 shadow-lg shadow-violet-500/10">
-              <Icon icon="fluent-color:rocket-24" width={22} height={22} />
-            </div>
+            <Icon icon="fluent-color:premium-24" width={28} height={28} />
             <div>
               <h3 className="text-base font-bold tracking-tight">
                 {t('paywall.title')}
@@ -94,7 +92,7 @@ export const PowerPackPaywall = () => {
           {/* Feature context — which feature triggered this */}
           {featureName && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-500/5 border border-violet-500/20">
-              <Icon icon="fluent-color:sparkle-24" width={14} height={14} className="shrink-0" />
+              <Icon icon="fluent-color:bot-sparkle-24" width={14} height={14} className="shrink-0" />
               <p className="text-xs text-foreground">
                 <span className="font-medium">{featureName}</span>
                 {' '}{t('paywall.requiresPowerPack')}
@@ -107,10 +105,10 @@ export const PowerPackPaywall = () => {
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               {t('paywall.includedFeatures')}
             </p>
-            {FEATURES.map(({ icon: Icon, key }) => (
+            {FEATURES.map(({ icon: iconName, key }) => (
               <div key={key} className="flex items-center gap-2.5">
                 <div className="h-6 w-6 rounded-md bg-violet-500/10 flex items-center justify-center shrink-0">
-                  <Icon className="h-3.5 w-3.5 text-violet-500" />
+                  <Icon icon={iconName} width={14} height={14} />
                 </div>
                 <span className="text-sm">{t(`packs.${key}`)}</span>
               </div>
@@ -130,7 +128,7 @@ export const PowerPackPaywall = () => {
               'active:scale-[0.98]',
             )}
           >
-            <Zap className="h-4 w-4" />
+            <Icon icon="fluent-color:star-24" width={16} height={16} />
             {t('paywall.getPowerPack')}
           </button>
 
