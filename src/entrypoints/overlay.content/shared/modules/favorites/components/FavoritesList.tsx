@@ -133,7 +133,7 @@ export const FavoritesList = ({
                   }
                 }}
                 className={cn(
-                  'group flex items-center gap-2 px-3 cursor-pointer text-sm text-foreground transition-colors h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px] rounded-sm',
+                  'group flex items-center gap-2 px-3 cursor-pointer text-sm text-foreground transition-colors h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]',
                   isSelected
                     ? 'bg-accent text-accent-foreground node-item-selected'
                     : 'hover:bg-accent/50',

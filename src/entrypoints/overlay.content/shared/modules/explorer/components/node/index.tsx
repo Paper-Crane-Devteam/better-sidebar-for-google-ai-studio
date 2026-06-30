@@ -337,7 +337,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
     // Base layout
     'flex items-center gap-1.5 px-1 pr-2 h-full',
     'cursor-pointer group relative',
-    'no-underline outline-none rounded-sm',
+    'no-underline outline-none',
     'text-density text-foreground/80 font-medium',
     // Hover: only apply default hover when not active and not current conversation
     !isActive && !isCurrentConversation && 'hover:bg-accent/50',
@@ -352,7 +352,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
     // Expand right padding on hover to make room for action buttons (skip while renaming)
     hasHoverActions && !node.isEditing && 'group-hover:pr-8',
     // Drag-over state
-    node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
+    node.willReceiveDrop && 'bg-accent/50 border border-primary/40',
     // Context menu or dropdown open state
     isMenuActive && !folderColor && 'bg-accent/50',
     isMenuActive && hasHoverActions && 'pr-8',

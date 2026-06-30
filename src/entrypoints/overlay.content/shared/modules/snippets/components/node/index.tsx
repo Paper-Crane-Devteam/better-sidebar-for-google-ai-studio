@@ -216,13 +216,13 @@ export const SnippetNode = ({
   );
 
   const commonClasses = cn(
-    'flex items-center gap-1.5 px-1 cursor-pointer group relative pr-2 h-full no-underline outline-none text-density rounded-sm font-medium text-foreground/80',
+    'flex items-center gap-1.5 px-1 cursor-pointer group relative pr-2 h-full no-underline outline-none text-density font-medium text-foreground/80',
     !node.isEditing && 'group-hover:pr-8',
     !(node.isSelected || isBatchSelected) && 'hover:bg-accent/50',
     (node.isSelected || isBatchSelected) && 'node-item-selected',
     !isFile && node.data.data?.is_pinned && 'node-item-pinned',
     isFile && isFavorite && 'node-item-favorited',
-    node.willReceiveDrop && 'bg-accent/50 border border-primary/40 rounded-sm',
+    node.willReceiveDrop && 'bg-accent/50 border border-primary/40',
     isMenuActive && 'bg-accent/50',
     isMenuActive && 'pr-8',
     isMenuActive && 'node-menu-active',
