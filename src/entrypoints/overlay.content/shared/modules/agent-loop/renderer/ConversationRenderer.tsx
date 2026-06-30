@@ -465,61 +465,91 @@ export class ConversationRenderer {
     console.log('[Renderer] renderToolCallWidgets — found:', toolCalls.length);
     if (toolCalls.length === 0) return;
 
-    // Hide .markdown content via a CSS class (Angular-safe: we hide from outside)
-    markdownEl.style.display = 'none';
+    // Walk through direct children (or block-level descendants) of .markdown,
+    // find elements whose textContent contains a tool_call tag, hide them, and mount widget after each.
+    const openTag = `<${TOOL_CALL_TAG}>`;
+    const closeTag = `</${TOOL_CALL_TAG}>`;
+    const processedEls = new Set<HTMLElement>();
+    let widgetIdx = 0;
 
-    // Mount React widget as a sibling AFTER .markdown's parent structure
-    // Append to model-response itself — Angular doesn't replace model-response elements
-    const host = document.createElement('div');
-    host.className = SHADOW_HOST_CLASS;
-    modelResp.appendChild(host);
+    // Collect candidate block elements — prefer direct children of .markdown
+    const candidates: HTMLElement[] = [];
+    for (const child of markdownEl.children) {
+      candidates.push(child as HTMLElement);
+    }
 
-    const shadow = host.attachShadow({ mode: 'open' });
-    applyShadowStyles(shadow, mainStyles);
+    for (const candidate of candidates) {
+      const text = candidate.textContent || '';
+      if (!text.includes(openTag)) continue;
+      if (processedEls.has(candidate)) continue;
 
-    const rootContainer = document.createElement('div');
-    rootContainer.className = 'shadow-body';
-    shadow.appendChild(rootContainer);
-    this.syncDarkMode(rootContainer);
+      // This element contains at least one tool call — hide it
+      processedEls.add(candidate);
+      candidate.style.display = 'none';
 
-    const reactRoot = ReactDOM.createRoot(rootContainer);
-    this.reactRoots.push(reactRoot);
-
-    const widgets = toolCalls.map((tc, idx) => {
-      const { toolName, description, query } = this.extractToolInfo(tc.fullMatch);
-      return (
-        <ToolCallWidget
-          key={idx}
-          toolName={toolName}
-          description={description}
-          query={query}
-          rawText={tc.fullMatch}
-          parseToolCall={this.parseToolCallFromText.bind(this)}
-          executeToolCall={this.executeToolCallFn.bind(this)}
-          fillResultToEditor={this.fillResultToEditor.bind(this)}
-        />
-      );
-    });
-
-    reactRoot.render(
-      <ShadowRootProvider container={rootContainer}>
-        <div className="py-2">{widgets}</div>
-      </ShadowRootProvider>,
-    );
-
-    // Verify after 1.5s
-    setTimeout(() => {
-      if (!host.isConnected) {
-        console.warn('[Renderer] ⚠️ Shadow host removed — retrying');
-        markdownEl.style.display = '';
-        modelResp.classList.remove(TOOL_CALL_RENDERED_CLASS);
-        modelResp.removeAttribute(TOOL_CALL_ATTR);
-        // Retry once more after a longer delay
-        setTimeout(() => this.processModelResponse(modelResp), 2000);
-      } else {
-        console.log('[Renderer] ✅ Shadow host stable');
+      // Extract all tool calls within this single element
+      const localRegex = new RegExp(`<${TOOL_CALL_TAG}>([\\s\\S]*?)<\\/${TOOL_CALL_TAG}>`, 'g');
+      let localMatch: RegExpExecArray | null;
+      const localToolCalls: Array<{ fullMatch: string; content: string }> = [];
+      while ((localMatch = localRegex.exec(text)) !== null) {
+        localToolCalls.push({ fullMatch: localMatch[0], content: localMatch[1].trim() });
       }
-    }, 1500);
+
+      // Mount one shadow host right after the hidden element, containing all tool calls from it
+      const host = document.createElement('div');
+      host.className = SHADOW_HOST_CLASS;
+      candidate.insertAdjacentElement('afterend', host);
+
+      const shadow = host.attachShadow({ mode: 'open' });
+      applyShadowStyles(shadow, mainStyles);
+
+      const rootContainer = document.createElement('div');
+      rootContainer.className = 'shadow-body';
+      shadow.appendChild(rootContainer);
+      this.syncDarkMode(rootContainer);
+
+      const reactRoot = ReactDOM.createRoot(rootContainer);
+      this.reactRoots.push(reactRoot);
+
+      const widgets = localToolCalls.map((tc, i) => {
+        const { toolName, description, query } = this.extractToolInfo(tc.fullMatch);
+        return (
+          <ToolCallWidget
+            key={`${widgetIdx}-${i}`}
+            toolName={toolName}
+            description={description}
+            query={query}
+            rawText={tc.fullMatch}
+            parseToolCall={this.parseToolCallFromText.bind(this)}
+            executeToolCall={this.executeToolCallFn.bind(this)}
+            fillResultToEditor={this.fillResultToEditor.bind(this)}
+          />
+        );
+      });
+
+      reactRoot.render(
+        <ShadowRootProvider container={rootContainer}>
+          <div className="py-2">{widgets}</div>
+        </ShadowRootProvider>,
+      );
+
+      const capturedCandidate = candidate;
+      const capturedIdx = widgetIdx;
+      // Verify after 1.5s
+      setTimeout(() => {
+        if (!host.isConnected) {
+          console.warn('[Renderer] ⚠️ Shadow host removed — retrying', capturedIdx);
+          capturedCandidate.style.display = '';
+          modelResp.classList.remove(TOOL_CALL_RENDERED_CLASS);
+          modelResp.removeAttribute(TOOL_CALL_ATTR);
+          setTimeout(() => this.processModelResponse(modelResp), 2000);
+        } else {
+          console.log('[Renderer] ✅ Shadow host stable', capturedIdx);
+        }
+      }, 1500);
+
+      widgetIdx++;
+    }
   }
 
   // ─── Streaming Tool Call ───────────────────────────────────────────
@@ -530,6 +560,11 @@ export class ConversationRenderer {
 
     const markdownEl = modelResp.querySelector('.markdown') as HTMLElement;
     if (!markdownEl) return;
+
+    // Only mount streaming widget when actually streaming (aria-busy === 'true').
+    // Static content (page load / conversation switch) should go through the stable render path.
+    const isBusy = markdownEl.getAttribute('aria-busy') === 'true';
+    if (!isBusy) return;
 
     const allText = markdownEl.textContent || '';
     if (!allText.includes(`<${TOOL_CALL_TAG}>`)) return;
