@@ -416,11 +416,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
 
       {/* Main Content Area */}
       <div
-        className={`flex flex-col transition-opacity duration-300 ease-in-out ${
-          isSidebarExpanded
-            ? 'opacity-100 pointer-events-auto'
-            : 'opacity-0 pointer-events-none'
-        }`}
+        className={`flex flex-col`}
         style={{
           width:
             'calc(var(--bard-sidenav-open-width, 360px) - var(--bard-sidenav-closed-width, 64px))',

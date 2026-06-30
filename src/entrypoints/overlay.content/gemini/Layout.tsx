@@ -174,9 +174,16 @@ async function mountDesktopLayout(
     });
 
     // 0.5. Monitor bard-sidenav width to detect open/close state
+    // Use a trailing-edge debounce so we only commit the final state after
+    // the native CSS transition settles (~200ms idle), avoiding repeated
+    // React re-renders during the animation.
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
     const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const width = entry.contentRect.width;
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        const lastEntry = entries[entries.length - 1];
+        if (!lastEntry) return;
+        const width = lastEntry.contentRect.width;
         const density = useSettingsStore.getState().layoutDensity;
         const closedWidth = density === 'compact' ? 56 : 64;
         const isSidebarExpanded = width > closedWidth + 10;
@@ -186,7 +193,7 @@ async function mountDesktopLayout(
         if (currentExpanded !== isSidebarExpanded) {
           useAppStore.getState().setSidebarExpanded(isSidebarExpanded);
         }
-      }
+      }, 100);
     });
     resizeObserver.observe(bardSidenavEl);
 
@@ -383,6 +390,7 @@ async function mountDesktopLayout(
         console.log('Better Sidebar: Destroying desktop layout');
         unsubDensity();
         unsubOverlay();
+        if (resizeTimer) clearTimeout(resizeTimer);
         resizeObserver.disconnect();
 
         // Restore sidebar widths
