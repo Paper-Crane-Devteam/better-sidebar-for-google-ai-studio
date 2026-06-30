@@ -28,6 +28,8 @@ export interface OverflowTooltipProps {
   forceShow?: boolean;
   /** Optional ref to use for tooltip position calculation instead of the trigger element */
   positionRef?: React.RefObject<HTMLElement | null>;
+  /** Whether to use a ResizeObserver to re-check overflow on element resize. Defaults to false. */
+  watchResize?: boolean;
 }
 
 /**
@@ -50,6 +52,7 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
   hoverRef,
   forceShow = false,
   positionRef,
+  watchResize = false,
 }) => {
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -77,8 +80,9 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
     checkOverflow();
   }, [children, checkOverflow]);
 
-  // Also watch for resize
+  // Also watch for resize (opt-in to avoid creating many observers per list item)
   useEffect(() => {
+    if (!watchResize) return;
     const el = triggerRef.current;
     if (!el) return;
 
@@ -88,7 +92,7 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
     observer.observe(el);
 
     return () => observer.disconnect();
-  }, [checkOverflow]);
+  }, [watchResize, checkOverflow]);
 
   // Calculate tooltip position based on placement — returns coords instead of setting state
   const calculatePosition = useCallback((): { top: number; left: number } | null => {

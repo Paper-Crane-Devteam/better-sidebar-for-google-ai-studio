@@ -321,13 +321,19 @@ export const SnippetReaderDrawer = () => {
       const rect = sidebarEl.getBoundingClientRect();
       setSidebarWidth(rect.width);
 
+      let resizeTimer: ReturnType<typeof setTimeout> | null = null;
       const resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          setSidebarWidth(entry.contentRect.width);
-        }
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          const lastEntry = entries[entries.length - 1];
+          if (lastEntry) setSidebarWidth(lastEntry.contentRect.width);
+        }, 150);
       });
       resizeObserver.observe(sidebarEl);
-      return () => resizeObserver.disconnect();
+      return () => {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeObserver.disconnect();
+      };
     }
   }, [isOpen]);
 
