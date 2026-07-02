@@ -14,7 +14,13 @@ export function mountEnhancedFeatures(mainStyles: string) {
   try {
     const enhancedWrapper = document.createElement('div');
     enhancedWrapper.id = 'better-sidebar-enhanced-features';
-    enhancedWrapper.style.position = 'relative';
+    // Take out of document flow so the empty container doesn't affect page layout
+    enhancedWrapper.style.position = 'absolute';
+    enhancedWrapper.style.top = '0';
+    enhancedWrapper.style.left = '0';
+    enhancedWrapper.style.width = '0';
+    enhancedWrapper.style.height = '0';
+    enhancedWrapper.style.overflow = 'visible';
     // Keep below sidebar reader drawer (z-9998) but above normal page content
     enhancedWrapper.style.zIndex = '40';
     document.body.appendChild(enhancedWrapper);

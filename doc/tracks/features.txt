@@ -22,14 +22,15 @@
 -24. integrate gem into Library
 25. customize tab icon and order
 26. scroll to top and bottom button
-27. keyboard shortcuts
+-27. keyboard shortcuts
 -28. real deletion of chats
 -29. debounce sync with gdrive and keep session
 -30. notebook integration
 -31. pending create indication
 32. export includes thinking process
 
-33. knowledge snippet; folder like
+-33. knowledge snippet; folder like
 -34.chat memo, chat info display
 35. audit log for sync and ai
 36.draggable modal
+37.default model for each gem or notebook
