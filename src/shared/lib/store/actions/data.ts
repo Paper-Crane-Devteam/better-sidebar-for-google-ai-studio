@@ -285,25 +285,29 @@ export function createDataActions(
           const total = conversationIds.length;
           let succeeded = 0;
           let failed = 0;
+          let cancelled = false;
+          const succeededIds: string[] = [];
 
-          const { addToast, removeToast } = useToastStore.getState();
-          addToast(i18n.t('batch.deletingProgress', { current: 1, total }), 'info', Infinity);
-          const toasts = useToastStore.getState().toasts;
-          const pId = toasts[toasts.length - 1]?.id || '';
+          const { addToast, removeToast, updateToast } = useToastStore.getState();
+          const pId = addToast(
+            i18n.t('batch.deletingProgress', { current: 1, total }),
+            'info',
+            Infinity,
+            { label: i18n.t('batch.cancelDelete'), onClick: () => { cancelled = true; } },
+          );
 
           for (let i = 0; i < conversationIds.length; i++) {
+            // Check if user cancelled
+            if (cancelled) break;
+
             const cid = conversationIds[i];
             const convo = state.conversations.find((c) => c.id === cid);
             const platform = convo?.platform || 'aistudio';
 
             // Update progress toast
-            useToastStore.setState((s) => ({
-              toasts: s.toasts.map((t) =>
-                t.id === pId
-                  ? { ...t, message: i18n.t('batch.deletingProgress', { current: i + 1, total }) }
-                  : t,
-              ),
-            }));
+            updateToast(pId, {
+              message: i18n.t('batch.deletingProgress', { current: i + 1, total }),
+            });
 
             try {
               await new Promise<void>((resolve) => {
@@ -314,6 +318,7 @@ export function createDataActions(
                   clearTimeout(timer);
                   window.removeEventListener(callbackEvent, handler);
                   succeeded++;
+                  succeededIds.push(cid);
                   resolve();
                 };
 
@@ -350,6 +355,7 @@ export function createDataActions(
                   clearTimeout(timer);
                   window.removeEventListener(callbackEvent, handler);
                   succeeded++;
+                  succeededIds.push(cid);
                   resolve();
                 }
               });
@@ -359,20 +365,33 @@ export function createDataActions(
           }
 
           removeToast(pId);
-          if (failed === 0) {
+          if (cancelled) {
+            addToast(i18n.t('batch.deleteCancelled', { succeeded, total }), 'info');
+          } else if (failed === 0) {
             addToast(i18n.t('batch.deleteSuccess', { count: succeeded }), 'success');
           } else {
             addToast(i18n.t('batch.deletePartial', { succeeded, total, failed }), 'warning');
           }
+
+          // Only clean up items that were actually deleted
+          const deletedConversationIds = cancelled ? succeededIds : conversationIds;
+
+          if (deletedConversationIds.length > 0 || folderIds.length > 0) {
+            await browser.runtime.sendMessage({
+              type: 'DELETE_ITEMS',
+              payload: { conversationIds: deletedConversationIds, folderIds },
+            });
+            redirectIfViewing(deletedConversationIds);
+          }
+        } else {
+          // Only folders to delete, no conversations
+          await browser.runtime.sendMessage({
+            type: 'DELETE_ITEMS',
+            payload: { conversationIds, folderIds },
+          });
+          redirectIfViewing(conversationIds);
         }
 
-        // Clean up local DB
-        await browser.runtime.sendMessage({
-          type: 'DELETE_ITEMS',
-          payload: { conversationIds, folderIds },
-        });
-
-        redirectIfViewing(conversationIds);
         await get().fetchData(true);
       } catch (error) {
         console.error('Failed to delete items:', error);

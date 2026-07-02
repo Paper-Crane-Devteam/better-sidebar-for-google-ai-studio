@@ -326,7 +326,12 @@
   },
   "explorerHeader": {
     "library": "Biblioteca",
-    "newChat": "Nuevo Chat"
+    "newChat": "Nuevo Chat",
+    "chats": "Chats"
+  },
+  "outline": {
+    "title": "Esquema",
+    "placeholder": "No hay esquema disponible"
   },
   "node": {
     "newFolder": "Crear Subcarpeta",
@@ -466,6 +471,8 @@
     "selectedCount": "{{count}} seleccionados",
     "selectItems": "Seleccionar elementos",
     "deletingProgress": "Eliminando {{current}}/{{total}}...",
+    "cancelDelete": "Cancelar",
+    "deleteCancelled": "Cancelado ({{succeeded}}/{{total}} eliminadas)",
     "deleteSuccess": "{{count}} conversaciones eliminadas",
     "deletePartial": "Eliminadas {{succeeded}}/{{total}}, {{failed}} fallidas"
   },

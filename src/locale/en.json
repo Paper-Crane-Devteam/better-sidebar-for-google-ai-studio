@@ -328,7 +328,12 @@
   },
   "explorerHeader": {
     "library": "Library",
-    "newChat": "New Chat"
+    "newChat": "New Chat",
+    "chats": "Chats"
+  },
+  "outline": {
+    "title": "Outline",
+    "placeholder": "No outline available"
   },
   "node": {
     "newFolder": "Create Subfolder",
@@ -468,6 +473,8 @@
     "selectedCount": "{{count}} selected",
     "selectItems": "Select items",
     "deletingProgress": "Deleting {{current}}/{{total}}...",
+    "cancelDelete": "Cancel",
+    "deleteCancelled": "Cancelled (deleted {{succeeded}}/{{total}})",
     "deleteSuccess": "Deleted {{count}} conversations",
     "deletePartial": "Deleted {{succeeded}}/{{total}}, {{failed}} failed"
   },
@@ -822,6 +829,19 @@
     "restoreToCompactView": "Restore to compact view",
     "collapseToIcon": "Collapse to icon",
     "expandToFullOutline": "Expand to full outline"
+  },
+  "outline": {
+    "title": "Outline",
+    "placeholder": "Open a conversation to see its outline",
+    "search": "Search outline",
+    "searchPlaceholder": "Filter outline...",
+    "filterAll": "All",
+    "filterHeadings": "Headings",
+    "filterCode": "Code",
+    "noConversation": "No conversation open",
+    "noConversationHint": "Open a conversation to see its outline",
+    "empty": "No outline content",
+    "noResults": "No matching items"
   },
   "firstInstall": {
     "title": "Import Conversation List?",

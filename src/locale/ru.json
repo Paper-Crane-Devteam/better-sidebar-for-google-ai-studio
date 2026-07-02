@@ -326,7 +326,12 @@
   },
   "explorerHeader": {
     "library": "Библиотека",
-    "newChat": "Новый чат"
+    "newChat": "Новый чат",
+    "chats": "Чаты"
+  },
+  "outline": {
+    "title": "Структура",
+    "placeholder": "Структура недоступна"
   },
   "node": {
     "newFolder": "Создать подпапку",
@@ -466,6 +471,8 @@
     "selectedCount": "{{count}} выбрано",
     "selectItems": "Выберите элементы",
     "deletingProgress": "Удаление {{current}}/{{total}}...",
+    "cancelDelete": "Отмена",
+    "deleteCancelled": "Отменено (удалено {{succeeded}}/{{total}})",
     "deleteSuccess": "Удалено {{count}} диалогов",
     "deletePartial": "Удалено {{succeeded}}/{{total}}, {{failed}} не удалось"
   },

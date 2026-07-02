@@ -1,11 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/shared/lib/store';
-import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Button } from '../../components/ui/button';
 import { RefreshCw, Loader2, FolderPlus } from 'lucide-react';
 import { ExplorerHeader } from './components/ExplorerHeader';
 import { ArboristTree, ArboristTreeHandle } from './components/ArboristTree';
-import { navigate } from '@/shared/lib/navigation';
 import { useCurrentConversationId } from '../../hooks/useCurrentConversationId';
 import { FilterBar } from '../../components/FilterBar';
 import { useStoreFilter } from '../../hooks/useStoreFilter';
@@ -16,6 +14,7 @@ import {
   ContextMenuTrigger,
 } from '../../components/ui/context-menu';
 import { ExclusiveContextMenu } from '../../components/ui/exclusive-context-menu';
+import { OutlineSection } from './components/OutlineSection';
 
 import type { ExplorerTypeFilter } from '../../types/filter';
 import type { SplitDropdownItem } from '@/shared/components/ui/split-icon-button';
@@ -365,6 +364,9 @@ export const ExplorerTab = ({
     browser.runtime.sendMessage({ type: 'SCAN_LIBRARY' });
   };
 
+  // State for collapsible CHATS section
+  const [isChatsSectionExpanded, setIsChatsSectionExpanded] = useState(true);
+
   return (
     <ExplorerContext.Provider value={{
       onNewChat: handleNewChatFromFolder,
@@ -385,7 +387,8 @@ export const ExplorerTab = ({
           </p>
         </div>
       )}
-      {/* Header */}
+
+      {/* CHATS Section Header (collapsible, VSCode-style) */}
       <ExplorerHeader
         onNewFolder={handleNewFolder}
         onCollapseAll={handleCollapseAll}
@@ -400,56 +403,66 @@ export const ExplorerTab = ({
           ...menuActions,
           handleScanLibrary,
         }}
+        isChatsSectionExpanded={isChatsSectionExpanded}
+        onToggleChatsSection={() => setIsChatsSectionExpanded(!isChatsSectionExpanded)}
       />
 
-      <FilterBar filter={filter} allTags={allTags} />
+      {/* CHATS Section Content (collapsible with quick animation) */}
+      {isChatsSectionExpanded && (
+        <div className="flex flex-col flex-1 min-h-0 animate-in fade-in slide-in-from-top-1 duration-150">
+          <FilterBar filter={filter} allTags={allTags} />
 
-      {/* Content */}
-      <ExclusiveContextMenu>
-        <ContextMenuTrigger asChild>
-          <div className="flex-1 overflow-hidden relative">
-            {(() => {
-              if (
-                isLoading &&
-                folders.length === 0 &&
-                conversations.length === 0
-              ) {
-                return (
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
-                    <Loader2 className="h-6 w-6 animate-spin text-foreground" />
-                  </div>
-                );
-              }
+          {/* Content */}
+          <ExclusiveContextMenu>
+            <ContextMenuTrigger asChild>
+              <div className="flex-1 overflow-hidden relative">
+                {(() => {
+                  if (
+                    isLoading &&
+                    folders.length === 0 &&
+                    conversations.length === 0
+                  ) {
+                    return (
+                      <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
+                        <Loader2 className="h-6 w-6 animate-spin text-foreground" />
+                      </div>
+                    );
+                  }
 
-              if (
-                !isScanning &&
-                folders.length === 0 &&
-                conversations.length === 0
-              ) {
-                return (
-                  <div className="flex flex-col items-center justify-center h-full p-4 text-center text-muted-foreground gap-4">
-                    <p>{t('explorer.noConversations')}</p>
-                    <p>{t('explorer.scanPrompt')}</p>
-                    <Button onClick={handleScanLibrary} className="gap-2">
-                      <RefreshCw className="h-4 w-4" />
-                      {t('explorer.scanLibrary')}
-                    </Button>
-                  </div>
-                );
-              }
-              return <ArboristTree ref={treeRef} onSelect={handleSelect} />;
-            })()}
-          </div>
-        </ContextMenuTrigger>
-        {viewMode === 'tree' && (
-          <ContextMenuContent>
-            <ContextMenuItem onClick={handleCreateRootFolder}>
-              <FolderPlus className="mr-2 h-4 w-4" />
-              {t('sidebar.newFolder')}
-            </ContextMenuItem>
-          </ContextMenuContent>
-        )}
-      </ExclusiveContextMenu>
+                  if (
+                    !isScanning &&
+                    folders.length === 0 &&
+                    conversations.length === 0
+                  ) {
+                    return (
+                      <div className="flex flex-col items-center justify-center h-full p-4 text-center text-muted-foreground gap-4">
+                        <p>{t('explorer.noConversations')}</p>
+                        <p>{t('explorer.scanPrompt')}</p>
+                        <Button onClick={handleScanLibrary} className="gap-2">
+                          <RefreshCw className="h-4 w-4" />
+                          {t('explorer.scanLibrary')}
+                        </Button>
+                      </div>
+                    );
+                  }
+                  return <ArboristTree ref={treeRef} onSelect={handleSelect} />;
+                })()}
+              </div>
+            </ContextMenuTrigger>
+            {viewMode === 'tree' && (
+              <ContextMenuContent>
+                <ContextMenuItem onClick={handleCreateRootFolder}>
+                  <FolderPlus className="mr-2 h-4 w-4" />
+                  {t('sidebar.newFolder')}
+                </ContextMenuItem>
+              </ContextMenuContent>
+            )}
+          </ExclusiveContextMenu>
+        </div>
+      )}
+
+      {/* OUTLINE Section (collapsible, at the bottom) */}
+      <OutlineSection />
     </div>
     </ExplorerContext.Provider>
   );

@@ -82,6 +82,8 @@ interface SettingsState {
       lastFetchedAt: number | null;
     };
   };
+  /** Persisted height of the outline panel in pixels */
+  outlineHeight: number;
 
   // Actions
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
@@ -109,6 +111,7 @@ interface SettingsState {
   ) => void;
   setLastSelectedGemId: (id: string | null) => void;
   setNotionConfig: (config: Partial<SettingsState['integrations']['notion']>) => void;
+  setOutlineHeight: (height: number) => void;
 }
 
 const storage: StateStorage = {
@@ -223,6 +226,7 @@ export const useSettingsStore = create<SettingsState>()(
           lastFetchedAt: null,
         },
       },
+      outlineHeight: 200,
 
       setTheme: (theme) => {
         set({ theme });
@@ -294,6 +298,7 @@ export const useSettingsStore = create<SettingsState>()(
             notion: { ...state.integrations.notion, ...config },
           },
         })),
+      setOutlineHeight: (height) => set({ outlineHeight: height }),
     }),
     {
       name: getStorageName(),

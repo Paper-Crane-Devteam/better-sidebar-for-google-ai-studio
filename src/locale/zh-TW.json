@@ -326,7 +326,12 @@
   },
   "explorerHeader": {
     "library": "資料庫",
-    "newChat": "新增對話"
+    "newChat": "新增對話",
+    "chats": "對話"
+  },
+  "outline": {
+    "title": "大綱",
+    "placeholder": "暫無大綱"
   },
   "node": {
     "newFolder": "建立子資料夾",
@@ -466,6 +471,8 @@
     "selectedCount": "已選取 {{count}} 項",
     "selectItems": "選取項目",
     "deletingProgress": "正在刪除 {{current}}/{{total}}...",
+    "cancelDelete": "取消",
+    "deleteCancelled": "已取消刪除（已刪除 {{succeeded}}/{{total}}）",
     "deleteSuccess": "已刪除 {{count}} 則對話",
     "deletePartial": "已刪除 {{succeeded}}/{{total}}，{{failed}} 則失敗"
   },

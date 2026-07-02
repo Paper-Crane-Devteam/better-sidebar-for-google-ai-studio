@@ -326,7 +326,12 @@
   },
   "explorerHeader": {
     "library": "Biblioteca",
-    "newChat": "Novo Chat"
+    "newChat": "Novo Chat",
+    "chats": "Conversas"
+  },
+  "outline": {
+    "title": "Esquema",
+    "placeholder": "Nenhum esquema disponível"
   },
   "node": {
     "newFolder": "Criar Subpasta",
@@ -466,6 +471,8 @@
     "selectedCount": "{{count}} selecionados",
     "selectItems": "Selecionar itens",
     "deletingProgress": "Excluindo {{current}}/{{total}}...",
+    "cancelDelete": "Cancelar",
+    "deleteCancelled": "Cancelado ({{succeeded}}/{{total}} excluídas)",
     "deleteSuccess": "{{count}} conversas excluídas",
     "deletePartial": "Excluídas {{succeeded}}/{{total}}, {{failed}} falharam"
   },

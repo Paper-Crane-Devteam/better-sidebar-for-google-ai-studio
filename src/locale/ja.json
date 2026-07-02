@@ -326,7 +326,12 @@
   },
   "explorerHeader": {
     "library": "ライブラリ",
-    "newChat": "新しいチャット"
+    "newChat": "新しいチャット",
+    "chats": "チャット"
+  },
+  "outline": {
+    "title": "アウトライン",
+    "placeholder": "アウトラインはありません"
   },
   "node": {
     "newFolder": "サブフォルダを作成",
@@ -467,6 +472,8 @@
     "selectedCount": "{{count}} 件選択中",
     "selectItems": "項目を選択",
     "deletingProgress": "削除中 {{current}}/{{total}}...",
+    "cancelDelete": "キャンセル",
+    "deleteCancelled": "キャンセルしました（{{succeeded}}/{{total}} 件削除済み）",
     "deleteSuccess": "{{count}} 件の会話を削除しました",
     "deletePartial": "{{succeeded}}/{{total}} 件削除、{{failed}} 件失敗"
   },
