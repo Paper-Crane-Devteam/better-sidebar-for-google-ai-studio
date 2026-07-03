@@ -25,7 +25,7 @@ const MODIFIER_SYMBOLS: Record<string, string> = {
 
 /** Renders a single key as a keyboard cap */
 const Kbd = ({ children }: { children: string }) => (
-  <kbd className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 text-[11px] font-medium font-sans rounded border border-border/80 bg-muted/60 text-foreground shadow-[0_1px_0_1px_rgba(0,0,0,0.05)] leading-none">
+  <kbd className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 text-[11px] font-medium font-sans rounded border border-border/80 bg-muted/60 text-foreground shadow-[0_1px_0_1px_rgba(0,0,0,0.05)] leading-none">
     {children}
   </kbd>
 );
@@ -36,7 +36,7 @@ const KeyBindingCaps = ({ binding }: { binding: string | null }) => {
 
   const parts = binding.split('+');
   return (
-    <span className="inline-flex items-center gap-0.5">
+    <span className="inline-flex items-center gap-1">
       {parts.map((part, i) => {
         const display = MODIFIER_SYMBOLS[part] || part;
         return <Kbd key={i}>{display}</Kbd>;
@@ -151,7 +151,7 @@ const HotkeyCheatsheetInner = ({
       {isOpen && (
         <div className="absolute bottom-12 right-0 w-[320px] rounded-lg border border-border bg-background/95 backdrop-blur-md shadow-xl p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-200">
           {/* Header */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold">{t('hotkeyHelper.title')}</h3>
             <div className="flex items-center gap-1">
               <button
@@ -175,7 +175,7 @@ const HotkeyCheatsheetInner = ({
           <div className="space-y-3 max-h-[400px] overflow-y-auto">
             {categories.map(({ category, ids }) => (
               <div key={category}>
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1.5">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
                   {t(CATEGORY_LABELS[category])}
                 </p>
                 <div className="space-y-1">

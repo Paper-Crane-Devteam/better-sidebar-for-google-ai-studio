@@ -16,7 +16,7 @@ export const GlobalModal = () => {
   return (
     <>
       {stack.map((current, index) => {
-        const { title, content, headerActions, confirmText, cancelText, onConfirm, onCancel, type, modalClassName } = current;
+        const { title, content, headerActions, confirmText, cancelText, destructive, onConfirm, onCancel, type, modalClassName } = current;
         const z = BASE_Z + index;
         return (
           <div
@@ -58,7 +58,7 @@ export const GlobalModal = () => {
                   </Button>
                 )}
                 <Button
-                  variant={type === 'error' ? 'destructive' : 'outline'}
+                  variant={type === 'error' || destructive ? 'destructive' : 'outline'}
                   onClick={
                     type === 'confirm'
                       ? onConfirm

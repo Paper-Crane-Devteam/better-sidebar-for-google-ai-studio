@@ -51,7 +51,7 @@ export const useDeleteHandler = () => {
       ? t('node.deleteFolderConfirm', { name })
       : t('node.deleteConfirm', { name });
 
-    const confirmed = await modal.confirm({
+    const confirmed = await modal.confirmDelete({
       title: t('node.deleteItem'),
       content: (
         <div className="space-y-2">
@@ -61,10 +61,13 @@ export const useDeleteHandler = () => {
               {t('node.deleteNote')}
             </p>
           )}
+          {isFolder && (
+            <p className="text-xs text-muted-foreground bg-muted p-2 rounded">
+              {t('node.deleteFolderNote')}
+            </p>
+          )}
         </div>
       ),
-      confirmText: t('node.delete'),
-      cancelText: t('common.cancel'),
     });
 
     if (confirmed) {

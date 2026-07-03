@@ -1,4 +1,23 @@
 @layer base {
+  /* ─── Spacing System (4px base, 8px rhythm) ──────────────────────────
+   * Use these tokens for consistent spacing across all components.
+   * Primary rhythm: 8, 16, 24, 32 (use for padding, margins, section gaps)
+   * Micro adjustments: 4px allowed for tight icon-text gaps in dense UI
+   * BANNED values: 2px, 6px, 10px (half-steps that break visual rhythm)
+   */
+  :root, :host {
+    --space-0: 0px;
+    --space-1: 4px;    /* micro: icon-text gap, inline spacing */
+    --space-2: 8px;    /* base unit: inner padding, small gaps */
+    --space-3: 12px;   /* compact panels: header padding, toolbar padding */
+    --space-4: 16px;   /* standard: section padding, card padding */
+    --space-5: 20px;   /* comfortable: modal content spacing */
+    --space-6: 24px;   /* generous: section gaps, dialog padding */
+    --space-8: 32px;   /* large: page-level spacing */
+    --space-10: 40px;  /* extra: hero spacing */
+    --space-12: 48px;  /* max: page margins */
+  }
+
   /* Sidebar Classes */
   .sidebar-nav {
     width: var(--sidebar-width);

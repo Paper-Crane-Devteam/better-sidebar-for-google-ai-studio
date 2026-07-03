@@ -349,7 +349,7 @@
     "hideItem": "Hide Item",
     "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
     "hideConfirm": "Are you sure you want to hide \"{{name}}\"?",
-    "deleteFolderConfirm": "Are you sure you want to delete the folder \"{{name}}\" and all its contents?",
+    "deleteFolderConfirm": "Are you sure you want to delete the folder \"{{name}}\"?",
     "deleteNote": "Note: This will permanently delete the conversation.",
     "hideNote": "Note: Hidden items can be restored by importing the chat list.",
     "deleteFolderNote": "Note: Deleted folders cannot be restored, but conversations can be recovered by importing the chat list.",

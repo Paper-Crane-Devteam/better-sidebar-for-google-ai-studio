@@ -347,7 +347,7 @@
     "hideItem": "Ocultar Elemento",
     "deleteConfirm": "¿Estás seguro de que deseas eliminar \"{{name}}\"?",
     "hideConfirm": "¿Estás seguro de que deseas ocultar \"{{name}}\"?",
-    "deleteFolderConfirm": "¿Estás seguro de que deseas eliminar la carpeta \"{{name}}\" y todo su contenido?",
+    "deleteFolderConfirm": "¿Estás seguro de que deseas eliminar la carpeta \"{{name}}\"?",
     "deleteNote": "Nota: Esto eliminará permanentemente la conversación.",
     "hideNote": "Nota: Los elementos ocultos se pueden restaurar importando la lista de chats.",
     "deleteFolderNote": "Nota: Las carpetas eliminadas no se pueden restaurar, pero las conversaciones se pueden recuperar importando la lista de chats.",

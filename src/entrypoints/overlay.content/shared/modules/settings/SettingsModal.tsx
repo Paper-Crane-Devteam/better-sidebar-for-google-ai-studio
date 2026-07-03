@@ -122,7 +122,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
                 </Button>
 
                 {/* Sidebar */}
-                <div className="w-64 bg-muted/30 border-r p-4 flex flex-col gap-2 overflow-y-auto">
+                <div className="w-64 bg-muted/30 border-r p-4 flex flex-col gap-1 overflow-y-auto">
                     <div className="px-2 py-2 mb-2">
                         <h2 className="font-semibold text-lg tracking-tight">{t('common.preferences')}</h2>
                     </div>

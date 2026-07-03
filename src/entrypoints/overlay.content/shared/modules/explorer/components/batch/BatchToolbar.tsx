@@ -36,11 +36,9 @@ export const BatchToolbar = ({ onSelectAll }: BatchToolbarProps) => {
     );
     if (validIds.length === 0) return;
 
-    const confirmed = await modal.confirm({
+    const confirmed = await modal.confirmDelete({
       title: t('batch.deleteConfirmTitle', { count: validIds.length }),
       content: t('batch.deleteConfirmMessage'),
-      confirmText: t('common.delete'),
-      cancelText: t('common.cancel'),
     });
 
     if (confirmed) {

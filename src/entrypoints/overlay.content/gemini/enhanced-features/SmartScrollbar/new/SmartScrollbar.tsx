@@ -57,7 +57,7 @@ export const SmartScrollbar: React.FC = () => {
         'flex flex-col items-center',
         'border border-border/40 rounded-full',
         'bg-transparent',
-        'py-5 px-[11px]',
+        'py-5 px-3',
         'overflow-visible',
         'transition-opacity duration-200',
         isDisabled && 'opacity-40 pointer-events-none',

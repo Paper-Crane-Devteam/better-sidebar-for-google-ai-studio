@@ -75,7 +75,7 @@ export const PowerPackPaywall = () => {
         </button>
 
         {/* Content */}
-        <div className="relative p-6 space-y-5">
+        <div className="relative p-6 space-y-4">
           {/* Header */}
           <div className="flex items-center gap-3">
             <Icon icon="fluent-color:premium-24" width={28} height={28} />
@@ -101,12 +101,12 @@ export const PowerPackPaywall = () => {
           )}
 
           {/* Feature list */}
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               {t('paywall.includedFeatures')}
             </p>
             {FEATURES.map(({ icon: iconName, key }) => (
-              <div key={key} className="flex items-center gap-2.5">
+              <div key={key} className="flex items-center gap-2">
                 <div className="h-6 w-6 rounded-md bg-violet-500/10 flex items-center justify-center shrink-0">
                   <Icon icon={iconName} width={14} height={14} />
                 </div>

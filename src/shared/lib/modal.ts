@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import React from 'react';
+import i18n from '@/locale/i18n';
+import { Trash2 } from 'lucide-react';
 
 /** Single modal item in the stack */
 export interface ModalState {
@@ -11,6 +13,8 @@ export interface ModalState {
   headerActions?: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
+  /** When true, the confirm button uses destructive styling (red) */
+  destructive?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
   modalClassName?: string;
@@ -23,6 +27,7 @@ const defaultModalState: ModalState = {
   headerActions: undefined,
   confirmText: '',
   cancelText: '',
+  destructive: false,
   onConfirm: () => {},
   onCancel: () => {},
   modalClassName: undefined,
@@ -62,10 +67,11 @@ export const useModalStore = create<ModalStore>((set) => ({
 
 export const modal = {
   confirm: (options: {
-    title: string;
+    title: React.ReactNode;
     content: React.ReactNode;
     confirmText?: string;
     cancelText?: string;
+    destructive?: boolean;
     modalClassName?: string;
   }) => {
     return new Promise<boolean>((resolve) => {
@@ -75,6 +81,7 @@ export const modal = {
         content: options.content,
         confirmText: options.confirmText,
         cancelText: options.cancelText,
+        destructive: options.destructive,
         modalClassName: options.modalClassName,
         onConfirm: () => {
           useModalStore.getState().close();
@@ -88,4 +95,30 @@ export const modal = {
     });
   },
   // Add other methods (info, error, warn) as needed later
+
+  /**
+   * Specialized delete confirmation modal.
+   * Title shows a Trash2 icon + title text, confirm button is red/destructive.
+   */
+  confirmDelete: (options: {
+    title: string;
+    content: React.ReactNode;
+    confirmText?: string;
+    cancelText?: string;
+  }) => {
+    const deleteTitle = React.createElement(
+      'span',
+      { className: 'inline-flex items-center gap-2 text-destructive' },
+      React.createElement(Trash2, { className: 'h-5 w-5' }),
+      options.title,
+    );
+
+    return modal.confirm({
+      title: deleteTitle,
+      content: options.content,
+      confirmText: options.confirmText || i18n.t('common.delete'),
+      cancelText: options.cancelText || i18n.t('common.cancel'),
+      destructive: true,
+    });
+  },
 };

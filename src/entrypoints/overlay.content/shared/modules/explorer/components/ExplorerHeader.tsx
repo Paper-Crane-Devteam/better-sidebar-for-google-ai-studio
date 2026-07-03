@@ -129,12 +129,12 @@ export const ExplorerHeader = ({
   return (
     <div className="flex flex-col bg-background">
       {/* Row 1: EXPLORER title + sync + three-dot menu */}
-      <div className="px-3 pt-2 pb-1 flex items-center justify-between border-b">
+      <div className="px-3 py-2 flex items-center justify-between border-b">
         <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
           {t('explorerHeader.library')}
         </h1>
 
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-1">
           <SimpleTooltip content={gdriveSyncing ? t('data.gdriveAutoSyncing') : t('data.gdriveSync')}>
             <Button
               variant="ghost"
@@ -183,7 +183,7 @@ export const ExplorerHeader = ({
       {isChatsSectionExpanded && (
         <div className="animate-in fade-in slide-in-from-top-1 duration-150">
           {/* Row 3: Filter toggles + new folder + new chat */}
-          <div className="px-3 py-1.5 flex items-center justify-between border-b border-border/30">
+          <div className="px-3 py-2 flex items-center justify-between border-b border-border/30">
             <div className="flex-1 mr-2">
               <FilterActions
                 filter={filter}
@@ -191,7 +191,7 @@ export const ExplorerHeader = ({
                 visibleFilters={visibleFilters}
               />
             </div>
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-1">
               {viewMode !== 'timeline' && (
                 <SimpleTooltip content={t('menu.newFolder')}>
                   <Button

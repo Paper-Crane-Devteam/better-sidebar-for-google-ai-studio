@@ -49,11 +49,9 @@ export const TagItem = ({ tag }: TagItemProps) => {
   };
 
   const handleDelete = async () => {
-    const confirmed = await modal.confirm({
+    const confirmed = await modal.confirmDelete({
       title: t('tags.deleteTag'),
       content: t('tags.deleteTagConfirm'),
-      confirmText: t('common.delete'),
-      cancelText: t('common.cancel'),
     });
     if (confirmed) {
       await deleteTag(tag.id);

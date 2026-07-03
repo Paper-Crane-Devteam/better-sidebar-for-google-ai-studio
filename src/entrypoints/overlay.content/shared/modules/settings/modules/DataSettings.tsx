@@ -124,11 +124,9 @@ export const DataSettings = () => {
   const handleDeleteProfile = async (profile: Profile) => {
     if (profile.id === activeProfileId) return;
 
-    const confirmed = await modal.confirm({
+    const confirmed = await modal.confirmDelete({
       title: t('profile.deleteProfileTitle', { name: profile.name }),
       content: t('profile.deleteProfileContent', { dbName: profile.dbName }),
-      confirmText: t('common.delete'),
-      cancelText: t('common.cancel'),
     });
     if (!confirmed) return;
 

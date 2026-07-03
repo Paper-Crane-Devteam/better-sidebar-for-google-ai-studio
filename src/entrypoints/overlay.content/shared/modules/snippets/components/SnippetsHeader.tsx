@@ -72,11 +72,9 @@ export const SnippetsHeader = ({
   const handleBatchDelete = async () => {
     if (selectedIds.length === 0) return;
 
-    const confirmed = await modal.confirm({
+    const confirmed = await modal.confirmDelete({
       title: t('batch.deleteConfirmTitle', { count: selectedIds.length }),
       content: t('batch.deleteConfirmMessage'),
-      confirmText: t('common.delete'),
-      cancelText: t('common.cancel'),
     });
 
     if (confirmed) {
@@ -135,12 +133,12 @@ export const SnippetsHeader = ({
   return (
     <div className="flex flex-col border-b bg-background">
       {/* Row 1: Title + actions */}
-      <div className="px-3 pt-2 pb-1 flex items-center justify-between">
+      <div className="px-3 py-2 flex items-center justify-between">
         <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
           {t('tabs.snippets')}
         </h1>
 
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-1">
           <SimpleTooltip content={gdriveSyncing ? t('data.gdriveAutoSyncing') : t('data.gdriveSync')}>
             <Button
               variant="ghost"
@@ -250,7 +248,7 @@ export const SnippetsHeader = ({
 
       {/* Row 3: Batch toolbar (conditional) */}
       {isBatchMode && (
-        <div className="px-3 py-1.5 flex items-center justify-between border-t bg-muted/30">
+        <div className="px-3 py-2 flex items-center justify-between border-t bg-muted/30">
           <span className="text-xs text-muted-foreground">
             {selectedIds.length > 0
               ? t('batch.selectedCount', { count: selectedIds.length })

@@ -55,7 +55,7 @@ export const OutlineContent = () => {
 
   // ── Toolbar (always visible) ─────────────────────────────────────
   const toolbar = (
-    <div className="flex items-center gap-1 px-2.5 py-1.5 border-b border-border/30">
+    <div className="flex items-center gap-1 px-2 py-1 border-b border-border/30">
       {/* Filter chips */}
       <FilterChips filter={filter} onFilterChange={setFilter} />
       <div className="flex-1" />
@@ -82,8 +82,8 @@ export const OutlineContent = () => {
 
   // ── Search input ─────────────────────────────────────────────────
   const searchBar = showSearch ? (
-    <div className="px-2.5 py-1.5 border-b border-border/30">
-      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-muted/40 border border-border/40">
+    <div className="px-2 py-1 border-b border-border/30">
+      <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/40 border border-border/40">
         <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <input
           ref={searchInputRef}
@@ -188,7 +188,7 @@ function FilterChips({
   ];
 
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="flex items-center gap-1">
       {filters.map(({ key, label, icon }) => (
         <button
           key={key}
@@ -239,7 +239,7 @@ function OutlineSectionItem({
       {/* User question row */}
       <div
         className={cn(
-          'group flex items-center gap-1.5 px-2 py-1 rounded-md',
+          'group flex items-center gap-1 px-2 py-1 rounded-md',
           section.userInDom
             ? 'cursor-pointer hover:bg-accent/50'
             : 'cursor-default opacity-50',
@@ -302,7 +302,7 @@ function OutlineSectionItem({
 
       {/* Children */}
       {hasChildren && !isCollapsed && (
-        <div className="ml-4 border-l border-border/25 pl-1.5 mb-0.5">
+        <div className="ml-4 border-l border-border/25 pl-2 mb-1">
           {section.children.map((node) => (
             <OutlineNodeItem
               key={node.id}
@@ -341,7 +341,7 @@ function OutlineNodeItem({
       <div
         onClick={() => navigable && onNavigate(messageId)}
         className={cn(
-          'group flex items-center gap-1.5 px-2 py-[3px] rounded-md',
+          'group flex items-center gap-1 px-2 py-1 rounded-md',
           'transition-colors duration-100',
           navigable
             ? 'cursor-pointer hover:bg-accent/40'

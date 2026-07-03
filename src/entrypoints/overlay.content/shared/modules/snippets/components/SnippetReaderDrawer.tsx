@@ -67,7 +67,7 @@ const SnippetCard = ({ snippet, isActive, onSelect, onCopy, onEdit, onNavigate, 
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+          className="h-7 px-2 text-xs gap-2 text-muted-foreground hover:text-foreground"
           onClick={(e) => { e.stopPropagation(); onSelect(snippet); onCopy(snippet); }}
         >
           <Copy className="h-3.5 w-3.5" />
@@ -76,7 +76,7 @@ const SnippetCard = ({ snippet, isActive, onSelect, onCopy, onEdit, onNavigate, 
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+          className="h-7 px-2 text-xs gap-2 text-muted-foreground hover:text-foreground"
           onClick={(e) => { e.stopPropagation(); onSelect(snippet); onEdit(snippet); }}
         >
           <Pencil className="h-3.5 w-3.5" />
@@ -86,7 +86,7 @@ const SnippetCard = ({ snippet, isActive, onSelect, onCopy, onEdit, onNavigate, 
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 px-2 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+            className="h-7 px-2 text-xs gap-2 text-muted-foreground hover:text-foreground"
             onClick={(e) => { e.stopPropagation(); onSelect(snippet); onNavigate(snippet); }}
           >
             <ExternalLink className="h-3.5 w-3.5" />

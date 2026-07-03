@@ -249,7 +249,7 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
             ref={tooltipRef}
             className={cn(
               'fixed z-[2147483647] pointer-events-none',
-              'px-3 py-1.5 rounded-md text-xs',
+              'px-3 py-2 rounded-md text-xs',
               'bg-foreground text-background dark:bg-foreground dark:text-background',
               'shadow-sm shadow-black/10 dark:shadow-black/20',
               'max-w-[320px] break-words',

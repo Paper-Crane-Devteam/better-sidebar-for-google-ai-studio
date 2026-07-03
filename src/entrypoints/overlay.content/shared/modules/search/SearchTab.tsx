@@ -71,11 +71,11 @@ export const SearchTab = ({
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <div className="p-3 border-b flex items-center justify-between h-12 shrink-0">
+      <div className="px-3 py-2 border-b flex items-center justify-between h-12 shrink-0">
         <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
           {t('search.title')}
         </h1>
-        <div className="flex gap-0.5 items-center">
+        <div className="flex gap-1 items-center">
           <PlatformFilter />
           <SimpleTooltip content={t('menu.collapseAll')}>
             <Button

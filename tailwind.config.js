@@ -65,6 +65,16 @@ export default {
         'density-x': 'var(--density-padding-x)',
         'density-y': 'var(--density-padding-y)',
         'density-gap': 'var(--density-gap)',
+        /* 8px Grid Spacing Tokens */
+        'grid-0.5': '4px',   /* micro: icon-text gap */
+        'grid-1': '8px',     /* base unit */
+        'grid-1.5': '12px',  /* compact: toolbar padding */
+        'grid-2': '16px',    /* standard: section padding */
+        'grid-2.5': '20px',  /* comfortable */
+        'grid-3': '24px',    /* generous: dialog padding */
+        'grid-4': '32px',    /* large */
+        'grid-5': '40px',    /* extra */
+        'grid-6': '48px',    /* max */
       },
       fontSize: {
         'density': 'var(--density-font-size)',

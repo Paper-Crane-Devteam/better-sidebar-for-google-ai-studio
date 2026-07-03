@@ -84,7 +84,7 @@ function ActivatedView({ t, tier }: { t: (key: string) => string; tier: LicenseT
               <Button
                 size="sm"
                 variant="outline"
-                className="mt-2 gap-1.5"
+                className="mt-2 gap-2"
                 onClick={() => openPurchasePage('power_pack')}
               >
                 <Icon icon="fluent-color:star-24" width={14} height={14} />
@@ -120,7 +120,7 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
       <div className="grid gap-4">
         {/* Support Pack Card */}
         <div className="rounded-xl border bg-accent/20 p-5">
-          <div className="flex items-center gap-2.5 mb-3">
+          <div className="flex items-center gap-2 mb-3">
             <Icon icon="fluent-color:paint-brush-24" width={24} height={24} />
             <div>
               <h4 className="text-sm font-semibold">{t('packs.supportPackTitle')}</h4>
@@ -170,7 +170,7 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
             </span>
           </div>
 
-          <div className="flex items-center gap-2.5 mb-3 relative">
+          <div className="flex items-center gap-2 mb-3 relative">
             <Icon icon="fluent-color:premium-24" width={24} height={24} />
             <div>
               <h4 className="text-sm font-semibold">{t('packs.powerPackTitle')}</h4>
@@ -358,7 +358,7 @@ function ActivationInput({ t }: { t: (key: string) => string }) {
 /** A single feature bullet point */
 function FeatureItem({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
-    <div className="flex items-center gap-2.5 py-0.5">
+    <div className="flex items-center gap-2 py-1">
       <div className="shrink-0">{icon}</div>
       <span className="text-xs">{text}</span>
     </div>

@@ -97,11 +97,9 @@ export const GemNode = ({
   };
 
   const handleDeleteGem = async () => {
-    const confirmed = await modal.confirm({
+    const confirmed = await modal.confirmDelete({
       title: t('gems.deleteGem'),
       content: t('gems.deleteGemConfirm', { name: node.data.name }),
-      confirmText: t('common.delete'),
-      cancelText: t('common.cancel'),
     });
     if (confirmed) {
       // Call Gemini API to delete the gem
@@ -137,11 +135,9 @@ export const GemNode = ({
 
   const handleDeleteConversation = async () => {
     const { deleteItem } = useAppStore.getState();
-    const confirmed = await modal.confirm({
+    const confirmed = await modal.confirmDelete({
       title: t('node.deleteItem'),
       content: t('node.deleteConfirm', { name: node.data.name }),
-      confirmText: t('node.delete'),
-      cancelText: t('common.cancel'),
     });
     if (confirmed) {
       await deleteItem(node.data.id, 'file');
@@ -253,7 +249,7 @@ export const GemNode = ({
   const isMenuActive = isContextMenuOpen || isDropdownOpen;
 
   const nodeClasses = cn(
-    'flex items-center gap-1.5 px-1 pr-2 h-full',
+    'flex items-center gap-2 px-1 pr-2 h-full',
     'cursor-pointer group relative',
     'no-underline outline-none',
     'text-density text-foreground/80 font-medium',

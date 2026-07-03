@@ -105,11 +105,9 @@ export const NotebookNode = ({
   };
 
   const handleDeleteNotebook = async () => {
-    const confirmed = await modal.confirm({
+    const confirmed = await modal.confirmDelete({
       title: t('notebooks.deleteNotebook'),
       content: t('notebooks.deleteNotebookConfirm', { name: node.data.name }),
-      confirmText: t('common.delete'),
-      cancelText: t('common.cancel'),
     });
     if (confirmed) {
       // Call Gemini API to delete the notebook (rpcid: Nwkn9)
@@ -157,11 +155,9 @@ export const NotebookNode = ({
 
   const handleDeleteConversation = async () => {
     const { deleteItem } = useAppStore.getState();
-    const confirmed = await modal.confirm({
+    const confirmed = await modal.confirmDelete({
       title: t('node.deleteItem'),
       content: t('node.deleteConfirm', { name: node.data.name }),
-      confirmText: t('node.delete'),
-      cancelText: t('common.cancel'),
     });
     if (confirmed) {
       await deleteItem(node.data.id, 'file');
@@ -244,7 +240,7 @@ export const NotebookNode = ({
   const isMenuActive = isContextMenuOpen || isDropdownOpen;
 
   const nodeClasses = cn(
-    'flex items-center gap-1.5 px-1 pr-2 h-full',
+    'flex items-center gap-2 px-1 pr-2 h-full',
     'cursor-pointer group relative',
     'no-underline outline-none',
     'text-density text-foreground/80 font-medium',

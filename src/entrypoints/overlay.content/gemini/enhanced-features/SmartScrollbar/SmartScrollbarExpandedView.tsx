@@ -161,7 +161,7 @@ export const SmartScrollbarExpandedView: React.FC<Props> = ({
                       key={`${node.id}-h-${i}`}
                       onClick={() => node.inDom && scrollToNode(node.id)}
                       className={cn(
-                        'flex items-center gap-1.5 px-2.5 py-[5px] rounded-md',
+                        'flex items-center gap-2 px-2 py-1 rounded-md',
                         'animate-in fade-in slide-in-from-top-1 duration-200',
                         node.inDom
                           ? 'cursor-pointer'
