@@ -150,9 +150,9 @@ export const GemNode = ({
 
   const toggleIcon = isGem ? (
     node.isOpen ? (
-      <ChevronDown className="w-3 h-3" />
+      <ChevronDown className="w-3.5 h-3.5" strokeWidth={2.5} />
     ) : (
-      <ChevronRight className="w-3 h-3" />
+      <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.5} />
     )
   ) : null;
 
@@ -286,7 +286,7 @@ export const GemNode = ({
             {/* Use shared FolderTreeNodeContent for both gem headers and file children */}
             <FolderTreeNodeContent
               node={node}
-              folderIcon={isGem ? <Gem className="w-4 h-4" /> : null}
+              folderIcon={null}
               fileIcon={null}
               toggleIcon={toggleIcon}
               handleToggle={handleToggle}

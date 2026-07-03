@@ -9,6 +9,7 @@ import {
   Calendar,
   Image,
   Star,
+  Inbox,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { navigateToConversation } from '@/shared/lib/navigation';
@@ -30,6 +31,7 @@ import { useExplorerContext } from '../../ExplorerContext';
 import { NodeActionBar } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import { useExplorerMenuItems } from './useExplorerMenuItems';
 import { PendingEntryNode } from './PendingEntryNode';
+import { isInboxFolder } from '@/shared/constants/inbox';
 
 export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   const { t } = useI18n();
@@ -72,6 +74,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   );
   const folderColor = !isFile && !isTimeGroup ? node.data?.data?.color : null;
   const url = isFile ? node.data?.data?.external_url : undefined;
+  const isInbox = isFolder && isInboxFolder(node.data.id);
 
   // --- Batch selection state ---
   const { isBatchMode, selectedIds: batchSelectedIds } = ui.explorer.batch;
@@ -204,13 +207,14 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
             pendingName = name;
             pendingColor = color;
           }}
+          nameDisabled={isInbox}
         />
       ),
       confirmText: t('common.save'),
       cancelText: t('common.cancel'),
     });
     if (confirmed) {
-      if (pendingName !== node.data.name) {
+      if (!isInbox && pendingName !== node.data.name) {
         await renameItem(node.data.id, pendingName, 'folder');
       }
       if (pendingColor !== folderColor) {
@@ -224,6 +228,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
     isFavorite,
     folderColor,
     isPinned: !!node.data.data?.is_pinned,
+    isInbox,
     onDelete: handleDelete,
     onTagToggle: handleTagToggle,
     onColorChange: async (color: string | null) => {
@@ -301,15 +306,17 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   // --- Icons ---
   const FolderIconComponent = isTimeGroup
     ? Calendar
-    : node.isOpen
-      ? FolderOpen
-      : FolderIcon;
+    : isInbox
+      ? Inbox
+      : node.isOpen
+        ? FolderOpen
+        : FolderIcon;
 
   const toggleIcon = isFolder ? (
     node.isOpen ? (
-      <ChevronDown className="w-3 h-3" />
+      <ChevronDown className="w-3.5 h-3.5" strokeWidth={2.5} />
     ) : (
-      <ChevronRight className="w-3 h-3" />
+      <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.5} />
     )
   ) : null;
   const folderIcon = (

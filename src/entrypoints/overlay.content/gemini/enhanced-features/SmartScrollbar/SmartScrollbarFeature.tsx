@@ -1,5 +1,5 @@
 import { useSettingsStore } from '@/shared/lib/settings-store';
-import { SmartScrollbar } from './index';
+import { SmartScrollbar } from './new';
 
 /**
  * Feature wrapper that reads the showSmartScrollbar setting

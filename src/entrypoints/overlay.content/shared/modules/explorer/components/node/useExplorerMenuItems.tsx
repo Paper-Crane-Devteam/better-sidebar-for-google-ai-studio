@@ -44,6 +44,7 @@ interface UseExplorerMenuItemsParams {
   isFavorite: boolean;
   folderColor: string | null;
   isPinned: boolean;
+  isInbox?: boolean;
   onDelete: () => void;
   onTagToggle: (tagId: string, checked: boolean) => void;
   onColorChange: (color: string | null) => void;
@@ -58,6 +59,7 @@ export function useExplorerMenuItems({
   isFavorite,
   folderColor,
   isPinned,
+  isInbox,
   onDelete,
   onTagToggle,
   onColorChange,
@@ -188,20 +190,6 @@ export function useExplorerMenuItems({
 
   // File-specific items
   if (isFile) {
-    // — Navigation —
-    items.push({
-      type: 'item',
-      key: 'open-new-tab',
-      icon: <ExternalLink className="h-4 w-4" />,
-      label: t('node.openInNewTab'),
-      onClick: () => {
-        const url = node.data.data.external_url;
-        if (url) window.open(url, '_blank');
-      },
-    });
-
-    items.push({ type: 'separator', key: 'sep-nav' });
-
     // — Organize —
     items.push({
       type: 'item',
@@ -365,14 +353,16 @@ export function useExplorerMenuItems({
 
     items.push({ type: 'separator', key: 'sep-folder-organize' });
 
-    // — Manage —
-    items.push({
-      type: 'item',
-      key: 'rename',
-      icon: <Edit2 className="h-4 w-4" />,
-      label: t('node.rename'),
-      onClick: () => node.edit(),
-    });
+    // — Manage — (hide rename for inbox)
+    if (!isInbox) {
+      items.push({
+        type: 'item',
+        key: 'rename',
+        icon: <Edit2 className="h-4 w-4" />,
+        label: t('node.rename'),
+        onClick: () => node.edit(),
+      });
+    }
 
     if (onFolderSettings) {
       items.push({
@@ -384,18 +374,37 @@ export function useExplorerMenuItems({
       });
     }
 
-    items.push({ type: 'separator', key: 'sep-folder-manage' });
+    if (!isInbox) {
+      items.push({ type: 'separator', key: 'sep-folder-manage' });
+    }
   }
 
-  // Delete (always last)
-  items.push({
-    type: 'item',
-    key: 'delete',
-    icon: <Trash2 className="h-4 w-4" />,
-    label: t('node.delete'),
-    className: 'text-destructive focus:text-destructive',
-    onClick: onDelete,
-  });
+  // Open in new tab (above delete, file-only)
+  if (isFile) {
+    items.push({
+      type: 'item',
+      key: 'open-new-tab',
+      icon: <ExternalLink className="h-4 w-4" />,
+      label: t('node.openInNewTab'),
+      onClick: () => {
+        const url = node.data.data.external_url;
+        if (url) window.open(url, '_blank');
+      },
+    });
+    items.push({ type: 'separator', key: 'sep-before-delete' });
+  }
+
+  // Delete (always last, but not for inbox folder)
+  if (!isInbox) {
+    items.push({
+      type: 'item',
+      key: 'delete',
+      icon: <Trash2 className="h-4 w-4" />,
+      label: t('node.delete'),
+      className: 'text-destructive focus:text-destructive',
+      onClick: onDelete,
+    });
+  }
 
   return items;
 }

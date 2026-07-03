@@ -15,7 +15,7 @@ const MAX_HEIGHT_RATIO = 0.75; // 75% of container height
  */
 export const OutlineSection = () => {
   const { t } = useI18n();
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const { outlineHeight, setOutlineHeight } = useSettingsStore();
   const [isDragging, setIsDragging] = useState(false);
   const dragDataRef = useRef({ startY: 0, startHeight: 0 });

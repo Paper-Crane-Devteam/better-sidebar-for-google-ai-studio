@@ -170,9 +170,9 @@ export const NotebookNode = ({
 
   const toggleIcon = isNotebook ? (
     node.isOpen ? (
-      <ChevronDown className="w-3 h-3" />
+      <ChevronDown className="w-3.5 h-3.5" strokeWidth={2.5} />
     ) : (
-      <ChevronRight className="w-3 h-3" />
+      <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.5} />
     )
   ) : null;
 
@@ -277,7 +277,7 @@ export const NotebookNode = ({
             {/* Use shared FolderTreeNodeContent for both notebook headers and file children */}
             <FolderTreeNodeContent
               node={node}
-              folderIcon={isNotebook ? <NotebookText className="w-4 h-4" /> : null}
+              folderIcon={null}
               fileIcon={null}
               toggleIcon={toggleIcon}
               handleToggle={handleToggle}

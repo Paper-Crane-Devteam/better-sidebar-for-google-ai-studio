@@ -37,7 +37,6 @@ const getDefaultLanguage = ():
 
 interface PegasusState {
   language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru';
-  defaultSyncFolderId: string | null; // null = "Inbox" folder, '__root__' = root level, string = folder ID
   gdriveAutoSync: boolean;
   gdriveSyncing: boolean;
   enhancedFeatures: {
@@ -52,14 +51,12 @@ interface PegasusState {
   setLanguage: (
     language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru',
   ) => void;
-  setDefaultSyncFolderId: (folderId: string | null) => void;
   setGdriveAutoSync: (enabled: boolean) => void;
   setGdriveSyncing: (syncing: boolean) => void;
 }
 
 export const usePegasusStore = create<PegasusState>()((set) => ({
   language: getDefaultLanguage(),
-  defaultSyncFolderId: null,
   gdriveAutoSync: true,
   gdriveSyncing: false,
   enhancedFeatures: {
@@ -79,7 +76,6 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
       },
     })),
   setLanguage: (language) => set({ language }),
-  setDefaultSyncFolderId: (defaultSyncFolderId) => set({ defaultSyncFolderId }),
   setGdriveAutoSync: (gdriveAutoSync) => set({ gdriveAutoSync }),
   setGdriveSyncing: (gdriveSyncing) => set({ gdriveSyncing }),
 }));

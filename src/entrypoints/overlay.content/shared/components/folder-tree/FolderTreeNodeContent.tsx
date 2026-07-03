@@ -99,7 +99,7 @@ export const FolderTreeNodeContent = ({
         {toggleIcon}
       </div>
 
-      {node.data.type === 'folder' && (
+      {node.data.type === 'folder' && folderIcon && !isTimeGroup && (
         <div className="w-4 h-4 flex items-center justify-center shrink-0">
           {folderIcon}
         </div>
@@ -133,7 +133,7 @@ export const FolderTreeNodeContent = ({
               content={tooltipContent ?? node.data.name}
               placement="right"
               offset={16}
-              className="text-sm select-none"
+              className="text-sm select-none font-semibold"
               style={folderColor ? { color: folderColor } : undefined}
               hoverRef={hoverRef}
               forceShow={forceShowTooltip}

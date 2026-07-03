@@ -14,6 +14,7 @@ import { ArboristTreeHandle } from '../types';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useDeleteHandler } from '../hooks/useDeleteHandler';
 import { useExplorerContext } from '../ExplorerContext';
+import { isInboxFolder } from '@/shared/constants/inbox';
 
 interface TreeViewProps {
   onSelect: (item: any) => void;
@@ -71,7 +72,7 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(
         .forEach((f) => {
           folderMap.set(f.id, {
             id: f.id,
-            name: f.name,
+            name: isInboxFolder(f.id) ? t('explorer.imported') : f.name,
             type: 'folder',
             children: [],
             data: f,
@@ -155,6 +156,12 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(
           const isAPinned = a.data?.is_pinned ? 1 : 0;
           const isBPinned = b.data?.is_pinned ? 1 : 0;
           if (isAPinned !== isBPinned) return isBPinned - isAPinned;
+
+          // Inbox folder always goes last (unless pinned, handled above)
+          const isAInbox = a.type === 'folder' && isInboxFolder(a.id);
+          const isBInbox = b.type === 'folder' && isInboxFolder(b.id);
+          if (isAInbox && !isBInbox) return 1;
+          if (!isAInbox && isBInbox) return -1;
 
           const isAFav = favoriteIds.has(a.id);
           const isBFav = favoriteIds.has(b.id);
@@ -309,6 +316,7 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(
           await moveItem(id, parentId, type);
         }}
         onRenameItem={async (id, name, type) => {
+          if (type === 'folder' && isInboxFolder(id)) return;
           await renameItem(id, name, type);
         }}
         onDeleteItems={async (ids) => {

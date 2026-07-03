@@ -1,15 +1,12 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Button } from '../../../components/ui/button';
 import { Separator } from '../../../components/ui/separator';
-import { ChevronDown, Folder } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { Switch } from '@/shared/components/ui/switch';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { useAppStore } from '@/shared/lib/store';
 import { detectPlatform, Platform } from '@/shared/types/platform';
-import { FolderPicker } from '@/shared/components/FolderPicker';
-import { useModalStore } from '@/shared/lib/modal';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,19 +26,9 @@ export const GeneralSettings = () => {
     setShortcutVisible,
   } = useSettingsStore();
 
-  const { language, setLanguage, defaultSyncFolderId, setDefaultSyncFolderId } = usePegasusStore();
-  const folders = useAppStore((state) => state.folders);
+  const { language, setLanguage } = usePegasusStore();
 
   const platform = detectPlatform();
-  const openModal = useModalStore((state) => state.open);
-  const closeModal = useModalStore((state) => state.close);
-
-  const selectedFolderName = useMemo(() => {
-    if (!defaultSyncFolderId) return t('settings.defaultSyncFolderImported');
-    if (defaultSyncFolderId === '__root__') return t('moveItemsDialog.rootLevel');
-    const folder = folders.find((f) => f.id === defaultSyncFolderId);
-    return folder?.name ?? t('settings.defaultSyncFolderImported');
-  }, [defaultSyncFolderId, folders, t]);
 
   return (
     <div className="space-y-6">
@@ -300,90 +287,37 @@ export const GeneralSettings = () => {
         <h3 className="text-lg font-medium">{t('settings.behavior')}</h3>
         <Separator />
         <div className="grid gap-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <span className="text-sm font-medium">
-                {t('settings.newChatBehavior')}
-              </span>
-              <p className="text-xs text-muted-foreground">
-                {t('settings.newChatBehaviorDescription')}
-              </p>
-            </div>
-            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border">
-              <Button
-                variant={
-                  newChatBehavior === 'current-tab' ? 'secondary' : 'ghost'
-                }
-                size="sm"
-                className="h-7 px-3 text-xs"
-                onClick={() => setNewChatBehavior('current-tab')}
-              >
-                {t('settings.currentTab')}
-              </Button>
-              <Button
-                variant={newChatBehavior === 'new-tab' ? 'secondary' : 'ghost'}
-                size="sm"
-                className="h-7 px-3 text-xs"
-                onClick={() => setNewChatBehavior('new-tab')}
-              >
-                {t('settings.newTab')}
-              </Button>
-            </div>
-          </div>
-
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="text-sm font-medium">
-                  {t('settings.defaultSyncFolder')}
+                  {t('settings.newChatBehavior')}
                 </span>
                 <p className="text-xs text-muted-foreground">
-                  {t('settings.defaultSyncFolderDescription')}
+                  {t('settings.newChatBehaviorDescription')}
                 </p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 px-3 text-xs min-w-[120px] justify-between"
-                onClick={() => {
-                  openModal({
-                    id: 'default-sync-folder',
-                    type: 'info',
-                    title: t('settings.defaultSyncFolder'),
-                    content: (
-                      <FolderPicker
-                        folders={folders}
-                        onSelect={(folderId) => {
-                          setDefaultSyncFolderId(folderId === null ? '__root__' : folderId);
-                          closeModal();
-                        }}
-                        initialSelectedId={
-                          defaultSyncFolderId === '__root__' ? null : defaultSyncFolderId
-                        }
-                        className="min-h-[200px] max-h-[300px]"
-                      />
-                    ),
-                    confirmText: t('common.cancel'),
-                    onConfirm: () => closeModal(),
-                    onCancel: () => closeModal(),
-                  });
-                }}
-              >
-                <Folder className="h-3 w-3 mr-1.5 shrink-0" />
-                <span className="truncate max-w-[140px]">{selectedFolderName}</span>
-                <ChevronDown className="h-3 w-3 ml-2 opacity-50 shrink-0" />
-              </Button>
+              <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border">
+                <Button
+                  variant={
+                    newChatBehavior === 'current-tab' ? 'secondary' : 'ghost'
+                  }
+                  size="sm"
+                  className="h-7 px-3 text-xs"
+                  onClick={() => setNewChatBehavior('current-tab')}
+                >
+                  {t('settings.currentTab')}
+                </Button>
+                <Button
+                  variant={newChatBehavior === 'new-tab' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  className="h-7 px-3 text-xs"
+                  onClick={() => setNewChatBehavior('new-tab')}
+                >
+                  {t('settings.newTab')}
+                </Button>
+              </div>
             </div>
-            {defaultSyncFolderId && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-xs text-muted-foreground"
-                onClick={() => setDefaultSyncFolderId(null)}
-              >
-                ↩ {t('settings.defaultSyncFolderImported')}
-              </Button>
-            )}
           </div>
         </div>
       </div>

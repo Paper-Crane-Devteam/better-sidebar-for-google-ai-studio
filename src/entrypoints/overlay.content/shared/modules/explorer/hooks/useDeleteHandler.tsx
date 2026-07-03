@@ -3,6 +3,7 @@ import { useAppStore } from '@/shared/lib/store';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { modal } from '@/shared/lib/modal';
 import { toast } from '@/shared/lib/toast';
+import { isInboxFolder } from '@/shared/constants/inbox';
 
 export const useDeleteHandler = () => {
   const { t } = useI18n();
@@ -27,6 +28,11 @@ export const useDeleteHandler = () => {
 
     const id = ids[0];
     const isFolder = folders.some((f) => f.id === id);
+
+    // Prevent deletion of inbox folder
+    if (isFolder && isInboxFolder(id)) {
+      return;
+    }
 
     // If folder, check if it contains conversations
     if (isFolder) {

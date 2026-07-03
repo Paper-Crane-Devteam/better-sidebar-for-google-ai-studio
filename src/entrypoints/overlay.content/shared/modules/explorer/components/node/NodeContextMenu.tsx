@@ -5,6 +5,7 @@ import {
 import { renderMenuItems } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import { useExplorerMenuItems } from './useExplorerMenuItems';
 import { NodeProps } from './types';
+import { isInboxFolder } from '@/shared/constants/inbox';
 
 interface NodeContextMenuProps extends NodeProps {
   isFavorite: boolean;
@@ -32,11 +33,15 @@ export const NodeContextMenu = ({
 }: NodeContextMenuProps) => {
   const shouldPreventRef = React.useRef(false);
 
+  const isFolder = node.data.type === 'folder';
+  const isInbox = isFolder && isInboxFolder(node.data.id);
+
   const menuItems = useExplorerMenuItems({
     node,
     isFavorite,
     folderColor,
     isPinned: isPinned ?? !!node.data.data?.is_pinned,
+    isInbox,
     onDelete,
     onTagToggle,
     onColorChange,

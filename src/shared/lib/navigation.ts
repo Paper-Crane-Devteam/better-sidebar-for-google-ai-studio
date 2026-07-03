@@ -27,7 +27,9 @@ export const navigateToGem = (gemIdOrUrl: string) => {
     : `https://gemini.google.com/gem/${gemIdOrUrl}`;
   // Trigger new chat first, then navigate to the gem
   clickGeminiNewChat();
-  navigate(gemUrl);
+  setTimeout(() => {
+    navigate(gemUrl);
+  }, 100);
 };
 
 /**
@@ -40,7 +42,9 @@ export const navigateToNotebook = (notebookIdOrUrl: string) => {
     ? notebookIdOrUrl
     : `https://gemini.google.com/notebook/notebooks%2F${notebookIdOrUrl}`;
   clickGeminiNewChat();
-  navigate(nbUrl);
+  setTimeout(() => {
+    navigate(nbUrl);
+  }, 100);
 };
 
 export const navigate = (url: string) => {
@@ -76,7 +80,9 @@ export const navigateToConversation = (targetId: string) => {
     // Fallback: same approach as navigateToGem — click "New chat" first, then pushState
     console.warn(`Conversation link not found for id: ${targetId}, falling back to new chat + pushState`);
     clickGeminiNewChat();
-    navigate(`/app/${targetId}`);
+    setTimeout(() => {
+      navigate(`/app/${targetId}`);
+    }, 100);
   }
   if(platform === Platform.AI_STUDIO) {
     navigate(`/prompts/${targetId}`);
