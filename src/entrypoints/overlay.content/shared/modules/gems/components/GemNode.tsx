@@ -31,6 +31,7 @@ import { useExplorerMenuItems } from '../../explorer/components/node/useExplorer
 import { renderMenuItems } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import type { MenuEntryDef } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import { FolderTreeNodeContent } from '../../../components/folder-tree';
+import { useNodeTooltip } from '../../../hooks/useNodeTooltip';
 
 export const GemNode = ({
   node,
@@ -53,6 +54,7 @@ export const GemNode = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [newName, setNewName] = useState(node.data.name);
   const nodeRowRef = useRef<HTMLDivElement>(null);
+  const { tooltipContent, forceShowTooltip } = useNodeTooltip(node);
 
   const combinedRef = useCallback(
     (el: HTMLDivElement | null) => {
@@ -290,6 +292,8 @@ export const GemNode = ({
               setNewName={setNewName}
               hoverRef={nodeRowRef}
               isPinned={isGem && !!node.data.data?.is_pinned}
+              tooltipContent={tooltipContent}
+              forceShowTooltip={forceShowTooltip}
             />
 
             {/* Action bar with three-dot menu */}
