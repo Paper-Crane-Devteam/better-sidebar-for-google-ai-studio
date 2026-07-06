@@ -61,7 +61,7 @@ export const HOTKEY_DEFINITIONS: Record<HotkeyActionId, HotkeyDefinition> = {
     id: 'newConversation',
     labelKey: 'hotkeys.newConversation',
     category: 'general',
-    defaultBinding: 'Alt+Shift+C',
+    defaultBinding: 'Alt+Shift+M',
   },
   openSearch: {
     id: 'openSearch',
