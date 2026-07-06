@@ -20,6 +20,7 @@ import type { ExplorerTypeFilter } from '../../types/filter';
 import type { SplitDropdownItem } from '@/shared/components/ui/split-icon-button';
 import { ExplorerContext } from './ExplorerContext';
 import { usePendingNewChat } from './hooks/usePendingNewChat';
+import { INBOX_FOLDER_ID } from '@/shared/constants/inbox';
 
 interface ExplorerTabProps {
   onNewChat: () => void;
@@ -83,6 +84,7 @@ export const ExplorerTab = ({
     commitEditing: commitPendingEditing,
     startEditing: startPendingEditing,
     removePendingEntry,
+    movePendingEntry,
     markIntercepted,
     finalize: finalizePendingEntry,
   } = usePendingNewChat();
@@ -137,7 +139,11 @@ export const ExplorerTab = ({
       // Expand the folder so the pending entry is visible
       treeRef.current?.open(selectedNode.data.id);
     } else {
-      pendingFolderRef.current = null;
+      // Default to inbox folder when no folder is selected
+      const platform = useAppStore.getState().ui.overlay.currentPlatform;
+      targetFolderId = INBOX_FOLDER_ID(platform);
+      pendingFolderRef.current = targetFolderId;
+      treeRef.current?.open(targetFolderId);
     }
     // Create the singleton pending entry (replaces any existing one)
     createPendingEntry(targetFolderId);
@@ -232,7 +238,11 @@ export const ExplorerTab = ({
       // Always refresh so the new item appears immediately
       fetchData(true);
 
-      if (!targetFolderId) return;
+      // If no folder was explicitly chosen, default to the inbox folder
+      if (!targetFolderId) {
+        const platform = useAppStore.getState().ui.overlay.currentPlatform;
+        targetFolderId = INBOX_FOLDER_ID(platform);
+      }
 
       try {
         await browser.runtime.sendMessage({
@@ -377,6 +387,7 @@ export const ExplorerTab = ({
       commitPendingEditing,
       startPendingEditing,
       removePendingEntry,
+      movePendingEntry,
     }}>
     <div className="flex flex-col h-full w-full relative">
       {isScanning && (

@@ -47,6 +47,7 @@ export function createDataActions(
   | 'toggleFavorite'
   | 'updateFolderColor'
   | 'togglePin'
+  | 'reorderFolders'
 > {
   return {
     setFolders: (folders) => set({ folders }),
@@ -446,6 +447,18 @@ export function createDataActions(
         await get().fetchData(true);
       } catch (error) {
         console.error('Failed to toggle pin:', error);
+      }
+    },
+
+    reorderFolders: async (parentId, orderedIds) => {
+      try {
+        await browser.runtime.sendMessage({
+          type: 'REORDER_FOLDERS',
+          payload: { parentId, orderedIds },
+        });
+        await get().fetchData(true);
+      } catch (error) {
+        console.error('Failed to reorder folders:', error);
       }
     },
   };

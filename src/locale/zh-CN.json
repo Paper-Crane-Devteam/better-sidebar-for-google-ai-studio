@@ -361,7 +361,6 @@
     "deleteFolderConfirm": "您确定要删除文件夹 \"{{name}}\" 吗？",
     "deleteNote": "注意：此操作将永久删除该对话。",
     "hideNote": "注意：隐藏的项目可以通过导入聊天列表来恢复。",
-    "deleteFolderNote": "注意：删除的文件夹无法恢复，但对话可以通过导入聊天列表来恢复。",
     "folderNotEmpty": "此文件夹包含 {{count}} 个对话，请先使用批量删除功能删除对话。",
     "folderNotEmptyNote": "只有空文件夹才能直接删除。请先使用批量选择功能删除文件夹内的对话。",
     "openInNewTab": "在新标签页打开",
@@ -375,7 +374,9 @@
     "duplicate": "复制",
     "changeColor": "更改颜色",
     "pinToTop": "置顶",
-    "unpinFromTop": "取消置顶"
+    "unpinFromTop": "取消置顶",
+    "createdAt": "创建时间",
+    "lastActiveAt": "最近活跃"
   },
   "pendingEntry": {
     "placeholder": "标题（选填）",

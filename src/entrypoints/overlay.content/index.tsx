@@ -1,5 +1,6 @@
 // Overlay content script entry: routes to platform-specific layout
 
+import '@/shared/lib/iconify-bundle';
 import mainStyles from '@/index.scss?inline';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 import { isPlatformEnabled } from '@/shared/lib/platform-enabled-store';

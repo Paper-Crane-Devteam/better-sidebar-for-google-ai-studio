@@ -288,6 +288,11 @@ export interface AppState {
   setNotebooksSortOrder: (order: 'alpha' | 'date') => void;
 
   // Pin
+  reorderFolders: (
+    parentId: string | null,
+    orderedIds: string[],
+  ) => Promise<void>;
+
   togglePin: (
     id: string,
     table: 'folders' | 'prompt_folders' | 'gems' | 'notebooks' | 'snippet_folders',

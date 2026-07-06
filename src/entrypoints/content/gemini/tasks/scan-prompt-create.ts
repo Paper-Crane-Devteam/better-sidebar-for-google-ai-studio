@@ -7,8 +7,9 @@ import { getExternalUrl } from '@/entrypoints/overlay.content/shared/utils';
  * This runs at the content script level so it works regardless of which sidebar
  * tab (Explorer / Gems / etc.) is currently active.
  *
- * folder_id is intentionally left null here — if the user has a folder selected
- * in ExplorerTab, that tab will follow up with a MOVE_CONVERSATION to assign it.
+ * folder_id is intentionally left null here — ExplorerTab follows up with a
+ * MOVE_CONVERSATION to assign it to the user's selected folder, or to the
+ * Inbox folder if no folder is selected.
  */
 export class PromptCreateScanner {
   private listener: (event: Event) => void;

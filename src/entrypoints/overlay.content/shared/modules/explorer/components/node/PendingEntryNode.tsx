@@ -10,9 +10,10 @@ interface PendingEntryNodeProps {
   style: React.CSSProperties;
   phase: PendingNewChatPhase;
   title: string;
+  dragHandle?: (el: HTMLDivElement | null) => void;
 }
 
-export const PendingEntryNode = ({ style, phase, title }: PendingEntryNodeProps) => {
+export const PendingEntryNode = ({ style, phase, title, dragHandle }: PendingEntryNodeProps) => {
   const { t } = useI18n();
   const {
     updatePendingTitle,
@@ -59,15 +60,31 @@ export const PendingEntryNode = ({ style, phase, title }: PendingEntryNodeProps)
     }
   };
 
-  // --- Editing phase: show input ---
-  if (phase === 'editing') {
-    return (
-      <div style={style} className="h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]">
-        <div className="flex items-center h-full px-1 pr-2 gap-1.5">
-          <div className="w-4 h-4 flex items-center justify-center shrink-0" />
-          <div className="w-4 h-4 flex items-center justify-center shrink-0 text-muted-foreground">
+  return (
+    <div style={style} className="h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]">
+      <div
+        ref={dragHandle}
+        className={cn(
+          'flex items-center h-full px-1 pr-2 gap-1.5 rounded-sm',
+          phase === 'editing' && '',
+          phase === 'idle' && 'group relative cursor-grab bg-accent/30 border border-dashed border-border',
+          phase === 'intercepted' && 'bg-accent/20',
+        )}
+      >
+        {/* Left spacer (toggle area) */}
+        <div className="w-4 h-4 flex items-center justify-center shrink-0" />
+
+        {/* Icon */}
+        <div className="w-4 h-4 flex items-center justify-center shrink-0 text-muted-foreground">
+          {phase === 'intercepted' ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
             <MessageSquarePlus className="w-4 h-4" />
-          </div>
+          )}
+        </div>
+
+        {/* Content area */}
+        {phase === 'editing' && (
           <form
             className="flex-1 min-w-0"
             onSubmit={(e) => {
@@ -92,28 +109,36 @@ export const PendingEntryNode = ({ style, phase, title }: PendingEntryNodeProps)
               }}
             />
           </form>
-        </div>
-      </div>
-    );
-  }
+        )}
 
-  // --- Idle phase: show title (or placeholder) with edit/delete actions ---
-  if (phase === 'idle') {
-    return (
-      <div style={style} className="h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]">
-        <div className="flex items-center h-full px-1 pr-2 gap-1.5 group relative cursor-default rounded-sm bg-accent/30 border border-dashed border-border">
-          <div className="w-4 h-4 flex items-center justify-center shrink-0" />
-          <div className="w-4 h-4 flex items-center justify-center shrink-0 text-muted-foreground">
-            <MessageSquarePlus className="w-4 h-4" />
-          </div>
+        {phase === 'idle' && (
           <span className={cn(
             'flex-1 min-w-0 text-sm truncate select-none',
             title ? 'text-foreground/80' : 'text-muted-foreground italic',
           )}>
             {title || t('pendingEntry.waitingForChat')}
           </span>
+        )}
 
-          {/* Action buttons: edit and delete */}
+        {phase === 'intercepted' && (
+          title ? (
+            <span className="flex-1 min-w-0 text-sm truncate select-none text-foreground/70">
+              {title}
+            </span>
+          ) : (
+            <div
+              className="flex-1 h-3 rounded-full"
+              style={{
+                background: 'linear-gradient(90deg, rgb(var(--muted-foreground) / 0.1) 25%, rgb(var(--muted-foreground) / 0.05) 50%, rgb(var(--muted-foreground) / 0.1) 75%)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 1.5s ease-in-out infinite',
+              }}
+            />
+          )
+        )}
+
+        {/* Action buttons for idle phase */}
+        {phase === 'idle' && (
           <div className="invisible group-hover:visible flex items-center gap-1 absolute right-0 pr-2 top-0 bottom-0 bg-accent/30">
             <div className="absolute inset-y-0 -left-4 w-4 pointer-events-none [background:inherit] [mask-image:linear-gradient(to_right,transparent,black)]" />
             <SimpleTooltip content={t('node.rename')}>
@@ -141,32 +166,6 @@ export const PendingEntryNode = ({ style, phase, title }: PendingEntryNodeProps)
               </div>
             </SimpleTooltip>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  // --- Intercepted phase: locked pending state with shimmer/spinner ---
-  return (
-    <div style={style} className="h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]">
-      <div className="flex items-center h-full px-1 pr-2 gap-1.5 rounded-sm bg-accent/20">
-        <div className="w-4 h-4 flex items-center justify-center shrink-0" />
-        <div className="w-4 h-4 flex items-center justify-center shrink-0 text-muted-foreground">
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-        </div>
-        {title ? (
-          <span className="flex-1 min-w-0 text-sm truncate select-none text-foreground/70">
-            {title}
-          </span>
-        ) : (
-          <div
-            className="flex-1 h-3 rounded-full"
-            style={{
-              background: 'linear-gradient(90deg, rgb(var(--muted-foreground) / 0.1) 25%, rgb(var(--muted-foreground) / 0.05) 50%, rgb(var(--muted-foreground) / 0.1) 75%)',
-              backgroundSize: '200% 100%',
-              animation: 'shimmer 1.5s ease-in-out infinite',
-            }}
-          />
         )}
       </div>
     </div>

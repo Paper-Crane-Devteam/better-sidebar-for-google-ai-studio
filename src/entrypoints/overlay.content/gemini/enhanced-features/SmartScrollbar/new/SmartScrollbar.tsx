@@ -57,8 +57,7 @@ export const SmartScrollbar: React.FC = () => {
         'flex flex-col items-center',
         'border border-border/40 rounded-full',
         'bg-transparent',
-        'py-5 px-3',
-        'overflow-visible',
+        'py-2 px-2',
         'transition-opacity duration-200',
         isDisabled && 'opacity-40 pointer-events-none',
       )}
@@ -67,11 +66,12 @@ export const SmartScrollbar: React.FC = () => {
       <div
         ref={containerRef}
         className={cn(
-          'flex flex-col items-center gap-[12px]',
-          'overflow-y-auto overflow-x-hidden',
+          'flex flex-col items-center gap-2',
+          'overflow-y-auto overflow-x-visible',
+          'py-1',
         )}
         style={{
-          maxHeight: `${MAX_HEIGHT - 40}px`, // account for py-5
+          maxHeight: `${MAX_HEIGHT - 16}px`, // account for py-2
           scrollbarWidth: 'none', // Firefox
           msOverflowStyle: 'none', // IE
         }}
@@ -113,10 +113,8 @@ const DotItem: React.FC<DotItemProps> = ({
   scrollToNode,
   activeRef,
 }) => {
-  const truncated = truncateText(node.content, 50);
-
   return (
-    <SimpleTooltip content={truncated} side="left" sideOffset={10} delayDuration={100}>
+    <SimpleTooltip content={node.content} side="left" sideOffset={8} delayDuration={100}>
       <div
         ref={activeRef}
         onClick={() => node.inDom && scrollToNode(node.id)}
@@ -124,10 +122,10 @@ const DotItem: React.FC<DotItemProps> = ({
           'rounded-full transition-all duration-150',
           node.inDom ? 'cursor-pointer' : 'cursor-default opacity-30',
           isActive
-            ? 'h-[16px] w-[16px] bg-primary'
+            ? 'h-[10px] w-[10px] bg-primary'
             : node.inDom
-              ? 'h-[14px] w-[14px] bg-muted-foreground/40 hover:bg-muted-foreground/80 hover:scale-[1.3]'
-              : 'h-[14px] w-[14px] bg-muted-foreground/20',
+              ? 'h-2 w-2 bg-muted-foreground/40 hover:bg-muted-foreground/80'
+              : 'h-2 w-2 bg-muted-foreground/20',
         )}
       />
     </SimpleTooltip>
@@ -140,17 +138,13 @@ const DisabledDots: React.FC = () => (
     {Array.from({ length: 3 }).map((_, i) => (
       <div
         key={i}
-        className="h-[14px] w-[14px] rounded-full bg-muted-foreground/20"
+        className="h-2 w-2 rounded-full bg-muted-foreground/20"
       />
     ))}
   </>
 );
 
 // ── Utilities ───────────────────────────────────────────────────────
-
-function truncateText(text: string, maxLen: number) {
-  return text.length <= maxLen ? text : text.substring(0, maxLen) + '…';
-}
 
 /** Check if the current URL looks like a Gemini conversation page */
 function isConversationUrl(): boolean {

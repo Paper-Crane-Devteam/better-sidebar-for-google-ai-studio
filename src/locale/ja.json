@@ -351,7 +351,6 @@
     "deleteFolderConfirm": "フォルダ \"{{name}}\" を削除してもよろしいですか？",
     "deleteNote": "注意：この操作により、会話が完全に削除されます。",
     "hideNote": "注意：非表示にした項目は、チャットリストをインポートすることで復元できます。",
-    "deleteFolderNote": "注意：削除されたフォルダは復元できませんが、会話はチャットリストをインポートすることで復元できます。",
     "folderNotEmpty": "このフォルダには {{count}} 件の会話が含まれています。先に一括削除で会話を削除してください。",
     "folderNotEmptyNote": "フォルダは空の状態でのみ削除できます。先に一括選択でフォルダ内の会話を削除してください。",
     "openInNewTab": "新しいタブで開く",
@@ -365,7 +364,9 @@
     "duplicate": "複製",
     "changeColor": "色を変更",
     "pinToTop": "上部に固定",
-    "unpinFromTop": "固定を解除"
+    "unpinFromTop": "固定を解除",
+    "createdAt": "作成日",
+    "lastActiveAt": "最終アクティブ"
   },
   "pendingEntry": {
     "placeholder": "タイトル（任意）",

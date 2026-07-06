@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
+import '@/shared/lib/iconify-bundle';
 import '@/index.scss';
 import '@/locale/i18n';
 import { useI18n } from '@/shared/hooks/useI18n';
