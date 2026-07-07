@@ -350,7 +350,6 @@
     "deleteFolderConfirm": "¿Estás seguro de que deseas eliminar la carpeta \"{{name}}\"?",
     "deleteNote": "Nota: Esto eliminará permanentemente la conversación.",
     "hideNote": "Nota: Los elementos ocultos se pueden restaurar importando la lista de chats.",
-    "deleteFolderNote": "Nota: Las carpetas eliminadas no se pueden restaurar, pero las conversaciones se pueden recuperar importando la lista de chats.",
     "folderNotEmpty": "Esta carpeta contiene {{count}} conversación(es). Usa la eliminación por lotes para eliminar las conversaciones primero.",
     "folderNotEmptyNote": "Las carpetas solo se pueden eliminar cuando están vacías. Usa la selección por lotes para eliminar las conversaciones dentro de la carpeta primero.",
     "openInNewTab": "Abrir en Nueva Pestaña",
@@ -364,7 +363,9 @@
     "duplicate": "Duplicar",
     "changeColor": "Cambiar Color",
     "pinToTop": "Fijar Arriba",
-    "unpinFromTop": "Desfijar"
+    "unpinFromTop": "Desfijar",
+    "createdAt": "Creado",
+    "lastActiveAt": "Última actividad"
   },
   "pendingEntry": {
     "placeholder": "Título (opcional)",

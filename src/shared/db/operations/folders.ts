@@ -99,4 +99,13 @@ export const folderRepo = {
       await folderRepo.delete(id);
     }
   },
+
+  reorder: async (parentId: string | null, orderedIds: string[]): Promise<void> => {
+    for (let i = 0; i < orderedIds.length; i++) {
+      await runCommand(
+        'UPDATE folders SET order_index = ?, updated_at = unixepoch() WHERE id = ?',
+        [i, orderedIds[i]],
+      );
+    }
+  },
 };

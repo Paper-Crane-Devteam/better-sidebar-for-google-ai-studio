@@ -350,7 +350,6 @@
     "deleteFolderConfirm": "Tem certeza de que deseja excluir a pasta \"{{name}}\"?",
     "deleteNote": "Nota: Isso excluirá permanentemente a conversa.",
     "hideNote": "Nota: Itens ocultos podem ser restaurados importando a lista de chats.",
-    "deleteFolderNote": "Nota: Pastas excluídas não podem ser restauradas, mas as conversas podem ser recuperadas importando a lista de chats.",
     "folderNotEmpty": "Esta pasta contém {{count}} conversa(s). Use a exclusão em lote para remover as conversas primeiro.",
     "folderNotEmptyNote": "As pastas só podem ser excluídas quando estão vazias. Use a seleção em lote para excluir as conversas dentro da pasta primeiro.",
     "openInNewTab": "Abrir em Nova Aba",
@@ -364,7 +363,9 @@
     "duplicate": "Duplicar",
     "changeColor": "Alterar Cor",
     "pinToTop": "Fixar no Topo",
-    "unpinFromTop": "Desafixar"
+    "unpinFromTop": "Desafixar",
+    "createdAt": "Criado",
+    "lastActiveAt": "Última atividade"
   },
   "pendingEntry": {
     "placeholder": "Título (opcional)",

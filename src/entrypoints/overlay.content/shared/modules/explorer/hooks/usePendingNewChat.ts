@@ -36,13 +36,15 @@ export interface UsePendingNewChatReturn {
   startEditing: () => void;
   /** Remove the pending entry (cancel / delete) */
   removePendingEntry: () => void;
+  /** Move the pending entry to a different folder */
+  movePendingEntry: (folderId: string | null) => void;
   /** Called when the create API is intercepted — locks the entry */
   markIntercepted: (conversationId: string) => void;
   /** Called when the conversation is fully created — clears the entry and returns rename info */
   finalize: (apiTitle: string) => FinalizeResult;
 }
 
-const PENDING_NODE_ID = '__pending_new_chat_entry__';
+export const PENDING_NODE_ID = '__pending_new_chat_entry__';
 
 export const usePendingNewChat = (): UsePendingNewChatReturn => {
   const [pendingEntry, setPendingEntry] = useState<PendingNewChatEntry | null>(null);
@@ -88,6 +90,13 @@ export const usePendingNewChat = (): UsePendingNewChatReturn => {
     setPendingEntry(null);
   }, []);
 
+  const movePendingEntry = useCallback((folderId: string | null) => {
+    setPendingEntry((prev) => {
+      if (!prev) return prev;
+      return { ...prev, folderId };
+    });
+  }, []);
+
   const markIntercepted = useCallback((conversationId: string) => {
     interceptedConversationIdRef.current = conversationId;
     setPendingEntry((prev) => {
@@ -124,6 +133,7 @@ export const usePendingNewChat = (): UsePendingNewChatReturn => {
     commitEditing,
     startEditing,
     removePendingEntry,
+    movePendingEntry,
     markIntercepted,
     finalize,
   };

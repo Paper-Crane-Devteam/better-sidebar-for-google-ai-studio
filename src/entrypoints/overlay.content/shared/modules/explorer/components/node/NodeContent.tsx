@@ -2,6 +2,7 @@ import React from 'react';
 import { Info } from 'lucide-react';
 import { NodeProps } from './types';
 import { FolderTreeNodeContent } from '../../../../components/folder-tree';
+import { useNodeTooltip } from '../../../../hooks/useNodeTooltip';
 
 interface NodeContentProps extends NodeProps {
   isBatchMode: boolean;
@@ -37,17 +38,7 @@ export const NodeContent = ({
   setNewName,
   hoverRef,
 }: NodeContentProps) => {
-  const isFile = node.data.type === 'file';
-  const description = isFile ? (node.data.data?.description || '') : '';
-  const hasDescription = description.length > 0;
-
-  // Build enriched tooltip content: title + description
-  const tooltipContent = hasDescription ? (
-    <div className="space-y-1">
-      <div className="font-medium">{node.data.name}</div>
-      <div className="text-[10px] opacity-80">{description}</div>
-    </div>
-  ) : undefined;
+  const { tooltipContent, forceShowTooltip, hasDescription } = useNodeTooltip(node);
 
   // Info icon indicator when description exists
   const nameAddon = hasDescription ? (
@@ -78,7 +69,7 @@ export const NodeContent = ({
       namePrefix={undefined}
       nameAddon={nameAddon}
       tooltipContent={tooltipContent}
-      forceShowTooltip={hasDescription}
+      forceShowTooltip={forceShowTooltip}
     />
   );
 };

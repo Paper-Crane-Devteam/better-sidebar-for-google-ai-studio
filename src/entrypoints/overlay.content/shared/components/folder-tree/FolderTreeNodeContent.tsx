@@ -43,7 +43,7 @@ export interface FolderTreeNodeContentProps {
   hoverRef?: React.RefObject<HTMLElement | null>;
 
   /** Custom tooltip content (overrides default name-only tooltip) */
-  tooltipContent?: React.ReactNode;
+  tooltipContent?: React.ReactNode | ((isOverflowing: boolean) => React.ReactNode);
 
   /** Force tooltip to show on hover even if text doesn't overflow */
   forceShowTooltip?: boolean;
@@ -133,7 +133,7 @@ export const FolderTreeNodeContent = ({
               content={tooltipContent ?? node.data.name}
               placement="right"
               offset={16}
-              className="text-sm select-none font-semibold"
+              className="text-sm select-none"
               style={folderColor ? { color: folderColor } : undefined}
               hoverRef={hoverRef}
               forceShow={forceShowTooltip}

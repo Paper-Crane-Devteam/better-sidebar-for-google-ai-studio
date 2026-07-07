@@ -16,6 +16,10 @@ export type ExtensionMessage = (
       };
     }
   | { type: 'DELETE_FOLDER'; payload: { id: string } }
+  | {
+      type: 'REORDER_FOLDERS';
+      payload: { parentId: string | null; orderedIds: string[] };
+    }
   | { type: 'GET_CONVERSATIONS'; payload?: { folderId?: string | null } }
   | {
       type: 'SAVE_CONVERSATION';

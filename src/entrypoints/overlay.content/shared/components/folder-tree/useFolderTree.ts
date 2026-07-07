@@ -18,6 +18,8 @@ export interface UseFolderTreeOptions {
   onDeleteItems: (ids: string[]) => Promise<void>;
   /** Create a new folder, returns the new folder id or null */
   onCreateFolder: (name: string, parentId: string) => Promise<string | null>;
+  /** Reorder folders within a parent */
+  onReorderFolders?: (parentId: string | null, orderedIds: string[]) => Promise<void>;
 }
 
 export const useFolderTree = (options: UseFolderTreeOptions) => {
@@ -29,6 +31,7 @@ export const useFolderTree = (options: UseFolderTreeOptions) => {
     onRenameItem,
     onDeleteItems,
     onCreateFolder,
+    onReorderFolders,
   } = options;
 
   const { t } = useI18n();
@@ -68,6 +71,7 @@ export const useFolderTree = (options: UseFolderTreeOptions) => {
   const onMove = async ({
     dragIds,
     parentId,
+    index,
   }: {
     dragIds: string[];
     parentId: string | null;
@@ -76,6 +80,56 @@ export const useFolderTree = (options: UseFolderTreeOptions) => {
     const id = dragIds[0];
     const isFolder = folders.some((f: any) => f.id === id);
     const type = isFolder ? 'folder' : 'file';
+
+    if (isFolder && onReorderFolders) {
+      const draggedFolder = folders.find((f: any) => f.id === id);
+      const currentParentId = draggedFolder?.parent_id || null;
+
+      // If the folder is staying within the same parent, treat as reorder
+      if (parentId === currentParentId) {
+        // Get sibling folders in the same parent, sorted by current order
+        const siblings = folders
+          .filter((f: any) => (f.parent_id || null) === parentId)
+          .sort((a: any, b: any) => {
+            const aPinned = a.is_pinned ? 1 : 0;
+            const bPinned = b.is_pinned ? 1 : 0;
+            if (aPinned !== bPinned) return bPinned - aPinned;
+            const aOrder = a.order_index ?? 0;
+            const bOrder = b.order_index ?? 0;
+            if (aOrder !== bOrder) return aOrder - bOrder;
+            return (a.name || '').localeCompare(b.name || '');
+          });
+
+        // Separate pinned and unpinned
+        const pinned = siblings.filter((f: any) => f.is_pinned);
+        const unpinned = siblings.filter((f: any) => !f.is_pinned);
+        const isDraggedPinned = draggedFolder?.is_pinned;
+
+        if (isDraggedPinned) {
+          // Remove dragged from the full ordered list, then reinsert at index
+          const ordered = [...pinned];
+          const fromIdx = ordered.findIndex((f: any) => f.id === id);
+          ordered.splice(fromIdx, 1);
+          // react-arborist index is the target position in the original list
+          const toIdx = Math.min(Math.max(0, fromIdx < index ? index - 1 : index), ordered.length);
+          ordered.splice(toIdx, 0, draggedFolder);
+          const orderedIds = [...ordered.map((f: any) => f.id), ...unpinned.map((f: any) => f.id)];
+          await onReorderFolders(parentId, orderedIds);
+        } else {
+          // For unpinned folders, adjust index by subtracting pinned count
+          const ordered = [...unpinned];
+          const fromIdx = ordered.findIndex((f: any) => f.id === id);
+          ordered.splice(fromIdx, 1);
+          const adjustedIndex = index - pinned.length;
+          const toIdx = Math.min(Math.max(0, fromIdx < adjustedIndex ? adjustedIndex - 1 : adjustedIndex), ordered.length);
+          ordered.splice(toIdx, 0, draggedFolder);
+          const orderedIds = [...pinned.map((f: any) => f.id), ...ordered.map((f: any) => f.id)];
+          await onReorderFolders(parentId, orderedIds);
+        }
+        return;
+      }
+    }
+
     await onMoveItem(id, parentId, type);
   };
 

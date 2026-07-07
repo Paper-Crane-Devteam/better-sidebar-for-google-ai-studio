@@ -15,6 +15,7 @@ import { useI18n } from '@/shared/hooks/useI18n';
 import { useDeleteHandler } from '../hooks/useDeleteHandler';
 import { useExplorerContext } from '../ExplorerContext';
 import { isInboxFolder } from '@/shared/constants/inbox';
+import { PENDING_NODE_ID } from '../hooks/usePendingNewChat';
 
 interface TreeViewProps {
   onSelect: (item: any) => void;
@@ -27,7 +28,7 @@ const NodeWrapper = (props: NodeRendererProps<FolderTreeNodeData>) => {
 export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(
   ({ onSelect }, ref) => {
     const { t } = useI18n();
-    const { pendingNewChatFolderId, pendingEntry } = useExplorerContext();
+    const { pendingNewChatFolderId, pendingEntry, movePendingEntry } = useExplorerContext();
     const {
       folders,
       conversations,
@@ -37,6 +38,7 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(
       moveItem,
       renameItem,
       createFolder,
+      reorderFolders,
       ui,
     } = useAppStore();
     const { explorer } = useSettingsStore();
@@ -157,20 +159,21 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(
           const isBPinned = b.data?.is_pinned ? 1 : 0;
           if (isAPinned !== isBPinned) return isBPinned - isAPinned;
 
-          // Inbox folder always goes last (unless pinned, handled above)
-          const isAInbox = a.type === 'folder' && isInboxFolder(a.id);
-          const isBInbox = b.type === 'folder' && isInboxFolder(b.id);
-          if (isAInbox && !isBInbox) return 1;
-          if (!isAInbox && isBInbox) return -1;
-
           const isAFav = favoriteIds.has(a.id);
           const isBFav = favoriteIds.has(b.id);
           if (isAFav && !isBFav) return -1;
           if (!isAFav && isBFav) return 1;
           if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
 
+          // Folders: sort by order_index (drag-and-drop order)
+          if (a.type === 'folder' && b.type === 'folder') {
+            const orderA = a.data?.order_index ?? 0;
+            const orderB = b.data?.order_index ?? 0;
+            if (orderA !== orderB) return orderA - orderB;
+            return a.name.localeCompare(b.name);
+          }
+
           if (sortOrder === 'date') {
-            if (a.type === 'folder') return a.name.localeCompare(b.name);
             let dateA = a.data?.last_active_at || a.data?.updated_at || a.data?.created_at || 0;
             let dateB = b.data?.last_active_at || b.data?.updated_at || b.data?.created_at || 0;
             if (dateA > 0) dateA *= 1000;
@@ -313,6 +316,10 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(
         searchTerm={searchTerm}
         onSelect={onSelect}
         onMoveItem={async (id, parentId, type) => {
+          if (id === PENDING_NODE_ID) {
+            movePendingEntry?.(parentId);
+            return;
+          }
           await moveItem(id, parentId, type);
         }}
         onRenameItem={async (id, name, type) => {
@@ -324,6 +331,9 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(
         }}
         onCreateFolder={async (name, parentId) => {
           return createFolder(name, parentId);
+        }}
+        onReorderFolders={async (parentId, orderedIds) => {
+          await reorderFolders(parentId, orderedIds);
         }}
         renderNode={NodeWrapper}
         renderRow={FolderTintRow}

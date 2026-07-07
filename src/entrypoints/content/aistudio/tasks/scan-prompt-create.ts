@@ -16,7 +16,8 @@ import { getExternalUrl } from '@/entrypoints/overlay.content/shared/utils';
  * before MOVE runs. A later SAVE_CONVERSATION from AI_STUDIO_RESPONSE will
  * upsert the full data while preserving folder_id via COALESCE.
  *
- * folder_id is intentionally null here — ExplorerTab follows up with MOVE.
+ * folder_id is intentionally null here — ExplorerTab follows up with MOVE
+ * to the user's selected folder, or to the Inbox folder if none is selected.
  */
 export class PromptCreateScanner {
   private listener: (event: Event) => void;

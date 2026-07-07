@@ -9,7 +9,7 @@ export interface OverflowTooltipProps {
   /** The text content to display. Tooltip shown only when this overflows. */
   children: React.ReactNode;
   /** Full content to display in the tooltip (defaults to children if not provided) */
-  content?: React.ReactNode;
+  content?: React.ReactNode | ((isOverflowing: boolean) => React.ReactNode);
   /** Placement of the tooltip relative to the trigger element */
   placement?: OverflowTooltipPlacement;
   /** Gap between the tooltip and the trigger element in pixels */
@@ -188,6 +188,10 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
   // We also need to dismiss the tooltip when the pointer moves over the
   // node-action-bar (or any element marked with data-tooltip-suppress) so
   // that hovering the action buttons doesn't trigger the underlying tooltip.
+  //
+  // Instead of a costly mousemove listener (DOM traversal every frame), we use
+  // pointerenter/pointerleave on [data-tooltip-suppress] children to detect
+  // when the pointer enters the suppressed region.
   useEffect(() => {
     const el = hoverRef?.current;
     if (!el) return;
@@ -210,21 +214,19 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
       handleMouseLeave();
     };
 
-    const onMove = (e: MouseEvent) => {
-      // While visible, if the pointer moves over a suppressed region, dismiss.
-      const target = e.target as HTMLElement | null;
-      if (target?.closest?.('[data-tooltip-suppress]')) {
-        handleMouseLeave();
-      }
-    };
+    // Lightweight suppress detection: listen for pointerenter on suppressed
+    // children instead of polling mousemove on the entire row.
+    const suppressEls = el.querySelectorAll<HTMLElement>('[data-tooltip-suppress]');
+    const onSuppressEnter = () => handleMouseLeave();
 
     el.addEventListener('mouseenter', onEnter);
     el.addEventListener('mouseleave', onLeave);
-    el.addEventListener('mousemove', onMove);
+    suppressEls.forEach((sel) => sel.addEventListener('pointerenter', onSuppressEnter));
+
     return () => {
       el.removeEventListener('mouseenter', onEnter);
       el.removeEventListener('mouseleave', onLeave);
-      el.removeEventListener('mousemove', onMove);
+      suppressEls.forEach((sel) => sel.removeEventListener('pointerenter', onSuppressEnter));
     };
   }, [hoverRef, isOverflowing, forceShow]); // re-attach when overflow state or forceShow changes
 
@@ -263,7 +265,7 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
               left: position.left,
             }}
           >
-            {content ?? children}
+            {typeof content === 'function' ? content(isOverflowing) : (content ?? children)}
           </div>,
           portalContainer,
         )}

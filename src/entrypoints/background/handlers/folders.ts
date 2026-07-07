@@ -30,6 +30,11 @@ export async function handleFolders(
       triggerAutoSync();
       return { success: true };
     }
+    case 'REORDER_FOLDERS': {
+      await folderRepo.reorder(message.payload.parentId, message.payload.orderedIds);
+      triggerAutoSync();
+      return { success: true };
+    }
     default:
       return null;
   }

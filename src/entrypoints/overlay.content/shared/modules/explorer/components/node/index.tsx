@@ -153,6 +153,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
         style={style}
         phase={phase}
         title={pendingTitle}
+        dragHandle={dragHandle}
       />
     );
   }

@@ -61,11 +61,6 @@ export const useDeleteHandler = () => {
               {t('node.deleteNote')}
             </p>
           )}
-          {isFolder && (
-            <p className="text-xs text-muted-foreground bg-muted p-2 rounded">
-              {t('node.deleteFolderNote')}
-            </p>
-          )}
         </div>
       ),
     });

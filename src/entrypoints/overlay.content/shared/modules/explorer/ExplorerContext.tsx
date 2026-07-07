@@ -19,6 +19,8 @@ interface ExplorerContextValue {
   startPendingEditing?: () => void;
   /** Remove/cancel the pending entry */
   removePendingEntry?: () => void;
+  /** Move the pending entry to a different folder */
+  movePendingEntry?: (folderId: string | null) => void;
 }
 
 export const ExplorerContext = createContext<ExplorerContextValue>({});
