@@ -26,6 +26,7 @@ interface ExplorerTabProps {
   onNewChat: () => void;
   onPrivateChat?: () => void;
   newChatDropdownItems?: SplitDropdownItem[];
+  newChatButton?: React.ReactNode;
   filterTypes?: ExplorerTypeFilter[];
   extraHeaderButtons?: React.ReactNode;
   visibleFilters?: ('search' | 'tags' | 'type' | 'favorites')[];
@@ -40,6 +41,7 @@ export const ExplorerTab = ({
   onNewChat,
   onPrivateChat,
   newChatDropdownItems,
+  newChatButton,
   filterTypes,
   extraHeaderButtons,
   visibleFilters,
@@ -455,6 +457,7 @@ export const ExplorerTab = ({
         onNewChat={handleNewChatFromFolder}
         onPrivateChat={onPrivateChat}
         newChatDropdownItems={newChatDropdownItems}
+        newChatButton={newChatButton}
         filter={filter}
         filterTypes={filterTypes}
         extraHeaderButtons={extraHeaderButtons}

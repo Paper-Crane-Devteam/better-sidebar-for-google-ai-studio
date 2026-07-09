@@ -12,6 +12,7 @@ export interface ModuleConfig {
     onNewChat: () => void;
     onPrivateChat?: () => void;
     newChatDropdownItems?: SplitDropdownItem[];
+    newChatButton?: React.ReactNode;
     filterTypes?: ExplorerTypeFilter[];
     extraHeaderButtons?: React.ReactNode;
     visibleFilters?: ('search' | 'tags' | 'type' | 'favorites')[];

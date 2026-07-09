@@ -44,6 +44,7 @@ interface SettingsState {
   autoScanLibrary: boolean;
   overlayPosition: { x: number; y: number };
   lastSelectedGemId: string | null;
+  lastSelectedNotebookId: string | null;
   explorer: {
     viewMode: 'tree' | 'timeline';
     sortOrder: 'alpha' | 'date';
@@ -110,6 +111,7 @@ interface SettingsState {
     value: AIStudioEnhancedFeatures[K],
   ) => void;
   setLastSelectedGemId: (id: string | null) => void;
+  setLastSelectedNotebookId: (id: string | null) => void;
   setNotionConfig: (config: Partial<SettingsState['integrations']['notion']>) => void;
   setOutlineHeight: (height: number) => void;
 }
@@ -170,6 +172,7 @@ export const useSettingsStore = create<SettingsState>()(
       autoScanLibrary: false,
       overlayPosition: { x: 16, y: 16 },
       lastSelectedGemId: null,
+      lastSelectedNotebookId: null,
       explorer: {
         viewMode: 'tree',
         sortOrder: 'date',
@@ -291,6 +294,7 @@ export const useSettingsStore = create<SettingsState>()(
           },
         })),
       setLastSelectedGemId: (id) => set({ lastSelectedGemId: id }),
+      setLastSelectedNotebookId: (id) => set({ lastSelectedNotebookId: id }),
       setNotionConfig: (config) =>
         set((state) => ({
           integrations: {

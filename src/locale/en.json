@@ -323,6 +323,15 @@
     "toggleMenu": "Toggle Menu",
     "newChatCta": "Click: New chat · Right-click: Private chat"
   },
+  "newChatButton": {
+    "dropdownTooltip": "More chat options",
+    "newGemChat": "New Gem Chat",
+    "newNotebookChat": "New Notebook Chat",
+    "gemItemTooltip": "Click: Select a Gem · Right-click: Select a Gem",
+    "gemItemTooltipWithLast": "Click: Chat with {{name}} · Right-click: Select a Gem",
+    "notebookItemTooltip": "Click: Select a Notebook · Right-click: Select a Notebook",
+    "notebookItemTooltipWithLast": "Click: Chat with {{name}} · Right-click: Select a Notebook"
+  },
   "favorites": {
     "noFavoritesFound": "No favorites found matching your filters.",
     "noFavoritesYet": "No favorites yet. Right-click on a file to add it to favorites.",
@@ -811,10 +820,14 @@
     "empty": "No notebooks yet. Create one on Gemini.",
     "noNotebooks": "No notebooks found.",
     "openNotebook": "Open Notebook",
+    "newNotebookChat": "New Notebook Chat",
     "openInNewTab": "Open in New Tab",
     "deleteNotebook": "Delete Notebook",
     "deleteNotebookConfirm": "Are you sure you want to delete \"{{name}}\"? This will permanently delete the Notebook from Gemini.",
     "newNotebook": "New Notebook",
+    "selectNotebook": "Select a Notebook",
+    "searchNotebooks": "Search notebooks...",
+    "chatWithLastNotebook": "Chat with {{name}}",
     "viewNotebooks": "View Notebooks",
     "scanNotebooks": "Refresh Notebooks",
     "scanningNotebooks": "Loading...",

@@ -3,6 +3,7 @@ import type { ExplorerTypeFilter } from '../shared/types/filter';
 import React from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useAppStore } from '@/shared/lib/store';
+import { NewChatButton } from './components/NewChatButton';
 import { ImportHistoryDialog } from './modules/search/components/ImportHistoryDialog';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { Upload } from 'lucide-react';
@@ -110,6 +111,7 @@ export const useModuleConfig = (): ModuleConfig => {
           navigate(url);
         }
       },
+      newChatButton: <NewChatButton />,
       filterTypes: ['all', 'conversation', 'text-to-image'],
       visibleFilters: ['search', 'tags', 'type', 'favorites'],
       extraHeaderButtons: null,

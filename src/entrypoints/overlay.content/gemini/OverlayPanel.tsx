@@ -428,6 +428,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             onNewChat={moduleConfig.explorer.onNewChat}
             onPrivateChat={moduleConfig.explorer.onPrivateChat}
             newChatDropdownItems={moduleConfig.explorer.newChatDropdownItems}
+            newChatButton={moduleConfig.explorer.newChatButton}
             filterTypes={moduleConfig.explorer.filterTypes}
             extraHeaderButtons={moduleConfig.explorer.extraHeaderButtons}
             visibleFilters={moduleConfig.explorer.visibleFilters}

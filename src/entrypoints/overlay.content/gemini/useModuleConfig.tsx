@@ -1,14 +1,11 @@
-import { navigate, navigateToGem, navigateToNewChat } from '@/shared/lib/navigation';
+import { navigate, navigateToNewChat } from '@/shared/lib/navigation';
 import { handleSearchNavigation } from '../shared/utils';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
-import { MessageSquareDashed, Gem as GemIcon } from 'lucide-react';
-import { GemWithHistory } from '@/shared/components/icons/gem-composite-icons';
+import { MessageSquareDashed } from 'lucide-react';
 import { useAppStore } from '@/shared/lib/store';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { useModalStore } from '@/shared/lib/modal';
-import { GemPickerContent } from '../shared/modules/gems/components/GemPickerContent';
-import { SplitIconButton } from '@/shared/components/ui/split-icon-button';
+import { NewChatButton } from './components/NewChatButton';
 import type { ModuleConfig } from '../shared/types/moduleConfig';
 
 const useTemporaryChatToggle = () => {
@@ -137,61 +134,6 @@ const useTemporaryChatToggle = () => {
   return { isTempChat, toggle };
 };
 
-const GemSplitButton = () => {
-  const { t } = useI18n();
-  const lastSelectedGemId = useSettingsStore((s) => s.lastSelectedGemId);
-  const { gems } = useAppStore();
-
-  const lastSelectedGem = useMemo(
-    () => (lastSelectedGemId ? gems.find((g) => g.id === lastSelectedGemId) : null),
-    [gems, lastSelectedGemId],
-  );
-
-  const handleChatWithLastGem = () => {
-    if (lastSelectedGem) {
-      navigateToGem(lastSelectedGem.id);
-    }
-  };
-
-  const handleNewGemChat = () => {
-    useModalStore.getState().open({
-      type: 'info',
-      title: t('gems.selectGem'),
-      content: <GemPickerContent lastSelectedGemId={lastSelectedGemId} />,
-      confirmText: t('common.cancel'),
-      modalClassName: 'max-w-sm',
-    });
-  };
-
-  // No last gem — plain button that opens the picker
-  if (!lastSelectedGem) {
-    return (
-      <SplitIconButton
-        icon={<GemIcon className="h-4 w-4" />}
-        tooltip={t('gems.selectGem')}
-        onClick={handleNewGemChat}
-      />
-    );
-  }
-
-  // Has last gem — split button: main = chat with last gem (decorated), dropdown = open picker
-  return (
-    <SplitIconButton
-      icon={<GemWithHistory />}
-      tooltip={t('gems.chatWithLastGem', { name: lastSelectedGem.name })}
-      onClick={handleChatWithLastGem}
-      dropdownItems={[
-        {
-          label: t('gems.selectGem'),
-          icon: GemIcon,
-          onClick: handleNewGemChat,
-          closeOnClick: true,
-        },
-      ]}
-    />
-  );
-};
-
 export const useModuleConfig = (): ModuleConfig => {
   const { t } = useI18n();
   const newChatBehavior = useSettingsStore((state) => state.newChatBehavior);
@@ -225,9 +167,9 @@ export const useModuleConfig = (): ModuleConfig => {
           onClick: toggleTempChat,
         },
       ],
+      newChatButton: <NewChatButton onPrivateChat={toggleTempChat} />,
       filterTypes: ['all', 'conversation', 'gem', 'notebook'] as const,
       visibleFilters: ['search', 'tags', 'type', 'favorites'],
-      extraHeaderButtons: <GemSplitButton />,
     },
     favorites: {
       visibleFilters: ['search', 'tags'],

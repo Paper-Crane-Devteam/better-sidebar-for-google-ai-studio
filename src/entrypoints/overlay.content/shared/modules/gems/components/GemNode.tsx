@@ -188,16 +188,6 @@ export const GemNode = ({
 
   // Menu items for gem nodes
   const gemMenuItems: MenuEntryDef[] = isGem ? [
-    // — Primary action —
-    {
-      type: 'item' as const,
-      key: 'new-gem-chat',
-      icon: <MessageSquarePlus className="h-4 w-4" />,
-      label: t('gems.newGemChat'),
-      onClick: () => {
-        navigateToGem(node.data.id);
-      },
-    },
     // — Pin —
     {
       type: 'item' as const,
@@ -336,16 +326,30 @@ export const GemNode = ({
             {/* Action bar with three-dot menu */}
             {hasHoverActions && (
               <NodeActionBar
-                actions={isFile && isFavorite ? [{
-                  icon: <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />,
-                  tooltip: t('tooltip.removeFromFavorites'),
-                  onClick: (e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    toggleFavorite(node.data.id, 'conversation', isFavorite);
-                  },
-                  className: 'text-yellow-400 hover:text-yellow-500',
-                }] : []}
+                actions={
+                  isGem
+                    ? [{
+                        icon: <MessageSquarePlus className="h-3.5 w-3.5" />,
+                        tooltip: t('gems.newGemChat'),
+                        onClick: (e: React.MouseEvent) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          navigateToGem(node.data.id);
+                        },
+                      }]
+                    : isFile && isFavorite
+                      ? [{
+                          icon: <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />,
+                          tooltip: t('tooltip.removeFromFavorites'),
+                          onClick: (e: React.MouseEvent) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            toggleFavorite(node.data.id, 'conversation', isFavorite);
+                          },
+                          className: 'text-yellow-400 hover:text-yellow-500',
+                        }]
+                      : []
+                }
                 menuItems={activeMenuItems}
                 forceVisible={isMenuActive}
                 onDropdownOpenChange={setIsDropdownOpen}

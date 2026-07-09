@@ -321,6 +321,15 @@
     "toggleMenu": "メニューを切り替え",
     "newChatCta": "クリック：新しいチャット · 右クリック：プライベートチャット"
   },
+  "newChatButton": {
+    "dropdownTooltip": "その他のチャットオプション",
+    "newGemChat": "新しい Gem チャット",
+    "newNotebookChat": "新しい Notebook チャット",
+    "gemItemTooltip": "クリック：Gem を選択 · 右クリック：Gem を選択",
+    "gemItemTooltipWithLast": "クリック：{{name}} とチャット · 右クリック：Gem を選択",
+    "notebookItemTooltip": "クリック：Notebook を選択 · 右クリック：Notebook を選択",
+    "notebookItemTooltipWithLast": "クリック：{{name}} とチャット · 右クリック：Notebook を選択"
+  },
   "favorites": {
     "noFavoritesFound": "フィルタに一致するお気に入りが見つかりません。",
     "noFavoritesYet": "お気に入りはまだありません。ファイルを右クリックしてお気に入りに追加できます。",
@@ -815,10 +824,14 @@
     "empty": "ノートブックはまだありません。Geminiで作成してください。",
     "noNotebooks": "ノートブックが見つかりません。",
     "openNotebook": "ノートブックを開く",
+    "newNotebookChat": "新しいノートブックチャット",
     "openInNewTab": "新しいタブで開く",
     "deleteNotebook": "ノートブックを削除",
     "deleteNotebookConfirm": "\"{{name}}\" を削除してもよろしいですか？この操作により、Geminiからノートブックが完全に削除されます。",
     "newNotebook": "新しいノートブック",
+    "selectNotebook": "ノートブックを選択",
+    "searchNotebooks": "ノートブックを検索...",
+    "chatWithLastNotebook": "{{name}} とチャット",
     "viewNotebooks": "ノートブックを表示",
     "scanNotebooks": "ノートブックを更新",
     "scanningNotebooks": "読み込み中...",

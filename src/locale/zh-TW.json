@@ -321,6 +321,15 @@
     "toggleMenu": "切換選單",
     "newChatCta": "點擊：新增對話 · 右鍵：私密對話"
   },
+  "newChatButton": {
+    "dropdownTooltip": "更多新增選項",
+    "newGemChat": "新增 Gem 對話",
+    "newNotebookChat": "新增 Notebook 對話",
+    "gemItemTooltip": "點擊：選擇 Gem · 右鍵：選擇 Gem",
+    "gemItemTooltipWithLast": "點擊：與 {{name}} 對話 · 右鍵：選擇 Gem",
+    "notebookItemTooltip": "點擊：選擇 Notebook · 右鍵：選擇 Notebook",
+    "notebookItemTooltipWithLast": "點擊：與 {{name}} 對話 · 右鍵：選擇 Notebook"
+  },
   "favorites": {
     "noFavoritesFound": "找不到符合篩選條件的收藏",
     "noFavoritesYet": "還沒有收藏。右鍵點選檔案可新增至收藏。",
@@ -814,10 +823,14 @@
     "empty": "尚無筆記本。請在 Gemini 中建立。",
     "noNotebooks": "找不到筆記本。",
     "openNotebook": "開啟筆記本",
+    "newNotebookChat": "新建 Notebook 對話",
     "openInNewTab": "在新分頁中開啟",
     "deleteNotebook": "刪除筆記本",
     "deleteNotebookConfirm": "確定要刪除 \"{{name}}\" 嗎？這將從 Gemini 中永久刪除該筆記本。",
     "newNotebook": "新增筆記本",
+    "selectNotebook": "選擇筆記本",
+    "searchNotebooks": "搜尋筆記本...",
+    "chatWithLastNotebook": "與 {{name}} 聊天",
     "viewNotebooks": "檢視筆記本",
     "scanNotebooks": "重新整理筆記本",
     "scanningNotebooks": "載入中...",

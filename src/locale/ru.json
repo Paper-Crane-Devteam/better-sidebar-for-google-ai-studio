@@ -321,6 +321,15 @@
     "toggleMenu": "Переключить меню",
     "newChatCta": "Клик: Новый чат · Правый клик: Приватный чат"
   },
+  "newChatButton": {
+    "dropdownTooltip": "Дополнительные опции чата",
+    "newGemChat": "Новый чат с Gem",
+    "newNotebookChat": "Новый чат с Notebook",
+    "gemItemTooltip": "Клик: Выбрать Gem · Правый клик: Выбрать Gem",
+    "gemItemTooltipWithLast": "Клик: Чат с {{name}} · Правый клик: Выбрать Gem",
+    "notebookItemTooltip": "Клик: Выбрать Notebook · Правый клик: Выбрать Notebook",
+    "notebookItemTooltipWithLast": "Клик: Чат с {{name}} · Правый клик: Выбрать Notebook"
+  },
   "favorites": {
     "noFavoritesFound": "Не найдено избранного, соответствующего вашим фильтрам.",
     "noFavoritesYet": "Пока нет избранного. Щёлкните правой кнопкой мыши на файле, чтобы добавить его в избранное.",
@@ -814,10 +823,14 @@
     "empty": "Блокнотов пока нет. Создайте один в Gemini.",
     "noNotebooks": "Блокноты не найдены.",
     "openNotebook": "Открыть блокнот",
+    "newNotebookChat": "Новый чат в блокноте",
     "openInNewTab": "Открыть в новой вкладке",
     "deleteNotebook": "Удалить блокнот",
     "deleteNotebookConfirm": "Вы уверены, что хотите удалить \"{{name}}\"? Это навсегда удалит блокнот из Gemini.",
     "newNotebook": "Новый блокнот",
+    "selectNotebook": "Выбрать блокнот",
+    "searchNotebooks": "Поиск блокнотов...",
+    "chatWithLastNotebook": "Чат с {{name}}",
     "viewNotebooks": "Просмотр блокнотов",
     "scanNotebooks": "Обновить блокноты",
     "scanningNotebooks": "Загрузка...",

@@ -321,6 +321,15 @@
     "toggleMenu": "Alternar menu",
     "newChatCta": "Clique: Novo chat · Clique direito: Chat privado"
   },
+  "newChatButton": {
+    "dropdownTooltip": "Mais opções de chat",
+    "newGemChat": "Novo chat com Gem",
+    "newNotebookChat": "Novo chat com Notebook",
+    "gemItemTooltip": "Clique: Selecionar um Gem · Clique direito: Selecionar um Gem",
+    "gemItemTooltipWithLast": "Clique: Conversar com {{name}} · Clique direito: Selecionar um Gem",
+    "notebookItemTooltip": "Clique: Selecionar um Notebook · Clique direito: Selecionar um Notebook",
+    "notebookItemTooltipWithLast": "Clique: Conversar com {{name}} · Clique direito: Selecionar um Notebook"
+  },
   "favorites": {
     "noFavoritesFound": "Nenhum favorito encontrado correspondendo aos seus filtros.",
     "noFavoritesYet": "Ainda não há favoritos. Clique com o botão direito em um arquivo para adicioná-lo aos favoritos.",
@@ -814,10 +823,14 @@
     "empty": "Nenhum notebook ainda. Crie um no Gemini.",
     "noNotebooks": "Nenhum notebook encontrado.",
     "openNotebook": "Abrir Notebook",
+    "newNotebookChat": "Novo Chat no Notebook",
     "openInNewTab": "Abrir em nova aba",
     "deleteNotebook": "Excluir Notebook",
     "deleteNotebookConfirm": "Tem certeza de que deseja excluir \"{{name}}\"? Isso excluirá permanentemente o Notebook do Gemini.",
     "newNotebook": "Novo Notebook",
+    "selectNotebook": "Selecionar um Notebook",
+    "searchNotebooks": "Pesquisar notebooks...",
+    "chatWithLastNotebook": "Conversar com {{name}}",
     "viewNotebooks": "Ver Notebooks",
     "scanNotebooks": "Atualizar Notebooks",
     "scanningNotebooks": "Carregando...",
