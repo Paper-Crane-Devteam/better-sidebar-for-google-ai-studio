@@ -338,7 +338,8 @@
   "explorerHeader": {
     "library": "Библиотека",
     "newChat": "Новый чат",
-    "chats": "Чаты"
+    "chats": "Чаты",
+    "moreFilters": "Больше фильтров"
   },
   "outline": {
     "title": "Структура",

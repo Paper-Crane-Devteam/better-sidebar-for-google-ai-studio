@@ -340,7 +340,8 @@
   "explorerHeader": {
     "library": "库",
     "newChat": "新建对话",
-    "chats": "对话"
+    "chats": "对话",
+    "moreFilters": "更多筛选"
   },
   "outline": {
     "title": "大纲",

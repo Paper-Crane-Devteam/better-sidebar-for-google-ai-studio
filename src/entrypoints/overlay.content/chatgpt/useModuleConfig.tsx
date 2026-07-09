@@ -34,7 +34,6 @@ export const useModuleConfig = (): ModuleConfig => {
         }
       },
       filterTypes: ['all', 'conversation'],
-      visibleFilters: ['search', 'tags', 'favorites'],
     },
     favorites: {},
     search: {

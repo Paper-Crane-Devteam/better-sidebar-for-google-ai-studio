@@ -390,8 +390,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             onNewChat={moduleConfig.explorer.onNewChat}
             newChatButton={moduleConfig.explorer.newChatButton}
             filterTypes={moduleConfig.explorer.filterTypes}
-            visibleFilters={moduleConfig.explorer.visibleFilters}
-            extraHeaderButtons={moduleConfig.explorer.extraHeaderButtons}
             menuActions={moduleConfig.general.menuActions}
           />
         ) : activeTab === 'search' ? (

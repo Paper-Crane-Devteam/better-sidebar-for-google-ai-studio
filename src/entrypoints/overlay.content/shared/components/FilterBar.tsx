@@ -14,9 +14,10 @@ import { X } from 'lucide-react';
 interface FilterBarProps {
   filter: FilterState<ExplorerTypeFilter> | FilterState<PromptsTypeFilter>;
   allTags: Tag[];
+  showSearch?: boolean;
 }
 
-export const FilterBar = ({ filter, allTags }: FilterBarProps) => {
+export const FilterBar = ({ filter, allTags, showSearch = true }: FilterBarProps) => {
   const { t } = useI18n();
   const { search, tags } = filter;
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -57,7 +58,7 @@ export const FilterBar = ({ filter, allTags }: FilterBarProps) => {
   return (
     <>
       {/* Search Input Area */}
-      {search.isOpen && (
+      {showSearch && search.isOpen && (
         <div className="px-3 py-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-in slide-in-from-top-2 duration-200">
           <div className="relative">
             <Input

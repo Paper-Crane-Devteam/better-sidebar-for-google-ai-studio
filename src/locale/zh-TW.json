@@ -338,7 +338,8 @@
   "explorerHeader": {
     "library": "資料庫",
     "newChat": "新增對話",
-    "chats": "對話"
+    "chats": "對話",
+    "moreFilters": "更多篩選"
   },
   "outline": {
     "title": "大綱",

@@ -426,12 +426,8 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
         {activeTab === 'files' ? (
           <ExplorerTab
             onNewChat={moduleConfig.explorer.onNewChat}
-            onPrivateChat={moduleConfig.explorer.onPrivateChat}
-            newChatDropdownItems={moduleConfig.explorer.newChatDropdownItems}
             newChatButton={moduleConfig.explorer.newChatButton}
             filterTypes={moduleConfig.explorer.filterTypes}
-            extraHeaderButtons={moduleConfig.explorer.extraHeaderButtons}
-            visibleFilters={moduleConfig.explorer.visibleFilters}
             menuActions={moduleConfig.general.menuActions}
           />
         ) : activeTab === 'search' ? (

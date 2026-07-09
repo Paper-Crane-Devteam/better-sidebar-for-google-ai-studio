@@ -1,5 +1,4 @@
 import type { ExplorerTypeFilter } from './filter';
-import type { SplitDropdownItem } from '@/shared/components/ui/split-icon-button';
 
 export interface ModuleConfig {
   general: {
@@ -10,12 +9,8 @@ export interface ModuleConfig {
   },
   explorer: {
     onNewChat: () => void;
-    onPrivateChat?: () => void;
-    newChatDropdownItems?: SplitDropdownItem[];
     newChatButton?: React.ReactNode;
     filterTypes?: ExplorerTypeFilter[];
-    extraHeaderButtons?: React.ReactNode;
-    visibleFilters?: ('search' | 'tags' | 'type' | 'favorites')[];
   };
   prompts: {
     enabled: boolean;

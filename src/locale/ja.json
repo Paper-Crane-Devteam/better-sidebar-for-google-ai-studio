@@ -338,7 +338,8 @@
   "explorerHeader": {
     "library": "ライブラリ",
     "newChat": "新しいチャット",
-    "chats": "チャット"
+    "chats": "チャット",
+    "moreFilters": "その他のフィルター"
   },
   "outline": {
     "title": "アウトライン",

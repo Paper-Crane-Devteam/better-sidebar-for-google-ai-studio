@@ -338,7 +338,8 @@
   "explorerHeader": {
     "library": "Biblioteca",
     "newChat": "Nuevo Chat",
-    "chats": "Chats"
+    "chats": "Chats",
+    "moreFilters": "Más filtros"
   },
   "outline": {
     "title": "Esquema",

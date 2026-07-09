@@ -113,8 +113,6 @@ export const useModuleConfig = (): ModuleConfig => {
       },
       newChatButton: <NewChatButton />,
       filterTypes: ['all', 'conversation', 'text-to-image'],
-      visibleFilters: ['search', 'tags', 'type', 'favorites'],
-      extraHeaderButtons: null,
     },
     favorites: {},
     search: {

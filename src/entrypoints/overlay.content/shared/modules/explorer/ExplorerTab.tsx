@@ -17,19 +17,14 @@ import { ExclusiveContextMenu } from '../../components/ui/exclusive-context-menu
 import { OutlineSection } from './components/OutlineSection';
 
 import type { ExplorerTypeFilter } from '../../types/filter';
-import type { SplitDropdownItem } from '@/shared/components/ui/split-icon-button';
 import { ExplorerContext } from './ExplorerContext';
 import { usePendingNewChat } from './hooks/usePendingNewChat';
 import { INBOX_FOLDER_ID } from '@/shared/constants/inbox';
 
 interface ExplorerTabProps {
   onNewChat: () => void;
-  onPrivateChat?: () => void;
-  newChatDropdownItems?: SplitDropdownItem[];
   newChatButton?: React.ReactNode;
   filterTypes?: ExplorerTypeFilter[];
-  extraHeaderButtons?: React.ReactNode;
-  visibleFilters?: ('search' | 'tags' | 'type' | 'favorites')[];
   menuActions?: {
     onViewHistory?: () => void;
     onSwitchToOriginalUI?: () => void;
@@ -39,12 +34,8 @@ interface ExplorerTabProps {
 
 export const ExplorerTab = ({
   onNewChat,
-  onPrivateChat,
-  newChatDropdownItems,
   newChatButton,
   filterTypes,
-  extraHeaderButtons,
-  visibleFilters,
   menuActions,
 }: ExplorerTabProps) => {
   const { t } = useI18n();
@@ -455,13 +446,9 @@ export const ExplorerTab = ({
         onLocateCurrent={handleLocateCurrent}
         onSelectAll={handleSelectAll}
         onNewChat={handleNewChatFromFolder}
-        onPrivateChat={onPrivateChat}
-        newChatDropdownItems={newChatDropdownItems}
         newChatButton={newChatButton}
         filter={filter}
         filterTypes={filterTypes}
-        extraHeaderButtons={extraHeaderButtons}
-        visibleFilters={visibleFilters}
         menuActions={{
           ...menuActions,
           handleScanLibrary,
@@ -473,7 +460,7 @@ export const ExplorerTab = ({
       {/* CHATS Section Content (collapsible with quick animation) */}
       {isChatsSectionExpanded && (
         <div className="flex flex-col flex-1 min-h-0 animate-in fade-in slide-in-from-top-1 duration-150">
-          <FilterBar filter={filter} allTags={allTags} />
+          <FilterBar filter={filter} allTags={allTags} showSearch={false} />
 
           {/* Content */}
           <ExclusiveContextMenu>

@@ -340,7 +340,8 @@
   "explorerHeader": {
     "library": "Library",
     "newChat": "New Chat",
-    "chats": "Chats"
+    "chats": "Chats",
+    "moreFilters": "More filters"
   },
   "outline": {
     "title": "Outline",

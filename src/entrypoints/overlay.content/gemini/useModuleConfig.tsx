@@ -2,9 +2,7 @@ import { navigate, navigateToNewChat } from '@/shared/lib/navigation';
 import { handleSearchNavigation } from '../shared/utils';
 import React, { useState, useEffect } from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
-import { MessageSquareDashed } from 'lucide-react';
 import { useAppStore } from '@/shared/lib/store';
-import { useI18n } from '@/shared/hooks/useI18n';
 import { NewChatButton } from './components/NewChatButton';
 import type { ModuleConfig } from '../shared/types/moduleConfig';
 
@@ -135,7 +133,6 @@ const useTemporaryChatToggle = () => {
 };
 
 export const useModuleConfig = (): ModuleConfig => {
-  const { t } = useI18n();
   const newChatBehavior = useSettingsStore((state) => state.newChatBehavior);
   const setOverlayOpen = useAppStore((state) => state.setOverlayOpen);
   const { toggle: toggleTempChat } = useTemporaryChatToggle();
@@ -159,17 +156,8 @@ export const useModuleConfig = (): ModuleConfig => {
           navigateToNewChat();
         }
       },
-      onPrivateChat: toggleTempChat,
-      newChatDropdownItems: [
-        {
-          label: t('tooltip.temporaryChat'),
-          icon: MessageSquareDashed,
-          onClick: toggleTempChat,
-        },
-      ],
       newChatButton: <NewChatButton onPrivateChat={toggleTempChat} />,
       filterTypes: ['all', 'conversation', 'gem', 'notebook'] as const,
-      visibleFilters: ['search', 'tags', 'type', 'favorites'],
     },
     favorites: {
       visibleFilters: ['search', 'tags'],
