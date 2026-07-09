@@ -48,6 +48,7 @@ function extractItems(content: string): ParsedItem[] {
   let inTable = false;
   let tableRowCount = 0;
   let tableStartLine = -1;
+  let tableLines: string[] = [];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -124,7 +125,9 @@ function extractItems(content: string): ParsedItem[] {
         inTable = true;
         tableRowCount = 0;
         tableStartLine = i;
+        tableLines = [];
       }
+      tableLines.push(line);
       if (!isSeparator) {
         tableRowCount++;
       }
@@ -204,15 +207,18 @@ function extractItems(content: string): ParsedItem[] {
     if (tableRowCount > 0) {
       // Subtract 1 for header row to get data rows
       const dataRows = Math.max(0, tableRowCount - 1);
+      const rawContent = tableLines.join('\n');
       items.push({
         type: 'table',
         label: `table (${dataRows} rows)`,
         meta: `${tableRowCount}`,
+        rawContent,
         depth: 2,
       });
     }
     inTable = false;
     tableRowCount = 0;
+    tableLines = [];
   }
 }
 

@@ -320,7 +320,8 @@
     "documentation": "Documentation",
     "switchToOriginalUI": "Switch to Original Sidebar",
     "temporaryChat": "Temporary chat",
-    "toggleMenu": "Toggle Menu"
+    "toggleMenu": "Toggle Menu",
+    "newChatCta": "Click: New chat · Right-click: Private chat"
   },
   "favorites": {
     "noFavoritesFound": "No favorites found matching your filters.",
@@ -856,7 +857,8 @@
     "copyQuery": "Copy question",
     "copyResponse": "Copy response",
     "expandAll": "Expand all",
-    "collapseAll": "Collapse all"
+    "collapseAll": "Collapse all",
+    "navigate": "Go to message"
   },
   "firstInstall": {
     "title": "Import Conversation List?",

@@ -320,7 +320,8 @@
     "documentation": "文档",
     "switchToOriginalUI": "切换到原始侧边栏",
     "temporaryChat": "临时对话",
-    "toggleMenu": "切换菜单"
+    "toggleMenu": "切换菜单",
+    "newChatCta": "点击：新建对话 · 右键：私密对话"
   },
   "favorites": {
     "noFavoritesFound": "未找到匹配筛选条件的收藏",
@@ -343,7 +344,13 @@
     "noConversation": "未打开对话",
     "noConversationHint": "打开一个对话以查看大纲",
     "empty": "暂无大纲内容",
-    "noResults": "无匹配项"
+    "noResults": "无匹配项",
+    "copy": "复制",
+    "copyQuery": "复制问题",
+    "copyResponse": "复制回复",
+    "expandAll": "展开全部",
+    "collapseAll": "折叠全部",
+    "navigate": "跳转到消息"
   },
   "node": {
     "newFolder": "创建子文件夹",

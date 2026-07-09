@@ -273,31 +273,18 @@ function OutlineSectionItem({
     toast.success(t('toast.copiedToClipboard'), 1000);
   };
 
-  const handleCopyResponse = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (section.modelContent) {
-      navigator.clipboard.writeText(section.modelContent);
-      toast.success(t('toast.copiedToClipboard'), 1000);
-    }
-  };
-
   return (
     <div
       ref={activeRef}
-      className={cn(
-        'mx-1 rounded-md transition-colors duration-100',
-        isActive && 'bg-primary/5',
-      )}
+      className="mx-1 rounded-md"
     >
-      {/* User question row */}
+      {/* User question row — click toggles expand/collapse */}
       <div
         className={cn(
           'group/section flex items-center gap-1 px-2 py-1 rounded-md relative',
-          section.userInDom
-            ? 'cursor-pointer hover:bg-accent/50'
-            : 'cursor-default opacity-50',
+          'cursor-pointer hover:bg-accent/50',
         )}
-        onClick={() => section.userInDom && onNavigate(section.userMessageId)}
+        onClick={() => hasChildren && onToggle()}
       >
         {hasChildren ? (
           <button
@@ -341,10 +328,10 @@ function OutlineSectionItem({
           content={section.userQueryFull || section.userQuery}
           placement="right"
           className={cn(
-            'text-xs leading-snug truncate flex-1',
+            'text-sm leading-snug truncate flex-1',
             isActive
               ? 'text-primary font-medium'
-              : 'text-foreground/80 group-hover/section:text-foreground',
+              : 'text-foreground',
           )}
         >
           {section.userQuery}
@@ -354,26 +341,29 @@ function OutlineSectionItem({
           <MapPin className="h-3 w-3 text-primary shrink-0 opacity-70" />
         )}
 
-        {/* Hover action buttons */}
+        {/* Hover action buttons — absolute positioned, floats above */}
         <div
-          className="invisible group-hover/section:visible flex items-center gap-1 shrink-0 ml-1"
+          className="invisible group-hover/section:visible absolute right-1 top-0 bottom-0 flex items-center gap-1 bg-accent/90 rounded-md px-1"
           data-tooltip-suppress
           onClick={(e) => e.stopPropagation()}
         >
           <button
             onClick={handleCopyQuery}
-            className="h-4 w-4 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+            className="h-5 w-5 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-colors"
             title={t('outline.copyQuery')}
           >
-            <Copy className="h-3 w-3" />
+            <Copy className="h-3.5 w-3.5" />
           </button>
-          {section.modelContent && (
+          {section.userInDom && (
             <button
-              onClick={handleCopyResponse}
-              className="h-4 w-4 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
-              title={t('outline.copyResponse')}
+              onClick={(e) => {
+                e.stopPropagation();
+                onNavigate(section.userMessageId);
+              }}
+              className="h-5 w-5 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-colors"
+              title={t('outline.navigate')}
             >
-              <Copy className="h-3 w-3 text-purple-400" />
+              <MapPin className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
@@ -463,10 +453,10 @@ function OutlineNodeItem({
           content={node.label}
           placement="right"
           className={cn(
-            'text-xs leading-snug truncate flex-1',
+            'text-sm leading-snug truncate flex-1',
             node.type === 'heading'
-              ? 'text-foreground/90 font-medium'
-              : 'text-muted-foreground group-hover/node:text-foreground',
+              ? 'text-foreground font-medium'
+              : 'text-foreground/90',
           )}
         >
           {node.label}
@@ -478,18 +468,18 @@ function OutlineNodeItem({
           </span>
         )}
 
-        {/* Hover copy button */}
+        {/* Hover copy button — absolute positioned, floats above */}
         <div
-          className="invisible group-hover/node:visible flex items-center shrink-0 ml-1"
+          className="invisible group-hover/node:visible absolute right-1 top-0 bottom-0 flex items-center bg-accent/90 rounded-md px-1"
           data-tooltip-suppress
           onClick={(e) => e.stopPropagation()}
         >
           <button
             onClick={handleCopy}
-            className="h-4 w-4 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+            className="h-5 w-5 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-colors"
             title={t('outline.copy')}
           >
-            <Copy className="h-3 w-3" />
+            <Copy className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>

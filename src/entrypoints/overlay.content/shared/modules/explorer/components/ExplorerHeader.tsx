@@ -11,6 +11,7 @@ import {
   Cloud,
   Loader2,
   Crosshair,
+  Plus,
 } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { SidePanelMenu } from '@/entrypoints/overlay.content/shared/components/menu/SidePanelMenu';
@@ -30,6 +31,7 @@ interface ExplorerHeaderProps {
   onLocateCurrent: () => void;
   onSelectAll: () => void;
   onNewChat: () => void;
+  onPrivateChat?: () => void;
   newChatDropdownItems?: SplitDropdownItem[];
   filter: FilterState<ExplorerTypeFilter>;
   filterTypes?: ExplorerTypeFilter[];
@@ -50,6 +52,7 @@ export const ExplorerHeader = ({
   onLocateCurrent,
   onSelectAll,
   onNewChat,
+  onPrivateChat,
   newChatDropdownItems,
   filter,
   filterTypes,
@@ -144,7 +147,7 @@ export const ExplorerHeader = ({
     <div className="flex flex-col bg-background">
       {/* Row 1: EXPLORER title + sync + three-dot menu */}
       <div className="px-3 py-2 flex items-center justify-between border-b">
-        <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+        <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground/70">
           {t('explorerHeader.library')}
         </h1>
 
@@ -184,6 +187,23 @@ export const ExplorerHeader = ({
           />
         </div>
       </div>
+
+      {/* New Chat CTA — minimal full-width bar, no extra borders */}
+      <SimpleTooltip content={onPrivateChat ? t('tooltip.newChatCta') : t('tooltip.newChat')}>
+        <button
+          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer border-none bg-transparent text-left"
+          onClick={onNewChat}
+          onContextMenu={(e) => {
+            if (onPrivateChat) {
+              e.preventDefault();
+              onPrivateChat();
+            }
+          }}
+        >
+          <Plus className="h-4 w-4" />
+          {t('explorerHeader.newChat')}
+        </button>
+      </SimpleTooltip>
 
       {/* Row 2: CHATS collapsible section header with batch/collapse/sort */}
       <SectionHeader

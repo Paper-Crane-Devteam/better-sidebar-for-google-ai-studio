@@ -134,7 +134,7 @@ export const SnippetsHeader = ({
     <div className="flex flex-col border-b bg-background">
       {/* Row 1: Title + actions */}
       <div className="px-3 py-2 flex items-center justify-between">
-        <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+        <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground/70">
           {t('tabs.snippets')}
         </h1>
 

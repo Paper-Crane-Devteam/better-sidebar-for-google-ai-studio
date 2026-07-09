@@ -426,6 +426,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
         {activeTab === 'files' ? (
           <ExplorerTab
             onNewChat={moduleConfig.explorer.onNewChat}
+            onPrivateChat={moduleConfig.explorer.onPrivateChat}
             newChatDropdownItems={moduleConfig.explorer.newChatDropdownItems}
             filterTypes={moduleConfig.explorer.filterTypes}
             extraHeaderButtons={moduleConfig.explorer.extraHeaderButtons}

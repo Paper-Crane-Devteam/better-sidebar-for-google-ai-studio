@@ -24,6 +24,7 @@ import { INBOX_FOLDER_ID } from '@/shared/constants/inbox';
 
 interface ExplorerTabProps {
   onNewChat: () => void;
+  onPrivateChat?: () => void;
   newChatDropdownItems?: SplitDropdownItem[];
   filterTypes?: ExplorerTypeFilter[];
   extraHeaderButtons?: React.ReactNode;
@@ -37,6 +38,7 @@ interface ExplorerTabProps {
 
 export const ExplorerTab = ({
   onNewChat,
+  onPrivateChat,
   newChatDropdownItems,
   filterTypes,
   extraHeaderButtons,
@@ -451,6 +453,7 @@ export const ExplorerTab = ({
         onLocateCurrent={handleLocateCurrent}
         onSelectAll={handleSelectAll}
         onNewChat={handleNewChatFromFolder}
+        onPrivateChat={onPrivateChat}
         newChatDropdownItems={newChatDropdownItems}
         filter={filter}
         filterTypes={filterTypes}

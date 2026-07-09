@@ -10,6 +10,7 @@ export interface ModuleConfig {
   },
   explorer: {
     onNewChat: () => void;
+    onPrivateChat?: () => void;
     newChatDropdownItems?: SplitDropdownItem[];
     filterTypes?: ExplorerTypeFilter[];
     extraHeaderButtons?: React.ReactNode;

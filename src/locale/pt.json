@@ -318,7 +318,8 @@
     "documentation": "Documentação",
     "switchToOriginalUI": "Alternar para Barra Lateral Original",
     "temporaryChat": "Chat temporário",
-    "toggleMenu": "Alternar menu"
+    "toggleMenu": "Alternar menu",
+    "newChatCta": "Clique: Novo chat · Clique direito: Chat privado"
   },
   "favorites": {
     "noFavoritesFound": "Nenhum favorito encontrado correspondendo aos seus filtros.",
@@ -332,7 +333,22 @@
   },
   "outline": {
     "title": "Esquema",
-    "placeholder": "Nenhum esquema disponível"
+    "placeholder": "Abra uma conversa para ver o esquema",
+    "search": "Pesquisar esquema",
+    "searchPlaceholder": "Filtrar esquema...",
+    "filterAll": "Tudo",
+    "filterHeadings": "Títulos",
+    "filterCode": "Código",
+    "noConversation": "Nenhuma conversa aberta",
+    "noConversationHint": "Abra uma conversa para ver o esquema",
+    "empty": "Sem conteúdo de esquema",
+    "noResults": "Nenhum item correspondente",
+    "copy": "Copiar",
+    "copyQuery": "Copiar pergunta",
+    "copyResponse": "Copiar resposta",
+    "expandAll": "Expandir tudo",
+    "collapseAll": "Recolher tudo",
+    "navigate": "Ir para mensagem"
   },
   "node": {
     "newFolder": "Criar Subpasta",

@@ -318,7 +318,8 @@
     "documentation": "文件",
     "switchToOriginalUI": "切換到原始側邊欄",
     "temporaryChat": "臨時對話",
-    "toggleMenu": "切換選單"
+    "toggleMenu": "切換選單",
+    "newChatCta": "點擊：新增對話 · 右鍵：私密對話"
   },
   "favorites": {
     "noFavoritesFound": "找不到符合篩選條件的收藏",
@@ -332,7 +333,22 @@
   },
   "outline": {
     "title": "大綱",
-    "placeholder": "暫無大綱"
+    "placeholder": "開啟對話以查看大綱",
+    "search": "搜尋大綱",
+    "searchPlaceholder": "篩選大綱...",
+    "filterAll": "全部",
+    "filterHeadings": "標題",
+    "filterCode": "程式碼",
+    "noConversation": "未開啟對話",
+    "noConversationHint": "開啟對話以查看大綱",
+    "empty": "暫無大綱內容",
+    "noResults": "無符合項目",
+    "copy": "複製",
+    "copyQuery": "複製問題",
+    "copyResponse": "複製回覆",
+    "expandAll": "全部展開",
+    "collapseAll": "全部收合",
+    "navigate": "跳轉到訊息"
   },
   "node": {
     "newFolder": "建立子資料夾",

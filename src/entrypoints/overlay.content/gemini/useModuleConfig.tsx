@@ -217,6 +217,7 @@ export const useModuleConfig = (): ModuleConfig => {
           navigateToNewChat();
         }
       },
+      onPrivateChat: toggleTempChat,
       newChatDropdownItems: [
         {
           label: t('tooltip.temporaryChat'),

@@ -72,7 +72,7 @@ export const SearchTab = ({
   return (
     <div className="flex flex-col h-full bg-background">
       <div className="px-3 py-2 border-b flex items-center justify-between h-12 shrink-0">
-        <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+        <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground/70">
           {t('search.title')}
         </h1>
         <div className="flex gap-1 items-center">

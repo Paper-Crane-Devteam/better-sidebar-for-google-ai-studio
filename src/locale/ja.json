@@ -318,7 +318,8 @@
     "documentation": "ドキュメント",
     "switchToOriginalUI": "元のサイドバーに切り替え",
     "temporaryChat": "一時チャット",
-    "toggleMenu": "メニューを切り替え"
+    "toggleMenu": "メニューを切り替え",
+    "newChatCta": "クリック：新しいチャット · 右クリック：プライベートチャット"
   },
   "favorites": {
     "noFavoritesFound": "フィルタに一致するお気に入りが見つかりません。",
@@ -332,7 +333,22 @@
   },
   "outline": {
     "title": "アウトライン",
-    "placeholder": "アウトラインはありません"
+    "placeholder": "会話を開くとアウトラインが表示されます",
+    "search": "アウトラインを検索",
+    "searchPlaceholder": "アウトラインを絞り込み...",
+    "filterAll": "すべて",
+    "filterHeadings": "見出し",
+    "filterCode": "コード",
+    "noConversation": "会話が開かれていません",
+    "noConversationHint": "会話を開くとアウトラインが表示されます",
+    "empty": "アウトラインの内容がありません",
+    "noResults": "一致する項目がありません",
+    "copy": "コピー",
+    "copyQuery": "質問をコピー",
+    "copyResponse": "回答をコピー",
+    "expandAll": "すべて展開",
+    "collapseAll": "すべて折りたたむ",
+    "navigate": "メッセージに移動"
   },
   "node": {
     "newFolder": "サブフォルダを作成",
