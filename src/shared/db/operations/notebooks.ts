@@ -53,7 +53,7 @@ export const notebookRepo = {
   update: async (
     id: string,
     updates: Partial<
-      Pick<Notebook, 'name' | 'description' | 'icon_url' | 'order_index' | 'is_pinned'>
+      Pick<Notebook, 'name' | 'description' | 'icon_url' | 'order_index' | 'is_pinned' | 'default_folder_id'>
     >,
   ): Promise<void> => {
     await updateWithTimestamp('notebooks', id, updates);

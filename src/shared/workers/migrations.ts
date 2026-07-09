@@ -337,6 +337,26 @@ export const runMigrations = async (db: any) => {
       }
     });
 
+    // Migration: Add default_folder_id to gems if missing
+    await step('add default_folder_id to gems', async () => {
+      if (!(await hasColumn('gems', 'default_folder_id'))) {
+        console.log('Worker: Migrating gems table - adding default_folder_id');
+        await db.run(
+          'ALTER TABLE gems ADD COLUMN default_folder_id TEXT',
+        );
+      }
+    });
+
+    // Migration: Add default_folder_id to notebooks if missing
+    await step('add default_folder_id to notebooks', async () => {
+      if (!(await hasColumn('notebooks', 'default_folder_id'))) {
+        console.log('Worker: Migrating notebooks table - adding default_folder_id');
+        await db.run(
+          'ALTER TABLE notebooks ADD COLUMN default_folder_id TEXT',
+        );
+      }
+    });
+
   } catch (err) {
     console.error('Worker: Migration failed:', err);
   }

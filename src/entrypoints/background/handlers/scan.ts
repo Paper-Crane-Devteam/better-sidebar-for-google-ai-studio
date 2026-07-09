@@ -3,7 +3,7 @@ import { navigate } from '@/shared/lib/navigation';
 import type { ExtensionMessage, ExtensionResponse } from '@/shared/types/messages';
 import type { MessageSender } from '../types';
 import { Platform } from '@/shared/types/platform';
-import { resolveSyncFolderId } from './resolve-sync-folder';
+import { resolveGemNotebookFolderId } from './resolve-sync-folder';
 
 // Track which tab initiated the library scan so SCAN_COMPLETE
 // notification is only sent back to that tab (not all tabs).
@@ -126,13 +126,23 @@ export async function handleScan(
         const existingMap = new Map(allExisting.map((c) => [c.external_id, c]));
         newCount = items.filter((item) => !existingMap.has(item.external_id)).length;
 
-        const defaultFolderId = await resolveSyncFolderId(platform);
-
-        const conversationsToSave = items.map((item) => {
-          const existing = existingMap.get(item.external_id);
-          const targetFolderId = existing? existing.folder_id : defaultFolderId;
-          return { ...item, folder_id: targetFolderId, platform };
-        });
+        const conversationsToSave = await Promise.all(
+          items.map(async (item) => {
+            const existing = existingMap.get(item.external_id);
+            let targetFolderId: string | null;
+            if (existing) {
+              targetFolderId = existing.folder_id;
+            } else {
+              // For new items, check gem/notebook default folder, fallback to inbox
+              targetFolderId = await resolveGemNotebookFolderId(
+                platform,
+                item.gem_id,
+                item.notebook_id,
+              );
+            }
+            return { ...item, folder_id: targetFolderId, platform };
+          }),
+        );
 
         if (conversationsToSave.length > 0) {
           await conversationRepo.bulkSave(conversationsToSave);

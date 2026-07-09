@@ -9,7 +9,7 @@ import type {
 } from '@/shared/types/messages';
 import type { MessageSender } from '../types';
 import { notifyDataUpdated } from '../notify';
-import { resolveSyncFolderId } from './resolve-sync-folder';
+import { resolveGemNotebookFolderId } from './resolve-sync-folder';
 import { triggerAutoSync, triggerPageLoadSync } from './gdrive-sync';
 
 export async function handleConversations(
@@ -79,7 +79,7 @@ export async function handleConversations(
       const platform = payloadPlatform ?? message.platform ?? 'aistudio';
       let folderId = providedFolderId;
       if (!folderId) {
-        folderId = await resolveSyncFolderId(platform);
+        folderId = await resolveGemNotebookFolderId(platform, gem_id, message.payload.notebook_id);
       }
       const external_url =
         providedExternalUrl ??
@@ -132,19 +132,27 @@ export async function handleConversations(
         const allExisting = await conversationRepo.getAll(platform);
         const existingMap = new Map(allExisting.map((c) => [c.id, c]));
 
-        const defaultFolderId = await resolveSyncFolderId(platform);
-
-        const conversationsToSave = itemsToSync.map((item) => {
-          const existing = existingMap.get(item.id);
-          const targetFolderId = existing
-            ? existing.folder_id
-            : defaultFolderId;
-          return {
-            ...item,
-            folder_id: targetFolderId,
-            platform,
-          };
-        });
+        const conversationsToSave = await Promise.all(
+          itemsToSync.map(async (item) => {
+            const existing = existingMap.get(item.id);
+            let targetFolderId: string | null;
+            if (existing) {
+              targetFolderId = existing.folder_id;
+            } else {
+              // For new conversations, check gem/notebook default folder, fallback to inbox
+              targetFolderId = await resolveGemNotebookFolderId(
+                platform,
+                item.gem_id,
+                item.notebook_id,
+              );
+            }
+            return {
+              ...item,
+              folder_id: targetFolderId,
+              platform,
+            };
+          }),
+        );
         await conversationRepo.bulkSave(conversationsToSave);
         await notifyDataUpdated();
       }

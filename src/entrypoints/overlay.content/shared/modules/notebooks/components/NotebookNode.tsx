@@ -8,6 +8,7 @@ import {
   Trash2,
   Pin,
   PinOff,
+  FolderInput,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import {
@@ -26,6 +27,7 @@ import {
 } from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
 import { ExclusiveContextMenu } from '@/entrypoints/overlay.content/shared/components/ui/exclusive-context-menu';
 import { modal } from '@/shared/lib/modal';
+import { toast } from '@/shared/lib/toast';
 import { NodeContextMenu } from '../../explorer/components/node/NodeContextMenu';
 import { NodeActionBar } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import { useExplorerMenuItems } from '../../explorer/components/node/useExplorerMenuItems';
@@ -33,6 +35,7 @@ import { renderMenuItems } from '@/entrypoints/overlay.content/shared/components
 import type { MenuEntryDef } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import { FolderTreeNodeContent } from '../../../components/folder-tree';
 import { useNodeTooltip } from '../../../hooks/useNodeTooltip';
+import { MoveItemsDialog } from '../../explorer/components/batch/MoveItemsDialog';
 
 export const NotebookNode = ({
   node,
@@ -166,6 +169,33 @@ export const NotebookNode = ({
     }
   };
 
+  const handleSetDefaultFolder = async () => {
+    let targetFolderId: string | null = node.data.data?.default_folder_id || null;
+
+    const confirmed = await modal.confirm({
+      title: t('notebooks.setDefaultFolder'),
+      content: (
+        <MoveItemsDialog
+          selectedIds={[]}
+          onSelect={(id) => (targetFolderId = id)}
+          initialSelectedId={targetFolderId}
+        />
+      ),
+      modalClassName: 'max-w-xl',
+      confirmText: t('common.save'),
+      cancelText: t('common.cancel'),
+    });
+
+    if (confirmed) {
+      await browser.runtime.sendMessage({
+        type: 'UPDATE_NOTEBOOK',
+        payload: { id: node.data.id, updates: { default_folder_id: targetFolderId } },
+      });
+      fetchData(true);
+      toast.success(t('notebooks.defaultFolderSet'));
+    }
+  };
+
   const toggleIcon = isNotebook ? (
     node.isOpen ? (
       <ChevronDown className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -209,6 +239,14 @@ export const NotebookNode = ({
           },
         },
         { type: 'separator' as const, key: 'sep-manage' },
+        {
+          type: 'item' as const,
+          key: 'set-default-folder',
+          icon: <FolderInput className="h-4 w-4" />,
+          label: t('notebooks.setDefaultFolder'),
+          onClick: () => void handleSetDefaultFolder(),
+        },
+        { type: 'separator' as const, key: 'sep-delete' },
         {
           type: 'item' as const,
           key: 'delete-notebook',

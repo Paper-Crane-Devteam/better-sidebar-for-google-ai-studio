@@ -238,10 +238,27 @@ export const ExplorerTab = ({
       // Always refresh so the new item appears immediately
       fetchData(true);
 
-      // If no folder was explicitly chosen, default to the inbox folder
+      // If no folder was explicitly chosen, check gem/notebook default folder, then fallback to inbox
       if (!targetFolderId) {
-        const platform = useAppStore.getState().ui.overlay.currentPlatform;
-        targetFolderId = INBOX_FOLDER_ID(platform);
+        const { gems, notebooks, ui } = useAppStore.getState();
+        const platform = ui.overlay.currentPlatform;
+        const { gem_id, notebook_id } = event.detail || {};
+
+        if (gem_id) {
+          const gem = gems.find((g) => g.id === gem_id);
+          if (gem?.default_folder_id) {
+            targetFolderId = gem.default_folder_id;
+          }
+        }
+        if (!targetFolderId && notebook_id) {
+          const notebook = notebooks.find((n) => n.id === notebook_id);
+          if (notebook?.default_folder_id) {
+            targetFolderId = notebook.default_folder_id;
+          }
+        }
+        if (!targetFolderId) {
+          targetFolderId = INBOX_FOLDER_ID(platform);
+        }
       }
 
       try {
@@ -357,6 +374,34 @@ export const ExplorerTab = ({
     treeRef.current?.collapseAll();
   };
 
+  // Locate current conversation: expand parent folders and scroll to it
+  const handleLocateCurrent = useCallback(() => {
+    if (!currentConversationId) return;
+    const conversation = conversations.find((c) => c.id === currentConversationId);
+    if (!conversation) return;
+
+    // Build the ancestor chain: open from root to parent folder
+    if (conversation.folder_id) {
+      const folderMap = new Map(folders.map((f) => [f.id, f]));
+      const ancestorIds: string[] = [];
+      let currentFolderId: string | null = conversation.folder_id;
+      while (currentFolderId) {
+        ancestorIds.unshift(currentFolderId);
+        const folder = folderMap.get(currentFolderId);
+        currentFolderId = folder?.parent_id || null;
+      }
+      // Open each ancestor folder from root down
+      for (const folderId of ancestorIds) {
+        treeRef.current?.open(folderId);
+      }
+    }
+
+    // Select and scroll to the conversation node
+    setTimeout(() => {
+      treeRef.current?.select(currentConversationId);
+    }, 50);
+  }, [currentConversationId, conversations, folders]);
+
   // Listen for hotkey-triggered collapse-all event
   useEffect(() => {
     const handler = () => treeRef.current?.collapseAll();
@@ -403,6 +448,7 @@ export const ExplorerTab = ({
       <ExplorerHeader
         onNewFolder={handleNewFolder}
         onCollapseAll={handleCollapseAll}
+        onLocateCurrent={handleLocateCurrent}
         onSelectAll={handleSelectAll}
         onNewChat={handleNewChatFromFolder}
         newChatDropdownItems={newChatDropdownItems}

@@ -502,6 +502,10 @@
   "moveItemsDialog": {
     "rootLevel": "根目录（顶层）"
   },
+  "defaultFolder": {
+    "currentLabel": "当前：",
+    "folderDeleted": "之前设置的文件夹已被删除，请重新选择"
+  },
   "timeline": {
     "today": "今天",
     "yesterday": "昨天",
@@ -805,7 +809,9 @@
     "empty": "暂无 Gems。创建一个或从 Gemini 同步。",
     "viewGems": "查看 Gems",
     "scanGems": "导入 Gems",
-    "scanningGems": "导入中..."
+    "scanningGems": "导入中...",
+    "setDefaultFolder": "设置默认文件夹",
+    "defaultFolderSet": "默认文件夹已更新"
   },
   "notebooks": {
     "title": "笔记本",
@@ -819,7 +825,9 @@
     "newNotebook": "新建笔记本",
     "viewNotebooks": "查看笔记本",
     "scanNotebooks": "刷新笔记本",
-    "scanningNotebooks": "加载中..."
+    "scanningNotebooks": "加载中...",
+    "setDefaultFolder": "设置默认文件夹",
+    "defaultFolderSet": "默认文件夹已更新"
   },
   "whatsNew": {
     "title": "v{{version}} 更新内容",

@@ -73,9 +73,11 @@ export function useOutline() {
       result.push({
         id: `section-${msg.id}`,
         userQuery: userLabel,
+        userQueryFull: userContent,
         userMessageId: msg.id,
         userInDom: !!findMessageElement(msg.id),
         modelMessageId: modelMsg?.id,
+        modelContent: modelMsg?.content,
         modelInDom: modelMsg ? !!findMessageElement(modelMsg.id) : false,
         children,
         turnIndex,
@@ -264,6 +266,10 @@ export function useOutline() {
       const allowedTypes: Record<Exclude<OutlineFilter, 'all'>, string[]> = {
         headings: ['heading'],
         code: ['code-block'],
+        images: ['image'],
+        tables: ['table'],
+        links: ['link'],
+        math: ['math'],
       };
       const types = allowedTypes[filter];
       result = result
@@ -286,15 +292,23 @@ export function useOutline() {
   const stats = useMemo(() => {
     let headings = 0;
     let codeBlocks = 0;
+    let images = 0;
+    let tables = 0;
+    let links = 0;
+    let math = 0;
     const countNodes = (nodes: OutlineSection['children']) => {
       for (const node of nodes) {
         if (node.type === 'heading') headings++;
         if (node.type === 'code-block') codeBlocks++;
+        if (node.type === 'image') images++;
+        if (node.type === 'table') tables++;
+        if (node.type === 'link') links++;
+        if (node.type === 'math') math++;
         countNodes(node.children);
       }
     };
     sections.forEach((s) => countNodes(s.children));
-    return { turns: sections.length, headings, codeBlocks };
+    return { turns: sections.length, headings, codeBlocks, images, tables, links, math };
   }, [sections]);
 
   return {

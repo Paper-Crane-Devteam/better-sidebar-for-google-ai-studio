@@ -182,6 +182,7 @@
   "menu": {
     "newFolder": "新增資料夾",
     "collapseAll": "全部摺疊",
+    "locateCurrent": "定位當前對話",
     "sortByDate": "依日期排序",
     "sortAlphabetically": "依字母排序",
     "switchToTimelineView": "切換到時間軸檢視",
@@ -490,6 +491,10 @@
   "moveItemsDialog": {
     "rootLevel": "根目錄（頂層）"
   },
+  "defaultFolder": {
+    "currentLabel": "目前：",
+    "folderDeleted": "先前設定的資料夾已被刪除，請重新選擇"
+  },
   "timeline": {
     "today": "今天",
     "yesterday": "昨天",
@@ -783,7 +788,9 @@
     "empty": "尚無 Gems。建立一個或從 Gemini 同步。",
     "viewGems": "檢視 Gems",
     "scanGems": "匯入 Gems",
-    "scanningGems": "匯入中..."
+    "scanningGems": "匯入中...",
+    "setDefaultFolder": "設定預設資料夾",
+    "defaultFolderSet": "預設資料夾已更新"
   },
   "notebooks": {
     "title": "筆記本",
@@ -797,7 +804,9 @@
     "newNotebook": "新增筆記本",
     "viewNotebooks": "檢視筆記本",
     "scanNotebooks": "重新整理筆記本",
-    "scanningNotebooks": "載入中..."
+    "scanningNotebooks": "載入中...",
+    "setDefaultFolder": "設定預設資料夾",
+    "defaultFolderSet": "預設資料夾已更新"
   },
   "whatsNew": {
     "title": "v{{version}} 更新內容",

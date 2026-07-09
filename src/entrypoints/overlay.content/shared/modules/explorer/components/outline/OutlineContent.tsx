@@ -7,10 +7,19 @@ import {
   Circle,
   MapPin,
   List,
+  Image,
+  Table2,
+  Link2,
+  Sigma,
+  Copy,
+  ChevronsUpDown,
+  ChevronsDownUp,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useOutline } from './useOutline';
+import { OverflowTooltip } from '@/shared/components/ui/overflow-tooltip';
+import { toast } from '@/shared/lib/toast';
 import type { OutlineNode, OutlineFilter, OutlineSection } from './types';
 
 /**
@@ -53,12 +62,32 @@ export const OutlineContent = () => {
     });
   };
 
+  const expandAll = () => setCollapsedSections(new Set());
+  const collapseAll = () => {
+    const allIds = new Set(sections.map((s) => s.id));
+    setCollapsedSections(allIds);
+  };
+  const isAllCollapsed = sections.length > 0 && collapsedSections.size === sections.length;
+
   // ── Toolbar (always visible) ─────────────────────────────────────
   const toolbar = (
     <div className="flex items-center gap-1 px-2 py-1 border-b border-border/30">
-      {/* Filter chips */}
-      <FilterChips filter={filter} onFilterChange={setFilter} />
+      {/* Filter chips — only show filters that have content */}
+      <FilterChips filter={filter} onFilterChange={setFilter} stats={stats} />
       <div className="flex-1" />
+      {/* Expand/Collapse all */}
+      {sections.length > 0 && (
+        <button
+          onClick={isAllCollapsed ? expandAll : collapseAll}
+          className="p-1 rounded-md transition-colors text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+          title={isAllCollapsed ? t('outline.expandAll') : t('outline.collapseAll')}
+        >
+          {isAllCollapsed
+            ? <ChevronsUpDown className="h-3.5 w-3.5" />
+            : <ChevronsDownUp className="h-3.5 w-3.5" />
+          }
+        </button>
+      )}
       {/* Search toggle */}
       <button
         onClick={() => setShowSearch(!showSearch)}
@@ -176,20 +205,25 @@ export const OutlineContent = () => {
 function FilterChips({
   filter,
   onFilterChange,
+  stats,
 }: {
   filter: OutlineFilter;
   onFilterChange: (f: OutlineFilter) => void;
+  stats: { headings: number; codeBlocks: number; images: number; tables: number; links: number; math: number };
 }) {
   const { t } = useI18n();
-  const filters: { key: OutlineFilter; label: string; icon?: React.ReactNode }[] = [
-    { key: 'all', label: t('outline.filterAll') },
-    { key: 'headings', label: t('outline.filterHeadings'), icon: <Heading className="h-3 w-3" /> },
-    { key: 'code', label: t('outline.filterCode'), icon: <Code2 className="h-3 w-3" /> },
+  const filters: { key: OutlineFilter; label: string; icon?: React.ReactNode; count: number }[] = [
+    { key: 'all', label: t('outline.filterAll'), count: -1 }, // always show
+    { key: 'headings', label: t('outline.filterHeadings'), icon: <Heading className="h-3 w-3" />, count: stats.headings },
+    { key: 'code', label: t('outline.filterCode'), icon: <Code2 className="h-3 w-3" />, count: stats.codeBlocks },
   ];
+
+  // Only show filters that have content (except 'all' which always shows)
+  const visibleFilters = filters.filter((f) => f.count === -1 || f.count > 0);
 
   return (
     <div className="flex items-center gap-1">
-      {filters.map(({ key, label, icon }) => (
+      {visibleFilters.map(({ key, label, icon, count }) => (
         <button
           key={key}
           onClick={() => onFilterChange(key)}
@@ -203,6 +237,9 @@ function FilterChips({
         >
           {icon}
           {label}
+          {count > 0 && (
+            <span className="text-[9px] opacity-60">{count}</span>
+          )}
         </button>
       ))}
     </div>
@@ -226,7 +263,23 @@ function OutlineSectionItem({
   onNavigate: (messageId: string) => void;
   activeRef?: React.RefObject<HTMLDivElement>;
 }) {
+  const { t } = useI18n();
   const hasChildren = section.children.length > 0;
+
+  const handleCopyQuery = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const content = section.userQueryFull || section.userQuery;
+    navigator.clipboard.writeText(content);
+    toast.success(t('toast.copiedToClipboard'), 1000);
+  };
+
+  const handleCopyResponse = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (section.modelContent) {
+      navigator.clipboard.writeText(section.modelContent);
+      toast.success(t('toast.copiedToClipboard'), 1000);
+    }
+  };
 
   return (
     <div
@@ -239,7 +292,7 @@ function OutlineSectionItem({
       {/* User question row */}
       <div
         className={cn(
-          'group flex items-center gap-1 px-2 py-1 rounded-md',
+          'group/section flex items-center gap-1 px-2 py-1 rounded-md relative',
           section.userInDom
             ? 'cursor-pointer hover:bg-accent/50'
             : 'cursor-default opacity-50',
@@ -283,21 +336,47 @@ function OutlineSectionItem({
           {section.turnIndex}
         </span>
 
-        {/* Query text */}
-        <span
+        {/* Query text with overflow tooltip */}
+        <OverflowTooltip
+          content={section.userQueryFull || section.userQuery}
+          placement="right"
           className={cn(
             'text-xs leading-snug truncate flex-1',
             isActive
               ? 'text-primary font-medium'
-              : 'text-foreground/80 group-hover:text-foreground',
+              : 'text-foreground/80 group-hover/section:text-foreground',
           )}
         >
           {section.userQuery}
-        </span>
+        </OverflowTooltip>
 
         {isActive && (
           <MapPin className="h-3 w-3 text-primary shrink-0 opacity-70" />
         )}
+
+        {/* Hover action buttons */}
+        <div
+          className="invisible group-hover/section:visible flex items-center gap-1 shrink-0 ml-1"
+          data-tooltip-suppress
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={handleCopyQuery}
+            className="h-4 w-4 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+            title={t('outline.copyQuery')}
+          >
+            <Copy className="h-3 w-3" />
+          </button>
+          {section.modelContent && (
+            <button
+              onClick={handleCopyResponse}
+              className="h-4 w-4 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+              title={t('outline.copyResponse')}
+            >
+              <Copy className="h-3 w-3 text-purple-400" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Children */}
@@ -318,7 +397,7 @@ function OutlineSectionItem({
   );
 }
 
-// ─── Outline Node Item (heading/code) ─────────────────────────────────
+// ─── Outline Node Item (heading/code/image/table/link/math) ───────────
 
 function OutlineNodeItem({
   node,
@@ -333,21 +412,31 @@ function OutlineNodeItem({
   navigable: boolean;
   depth?: number;
 }) {
+  const { t } = useI18n();
   const [isExpanded, setIsExpanded] = useState(true);
   const hasChildren = node.children.length > 0;
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const content = node.rawContent || node.label;
+    if (content) {
+      navigator.clipboard.writeText(content);
+      toast.success(t('toast.copiedToClipboard'), 1000);
+    }
+  };
 
   return (
     <div>
       <div
         onClick={() => navigable && onNavigate(messageId)}
         className={cn(
-          'group flex items-center gap-1 px-2 py-1 rounded-md',
+          'group/node flex items-center gap-1 px-2 py-1 rounded-md relative',
           'transition-colors duration-100',
           navigable
             ? 'cursor-pointer hover:bg-accent/40'
             : 'cursor-default opacity-50',
         )}
-        style={{ paddingLeft: `${6 + depth * 12}px` }}
+        style={{ paddingLeft: `${8 + depth * 12}px` }}
       >
         {hasChildren ? (
           <button
@@ -370,22 +459,39 @@ function OutlineNodeItem({
 
         {getNodeIcon(node)}
 
-        <span
+        <OverflowTooltip
+          content={node.label}
+          placement="right"
           className={cn(
-            'text-[11px] leading-snug truncate flex-1',
+            'text-xs leading-snug truncate flex-1',
             node.type === 'heading'
               ? 'text-foreground/90 font-medium'
-              : 'text-muted-foreground group-hover:text-foreground',
+              : 'text-muted-foreground group-hover/node:text-foreground',
           )}
         >
           {node.label}
-        </span>
+        </OverflowTooltip>
 
         {node.meta && node.type === 'code-block' && (
-          <span className="text-[9px] px-1 py-px rounded bg-muted/50 text-muted-foreground/70 font-mono shrink-0">
+          <span className="text-[10px] px-1 py-px rounded bg-muted/50 text-muted-foreground/70 font-mono shrink-0">
             {node.meta}
           </span>
         )}
+
+        {/* Hover copy button */}
+        <div
+          className="invisible group-hover/node:visible flex items-center shrink-0 ml-1"
+          data-tooltip-suppress
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            onClick={handleCopy}
+            className="h-4 w-4 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+            title={t('outline.copy')}
+          >
+            <Copy className="h-3 w-3" />
+          </button>
+        </div>
       </div>
 
       {hasChildren && isExpanded && (
@@ -413,16 +519,26 @@ function getNodeIcon(node: OutlineNode) {
         <Heading
           className={cn(
             'h-3 w-3 shrink-0',
-            node.meta === 'h2'
-              ? 'text-blue-500'
-              : node.meta === 'h3'
-                ? 'text-green-500'
-                : 'text-orange-400',
+            node.meta === 'h1'
+              ? 'text-red-500'
+              : node.meta === 'h2'
+                ? 'text-blue-500'
+                : node.meta === 'h3'
+                  ? 'text-green-500'
+                  : 'text-orange-400',
           )}
         />
       );
     case 'code-block':
       return <Code2 className="h-3 w-3 shrink-0 text-purple-500" />;
+    case 'image':
+      return <Image className="h-3 w-3 shrink-0 text-pink-500" />;
+    case 'table':
+      return <Table2 className="h-3 w-3 shrink-0 text-cyan-500" />;
+    case 'link':
+      return <Link2 className="h-3 w-3 shrink-0 text-blue-400" />;
+    case 'math':
+      return <Sigma className="h-3 w-3 shrink-0 text-amber-500" />;
     default:
       return <Circle className="h-2 w-2 shrink-0 text-muted-foreground/30" />;
   }

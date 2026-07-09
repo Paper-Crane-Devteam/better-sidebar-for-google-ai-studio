@@ -182,6 +182,7 @@
   "menu": {
     "newFolder": "新しいフォルダ",
     "collapseAll": "すべて折りたたむ",
+    "locateCurrent": "現在のチャットを表示",
     "sortByDate": "日付で並べ替え",
     "sortAlphabetically": "アルファベット順で並べ替え",
     "switchToTimelineView": "タイムラインビューに切り替え",
@@ -491,6 +492,10 @@
   "moveItemsDialog": {
     "rootLevel": "ルート（トップレベル）"
   },
+  "defaultFolder": {
+    "currentLabel": "現在：",
+    "folderDeleted": "以前設定したフォルダが削除されました。新しいフォルダを選択してください"
+  },
   "timeline": {
     "today": "今日",
     "yesterday": "昨日",
@@ -784,7 +789,9 @@
     "empty": "Gems がまだありません。作成するか Gemini から同期してください。",
     "viewGems": "Gems を表示",
     "scanGems": "Gems をインポート",
-    "scanningGems": "インポート中..."
+    "scanningGems": "インポート中...",
+    "setDefaultFolder": "デフォルトフォルダーを設定",
+    "defaultFolderSet": "デフォルトフォルダーを更新しました"
   },
   "notebooks": {
     "title": "ノートブック",
@@ -798,7 +805,9 @@
     "newNotebook": "新しいノートブック",
     "viewNotebooks": "ノートブックを表示",
     "scanNotebooks": "ノートブックを更新",
-    "scanningNotebooks": "読み込み中..."
+    "scanningNotebooks": "読み込み中...",
+    "setDefaultFolder": "デフォルトフォルダーを設定",
+    "defaultFolderSet": "デフォルトフォルダーを更新しました"
   },
   "whatsNew": {
     "title": "v{{version}} の新機能",

@@ -11,6 +11,7 @@ import {
   MessageSquarePlus,
   Pin,
   PinOff,
+  FolderInput,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { navigateToConversation, navigateToGem, navigate } from '@/shared/lib/navigation';
@@ -25,6 +26,7 @@ import {
 } from '@/entrypoints/overlay.content/shared/components/ui/context-menu';
 import { ExclusiveContextMenu } from '@/entrypoints/overlay.content/shared/components/ui/exclusive-context-menu';
 import { modal } from '@/shared/lib/modal';
+import { toast } from '@/shared/lib/toast';
 import { NodeContextMenu } from '../../explorer/components/node/NodeContextMenu';
 import { NodeActionBar } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import { useExplorerMenuItems } from '../../explorer/components/node/useExplorerMenuItems';
@@ -32,6 +34,7 @@ import { renderMenuItems } from '@/entrypoints/overlay.content/shared/components
 import type { MenuEntryDef } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import { FolderTreeNodeContent } from '../../../components/folder-tree';
 import { useNodeTooltip } from '../../../hooks/useNodeTooltip';
+import { MoveItemsDialog } from '../../explorer/components/batch/MoveItemsDialog';
 
 export const GemNode = ({
   node,
@@ -146,6 +149,33 @@ export const GemNode = ({
     }
   };
 
+  const handleSetDefaultFolder = async () => {
+    let targetFolderId: string | null = node.data.data?.default_folder_id || null;
+
+    const confirmed = await modal.confirm({
+      title: t('gems.setDefaultFolder'),
+      content: (
+        <MoveItemsDialog
+          selectedIds={[]}
+          onSelect={(id) => (targetFolderId = id)}
+          initialSelectedId={targetFolderId}
+        />
+      ),
+      modalClassName: 'max-w-xl',
+      confirmText: t('common.save'),
+      cancelText: t('common.cancel'),
+    });
+
+    if (confirmed) {
+      await browser.runtime.sendMessage({
+        type: 'UPDATE_GEM',
+        payload: { id: node.data.id, updates: { default_folder_id: targetFolderId } },
+      });
+      fetchData(true);
+      toast.success(t('gems.defaultFolderSet'));
+    }
+  };
+
   const toggleIcon = isGem ? (
     node.isOpen ? (
       <ChevronDown className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -203,6 +233,13 @@ export const GemNode = ({
     },
     { type: 'separator' as const, key: 'sep-nav' },
     // — Manage —
+    {
+      type: 'item' as const,
+      key: 'set-default-folder',
+      icon: <FolderInput className="h-4 w-4" />,
+      label: t('gems.setDefaultFolder'),
+      onClick: () => void handleSetDefaultFolder(),
+    },
     {
       type: 'item' as const,
       key: 'edit-gem',

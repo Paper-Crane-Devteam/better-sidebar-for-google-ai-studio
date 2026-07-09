@@ -50,7 +50,7 @@ export const gemRepo = {
 
   update: async (
     id: string,
-    updates: Partial<Pick<Gem, 'name' | 'description' | 'icon_url' | 'order_index' | 'is_pinned'>>,
+    updates: Partial<Pick<Gem, 'name' | 'description' | 'icon_url' | 'order_index' | 'is_pinned' | 'default_folder_id'>>,
   ): Promise<void> => {
     await updateWithTimestamp('gems', id, updates);
   },

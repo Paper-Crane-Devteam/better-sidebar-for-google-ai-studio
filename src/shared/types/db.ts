@@ -41,6 +41,7 @@ export interface Gem {
   order_index: number;
   is_pinned: number;
   is_deleted: number;
+  default_folder_id: string | null;
   created_at: number;
   updated_at: number;
 }
@@ -56,6 +57,7 @@ export interface Notebook {
   order_index: number;
   is_pinned: number;
   is_deleted: number;
+  default_folder_id: string | null;
   created_at: number;
   updated_at: number;
 }

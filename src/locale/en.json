@@ -493,6 +493,10 @@
   "moveItemsDialog": {
     "rootLevel": "Root (Top Level)"
   },
+  "defaultFolder": {
+    "currentLabel": "Current: ",
+    "folderDeleted": "Previously set folder has been deleted, please select a new one"
+  },
   "timeline": {
     "today": "Today",
     "yesterday": "Yesterday",
@@ -796,7 +800,9 @@
     "empty": "No gems yet. Create one or sync from Gemini.",
     "viewGems": "View Gems",
     "scanGems": "Import Gems",
-    "scanningGems": "Importing..."
+    "scanningGems": "Importing...",
+    "setDefaultFolder": "Set Default Folder",
+    "defaultFolderSet": "Default folder updated"
   },
   "notebooks": {
     "title": "Notebooks",
@@ -810,7 +816,9 @@
     "newNotebook": "New Notebook",
     "viewNotebooks": "View Notebooks",
     "scanNotebooks": "Refresh Notebooks",
-    "scanningNotebooks": "Loading..."
+    "scanningNotebooks": "Loading...",
+    "setDefaultFolder": "Set Default Folder",
+    "defaultFolderSet": "Default folder updated"
   },
   "whatsNew": {
     "title": "What's New in v{{version}}",
@@ -843,7 +851,12 @@
     "noConversation": "No conversation open",
     "noConversationHint": "Open a conversation to see its outline",
     "empty": "No outline content",
-    "noResults": "No matching items"
+    "noResults": "No matching items",
+    "copy": "Copy",
+    "copyQuery": "Copy question",
+    "copyResponse": "Copy response",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all"
   },
   "firstInstall": {
     "title": "Import Conversation List?",
