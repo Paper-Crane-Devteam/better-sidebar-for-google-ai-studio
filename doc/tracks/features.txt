@@ -36,3 +36,6 @@
 37.default sync folder for each gem or notebook
 38.add create time and active time on tooltip
 39. ui customization-bigger create chat modal;pin and star style optimize;
+40. locate current chat
+41. move to for folders
+42. in input mode disable drag

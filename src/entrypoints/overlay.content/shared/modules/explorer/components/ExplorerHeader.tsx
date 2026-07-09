@@ -10,6 +10,7 @@ import {
   ListChecks,
   Cloud,
   Loader2,
+  Crosshair,
 } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { SidePanelMenu } from '@/entrypoints/overlay.content/shared/components/menu/SidePanelMenu';
@@ -26,6 +27,7 @@ import { SectionHeader } from './SectionHeader';
 interface ExplorerHeaderProps {
   onNewFolder: () => void;
   onCollapseAll: () => void;
+  onLocateCurrent: () => void;
   onSelectAll: () => void;
   onNewChat: () => void;
   newChatDropdownItems?: SplitDropdownItem[];
@@ -45,6 +47,7 @@ interface ExplorerHeaderProps {
 export const ExplorerHeader = ({
   onNewFolder,
   onCollapseAll,
+  onLocateCurrent,
   onSelectAll,
   onNewChat,
   newChatDropdownItems,
@@ -110,6 +113,17 @@ export const ExplorerHeader = ({
           onClick={() => setExplorerBatchMode(!isBatchMode)}
         >
           <ListChecks className="h-3.5 w-3.5" />
+        </Button>
+      </SimpleTooltip>
+
+      <SimpleTooltip content={t('menu.locateCurrent')}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-5 w-5 text-muted-foreground hover:text-foreground"
+          onClick={() => onLocateCurrent()}
+        >
+          <Crosshair className="h-3.5 w-3.5" />
         </Button>
       </SimpleTooltip>
 

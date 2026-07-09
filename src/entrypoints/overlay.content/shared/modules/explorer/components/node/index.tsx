@@ -56,13 +56,15 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const nodeRowRef = useRef<HTMLDivElement>(null);
 
-  // Combine dragHandle and nodeRowRef into one callback ref
+  // Combine dragHandle and nodeRowRef into one callback ref.
+  // Disable drag when the node is in editing (rename) mode so the user can
+  // drag-select text inside the input without triggering tree reorder.
   const combinedRef = useCallback(
     (el: HTMLDivElement | null) => {
       (nodeRowRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
-      if (dragHandle) dragHandle(el);
+      if (dragHandle) dragHandle(node.isEditing ? null : el);
     },
-    [dragHandle],
+    [dragHandle, node.isEditing],
   );
 
   // --- Derived state ---

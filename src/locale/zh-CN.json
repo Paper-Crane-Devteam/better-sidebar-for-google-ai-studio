@@ -184,6 +184,7 @@
   "menu": {
     "newFolder": "新建文件夹",
     "collapseAll": "折叠全部",
+    "locateCurrent": "定位当前对话",
     "sortByDate": "按日期排序",
     "sortAlphabetically": "按字母排序",
     "switchToTimelineView": "切换到时间线视图",

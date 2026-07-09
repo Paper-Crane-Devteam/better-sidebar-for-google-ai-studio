@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Folder as FolderIcon,
   ChevronRight,
@@ -57,6 +57,14 @@ export const SnippetNode = ({
   const [newName, setNewName] = useState(node.data.name);
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Disable drag when node is in editing (rename) mode so user can drag-select text
+  const safeDragHandle = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (dragHandle) dragHandle(node.isEditing ? null : el);
+    },
+    [dragHandle, node.isEditing],
+  );
 
   const { isBatchMode, selectedIds: batchSelectedIds } = ui.snippets.batch;
   const isBatchSelected = batchSelectedIds.includes(node.data.id);
@@ -121,11 +129,24 @@ export const SnippetNode = ({
 
   const handleMoveTo = async () => {
     let targetFolderId: string | null = null;
+
+    // For folders, exclude the folder itself and all its descendants
+    // to prevent circular moves
+    let excludeIds = [node.data.id];
+    if (node.data.type === 'folder') {
+      const { snippetFolders } = useAppStore.getState();
+      const getDescendantIds = (parentId: string): string[] => {
+        const children = snippetFolders.filter((f) => f.parent_id === parentId);
+        return children.flatMap((c) => [c.id, ...getDescendantIds(c.id)]);
+      };
+      excludeIds = [node.data.id, ...getDescendantIds(node.data.id)];
+    }
+
     const confirmed = await modal.confirm({
       title: t('batch.moveTitle'),
       content: (
         <SnippetMoveDialog
-          selectedIds={[node.data.id]}
+          selectedIds={excludeIds}
           onSelect={(id) => (targetFolderId = id)}
         />
       ),
@@ -255,7 +276,7 @@ export const SnippetNode = ({
       }}
     >
       <div
-        ref={dragHandle}
+        ref={safeDragHandle}
         role="button"
         tabIndex={0}
         className={commonClasses}

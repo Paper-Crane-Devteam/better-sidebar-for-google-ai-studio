@@ -112,11 +112,24 @@ export function useExplorerMenuItems({
 
   const handleMove = async () => {
     let targetFolderId: string | null = null;
+
+    // For folders, exclude the folder itself and all its descendants
+    // to prevent circular moves
+    let excludeIds = [node.data.id];
+    if (node.data.type === 'folder') {
+      const { folders } = useAppStore.getState();
+      const getDescendantIds = (parentId: string): string[] => {
+        const children = folders.filter((f) => f.parent_id === parentId);
+        return children.flatMap((c) => [c.id, ...getDescendantIds(c.id)]);
+      };
+      excludeIds = [node.data.id, ...getDescendantIds(node.data.id)];
+    }
+
     const confirmed = await modal.confirm({
       title: t('batch.moveTitle'),
       content: (
         <MoveItemsDialog
-          selectedIds={[node.data.id]}
+          selectedIds={excludeIds}
           onSelect={(id) => (targetFolderId = id)}
         />
       ),
@@ -185,6 +198,15 @@ export function useExplorerMenuItems({
       label: isPinned ? t('node.unpinFromTop') : t('node.pinToTop'),
       onClick: () => onTogglePin(node.data.id, isPinned),
     });
+    if (!isInbox) {
+      items.push({
+        type: 'item',
+        key: 'move-to',
+        icon: <FolderInput className="h-4 w-4" />,
+        label: t('node.moveTo'),
+        onClick: () => void handleMove(),
+      });
+    }
     items.push({ type: 'separator', key: 'sep-folder-top' });
   }
 

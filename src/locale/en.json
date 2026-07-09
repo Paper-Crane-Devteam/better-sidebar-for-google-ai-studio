@@ -184,6 +184,7 @@
   "menu": {
     "newFolder": "New Folder",
     "collapseAll": "Collapse All",
+    "locateCurrent": "Locate Current Chat",
     "sortByDate": "Sort by Date",
     "sortAlphabetically": "Sort Alphabetically",
     "switchToTimelineView": "Switch to Timeline View",

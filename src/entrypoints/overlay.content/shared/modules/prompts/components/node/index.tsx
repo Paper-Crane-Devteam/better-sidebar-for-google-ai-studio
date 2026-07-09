@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Folder as FolderIcon,
   MessageSquare,
@@ -59,6 +59,14 @@ export const Node = ({
   const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const variableFormRef = useRef<VariableFillFormRef | null>(null);
+
+  // Disable drag when node is in editing (rename) mode so user can drag-select text
+  const safeDragHandle = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (dragHandle) dragHandle(node.isEditing ? null : el);
+    },
+    [dragHandle, node.isEditing],
+  );
 
   const isFavorite = favorites.some(
     (f) => f.target_id === node.data.id && f.target_type === 'prompt',
@@ -300,7 +308,7 @@ export const Node = ({
       )}
     >
       <div
-        ref={dragHandle}
+        ref={safeDragHandle}
         role="button"
         tabIndex={0}
         className={commonClasses}

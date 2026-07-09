@@ -168,6 +168,15 @@ export function useSnippetMenuItems({
       label: isPinned ? t('node.unpinFromTop') : t('node.pinToTop'),
       onClick: () => onTogglePin(node.data.id, isPinned),
     });
+    if (onMoveTo) {
+      items.push({
+        type: 'item',
+        key: 'move-to',
+        icon: <FolderInput className="h-4 w-4" />,
+        label: t('node.moveTo'),
+        onClick: () => onMoveTo(),
+      });
+    }
   }
 
   items.push({
