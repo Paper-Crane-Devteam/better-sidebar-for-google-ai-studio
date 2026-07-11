@@ -233,24 +233,42 @@ export function useOutline() {
     const el = findMessageElement(messageId);
     if (!el) return;
 
-    // If a heading label is provided, try to find and scroll to that specific heading
-    if (headingLabel && headingLevel) {
-      const tag = headingLevel; // e.g. 'h1', 'h2', 'h3'
-      const headings = el.querySelectorAll(tag);
-      for (const heading of headings) {
-        if (heading.textContent?.trim() === headingLabel.trim()) {
-          heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          setActiveMessageId(messageId);
-          return;
+    // If a heading label is provided, try to find and scroll to that specific element
+    if (headingLabel) {
+      const searchRoot = el.closest('.conversation-container') || el;
+
+      // For actual h1-h4 headings, search by tag
+      if (headingLevel && /^h[1-4]$/.test(headingLevel)) {
+        const headings = searchRoot.querySelectorAll(headingLevel);
+        for (const heading of headings) {
+          if (heading.textContent?.trim() === headingLabel.trim()) {
+            heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setActiveMessageId(messageId);
+            return;
+          }
+        }
+        // Partial match fallback
+        for (const heading of headings) {
+          if (heading.textContent?.trim().includes(headingLabel.trim().slice(0, 40))) {
+            heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setActiveMessageId(messageId);
+            return;
+          }
         }
       }
-      // Fallback: try matching with includes for partial matches
-      for (const heading of headings) {
-        if (heading.textContent?.trim().includes(headingLabel.trim().slice(0, 40))) {
-          heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // For bold headers, code blocks, etc. — search by text content across all elements
+      const walker = document.createTreeWalker(searchRoot, NodeFilter.SHOW_ELEMENT);
+      let current = walker.nextNode() as HTMLElement | null;
+      const labelNorm = headingLabel.trim().slice(0, 40);
+      while (current) {
+        const text = current.textContent?.trim();
+        if (text && text.includes(labelNorm) && current.offsetHeight > 0) {
+          current.scrollIntoView({ behavior: 'smooth', block: 'start' });
           setActiveMessageId(messageId);
           return;
         }
+        current = walker.nextNode() as HTMLElement | null;
       }
     }
 
