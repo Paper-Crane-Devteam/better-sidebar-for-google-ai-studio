@@ -512,7 +512,7 @@ export const ExplorerTab = ({
       )}
 
       {/* OUTLINE Section (collapsible, at the bottom) */}
-      <OutlineSection />
+      <OutlineSection fillAvailable={!isChatsSectionExpanded} />
     </div>
     </ExplorerContext.Provider>
   );

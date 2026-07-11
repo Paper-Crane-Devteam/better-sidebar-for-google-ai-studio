@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { NotebookText } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useSettingsStore } from '@/shared/lib/settings-store';
@@ -100,7 +99,7 @@ export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
           },
           {
             label: t('newChatButton.newNotebookChat'),
-            icon: <NotebookText className="h-4 w-4" />,
+            icon: <Icon icon="tabler:notebook" className="h-4 w-4" />,
             tooltip: notebookTooltip,
             // Left click: navigate to last notebook, or open picker if none
             onClick: (e) => {

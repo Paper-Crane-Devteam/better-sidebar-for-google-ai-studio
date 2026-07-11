@@ -15,9 +15,9 @@ import {
   BookOpen,
   LogOut,
   Search,
-  Sparkles,
   ScrollText,
 } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { SqlExecutor } from '../shared/components/menu/SqlExecutor';
 import { ExplorerTab } from '../shared/modules/explorer/ExplorerTab';
 import { PromptsTab } from '../shared/modules/prompts/PromptsTab';
@@ -264,7 +264,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             onClick={() => handleTabChange('prompts')}
             className="sidebar-btn transition-all"
           >
-            <Sparkles className="sidebar-icon" />
+            <Icon icon="tabler:blockquote" className="sidebar-icon" />
           </Button>
         </SimpleTooltip>
         {shortcuts?.favorites && (

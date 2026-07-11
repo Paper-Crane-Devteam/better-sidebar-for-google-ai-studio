@@ -18,7 +18,6 @@ import {
   Image as ImageIcon,
   LayoutGrid,
   Star,
-  NotebookText,
 } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { debounce } from 'lodash';
@@ -60,7 +59,7 @@ const TypeFilterDropdown = ({ value, filterTypes, onChange, getTypeTitle }: Type
       case 'conversation': return <MessageSquare className="h-4 w-4" />;
       case 'text-to-image': return <ImageIcon className="h-4 w-4" />;
       case 'gem': return <Icon icon="tabler:diamond" className="h-4 w-4" />;
-      case 'notebook': return <NotebookText className="h-4 w-4" />;
+      case 'notebook': return <Icon icon="tabler:notebook" className="h-4 w-4" />;
       default: return <LayoutGrid className="h-4 w-4" />;
     }
   };

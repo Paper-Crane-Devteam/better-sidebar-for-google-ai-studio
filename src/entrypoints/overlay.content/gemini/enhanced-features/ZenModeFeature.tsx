@@ -1,5 +1,5 @@
 import React from 'react';
-import { Maximize, Minimize } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { cn } from '@/shared/lib/utils/utils';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
@@ -18,11 +18,10 @@ export const ZenModeFeature = () => {
         <button
           onClick={() => setGeminiFeature('zenMode', false)}
           className={cn(
-            "flex h-9 items-center justify-center gap-2 rounded-xl border border-border/50 bg-background/60 px-3 backdrop-blur-md transition-all hover:bg-accent hover:shadow-sm"
+            "flex h-8 w-8 items-center justify-center rounded-xl border border-border/50 bg-background/60 backdrop-blur-md transition-all hover:bg-accent hover:shadow-sm"
           )}
         >
-          <Minimize className="h-4 w-4 text-foreground" />
-          <span className="text-xs font-semibold text-foreground">{t('geminiUI.exitZenMode')}</span>
+          <Icon icon="tabler:layout-sidebar-left-expand" className="h-4 w-4 text-foreground" />
         </button>
       </SimpleTooltip>
     </div>

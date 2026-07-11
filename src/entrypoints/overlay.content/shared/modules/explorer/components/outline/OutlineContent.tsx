@@ -19,6 +19,7 @@ import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useOutline } from './useOutline';
 import { OverflowTooltip } from '@/shared/components/ui/overflow-tooltip';
+import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { toast } from '@/shared/lib/toast';
 import type { OutlineNode, OutlineFilter, OutlineSection } from './types';
 
@@ -260,7 +261,7 @@ function OutlineSectionItem({
   isActive: boolean;
   isCollapsed: boolean;
   onToggle: () => void;
-  onNavigate: (messageId: string) => void;
+  onNavigate: (messageId: string, headingLabel?: string, headingLevel?: string) => void;
   activeRef?: React.RefObject<HTMLDivElement>;
 }) {
   const { t } = useI18n();
@@ -337,10 +338,6 @@ function OutlineSectionItem({
           {section.userQuery}
         </OverflowTooltip>
 
-        {isActive && (
-          <MapPin className="h-3 w-3 text-primary shrink-0 opacity-70" />
-        )}
-
         {/* Hover action buttons — absolute positioned, floats above */}
         <div
           className="invisible group-hover/section:visible absolute right-1 top-0 bottom-0 flex items-center gap-1 bg-accent/90 rounded-md px-1"
@@ -397,7 +394,7 @@ function OutlineNodeItem({
   depth = 0,
 }: {
   node: OutlineNode;
-  onNavigate: (messageId: string) => void;
+  onNavigate: (messageId: string, headingLabel?: string, headingLevel?: string) => void;
   messageId: string;
   navigable: boolean;
   depth?: number;
@@ -408,23 +405,34 @@ function OutlineNodeItem({
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const content = node.rawContent || node.label;
+    const parts: string[] = [];
+    if (node.label) parts.push(node.label);
+    if (node.rawContent && node.rawContent !== node.label) parts.push(node.rawContent);
+    const content = parts.join('\n\n');
     if (content) {
       navigator.clipboard.writeText(content);
       toast.success(t('toast.copiedToClipboard'), 1000);
     }
   };
 
+  // Build full tooltip content for markdown rendering
+  const tooltipMarkdown = (() => {
+    const parts: string[] = [];
+    if (node.label) parts.push(node.label);
+    if (node.rawContent && node.rawContent !== node.label) parts.push(node.rawContent);
+    return parts.join('\n\n');
+  })();
+
   return (
     <div>
       <div
-        onClick={() => navigable && onNavigate(messageId)}
+        onClick={() => navigable && onNavigate(messageId, node.label, node.type === 'heading' ? node.meta : undefined)}
         className={cn(
           'group/node flex items-center gap-1 px-2 py-1 rounded-md relative',
           'transition-colors duration-100',
           navigable
-            ? 'cursor-pointer hover:bg-accent/40'
-            : 'cursor-default opacity-50',
+            ? 'cursor-pointer hover:bg-accent/50'
+            : 'cursor-default',
         )}
         style={{ paddingLeft: `${8 + depth * 12}px` }}
       >
@@ -450,13 +458,21 @@ function OutlineNodeItem({
         {getNodeIcon(node)}
 
         <OverflowTooltip
-          content={node.label}
+          content={
+            <MarkdownRenderer className="text-xs [&_*]:!text-background [&_code]:!bg-background/10 [&_code]:!text-background max-h-[300px] overflow-y-auto">
+              {tooltipMarkdown}
+            </MarkdownRenderer>
+          }
+          forceShow
           placement="right"
+          tooltipClassName="max-w-[400px]"
           className={cn(
             'text-sm leading-snug truncate flex-1',
-            node.type === 'heading'
-              ? 'text-foreground font-medium'
-              : 'text-foreground/90',
+            !navigable
+              ? 'text-muted-foreground'
+              : node.type === 'heading'
+                ? 'text-foreground font-medium'
+                : 'text-foreground',
           )}
         >
           {node.label}

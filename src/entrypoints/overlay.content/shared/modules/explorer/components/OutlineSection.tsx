@@ -8,12 +8,17 @@ import { useSettingsStore } from '@/shared/lib/settings-store';
 const MIN_HEIGHT = 80;
 const MAX_HEIGHT_RATIO = 0.75; // 75% of container height
 
+interface OutlineSectionProps {
+  /** When true, the section fills all available vertical space (e.g. when Chats is collapsed) */
+  fillAvailable?: boolean;
+}
+
 /**
  * Collapsible outline section at the bottom of the Explorer.
  * The section height is resizable via a drag handle on the top edge,
  * and the height is persisted in the settings store.
  */
-export const OutlineSection = () => {
+export const OutlineSection: React.FC<OutlineSectionProps> = ({ fillAvailable = false }) => {
   const { t } = useI18n();
   const [isExpanded, setIsExpanded] = useState(false);
   const { outlineHeight, setOutlineHeight } = useSettingsStore();
@@ -69,8 +74,11 @@ export const OutlineSection = () => {
   return (
     <div
       ref={containerRef}
-      className="flex flex-col shrink-0 relative"
-      style={isExpanded ? { height: outlineHeight } : undefined}
+      className={cn(
+        'flex flex-col relative',
+        fillAvailable ? 'flex-1 min-h-0' : 'shrink-0',
+      )}
+      style={isExpanded && !fillAvailable ? { height: outlineHeight } : undefined}
     >
       {/* Resize handle — absolute positioned over the top border, no layout space */}
       {isExpanded && (

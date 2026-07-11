@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { NotebookText, Search, Plus, ScanSearch, Loader2 } from 'lucide-react';
+import { Search, Plus, ScanSearch, Loader2 } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
@@ -169,7 +170,7 @@ export const NotebookPickerContent = ({ lastSelectedNotebookId }: NotebookPicker
                   onClick={() => handleSelect(notebook)}
                   onMouseEnter={() => setActiveIndex(index)}
                 >
-                  <NotebookText className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <Icon icon="tabler:notebook" className="h-4 w-4 text-muted-foreground shrink-0" />
                   <span className="truncate">{notebook.name}</span>
                 </button>
               );

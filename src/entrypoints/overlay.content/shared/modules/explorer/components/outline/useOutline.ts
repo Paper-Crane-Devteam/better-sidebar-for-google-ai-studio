@@ -229,9 +229,32 @@ export function useOutline() {
   }, [sections, activeMessageId]);
 
   // ── Navigation ───────────────────────────────────────────────────
-  const scrollToMessage = useCallback((messageId: string) => {
+  const scrollToMessage = useCallback((messageId: string, headingLabel?: string, headingLevel?: string) => {
     const el = findMessageElement(messageId);
     if (!el) return;
+
+    // If a heading label is provided, try to find and scroll to that specific heading
+    if (headingLabel && headingLevel) {
+      const tag = headingLevel; // e.g. 'h1', 'h2', 'h3'
+      const headings = el.querySelectorAll(tag);
+      for (const heading of headings) {
+        if (heading.textContent?.trim() === headingLabel.trim()) {
+          heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          setActiveMessageId(messageId);
+          return;
+        }
+      }
+      // Fallback: try matching with includes for partial matches
+      for (const heading of headings) {
+        if (heading.textContent?.trim().includes(headingLabel.trim().slice(0, 40))) {
+          heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          setActiveMessageId(messageId);
+          return;
+        }
+      }
+    }
+
+    // Default: scroll to the message container
     const container = el.closest('.conversation-container') || el;
     container.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setActiveMessageId(messageId);

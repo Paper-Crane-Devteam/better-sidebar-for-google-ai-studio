@@ -1,6 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
 import {
-  NotebookText,
   ChevronRight,
   ChevronDown,
   ExternalLink,
@@ -10,6 +9,7 @@ import {
   PinOff,
   FolderInput,
 } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { cn } from '@/shared/lib/utils/utils';
 import {
   navigateToConversation,
@@ -323,7 +323,7 @@ export const NotebookNode = ({
                 actions={
                   isNotebook
                     ? [{
-                        icon: <NotebookText className="h-3.5 w-3.5" />,
+                        icon: <Icon icon="tabler:notebook" className="h-3.5 w-3.5" />,
                         tooltip: t('notebooks.newNotebookChat'),
                         onClick: (e: React.MouseEvent) => {
                           e.stopPropagation();

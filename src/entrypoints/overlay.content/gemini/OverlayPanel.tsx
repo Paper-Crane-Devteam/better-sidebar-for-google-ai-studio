@@ -15,10 +15,8 @@ import {
   BookOpen,
   LogOut,
   Search,
-  Sparkles,
   Menu,
   Library,
-  NotebookText,
   SquarePen,
   ScrollText,
 } from 'lucide-react';
@@ -286,7 +284,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
               className="sidebar-btn transition-all"
               data-tour-id="tour-prompts"
             >
-              <Sparkles className="sidebar-icon" />
+              <Icon icon="tabler:blockquote" className="sidebar-icon" />
             </Button>
           </SimpleTooltip>
           <SimpleTooltip content={t('tabs.tags')}>
@@ -353,7 +351,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
                 className="sidebar-btn transition-all"
                 data-tour-id="tour-notebooks"
               >
-                <NotebookText className="sidebar-icon" />
+                <Icon icon="tabler:notebook" className="sidebar-icon" />
               </Button>
             </SimpleTooltip>
           )}

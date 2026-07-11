@@ -1,5 +1,5 @@
 import React from 'react';
-import { History, Plus, NotebookText } from 'lucide-react';
+import { History, Plus } from 'lucide-react';
 import { Icon } from '@iconify/react';
 
 interface CompositeIconProps {
@@ -23,7 +23,7 @@ export const GemWithPlus = ({ className }: CompositeIconProps) => (
 
 export const NotebookWithHistory = ({ className }: CompositeIconProps) => (
   <span className={`relative inline-flex items-center justify-center ${className ?? ''}`}>
-    <NotebookText className="h-4 w-4" />
+    <Icon icon="tabler:notebook" className="h-4 w-4" />
     <History className="absolute -top-1 -right-1.5" style={{ width: 12, height: 12 }} strokeWidth={2.5} />
   </span>
 );
