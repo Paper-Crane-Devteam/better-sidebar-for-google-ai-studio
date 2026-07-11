@@ -574,7 +574,7 @@
     "messagePreview": "消息预览",
     "jumpToConversation": "跳转到对话",
     "searching": "搜索中...",
-    "resultsSummary": "{{files}} 个对话中共 {{count}} 条结果",
+    "resultsSummary": "{{files}} 个聊天中共 {{count}} 条结果",
     "indexingInfoTitle": "搜索索引说明",
     "indexingInfoIntro": "扩展仅会记录并索引安装后访问的对话，默认无法搜索更早的历史记录。",
     "indexingHowTo": "要搜索更早的对话：",

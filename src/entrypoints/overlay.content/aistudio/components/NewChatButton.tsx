@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { navigate } from '@/shared/lib/navigation';
@@ -21,7 +21,7 @@ export const NewChatButton = () => {
   return (
     <div className="px-3 py-2">
       <SplitNewChatButton
-        icon={<Plus className="h-4 w-4" />}
+        icon={<Icon icon="tabler:message-plus" className="h-4 w-4" />}
         label={t('explorerHeader.newChat')}
         onClick={handleNewChat}
       />

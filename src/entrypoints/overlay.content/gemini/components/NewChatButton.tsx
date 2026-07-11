@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { Plus, Gem as GemIcon, NotebookText } from 'lucide-react';
+import { NotebookText } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useAppStore } from '@/shared/lib/store';
@@ -71,7 +72,7 @@ export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
   return (
     <div className="px-3 py-2">
       <SplitNewChatButton
-        icon={<Plus className="h-4 w-4" />}
+        icon={<Icon icon="tabler:message-plus" className="h-4 w-4" />}
         label={t('explorerHeader.newChat')}
         tooltip={onPrivateChat ? t('tooltip.newChatCta') : t('tooltip.newChat')}
         onClick={handleNewChat}
@@ -80,7 +81,7 @@ export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
         dropdownItems={[
           {
             label: t('newChatButton.newGemChat'),
-            icon: <GemIcon className="h-4 w-4" />,
+            icon: <Icon icon="tabler:diamond" className="h-4 w-4" />,
             tooltip: gemTooltip,
             // Left click: navigate to last gem, or open picker if no last gem
             onClick: (e) => {

@@ -69,9 +69,9 @@ export const SplitNewChatButton = ({
       {/* Button row */}
       <div
         className={cn(
-          'flex items-stretch border border-border/60 rounded bg-accent/30 transition-all',
-          'hover:bg-accent/50 hover:border-border',
-          open && 'rounded-b-none border-b-transparent bg-accent/50 border-border',
+          'flex items-stretch border border-primary/20 rounded bg-primary/5 transition-all',
+          'hover:bg-primary/10 hover:border-primary/30',
+          open && 'rounded-b-none border-b-transparent bg-primary/10 border-primary/30',
         )}
       >
         {/* Main button */}

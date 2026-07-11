@@ -4,7 +4,8 @@ import { GemsHeader } from './components/GemsHeader';
 import { GemsTreeView, GemsTreeHandle } from './components/GemsTreeView';
 import { FilterBar } from '../../components/FilterBar';
 import { useStoreFilter } from '../../hooks/useStoreFilter';
-import { Gem as GemIcon, Loader2, Plus, ScanSearch } from 'lucide-react';
+import { Loader2, Plus, ScanSearch } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { Button } from '@/shared/components/ui/button';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { navigate } from '@/shared/lib/navigation';
@@ -101,7 +102,7 @@ export const GemsTab = ({ menuActions }: GemsTabProps) => {
           </div>
         ) : gems.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-4 text-center text-muted-foreground gap-3">
-            <GemIcon className="h-10 w-10 text-muted-foreground/50" />
+            <Icon icon="tabler:diamond" className="h-10 w-10 opacity-50" />
             <p className="text-sm">{t('gems.empty')}</p>
             <div className="flex items-center gap-2 mt-1">
               <Button

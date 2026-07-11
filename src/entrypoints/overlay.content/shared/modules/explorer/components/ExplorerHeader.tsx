@@ -3,7 +3,6 @@ import { useAppStore } from '@/shared/lib/store';
 import { Button } from '@/shared/components/ui/button';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import {
-  MessageSquarePlus,
   FolderPlus,
   ArrowDownAZ,
   Clock,
@@ -13,13 +12,12 @@ import {
   Crosshair,
   Search,
   X,
-  MoreHorizontal,
+  Filter,
   Tags,
   MessageSquare,
   Image as ImageIcon,
   LayoutGrid,
   Star,
-  Gem,
   NotebookText,
 } from 'lucide-react';
 import { Icon } from '@iconify/react';
@@ -32,6 +30,91 @@ import { useI18n } from '@/shared/hooks/useI18n';
 import { BatchToolbar } from './batch/BatchToolbar';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { SectionHeader } from './SectionHeader';
+
+// ── Type Filter Dropdown ────────────────────────────────────────────
+interface TypeFilterDropdownProps {
+  value: ExplorerTypeFilter;
+  filterTypes: ExplorerTypeFilter[];
+  onChange: (value: ExplorerTypeFilter) => void;
+  getTypeTitle: () => string;
+}
+
+const TypeFilterDropdown = ({ value, filterTypes, onChange, getTypeTitle }: TypeFilterDropdownProps) => {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  const getTypeIcon = (type: ExplorerTypeFilter) => {
+    switch (type) {
+      case 'conversation': return <MessageSquare className="h-4 w-4" />;
+      case 'text-to-image': return <ImageIcon className="h-4 w-4" />;
+      case 'gem': return <Icon icon="tabler:diamond" className="h-4 w-4" />;
+      case 'notebook': return <NotebookText className="h-4 w-4" />;
+      default: return <LayoutGrid className="h-4 w-4" />;
+    }
+  };
+
+  const getTypeLabel = (type: ExplorerTypeFilter) => {
+    switch (type) {
+      case 'conversation': return t('tooltip.filterConversations');
+      case 'text-to-image': return t('tooltip.filterImages');
+      case 'gem': return t('tooltip.filterGems');
+      case 'notebook': return t('tooltip.filterNotebooks');
+      default: return t('tooltip.filterAll');
+    }
+  };
+
+  // Selected item first, then the rest in original order
+  const sortedTypes = [value, ...filterTypes.filter((type) => type !== value)];
+
+  return (
+    <div ref={containerRef} className="relative">
+      <SimpleTooltip content={getTypeTitle()}>
+        <Button
+          variant={value === 'all' ? 'ghost' : 'secondary'}
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => setOpen(!open)}
+        >
+          {getTypeIcon(value)}
+        </Button>
+      </SimpleTooltip>
+
+      {open && (
+        <div className="absolute top-0 left-0 z-50 flex flex-col rounded-md border border-border bg-popover shadow-md animate-in fade-in slide-in-from-top-1 duration-100">
+          {sortedTypes.map((type) => (
+            <SimpleTooltip key={type} content={getTypeLabel(type)} side="right">
+              <button
+                className={`flex items-center justify-center h-7 w-7 transition-colors rounded-md ${
+                  value === type
+                    ? 'bg-primary/15 text-primary'
+                    : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
+                }`}
+                onClick={() => {
+                  onChange(type);
+                  setOpen(false);
+                }}
+              >
+                {getTypeIcon(type)}
+              </button>
+            </SimpleTooltip>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface ExplorerHeaderProps {
   onNewFolder: () => void;
@@ -116,13 +199,6 @@ export const ExplorerHeader = ({
   const handleToggleViewMode = () => {
     const newMode = viewMode === 'tree' ? 'timeline' : 'tree';
     setExplorerViewMode(newMode);
-  };
-
-  // Type filter cycling
-  const handleTypeToggle = () => {
-    const currentIndex = filterTypes.indexOf(filter.type.value as ExplorerTypeFilter);
-    const nextIndex = (currentIndex + 1) % filterTypes.length;
-    filter.type.setValue(filterTypes[nextIndex]);
   };
 
   const getTypeTitle = () => {
@@ -272,8 +348,20 @@ export const ExplorerHeader = ({
       {/* Collapsible content: inline search + more filters */}
       {isChatsSectionExpanded && (
         <div className="animate-in fade-in slide-in-from-top-1 duration-150">
-          {/* Search row with "..." button */}
+          {/* Search row with filter funnel on left */}
           <div className="px-3 py-1 flex items-center gap-1">
+            {/* Filter funnel toggle */}
+            <SimpleTooltip content={t('explorerHeader.moreFilters')}>
+              <Button
+                variant={hasActiveExtraFilters || moreFiltersOpen ? 'secondary' : 'ghost'}
+                size="icon"
+                className="h-7 w-7 shrink-0"
+                onClick={() => setMoreFiltersOpen(!moreFiltersOpen)}
+              >
+                <Filter className="h-4 w-4" />
+              </Button>
+            </SimpleTooltip>
+
             <div className="flex-1 relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <input
@@ -281,7 +369,7 @@ export const ExplorerHeader = ({
                 value={localQuery}
                 onChange={handleSearchChange}
                 placeholder={t('tooltip.search')}
-                className="flex h-7 w-full rounded-sm border border-border/60 bg-transparent pl-7 pr-7 text-xs shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="flex h-7 w-full rounded-sm border border-border/60 bg-transparent pl-7 pr-7 text-xs shadow-sm transition-colors placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 onKeyDown={(e) => {
                   if (e.key === 'Escape') {
                     handleClearSearch();
@@ -297,21 +385,9 @@ export const ExplorerHeader = ({
                 </button>
               )}
             </div>
-
-            {/* More filters toggle */}
-            <SimpleTooltip content={t('explorerHeader.moreFilters')}>
-              <Button
-                variant={hasActiveExtraFilters || moreFiltersOpen ? 'secondary' : 'ghost'}
-                size="icon"
-                className="h-7 w-7 shrink-0"
-                onClick={() => setMoreFiltersOpen(!moreFiltersOpen)}
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </SimpleTooltip>
           </div>
 
-          {/* Expandable filter options (tags, type, favorites) */}
+          {/* Expandable filter options (tags, type dropdown, favorites) */}
           {moreFiltersOpen && (
             <div className="px-3 py-1 flex items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-100">
               <SimpleTooltip content={t('tooltip.filterByTags')}>
@@ -325,20 +401,13 @@ export const ExplorerHeader = ({
                 </Button>
               </SimpleTooltip>
 
-              <SimpleTooltip content={getTypeTitle()}>
-                <Button
-                  variant={filter.type.value === 'all' ? 'ghost' : 'secondary'}
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={handleTypeToggle}
-                >
-                  {filter.type.value === 'all' && <LayoutGrid className="h-4 w-4" />}
-                  {filter.type.value === 'conversation' && <MessageSquare className="h-4 w-4" />}
-                  {filter.type.value === 'text-to-image' && <ImageIcon className="h-4 w-4" />}
-                  {filter.type.value === 'gem' && <Gem className="h-4 w-4" />}
-                  {filter.type.value === 'notebook' && <NotebookText className="h-4 w-4" />}
-                </Button>
-              </SimpleTooltip>
+              {/* Type filter with dropdown */}
+              <TypeFilterDropdown
+                value={filter.type.value}
+                filterTypes={filterTypes}
+                onChange={filter.type.setValue}
+                getTypeTitle={getTypeTitle}
+              />
 
               <SimpleTooltip content={t('tooltip.filterFavorites')}>
                 <Button

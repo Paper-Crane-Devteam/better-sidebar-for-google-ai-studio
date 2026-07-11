@@ -18,11 +18,11 @@ import {
   Sparkles,
   Menu,
   Library,
-  Gem,
   NotebookText,
   SquarePen,
   ScrollText,
 } from 'lucide-react';
+import { Icon } from '@iconify/react';
 import { SqlExecutor } from '../shared/components/menu/SqlExecutor';
 import { ExplorerTab } from '../shared/modules/explorer/ExplorerTab';
 import { PromptsTab } from '../shared/modules/prompts/PromptsTab';
@@ -339,7 +339,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
                 className="sidebar-btn transition-all"
                 data-tour-id="tour-gems"
               >
-                <Gem className="sidebar-icon" />
+                <Icon icon="tabler:diamond" className="sidebar-icon" />
               </Button>
             </SimpleTooltip>
           )}

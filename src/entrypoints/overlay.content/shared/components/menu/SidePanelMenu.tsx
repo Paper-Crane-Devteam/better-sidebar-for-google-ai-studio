@@ -10,7 +10,7 @@ import { Button } from '../ui/button';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
 import { navigate } from '@/shared/lib/navigation';
-import { MoreVertical, Settings, Database, History, Layout, RefreshCw, FolderPlus, ListCollapse, ArrowDownAZ, Clock, Calendar, Folder, Upload, Gem, Eye } from 'lucide-react';
+import { MoreVertical, Settings, Database, History, Layout, RefreshCw, FolderPlus, ListCollapse, ArrowDownAZ, Clock, Calendar, Folder, Upload, Eye } from 'lucide-react';
 import { useBadgeStore } from '@/shared/lib/badge-store';
 import { BadgeDot } from '@/shared/components/ui/badge-dot';
 

@@ -51,10 +51,10 @@ export const SectionHeader = ({
         </span>
       </div>
 
-      {/* Action buttons on the right: always visible when expanded, hidden when collapsed */}
+      {/* Action buttons on the right: only visible on hover */}
       {actions && isExpanded && (
         <div
-          className="flex items-center gap-0"
+          className="flex items-center gap-0 opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={(e) => e.stopPropagation()}
         >
           {actions}
