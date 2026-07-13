@@ -123,9 +123,9 @@ export const Node = ({
   const toggleIcon =
     node.data.type === 'folder' ? (
       node.isOpen ? (
-        <ChevronDown className="w-3 h-3" />
+        <ChevronDown className="w-3.5 h-3.5" strokeWidth={2.5} />
       ) : (
-        <ChevronRight className="w-3 h-3" />
+        <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.5} />
       )
     ) : null;
 

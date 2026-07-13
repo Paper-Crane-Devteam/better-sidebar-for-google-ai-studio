@@ -429,7 +429,7 @@ export const ExplorerTab = ({
       removePendingEntry,
       movePendingEntry,
     }}>
-    <div className="flex flex-col h-full w-full relative">
+    <div className="flex flex-col h-full w-full relative overflow-hidden">
       {isScanning && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[1px] gap-2">
           <Loader2 className="h-8 w-8 animate-spin text-foreground" />

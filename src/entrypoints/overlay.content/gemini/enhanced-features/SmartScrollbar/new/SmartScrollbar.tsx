@@ -57,7 +57,7 @@ export const SmartScrollbar: React.FC = () => {
         'flex flex-col items-center',
         'border border-border/40 rounded-full',
         'bg-transparent',
-        'py-2 px-2',
+        'py-1 px-0',
         'transition-opacity duration-200',
         isDisabled && 'opacity-40 pointer-events-none',
       )}
@@ -66,7 +66,7 @@ export const SmartScrollbar: React.FC = () => {
       <div
         ref={containerRef}
         className={cn(
-          'flex flex-col items-center gap-2',
+          'flex flex-col items-center gap-0',
           'overflow-y-auto overflow-x-visible',
           'py-1',
         )}
@@ -119,15 +119,24 @@ const DotItem: React.FC<DotItemProps> = ({
         ref={activeRef}
         onClick={() => node.inDom && scrollToNode(node.id)}
         className={cn(
-          'rounded-full transition-all duration-150',
-          node.inDom ? 'cursor-pointer' : 'cursor-default opacity-30',
-          isActive
-            ? 'h-[10px] w-[10px] bg-primary'
-            : node.inDom
-              ? 'h-2 w-2 bg-muted-foreground/40 hover:bg-muted-foreground/80'
-              : 'h-2 w-2 bg-muted-foreground/20',
+          'group flex items-center justify-center',
+          'h-4 w-6 rounded-full',
+          'transition-all duration-150',
+          node.inDom ? 'cursor-pointer' : 'cursor-default',
         )}
-      />
+      >
+        <div
+          className={cn(
+            'rounded-full transition-all duration-150',
+            !node.inDom && 'opacity-30',
+            isActive
+              ? 'h-[10px] w-[10px] bg-primary'
+              : node.inDom
+                ? 'h-2 w-2 bg-muted-foreground/40 group-hover:bg-muted-foreground/80'
+                : 'h-2 w-2 bg-muted-foreground/20',
+          )}
+        />
+      </div>
     </SimpleTooltip>
   );
 };

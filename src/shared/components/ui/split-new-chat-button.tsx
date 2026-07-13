@@ -77,7 +77,7 @@ export const SplitNewChatButton = ({
         {/* Main button */}
         <SimpleTooltip content={tooltip}>
           <button
-            className="flex-1 flex items-center gap-2 px-3 py-1 text-[13px] font-medium text-foreground/80 hover:text-foreground rounded-l transition-colors cursor-pointer border-none bg-transparent text-left"
+            className="flex-1 flex items-center gap-2 px-3 py-1 text-density font-medium text-foreground/80 hover:text-foreground rounded-l transition-colors cursor-pointer border-none bg-transparent text-left"
             onClick={onClick}
             onContextMenu={(e) => {
               if (onContextMenu) {
@@ -98,7 +98,7 @@ export const SplitNewChatButton = ({
             <SimpleTooltip content={dropdownTooltip}>
               <button
                 className={cn(
-                  'flex items-center justify-center w-7 text-foreground/50 hover:text-foreground hover:bg-accent/60 rounded-r transition-colors cursor-pointer border-none bg-transparent',
+                  'flex items-center justify-center w-7 text-muted-foreground hover:text-foreground hover:bg-accent/60 rounded-r transition-colors cursor-pointer border-none bg-transparent',
                   open && 'text-foreground bg-accent/60',
                 )}
                 onClick={() => setOpen(!open)}
@@ -119,7 +119,7 @@ export const SplitNewChatButton = ({
             <SimpleTooltip key={i} content={item.tooltip} side="left">
               <button
                 className={cn(
-                  'w-full flex items-center gap-2 px-3 py-1 text-[13px] font-medium text-foreground/80 hover:text-foreground hover:bg-accent transition-colors cursor-pointer border-none bg-transparent text-left',
+                  'w-full flex items-center gap-2 px-3 py-1 text-density font-medium text-foreground/80 hover:text-foreground hover:bg-accent transition-colors cursor-pointer border-none bg-transparent text-left',
                   i < dropdownItems.length - 1 && 'border-b border-border/30',
                 )}
                 onClick={(e) => {

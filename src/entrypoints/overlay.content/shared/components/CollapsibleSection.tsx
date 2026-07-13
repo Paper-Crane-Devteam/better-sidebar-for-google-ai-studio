@@ -145,7 +145,11 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
       ref={containerRef}
       className={cn(
         'flex flex-col relative',
-        fillAvailable ? 'flex-1 min-h-0' : 'shrink-0',
+        fillAvailable
+          ? 'flex-1 min-h-0'
+          : isExpanded && resizable
+            ? 'min-h-0'   // allow shrink when expanded with fixed height
+            : 'shrink-0', // don't shrink when collapsed (header only)
         className,
       )}
       style={containerStyle}
