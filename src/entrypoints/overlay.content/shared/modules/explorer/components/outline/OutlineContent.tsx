@@ -1,21 +1,20 @@
-import { useState, useRef, useEffect } from 'react';
-import {
-  Search,
-  List,
-  ChevronsUpDown,
-  ChevronsDownUp,
-} from 'lucide-react';
-import { cn } from '@/shared/lib/utils/utils';
+import { useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import { List } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useOutline } from './useOutline';
 import { FilterChips } from './components/FilterChips';
 import { OutlineSectionItem } from './components/OutlineSectionItem';
 
+export interface OutlineContentHandle {
+  collapseAll: () => void;
+  scrollToActive: () => void;
+}
+
 /**
  * Outline content rendered inside the collapsible Explorer section.
  * VSCode-style tree with headings, code blocks, and click-to-navigate.
  */
-export const OutlineContent = () => {
+export const OutlineContent = forwardRef<OutlineContentHandle>((_, ref) => {
   const { t } = useI18n();
   const {
     sections,
@@ -23,7 +22,6 @@ export const OutlineContent = () => {
     filter,
     setFilter,
     searchQuery,
-    setSearchQuery,
     scrollToMessage,
     isLoading,
     stats,
@@ -31,16 +29,8 @@ export const OutlineContent = () => {
   } = useOutline();
 
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
-  const [showSearch, setShowSearch] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const activeRef = useRef<HTMLDivElement>(null!);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (showSearch && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [showSearch]);
 
   const toggleSection = (sectionId: string) => {
     setCollapsedSections((prev) => {
@@ -51,41 +41,24 @@ export const OutlineContent = () => {
     });
   };
 
-  const expandAll = () => setCollapsedSections(new Set());
-  const collapseAll = () => {
-    const allIds = new Set(sections.map((s) => s.id));
-    setCollapsedSections(allIds);
-  };
-  const isAllCollapsed = sections.length > 0 && collapsedSections.size === sections.length;
+  // Expose imperative methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    collapseAll: () => {
+      const allIds = new Set(sections.map((s) => s.id));
+      setCollapsedSections(allIds);
+    },
+    scrollToActive: () => {
+      if (activeRef.current) {
+        activeRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    },
+  }), [sections]);
 
   // ── Toolbar ──────────────────────────────────────────────────────
   const toolbar = (
     <div className="flex items-center gap-1 px-2 py-1 border-b border-border/30">
       <FilterChips filter={filter} onFilterChange={setFilter} stats={stats} />
       <div className="flex-1" />
-      {sections.length > 0 && (
-        <button
-          onClick={isAllCollapsed ? expandAll : collapseAll}
-          className="p-1 rounded-md transition-colors text-muted-foreground hover:bg-accent/60 hover:text-foreground"
-          title={isAllCollapsed ? t('outline.expandAll') : t('outline.collapseAll')}
-        >
-          {isAllCollapsed
-            ? <ChevronsUpDown className="h-3.5 w-3.5" />
-            : <ChevronsDownUp className="h-3.5 w-3.5" />
-          }
-        </button>
-      )}
-      <button
-        onClick={() => setShowSearch(!showSearch)}
-        className={cn(
-          'p-1 rounded-md transition-colors',
-          showSearch
-            ? 'bg-primary/15 text-primary'
-            : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
-        )}
-      >
-        <Search className="h-3.5 w-3.5" />
-      </button>
       {stats.turns > 0 && (
         <span className="text-[10px] text-muted-foreground/60 tabular-nums ml-1">
           {stats.turns}
@@ -93,31 +66,6 @@ export const OutlineContent = () => {
       )}
     </div>
   );
-
-  // ── Search input ─────────────────────────────────────────────────
-  const searchBar = showSearch ? (
-    <div className="px-2 py-1 border-b border-border/30">
-      <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/40 border border-border/40">
-        <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-        <input
-          ref={searchInputRef}
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={t('outline.searchPlaceholder')}
-          className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground/50"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            className="text-muted-foreground hover:text-foreground text-xs"
-          >
-            ✕
-          </button>
-        )}
-      </div>
-    </div>
-  ) : null;
 
   // ── Empty / loading states ───────────────────────────────────────
   if (!isOnConversation) {
@@ -147,7 +95,6 @@ export const OutlineContent = () => {
     return (
       <div className="flex flex-col h-full">
         {toolbar}
-        {searchBar}
         <div className="flex flex-col items-center justify-center py-6 px-4 text-center text-muted-foreground min-h-[80px]">
           <List className="h-5 w-5 mb-2 opacity-40" />
           <p className="text-xs">
@@ -161,7 +108,6 @@ export const OutlineContent = () => {
   return (
     <div ref={containerRef} className="flex flex-col h-full min-h-0">
       {toolbar}
-      {searchBar}
 
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
         <div className="py-1">
@@ -182,4 +128,6 @@ export const OutlineContent = () => {
       </div>
     </div>
   );
-};
+});
+
+OutlineContent.displayName = 'OutlineContent';

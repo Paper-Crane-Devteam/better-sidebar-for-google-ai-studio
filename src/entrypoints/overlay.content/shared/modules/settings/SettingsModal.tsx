@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../../components/ui/button';
 import { X, Settings, Heart, Info, LayoutTemplate, Database, SlidersHorizontal, Palette, Keyboard, Plug } from 'lucide-react';
-import { Icon as IconifyIcon } from '@iconify/react';
+import { UIcon } from '@/shared/components/ui/icon';
 import { GeneralSettings } from './modules/GeneralSettings';
 import { ThemeSettings } from './modules/ThemeSettings';
 import { ExplorerSettings } from './modules/ExplorerSettings';
@@ -20,7 +20,7 @@ import { BadgeDot } from '@/shared/components/ui/badge-dot';
 /** Wrapper to use a fluent-color iconify icon as a NavButton icon component */
 const PacksIcon = ({ className }: { className?: string }) => (
   <span className={className}>
-    <IconifyIcon icon="fluent-color:trophy-24" width="1em" height="1em" />
+    <UIcon icon="fluent-color:trophy-24" width="1em" height="1em" />
   </span>
 );
 

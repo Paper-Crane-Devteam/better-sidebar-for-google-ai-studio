@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
-import { Icon } from '@iconify/react';
+import { UIcon } from '@/shared/components/ui/icon';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useAppStore } from '@/shared/lib/store';
-import { useModalStore } from '@/shared/lib/modal';
+import { usePopoverPickerStore } from '@/shared/lib/popover-picker';
 import { navigateToGem, navigateToNotebook, navigateToNewChat } from '@/shared/lib/navigation';
 import { GemPickerContent } from '../../shared/modules/gems/components/GemPickerContent';
 import { NotebookPickerContent } from '../../shared/modules/notebooks/components/NotebookPickerContent';
@@ -38,23 +38,21 @@ export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
     }
   };
 
-  const handleNewGemChat = () => {
-    useModalStore.getState().open({
-      type: 'info',
-      title: t('gems.selectGem'),
+  const handleNewGemChat = (e: React.MouseEvent) => {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    usePopoverPickerStore.getState().open({
+      anchorRect: rect,
       content: <GemPickerContent lastSelectedGemId={lastSelectedGemId} />,
-      confirmText: t('common.cancel'),
-      modalClassName: 'max-w-sm',
+      width: 280,
     });
   };
 
-  const handleNewNotebookChat = () => {
-    useModalStore.getState().open({
-      type: 'info',
-      title: t('notebooks.selectNotebook'),
+  const handleNewNotebookChat = (e: React.MouseEvent) => {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    usePopoverPickerStore.getState().open({
+      anchorRect: rect,
       content: <NotebookPickerContent lastSelectedNotebookId={lastSelectedNotebookId} />,
-      confirmText: t('common.cancel'),
-      modalClassName: 'max-w-sm',
+      width: 280,
     });
   };
 
@@ -71,7 +69,7 @@ export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
   return (
     <div className="px-3 py-2">
       <SplitNewChatButton
-        icon={<Icon icon="tabler:message-plus" className="h-4 w-4" />}
+        icon={<UIcon icon="tabler:message-plus" className="h-4 w-4" />}
         label={t('explorerHeader.newChat')}
         tooltip={onPrivateChat ? t('tooltip.newChatCta') : t('tooltip.newChat')}
         onClick={handleNewChat}
@@ -80,7 +78,7 @@ export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
         dropdownItems={[
           {
             label: t('newChatButton.newGemChat'),
-            icon: <Icon icon="tabler:diamond" className="h-4 w-4" />,
+            icon: <UIcon icon="tabler:diamond" className="h-4 w-4" />,
             tooltip: gemTooltip,
             // Left click: navigate to last gem, or open picker if no last gem
             onClick: (e) => {
@@ -88,18 +86,18 @@ export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
               if (lastGem) {
                 navigateToGem(lastGem.id);
               } else {
-                handleNewGemChat();
+                handleNewGemChat(e);
               }
             },
-            // Right click: always open picker modal
+            // Right click: always open popover picker
             onContextMenu: (e) => {
               e.preventDefault();
-              handleNewGemChat();
+              handleNewGemChat(e);
             },
           },
           {
             label: t('newChatButton.newNotebookChat'),
-            icon: <Icon icon="tabler:notebook" className="h-4 w-4" />,
+            icon: <UIcon icon="tabler:notebook" className="h-4 w-4" />,
             tooltip: notebookTooltip,
             // Left click: navigate to last notebook, or open picker if none
             onClick: (e) => {
@@ -107,13 +105,13 @@ export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
               if (lastNotebook) {
                 navigateToNotebook(lastNotebook.id);
               } else {
-                handleNewNotebookChat();
+                handleNewNotebookChat(e);
               }
             },
-            // Right click: always open picker modal
+            // Right click: always open popover picker
             onContextMenu: (e) => {
               e.preventDefault();
-              handleNewNotebookChat();
+              handleNewNotebookChat(e);
             },
           },
         ]}

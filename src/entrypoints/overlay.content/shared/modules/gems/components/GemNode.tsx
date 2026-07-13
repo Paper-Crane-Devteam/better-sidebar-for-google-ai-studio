@@ -12,7 +12,7 @@ import {
   PinOff,
   FolderInput,
 } from 'lucide-react';
-import { Icon } from '@iconify/react';
+import { UIcon } from '@/shared/components/ui/icon';
 import { cn } from '@/shared/lib/utils/utils';
 import { navigateToConversation, navigateToGem, navigate } from '@/shared/lib/navigation';
 import { useAppStore } from '@/shared/lib/store';
@@ -204,7 +204,7 @@ export const GemNode = ({
     {
       type: 'item' as const,
       key: 'open-gem',
-      icon: <Icon icon="tabler:diamond" className="h-4 w-4" />,
+      icon: <UIcon icon="tabler:diamond" className="h-4 w-4" />,
       label: t('gems.openGem'),
       onClick: () => {
         const gemUrl = node.data.data?.external_url;

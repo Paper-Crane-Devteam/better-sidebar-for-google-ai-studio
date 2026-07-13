@@ -8,6 +8,8 @@ interface SectionHeaderProps {
   onToggle: () => void;
   actions?: React.ReactNode;
   className?: string;
+  /** When true, force-show the actions regardless of hover */
+  showActions?: boolean;
 }
 
 /**
@@ -20,12 +22,13 @@ export const SectionHeader = ({
   onToggle,
   actions,
   className,
+  showActions,
 }: SectionHeaderProps) => {
   return (
     <div
       className={cn(
         'flex items-center h-7 px-3 select-none',
-        'hover:bg-accent/50 cursor-pointer group',
+        'hover:bg-accent/50 cursor-pointer',
         className,
       )}
       onClick={onToggle}
@@ -51,10 +54,13 @@ export const SectionHeader = ({
         </span>
       </div>
 
-      {/* Action buttons on the right: only visible on hover */}
+      {/* Action buttons on the right: visible when showActions is true or on hover */}
       {actions && isExpanded && (
         <div
-          className="flex items-center gap-0 opacity-0 group-hover:opacity-100 transition-opacity"
+          className={cn(
+            'flex items-center gap-0 transition-opacity',
+            showActions ? 'opacity-100' : 'opacity-0 group-hover/section:opacity-100',
+          )}
           onClick={(e) => e.stopPropagation()}
         >
           {actions}

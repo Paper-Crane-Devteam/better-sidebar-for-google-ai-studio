@@ -9,7 +9,7 @@ import {
   PinOff,
   FolderInput,
 } from 'lucide-react';
-import { Icon } from '@iconify/react';
+import { UIcon } from '@/shared/components/ui/icon';
 import { cn } from '@/shared/lib/utils/utils';
 import {
   navigateToConversation,
@@ -323,7 +323,7 @@ export const NotebookNode = ({
                 actions={
                   isNotebook
                     ? [{
-                        icon: <Icon icon="tabler:notebook" className="h-3.5 w-3.5" />,
+                        icon: <UIcon icon="tabler:notebook" className="h-3.5 w-3.5" />,
                         tooltip: t('notebooks.newNotebookChat'),
                         onClick: (e: React.MouseEvent) => {
                           e.stopPropagation();

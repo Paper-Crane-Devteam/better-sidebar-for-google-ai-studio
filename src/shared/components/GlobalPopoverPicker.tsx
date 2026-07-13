@@ -1,0 +1,130 @@
+import { useRef, useEffect, useState, useCallback } from 'react';
+import { usePopoverPickerStore } from '@/shared/lib/popover-picker';
+import { cn } from '@/shared/lib/utils/utils';
+
+/**
+ * A transparent-background popover that positions itself to the right of
+ * the anchor element (like a tooltip). No overlay, no confirm/cancel buttons.
+ * Closes when clicking outside or pressing Escape.
+ *
+ * Mounted inside the enhanced-features shadow DOM alongside GlobalModal.
+ */
+export const GlobalPopoverPicker = () => {
+  const { isOpen, anchorRect, content, width, close } = usePopoverPickerStore();
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [isPositioned, setIsPositioned] = useState(false);
+
+  // Calculate position: to the right of the anchor, vertically centered
+  const calculatePosition = useCallback(() => {
+    if (!anchorRect || !popoverRef.current) return;
+
+    const popoverRect = popoverRef.current.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const gap = 8; // 8px gap between anchor and popover
+
+    let top = anchorRect.top + anchorRect.height / 2 - popoverRect.height / 2;
+    let left = anchorRect.right + gap;
+
+    // If overflows right, try positioning to the left
+    if (left + popoverRect.width > viewportWidth - 8) {
+      left = anchorRect.left - popoverRect.width - gap;
+    }
+
+    // If overflows left, fall back to right but clamp
+    if (left < 8) {
+      left = 8;
+    }
+
+    // Vertical clamping
+    if (top < 8) top = 8;
+    if (top + popoverRect.height > viewportHeight - 8) {
+      top = viewportHeight - 8 - popoverRect.height;
+    }
+
+    setPosition({ top, left });
+  }, [anchorRect]);
+
+  // Position on open
+  useEffect(() => {
+    if (!isOpen) {
+      setIsPositioned(false);
+      return;
+    }
+
+    // Double rAF to let the popover render invisibly first, then measure & position
+    requestAnimationFrame(() => {
+      calculatePosition();
+      requestAnimationFrame(() => {
+        setIsPositioned(true);
+      });
+    });
+  }, [isOpen, calculatePosition]);
+
+  // Close on outside click — use composedPath() to handle shadow DOM boundaries
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (!popoverRef.current) return;
+
+      // composedPath() crosses shadow DOM boundaries, so we can correctly
+      // detect clicks inside the popover even though it's in a shadow root.
+      const path = e.composedPath();
+      if (!path.includes(popoverRef.current)) {
+        close();
+      }
+    };
+
+    // Use setTimeout to avoid immediately closing from the triggering click
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleMouseDown, true);
+    }, 0);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleMouseDown, true);
+    };
+  }, [isOpen, close]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        close();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, close]);
+
+  if (!isOpen || !anchorRect) return null;
+
+  return (
+    <div
+      ref={popoverRef}
+      className={cn(
+        'fixed z-[10002] rounded-lg border border-border shadow-lg overflow-hidden',
+        'bg-popover',
+        isPositioned
+          ? 'animate-in fade-in-0 zoom-in-95 slide-in-from-left-1 duration-150'
+          : 'opacity-0',
+      )}
+      style={{
+        top: position.top,
+        left: position.left,
+        width: width ?? 280,
+      }}
+    >
+      {/* Wrapper with padding matching GlobalModal's content area (px-6 py-4)
+          so that PickerContent's negative margins (-mx-6 -my-4) cancel out correctly */}
+      <div className="px-6 py-4">
+        {content}
+      </div>
+    </div>
+  );
+};

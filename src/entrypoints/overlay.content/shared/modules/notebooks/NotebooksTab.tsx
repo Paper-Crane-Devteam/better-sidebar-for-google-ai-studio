@@ -8,7 +8,7 @@ import {
 import { FilterBar } from '../../components/FilterBar';
 import { useStoreFilter } from '../../hooks/useStoreFilter';
 import { Loader2, Plus, RefreshCw } from 'lucide-react';
-import { Icon } from '@iconify/react';
+import { UIcon } from '@/shared/components/ui/icon';
 import { Button } from '@/shared/components/ui/button';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { navigate } from '@/shared/lib/navigation';
@@ -109,7 +109,7 @@ export const NotebooksTab = ({ menuActions }: NotebooksTabProps) => {
           </div>
         ) : notebooks.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-4 text-center text-muted-foreground gap-3">
-            <Icon icon="tabler:notebook" className="h-10 w-10 opacity-50" />
+            <UIcon icon="tabler:notebook" className="h-10 w-10 opacity-50" />
             <p className="text-sm">{t('notebooks.empty')}</p>
             <div className="flex items-center gap-2 mt-1">
               <Button

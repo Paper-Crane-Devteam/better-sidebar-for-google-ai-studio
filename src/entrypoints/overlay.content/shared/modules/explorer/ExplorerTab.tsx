@@ -439,7 +439,10 @@ export const ExplorerTab = ({
         </div>
       )}
 
-      {/* CHATS Section Header (collapsible, VSCode-style) */}
+      {/* CHATS Section (collapsible, VSCode-style) */}
+      <div
+        className={`flex flex-col min-h-0 ${isChatsSectionExpanded ? 'flex-1' : ''}`}
+      >
       <ExplorerHeader
         onNewFolder={handleNewFolder}
         onCollapseAll={handleCollapseAll}
@@ -510,6 +513,7 @@ export const ExplorerTab = ({
           </ExclusiveContextMenu>
         </div>
       )}
+      </div>
 
       {/* OUTLINE Section (collapsible, at the bottom) */}
       <OutlineSection fillAvailable={!isChatsSectionExpanded} />

@@ -8,7 +8,7 @@ import {
   KeyRound,
   ShoppingCart,
 } from 'lucide-react';
-import { Icon } from '@iconify/react';
+import { UIcon } from '@/shared/components/ui/icon';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useLicenseStore, isLicenseValid, type LicenseTier } from '@/shared/lib/license-store';
 import { activateLicense, identifyTokenSource } from '@/shared/lib/license-api';
@@ -24,7 +24,7 @@ export const SupportPackSettings = () => {
       {/* Header */}
       <div className="space-y-2">
         <h3 className="text-lg font-medium flex items-center gap-2">
-          <Icon icon="fluent-color:trophy-24" width={20} height={20} />
+          <UIcon icon="fluent-color:trophy-24" width={20} height={20} />
           {t('packs.title')}
         </h3>
         <p className="text-sm text-muted-foreground">
@@ -77,7 +77,7 @@ function ActivatedView({ t, tier }: { t: (key: string) => string; tier: LicenseT
       {tier === 'support_pack' && (
         <div className="rounded-xl border border-dashed border-amber-500/40 bg-amber-500/5 p-5">
           <div className="flex items-start gap-3">
-            <Icon icon="fluent-color:ribbon-star-24" width={20} height={20} className="shrink-0 mt-0.5" />
+            <UIcon icon="fluent-color:ribbon-star-24" width={20} height={20} className="shrink-0 mt-0.5" />
             <div className="space-y-2">
               <p className="text-sm font-medium">{t('packs.upgradePrompt')}</p>
               <p className="text-xs text-muted-foreground">{t('packs.upgradePromptDesc')}</p>
@@ -87,7 +87,7 @@ function ActivatedView({ t, tier }: { t: (key: string) => string; tier: LicenseT
                 className="mt-2 gap-2"
                 onClick={() => openPurchasePage('power_pack')}
               >
-                <Icon icon="fluent-color:star-24" width={14} height={14} />
+                <UIcon icon="fluent-color:star-24" width={14} height={14} />
                 {t('packs.upgradeToPower')}
               </Button>
             </div>
@@ -121,7 +121,7 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
         {/* Support Pack Card */}
         <div className="rounded-xl border bg-accent/20 p-5">
           <div className="flex items-center gap-2 mb-3">
-            <Icon icon="fluent-color:paint-brush-24" width={24} height={24} />
+            <UIcon icon="fluent-color:paint-brush-24" width={24} height={24} />
             <div>
               <h4 className="text-sm font-semibold">{t('packs.supportPackTitle')}</h4>
               <p className="text-xs text-muted-foreground">{t('packs.supportPackTagline')}</p>
@@ -129,19 +129,19 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
           </div>
           <div className="space-y-2 ml-0.5">
             <FeatureItem
-              icon={<Icon icon="fluent-color:paint-brush-24" width={14} height={14} />}
+              icon={<UIcon icon="fluent-color:paint-brush-24" width={14} height={14} />}
               text={t('packs.spFeature1')}
             />
             <FeatureItem
-              icon={<Icon icon="fluent-color:arrow-sync-24" width={14} height={14} />}
+              icon={<UIcon icon="fluent-color:arrow-sync-24" width={14} height={14} />}
               text={t('packs.spFeature2')}
             />
             <FeatureItem
-              icon={<Icon icon="fluent-color:wrench-24" width={14} height={14} />}
+              icon={<UIcon icon="fluent-color:wrench-24" width={14} height={14} />}
               text={t('packs.spFeature3')}
             />
             <FeatureItem
-              icon={<Icon icon="fluent-color:laptop-24" width={14} height={14} />}
+              icon={<UIcon icon="fluent-color:laptop-24" width={14} height={14} />}
               text={t('packs.spFeature4')}
             />
           </div>
@@ -165,13 +165,13 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
           {/* Popular badge */}
           <div className="absolute top-3 right-3">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-500/20 text-violet-600 dark:text-violet-300 border border-violet-500/30">
-              <Icon icon="fluent-color:star-24" width={10} height={10} />
+              <UIcon icon="fluent-color:star-24" width={10} height={10} />
               {t('packs.popular')}
             </span>
           </div>
 
           <div className="flex items-center gap-2 mb-3 relative">
-            <Icon icon="fluent-color:premium-24" width={24} height={24} />
+            <UIcon icon="fluent-color:premium-24" width={24} height={24} />
             <div>
               <h4 className="text-sm font-semibold">{t('packs.powerPackTitle')}</h4>
               <p className="text-xs text-muted-foreground">{t('packs.powerPackTagline')}</p>
@@ -182,23 +182,23 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
           </p>
           <div className="space-y-2 ml-0.5 relative">
             <FeatureItem
-              icon={<Icon icon="fluent-color:paint-brush-24" width={14} height={14} />}
+              icon={<UIcon icon="fluent-color:paint-brush-24" width={14} height={14} />}
               text={t('packs.ppFeatureThemes')}
             />
             <FeatureItem
-              icon={<Icon icon="fluent-color:bot-sparkle-24" width={14} height={14} />}
+              icon={<UIcon icon="fluent-color:bot-sparkle-24" width={14} height={14} />}
               text={t('packs.ppFeatureAgent')}
             />
             <FeatureItem
-              icon={<Icon icon="fluent-color:database-24" width={14} height={14} />}
+              icon={<UIcon icon="fluent-color:database-24" width={14} height={14} />}
               text={t('packs.ppFeatureWrite')}
             />
             <FeatureItem
-              icon={<Icon icon="fluent-color:history-24" width={14} height={14} />}
+              icon={<UIcon icon="fluent-color:history-24" width={14} height={14} />}
               text={t('packs.ppFeatureHistory')}
             />
             <FeatureItem
-              icon={<Icon icon="fluent-color:share-android-24" width={14} height={14} />}
+              icon={<UIcon icon="fluent-color:share-android-24" width={14} height={14} />}
               text={t('packs.ppFeatureExport')}
             />
           </div>
@@ -206,7 +206,7 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
             className="w-full mt-4 gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md shadow-violet-500/20 border-0"
             onClick={() => openPurchasePage('power_pack')}
           >
-            <Icon icon="fluent-color:star-24" width={14} height={14} />
+            <UIcon icon="fluent-color:star-24" width={14} height={14} />
             {t('packs.getPowerPack')}
           </Button>
         </div>

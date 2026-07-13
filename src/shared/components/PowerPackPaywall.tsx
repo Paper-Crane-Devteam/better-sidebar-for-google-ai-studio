@@ -9,7 +9,7 @@
 
 import { useEffect } from 'react';
 import { X, ExternalLink } from 'lucide-react';
-import { Icon } from '@iconify/react';
+import { UIcon } from '@/shared/components/ui/icon';
 import { usePaywallStore } from '@/shared/lib/powerpack-paywall';
 import { openPurchasePage, getPurchaseLinks } from '@/shared/lib/license-links';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -78,7 +78,7 @@ export const PowerPackPaywall = () => {
         <div className="relative p-6 space-y-4">
           {/* Header */}
           <div className="flex items-center gap-3">
-            <Icon icon="fluent-color:premium-24" width={28} height={28} />
+            <UIcon icon="fluent-color:premium-24" width={28} height={28} />
             <div>
               <h3 className="text-base font-bold tracking-tight">
                 {t('paywall.title')}
@@ -92,7 +92,7 @@ export const PowerPackPaywall = () => {
           {/* Feature context — which feature triggered this */}
           {featureName && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-500/5 border border-violet-500/20">
-              <Icon icon="fluent-color:bot-sparkle-24" width={14} height={14} className="shrink-0" />
+              <UIcon icon="fluent-color:bot-sparkle-24" width={14} height={14} className="shrink-0" />
               <p className="text-xs text-foreground">
                 <span className="font-medium">{featureName}</span>
                 {' '}{t('paywall.requiresPowerPack')}
@@ -108,7 +108,7 @@ export const PowerPackPaywall = () => {
             {FEATURES.map(({ icon: iconName, key }) => (
               <div key={key} className="flex items-center gap-2">
                 <div className="h-6 w-6 rounded-md bg-violet-500/10 flex items-center justify-center shrink-0">
-                  <Icon icon={iconName} width={14} height={14} />
+                  <UIcon icon={iconName} width={14} height={14} />
                 </div>
                 <span className="text-sm">{t(`packs.${key}`)}</span>
               </div>
@@ -128,7 +128,7 @@ export const PowerPackPaywall = () => {
               'active:scale-[0.98]',
             )}
           >
-            <Icon icon="fluent-color:star-24" width={16} height={16} />
+            <UIcon icon="fluent-color:star-24" width={16} height={16} />
             {t('paywall.getPowerPack')}
           </button>
 

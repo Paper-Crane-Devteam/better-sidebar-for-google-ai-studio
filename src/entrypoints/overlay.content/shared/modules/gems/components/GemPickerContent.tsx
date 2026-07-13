@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Search, Plus, ScanSearch, Loader2 } from 'lucide-react';
-import { Icon } from '@iconify/react';
+import { UIcon } from '@/shared/components/ui/icon';
 import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
 import { navigateToGem, navigate } from '@/shared/lib/navigation';
 import { useModalStore } from '@/shared/lib/modal';
+import { usePopoverPickerStore } from '@/shared/lib/popover-picker';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Button } from '@/shared/components/ui/button';
 import { toast } from '@/shared/lib/toast';
@@ -23,6 +24,7 @@ export const GemPickerContent = ({ lastSelectedGemId }: GemPickerContentProps) =
   const { t } = useI18n();
   const { gems, fetchData } = useAppStore();
   const close = useModalStore((s) => s.close);
+  const closePopover = usePopoverPickerStore((s) => s.close);
   const [search, setSearch] = useState('');
   const [activeIndex, setActiveIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,15 +49,17 @@ export const GemPickerContent = ({ lastSelectedGemId }: GemPickerContentProps) =
     (gem: Gem) => {
       useSettingsStore.getState().setLastSelectedGemId(gem.id);
       close();
+      closePopover();
       navigateToGem(gem.id);
     },
-    [close],
+    [close, closePopover],
   );
 
   const handleCreateGem = useCallback(() => {
     close();
+    closePopover();
     navigate('https://gemini.google.com/gems/create');
-  }, [close]);
+  }, [close, closePopover]);
 
   const handleScanGems = useCallback(async () => {
     if (isScanning) return;
@@ -125,7 +129,7 @@ export const GemPickerContent = ({ lastSelectedGemId }: GemPickerContentProps) =
         />
       );
     }
-    return <Icon icon="tabler:diamond" className="h-4 w-4 text-muted-foreground shrink-0" />;
+    return <UIcon icon="tabler:diamond" className="h-4 w-4 text-muted-foreground shrink-0" />;
   };
 
   return (

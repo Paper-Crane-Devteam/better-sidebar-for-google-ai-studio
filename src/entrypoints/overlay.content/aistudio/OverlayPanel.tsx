@@ -17,7 +17,7 @@ import {
   Search,
   ScrollText,
 } from 'lucide-react';
-import { Icon } from '@iconify/react';
+import { UIcon } from '@/shared/components/ui/icon';
 import { SqlExecutor } from '../shared/components/menu/SqlExecutor';
 import { ExplorerTab } from '../shared/modules/explorer/ExplorerTab';
 import { PromptsTab } from '../shared/modules/prompts/PromptsTab';
@@ -264,7 +264,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             onClick={() => handleTabChange('prompts')}
             className="sidebar-btn transition-all"
           >
-            <Icon icon="tabler:blockquote" className="sidebar-icon" />
+            <UIcon icon="tabler:blockquote" className="sidebar-icon" />
           </Button>
         </SimpleTooltip>
         {shortcuts?.favorites && (

@@ -19,7 +19,7 @@ import {
   LayoutGrid,
   Star,
 } from 'lucide-react';
-import { Icon } from '@iconify/react';
+import { UIcon } from '@/shared/components/ui/icon';
 import { debounce } from 'lodash';
 import { SidePanelMenu } from '@/entrypoints/overlay.content/shared/components/menu/SidePanelMenu';
 import { useModalStore } from '@/shared/lib/modal';
@@ -28,7 +28,7 @@ import type { FilterState, ExplorerTypeFilter } from '../../../types/filter';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { BatchToolbar } from './batch/BatchToolbar';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
-import { SectionHeader } from './SectionHeader';
+import { CollapsibleSection } from '../../../components/CollapsibleSection';
 
 // ── Type Filter Dropdown ────────────────────────────────────────────
 interface TypeFilterDropdownProps {
@@ -58,8 +58,8 @@ const TypeFilterDropdown = ({ value, filterTypes, onChange, getTypeTitle }: Type
     switch (type) {
       case 'conversation': return <MessageSquare className="h-4 w-4" />;
       case 'text-to-image': return <ImageIcon className="h-4 w-4" />;
-      case 'gem': return <Icon icon="tabler:diamond" className="h-4 w-4" />;
-      case 'notebook': return <Icon icon="tabler:notebook" className="h-4 w-4" />;
+      case 'gem': return <UIcon icon="tabler:diamond" className="h-4 w-4" />;
+      case 'notebook': return <UIcon icon="tabler:notebook" className="h-4 w-4" />;
       default: return <LayoutGrid className="h-4 w-4" />;
     }
   };
@@ -248,7 +248,7 @@ export const ExplorerHeader = ({
           className="h-5 w-5 text-muted-foreground hover:text-foreground"
           onClick={() => onCollapseAll()}
         >
-          <Icon icon="codicon:collapse-all" className="h-3.5 w-3.5" />
+          <UIcon icon="codicon:collapse-all" className="h-3.5 w-3.5" />
         </Button>
       </SimpleTooltip>
     </>
@@ -336,97 +336,95 @@ export const ExplorerHeader = ({
       {/* New Chat CTA row */}
       {newChatButton}
 
-      {/* CHATS collapsible section header */}
-      <SectionHeader
+      {/* CHATS collapsible section */}
+      <CollapsibleSection
         title={t('explorerHeader.chats')}
         isExpanded={isChatsSectionExpanded}
         onToggle={onToggleChatsSection}
         actions={chatsSectionActions}
-      />
-
-      {/* Collapsible content: inline search + more filters */}
-      {isChatsSectionExpanded && (
+        contentClassName="flex-1 min-h-0"
+      >
         <div className="animate-in fade-in slide-in-from-top-1 duration-150">
-          {/* Search row with filter funnel on left */}
-          <div className="px-3 py-1 flex items-center gap-1">
-            {/* Filter funnel toggle */}
-            <SimpleTooltip content={t('explorerHeader.moreFilters')}>
-              <Button
-                variant={hasActiveExtraFilters || moreFiltersOpen ? 'secondary' : 'ghost'}
-                size="icon"
-                className="h-7 w-7 shrink-0"
-                onClick={() => setMoreFiltersOpen(!moreFiltersOpen)}
-              >
-                <Filter className="h-4 w-4" />
-              </Button>
-            </SimpleTooltip>
-
-            <div className="flex-1 relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-              <input
-                ref={searchInputRef}
-                value={localQuery}
-                onChange={handleSearchChange}
-                placeholder={t('tooltip.search')}
-                className="flex h-7 w-full rounded-sm border border-border/60 bg-transparent pl-7 pr-7 text-xs shadow-sm transition-colors placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    handleClearSearch();
-                  }
-                }}
-              />
-              {localQuery && (
-                <button
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-5 w-5 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-sm cursor-pointer border-none bg-transparent"
-                  onClick={handleClearSearch}
+            {/* Search row with filter funnel on left */}
+            <div className="px-3 py-1 flex items-center gap-1">
+              {/* Filter funnel toggle */}
+              <SimpleTooltip content={t('explorerHeader.moreFilters')}>
+                <Button
+                  variant={hasActiveExtraFilters || moreFiltersOpen ? 'secondary' : 'ghost'}
+                  size="icon"
+                  className="h-7 w-7 shrink-0"
+                  onClick={() => setMoreFiltersOpen(!moreFiltersOpen)}
                 >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </SimpleTooltip>
+
+              <div className="flex-1 relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                <input
+                  ref={searchInputRef}
+                  value={localQuery}
+                  onChange={handleSearchChange}
+                  placeholder={t('tooltip.search')}
+                  className="flex h-7 w-full rounded-sm border border-border/60 bg-transparent pl-7 pr-7 text-xs shadow-sm transition-colors placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      handleClearSearch();
+                    }
+                  }}
+                />
+                {localQuery && (
+                  <button
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-5 w-5 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-sm cursor-pointer border-none bg-transparent"
+                    onClick={handleClearSearch}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
             </div>
+
+            {/* Expandable filter options (tags, type dropdown, favorites) */}
+            {moreFiltersOpen && (
+              <div className="px-3 py-1 flex items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-100">
+                <SimpleTooltip content={t('tooltip.filterByTags')}>
+                  <Button
+                    variant={filter.tags.isOpen || filter.tags.selected.length > 0 ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => filter.tags.setIsOpen(!filter.tags.isOpen)}
+                  >
+                    <Tags className="h-4 w-4" />
+                  </Button>
+                </SimpleTooltip>
+
+                {/* Type filter with dropdown */}
+                <TypeFilterDropdown
+                  value={filter.type.value}
+                  filterTypes={filterTypes}
+                  onChange={filter.type.setValue}
+                  getTypeTitle={getTypeTitle}
+                />
+
+                <SimpleTooltip content={t('tooltip.filterFavorites')}>
+                  <Button
+                    variant={filter.onlyFavorites.value ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => filter.onlyFavorites.setValue(!filter.onlyFavorites.value)}
+                  >
+                    <Star className={`h-4 w-4 ${filter.onlyFavorites.value ? 'fill-current' : ''}`} />
+                  </Button>
+                </SimpleTooltip>
+              </div>
+            )}
+
+            {/* Batch toolbar */}
+            {isBatchMode && (
+              <BatchToolbar onSelectAll={onSelectAll} />
+            )}
           </div>
-
-          {/* Expandable filter options (tags, type dropdown, favorites) */}
-          {moreFiltersOpen && (
-            <div className="px-3 py-1 flex items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-100">
-              <SimpleTooltip content={t('tooltip.filterByTags')}>
-                <Button
-                  variant={filter.tags.isOpen || filter.tags.selected.length > 0 ? 'secondary' : 'ghost'}
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => filter.tags.setIsOpen(!filter.tags.isOpen)}
-                >
-                  <Tags className="h-4 w-4" />
-                </Button>
-              </SimpleTooltip>
-
-              {/* Type filter with dropdown */}
-              <TypeFilterDropdown
-                value={filter.type.value}
-                filterTypes={filterTypes}
-                onChange={filter.type.setValue}
-                getTypeTitle={getTypeTitle}
-              />
-
-              <SimpleTooltip content={t('tooltip.filterFavorites')}>
-                <Button
-                  variant={filter.onlyFavorites.value ? 'secondary' : 'ghost'}
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={() => filter.onlyFavorites.setValue(!filter.onlyFavorites.value)}
-                >
-                  <Star className={`h-4 w-4 ${filter.onlyFavorites.value ? 'fill-current' : ''}`} />
-                </Button>
-              </SimpleTooltip>
-            </div>
-          )}
-
-          {/* Batch toolbar */}
-          {isBatchMode && (
-            <BatchToolbar onSelectAll={onSelectAll} />
-          )}
-        </div>
-      )}
+      </CollapsibleSection>
     </div>
   );
 };

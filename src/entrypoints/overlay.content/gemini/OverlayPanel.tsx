@@ -20,7 +20,7 @@ import {
   SquarePen,
   ScrollText,
 } from 'lucide-react';
-import { Icon } from '@iconify/react';
+import { UIcon } from '@/shared/components/ui/icon';
 import { SqlExecutor } from '../shared/components/menu/SqlExecutor';
 import { ExplorerTab } from '../shared/modules/explorer/ExplorerTab';
 import { PromptsTab } from '../shared/modules/prompts/PromptsTab';
@@ -284,7 +284,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
               className="sidebar-btn transition-all"
               data-tour-id="tour-prompts"
             >
-              <Icon icon="tabler:blockquote" className="sidebar-icon" />
+              <UIcon icon="tabler:blockquote" className="sidebar-icon" />
             </Button>
           </SimpleTooltip>
           <SimpleTooltip content={t('tabs.tags')}>
@@ -337,7 +337,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
                 className="sidebar-btn transition-all"
                 data-tour-id="tour-gems"
               >
-                <Icon icon="tabler:diamond" className="sidebar-icon" />
+                <UIcon icon="tabler:diamond" className="sidebar-icon" />
               </Button>
             </SimpleTooltip>
           )}
@@ -351,7 +351,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
                 className="sidebar-btn transition-all"
                 data-tour-id="tour-notebooks"
               >
-                <Icon icon="tabler:notebook" className="sidebar-icon" />
+                <UIcon icon="tabler:notebook" className="sidebar-icon" />
               </Button>
             </SimpleTooltip>
           )}
