@@ -1,9 +1,12 @@
-import { useState, useRef, useImperativeHandle, forwardRef } from 'react';
-import { List } from 'lucide-react';
+import { useState, useRef, useImperativeHandle, forwardRef, useCallback, useEffect } from 'react';
+import { List, Search, X, Filter } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useOutline } from './useOutline';
 import { FilterChips } from './components/FilterChips';
 import { OutlineSectionItem } from './components/OutlineSectionItem';
+import { Button } from '@/shared/components/ui/button';
+import { SimpleTooltip } from '@/shared/components/ui/tooltip';
+import { debounce } from 'lodash';
 
 export interface OutlineContentHandle {
   collapseAll: () => void;
@@ -22,6 +25,7 @@ export const OutlineContent = forwardRef<OutlineContentHandle>((_, ref) => {
     filter,
     setFilter,
     searchQuery,
+    setSearchQuery,
     scrollToMessage,
     isLoading,
     stats,
@@ -29,8 +33,34 @@ export const OutlineContent = forwardRef<OutlineContentHandle>((_, ref) => {
   } = useOutline();
 
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+  const [localQuery, setLocalQuery] = useState(searchQuery);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const activeRef = useRef<HTMLDivElement>(null!);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setLocalQuery(searchQuery);
+  }, [searchQuery]);
+
+  const debouncedSearch = useCallback(
+    debounce((value: string) => {
+      setSearchQuery(value);
+    }, 350),
+    [setSearchQuery],
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocalQuery(value);
+    debouncedSearch(value);
+  };
+
+  const handleClearSearch = () => {
+    setLocalQuery('');
+    setSearchQuery('');
+    searchInputRef.current?.focus();
+  };
 
   const toggleSection = (sectionId: string) => {
     setCollapsedSections((prev) => {
@@ -54,15 +84,54 @@ export const OutlineContent = forwardRef<OutlineContentHandle>((_, ref) => {
     },
   }), [sections]);
 
+  const hasActiveFilter = filter !== 'all';
+
   // ── Toolbar ──────────────────────────────────────────────────────
   const toolbar = (
-    <div className="flex items-center gap-1 px-2 py-1 border-b border-border/30">
-      <FilterChips filter={filter} onFilterChange={setFilter} stats={stats} />
-      <div className="flex-1" />
-      {stats.turns > 0 && (
-        <span className="text-[10px] text-muted-foreground/60 tabular-nums ml-1">
-          {stats.turns}
-        </span>
+    <div className="flex flex-col border-b border-border/30">
+      {/* Search row with filter icon on left */}
+      <div className="px-2 py-1 flex items-center gap-1">
+        <SimpleTooltip content={t('explorerHeader.moreFilters')}>
+          <Button
+            variant={hasActiveFilter || filtersOpen ? 'secondary' : 'ghost'}
+            size="icon"
+            className="h-7 w-7 shrink-0"
+            onClick={() => setFiltersOpen(!filtersOpen)}
+          >
+            <Filter className="h-4 w-4" />
+          </Button>
+        </SimpleTooltip>
+
+        <div className="flex-1 relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
+          <input
+            ref={searchInputRef}
+            value={localQuery}
+            onChange={handleSearchChange}
+            placeholder={t('outline.searchPlaceholder')}
+            className="flex h-7 w-full rounded-sm border border-border/60 bg-transparent pl-7 pr-7 text-xs shadow-sm transition-colors placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                handleClearSearch();
+              }
+            }}
+          />
+          {localQuery && (
+            <button
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-5 w-5 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-sm cursor-pointer border-none bg-transparent"
+              onClick={handleClearSearch}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Expandable filter chips (category filters without counts) */}
+      {filtersOpen && (
+        <div className="px-2 py-1 animate-in fade-in slide-in-from-top-1 duration-100">
+          <FilterChips filter={filter} onFilterChange={setFilter} stats={stats} />
+        </div>
       )}
     </div>
   );
@@ -109,7 +178,7 @@ export const OutlineContent = forwardRef<OutlineContentHandle>((_, ref) => {
     <div ref={containerRef} className="flex flex-col h-full min-h-0">
       {toolbar}
 
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar">
         <div className="py-1">
           {sections.map((section) => (
             <OutlineSectionItem

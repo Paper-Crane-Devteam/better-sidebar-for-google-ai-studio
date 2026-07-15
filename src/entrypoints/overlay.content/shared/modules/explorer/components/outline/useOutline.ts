@@ -1,56 +1,37 @@
 /**
  * Hook: useOutline
  *
- * Builds outline section data from conversation nodes.
- * Uses useUrl to detect URL changes (same pattern as SmartScrollbar).
- * Fetches messages from DB and interceptor events.
+ * Builds outline section data from the shared conversation-messages-store.
+ * No longer manages its own DB fetches or interceptor listeners — all data
+ * comes from useConversationMessagesStore (initialized at the app root).
+ *
+ * This hook only adds:
+ *  - Outline parsing (messages → sections with parsed heading/code trees)
+ *  - Filter / search
+ *  - Scroll-based active section detection
+ *  - Navigation (scroll to heading)
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useUrl } from '@/shared/hooks/useUrl';
-import { useAppStore } from '@/shared/lib/store';
-import { browser } from 'wxt/browser';
+import {
+  useConversationMessagesStore,
+  type ConversationMessage,
+} from '@/shared/lib/conversation-messages-store';
 import { parseOutlineFromContent } from './parse-outline';
 import type { OutlineSection, OutlineFilter } from './types';
-import {
-  findMessageElement,
-  getChatScrollContainer,
-} from '@/entrypoints/overlay.content/gemini/enhanced-features/SmartScrollbar/dom-utils';
-
-// ── URL helpers ──────────────────────────────────────────────────────
-const EXTERNAL_ID_RE = /\/app\/([a-zA-Z0-9_-]+)/;
-const GEM_CONVO_ID_RE = /\/gem\/[^/]+\/([a-zA-Z0-9_-]+)/;
-
-function extractExternalId(path: string): string | null {
-  return EXTERNAL_ID_RE.exec(path)?.[1] || GEM_CONVO_ID_RE.exec(path)?.[1] || null;
-}
-
-interface RawMessage {
-  id: string;
-  content: string;
-  role: 'user' | 'model';
-  timestamp?: number;
-  order_index?: number;
-  message_type?: string;
-}
+import { getPlatformDomAdapter } from '@/shared/lib/platform-dom-adapter';
 
 export function useOutline() {
-  const { url, path } = useUrl();
-  const conversations = useAppStore((s) => s.conversations);
+  const messages = useConversationMessagesStore((s) => s.messages);
+  const isLoading = useConversationMessagesStore((s) => s.isLoading);
+  const isOnConversation = useConversationMessagesStore((s) => s.isOnConversation);
 
-  const [sections, setSections] = useState<OutlineSection[]>([]);
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   const [filter, setFilter] = useState<OutlineFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const pathRef = useRef(path);
-  const prevUrlRef = useRef(url);
-
-  useEffect(() => { pathRef.current = path; }, [path]);
 
   // ── Build sections from messages ─────────────────────────────────
-  const buildSections = useCallback((messages: RawMessage[]): OutlineSection[] => {
+  const sections = useMemo(() => {
     const result: OutlineSection[] = [];
     let turnIndex = 0;
 
@@ -65,7 +46,16 @@ export function useOutline() {
           ? userContent.substring(0, 80) + '…'
           : userContent;
 
-      const modelMsg = messages[i + 1]?.role === 'model' ? messages[i + 1] : undefined;
+      // Find the paired model message (next message with role=model)
+      let modelMsg: ConversationMessage | undefined;
+      for (let j = i + 1; j < messages.length; j++) {
+        if (messages[j].role === 'model') {
+          modelMsg = messages[j];
+          break;
+        }
+        if (messages[j].role === 'user') break; // next user message, no model for this turn
+      }
+
       const children = modelMsg
         ? parseOutlineFromContent(modelMsg.content, modelMsg.id)
         : [];
@@ -75,10 +65,10 @@ export function useOutline() {
         userQuery: userLabel,
         userQueryFull: userContent,
         userMessageId: msg.id,
-        userInDom: !!findMessageElement(msg.id),
+        userInDom: msg.inDom,
         modelMessageId: modelMsg?.id,
         modelContent: modelMsg?.content,
-        modelInDom: modelMsg ? !!findMessageElement(modelMsg.id) : false,
+        modelInDom: modelMsg?.inDom ?? false,
         children,
         turnIndex,
         timestamp: msg.timestamp,
@@ -86,106 +76,13 @@ export function useOutline() {
     }
 
     return result;
-  }, []);
-
-  // ── Fetch messages on URL change ─────────────────────────────────
-  useEffect(() => {
-    const isUrlChange = url !== prevUrlRef.current;
-    if (isUrlChange) {
-      prevUrlRef.current = url;
-      setSections([]);
-      setActiveMessageId(null);
-    }
-
-    const externalId = extractExternalId(path);
-    if (!externalId) {
-      setSections([]);
-      return;
-    }
-
-    const convo = conversations.find((c) => c.external_id === externalId);
-    if (!convo) return;
-
-    let cancelled = false;
-    setIsLoading(true);
-
-    (async () => {
-      try {
-        const response = await browser.runtime.sendMessage({
-          type: 'GET_MESSAGES_BY_CONVERSATION_ID',
-          payload: { conversationId: convo.id },
-        });
-        if (cancelled || !response?.success || !Array.isArray(response.data)) return;
-        if (extractExternalId(pathRef.current) !== externalId) return;
-
-        const messages: RawMessage[] = response.data
-          .filter(
-            (msg: any) =>
-              (msg.role === 'user' || msg.role === 'model') &&
-              msg.content &&
-              msg.message_type !== 'thought',
-          )
-          .sort((a: any, b: any) => {
-            if (a.order_index != null && b.order_index != null)
-              return a.order_index - b.order_index;
-            return (a.timestamp ?? 0) - (b.timestamp ?? 0);
-          });
-
-        const built = buildSections(messages);
-        setSections(built);
-      } catch (e) {
-        console.error('Outline: DB fetch failed', e);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-
-    return () => { cancelled = true; };
-  }, [url, conversations, buildSections]);
-
-  // ── Live updates from interceptor ────────────────────────────────
-  useEffect(() => {
-    const handleEvent = (event: Event) => {
-      const detail = (event as CustomEvent).detail;
-      const messages = detail?.messages;
-      if (!messages || !Array.isArray(messages)) return;
-
-      const eventConvoId = detail?.conversationId ?? detail?.id;
-      const urlConvoId = extractExternalId(pathRef.current);
-      if (!urlConvoId || !eventConvoId || eventConvoId !== urlConvoId) return;
-
-      const sorted = [...messages]
-        .filter(
-          (msg: any) =>
-            (msg.role === 'user' || msg.role === 'model') && msg.content,
-        )
-        .sort((a: any, b: any) => {
-          if (a.order_index != null && b.order_index != null)
-            return a.order_index - b.order_index;
-          return (a.created_at ?? 0) - (b.created_at ?? 0);
-        })
-        .map((msg: any) => ({
-          id: msg.id,
-          content: msg.content,
-          role: msg.role as 'user' | 'model',
-          timestamp: msg.created_at,
-          order_index: msg.order_index,
-        }));
-
-      const built = buildSections(sorted);
-      setSections(built);
-    };
-
-    globalThis.addEventListener('GEMINI_CHAT_CONTENT_RESPONSE', handleEvent);
-    globalThis.addEventListener('BETTER_SIDEBAR_PROMPT_CREATE', handleEvent);
-    return () => {
-      globalThis.removeEventListener('GEMINI_CHAT_CONTENT_RESPONSE', handleEvent);
-      globalThis.removeEventListener('BETTER_SIDEBAR_PROMPT_CREATE', handleEvent);
-    };
-  }, [buildSections]);
+  }, [messages]);
 
   // ── Active section detection (scroll tracking) ───────────────────
   useEffect(() => {
+    const adapter = getPlatformDomAdapter();
+    if (!adapter) return;
+
     const detect = () => {
       if (sections.length === 0) return;
       const center = window.innerHeight / 2;
@@ -193,7 +90,7 @@ export function useOutline() {
       let bestDist = Infinity;
 
       for (const section of sections) {
-        const el = findMessageElement(section.userMessageId);
+        const el = adapter.findMessageElement(section.userMessageId);
         if (!el) continue;
         const top = el.getBoundingClientRect().top;
         const dist = Math.abs(top - center);
@@ -219,7 +116,7 @@ export function useOutline() {
       timer = setTimeout(detect, 100);
     };
 
-    const target = getChatScrollContainer() || window;
+    const target = adapter.getChatScrollContainer() || window;
     target.addEventListener('scroll', onScroll, { passive: true });
 
     return () => {
@@ -230,7 +127,10 @@ export function useOutline() {
 
   // ── Navigation ───────────────────────────────────────────────────
   const scrollToMessage = useCallback((messageId: string, headingLabel?: string, headingLevel?: string) => {
-    const el = findMessageElement(messageId);
+    const adapter = getPlatformDomAdapter();
+    if (!adapter) return;
+
+    const el = adapter.findMessageElement(messageId);
     if (!el) return;
 
     // If a heading label is provided, try to find and scroll to that specific element
@@ -286,16 +186,19 @@ export function useOutline() {
       const q = searchQuery.toLowerCase();
       result = result
         .map((section) => {
-          const matchesQuery = section.userQuery.toLowerCase().includes(q);
+          // Full-text search: match against user query, model content, and outline node labels
+          const matchesUserQuery = section.userQueryFull.toLowerCase().includes(q);
+          const matchesModelContent = section.modelContent?.toLowerCase().includes(q) ?? false;
           const matchingChildren = section.children.filter(
             (child) =>
               child.label.toLowerCase().includes(q) ||
               child.children.some((c) => c.label.toLowerCase().includes(q)),
           );
-          if (matchesQuery || matchingChildren.length > 0) {
+          if (matchesUserQuery || matchesModelContent || matchingChildren.length > 0) {
             return {
               ...section,
-              children: matchesQuery ? section.children : matchingChildren,
+              // If matched via full content, show all children; otherwise only matching ones
+              children: (matchesUserQuery || matchesModelContent) ? section.children : matchingChildren,
             };
           }
           return null;
@@ -363,6 +266,6 @@ export function useOutline() {
     scrollToMessage,
     isLoading,
     stats,
-    isOnConversation: !!extractExternalId(path),
+    isOnConversation,
   };
 }

@@ -26,8 +26,14 @@ export function OutlineSectionItem({
 
   const handleCopyQuery = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const content = section.userQueryFull || section.userQuery;
-    navigator.clipboard.writeText(content);
+    // Copy the full section content: user query + model response
+    const parts: string[] = [];
+    const userContent = section.userQueryFull || section.userQuery;
+    parts.push(userContent);
+    if (section.modelContent) {
+      parts.push(section.modelContent);
+    }
+    navigator.clipboard.writeText(parts.join('\n\n'));
     toast.success(t('toast.copiedToClipboard'), 1000);
   };
 
@@ -52,7 +58,7 @@ export function OutlineSectionItem({
               className={cn(
                 'h-3 w-3 transition-transform duration-150',
                 !isCollapsed && 'rotate-90',
-                isActive ? 'text-primary' : 'text-muted-foreground/50',
+                isActive ? 'text-foreground' : 'text-muted-foreground/50',
               )}
             />
           </button>
@@ -61,7 +67,7 @@ export function OutlineSectionItem({
             <div
               className={cn(
                 'h-1.5 w-1.5 rounded-full',
-                isActive ? 'bg-primary' : 'bg-muted-foreground/30',
+                isActive ? 'bg-foreground' : 'bg-muted-foreground/30',
               )}
             />
           </div>
@@ -69,8 +75,8 @@ export function OutlineSectionItem({
 
         <span
           className={cn(
-            'text-[10px] font-bold shrink-0 w-4 text-center',
-            isActive ? 'text-primary' : 'text-muted-foreground/60',
+            'text-[10px] font-bold shrink-0 h-4 w-4 flex items-center justify-center',
+            isActive ? 'text-primary-foreground bg-primary/80 rounded-full' : 'text-muted-foreground/60',
           )}
         >
           {section.turnIndex}
@@ -79,9 +85,10 @@ export function OutlineSectionItem({
         <OverflowTooltip
           content={section.userQueryFull || section.userQuery}
           placement="right"
+          interactive
           className={cn(
             'text-sm leading-snug truncate flex-1',
-            isActive ? 'text-primary font-medium' : 'text-foreground',
+            isActive ? 'text-foreground font-medium' : 'text-foreground',
           )}
         >
           {section.userQuery}
@@ -122,6 +129,7 @@ export function OutlineSectionItem({
               node={node}
               onNavigate={onNavigate}
               messageId={section.modelMessageId || section.userMessageId}
+              modelContent={section.modelContent}
             />
           ))}
         </div>

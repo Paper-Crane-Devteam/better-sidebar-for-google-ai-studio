@@ -257,7 +257,7 @@ export const ExplorerHeader = ({
   return (
     <div className="flex flex-col bg-background">
       {/* Row 1: Library title | cloud, (divider), sort, new folder, menu */}
-      <div className="px-3 py-2 flex items-center justify-between">
+      <div className="px-3 py-2 flex items-center justify-between border-b border-border/50 h-12 shrink-0">
         <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground/70">
           {t('explorerHeader.library')}
         </h1>

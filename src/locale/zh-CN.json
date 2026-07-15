@@ -347,7 +347,7 @@
     "title": "大纲",
     "placeholder": "打开对话以查看大纲",
     "search": "搜索大纲",
-    "searchPlaceholder": "筛选大纲...",
+    "searchPlaceholder": "全文搜索...",
     "filterAll": "全部",
     "filterHeadings": "标题",
     "filterCode": "代码",

@@ -1,7 +1,42 @@
-import React, { memo } from 'react';
+import React, { memo, Component } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import katex from 'katex';
 import { cn } from '@/shared/lib/utils/utils';
+
+// Error boundary to prevent math rendering errors from breaking the entire component
+class MarkdownErrorBoundary extends Component<
+  { children: React.ReactNode; fallback: string },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error) {
+    console.warn('[MarkdownRenderer] Render error:', error.message);
+  }
+  render() {
+    if (this.state.hasError) {
+      return <pre className="text-xs whitespace-pre-wrap">{this.props.fallback}</pre>;
+    }
+    return this.props.children;
+  }
+}
+
+/** Render a KaTeX formula safely — returns HTML string or fallback on error */
+function renderKatex(tex: string, displayMode: boolean): string {
+  try {
+    return katex.renderToString(tex, {
+      displayMode,
+      throwOnError: false,
+      output: 'html',
+    });
+  } catch {
+    return `<code>${tex}</code>`;
+  }
+}
 
 interface MarkdownRendererProps {
   children: string;
@@ -61,7 +96,12 @@ export const MarkdownRenderer = memo(({ children, className, highlight, highligh
       return node.map((child, index) => <React.Fragment key={index}>{processChildren(child)}</React.Fragment>);
     }
     if (React.isValidElement(node)) {
-       const element = node as React.ReactElement<{ children?: React.ReactNode }>;
+       const element = node as React.ReactElement<{ children?: React.ReactNode; className?: string }>;
+       // Skip KaTeX-rendered elements — they have complex internal structure that must not be modified
+       if (element.props?.className && typeof element.props.className === 'string' &&
+           (element.props.className.includes('katex') || element.props.className.includes('math-inline') || element.props.className.includes('math-display'))) {
+         return node;
+       }
        if (element.props && element.props.children) {
            return React.cloneElement(element, {
                children: processChildren(element.props.children)
@@ -74,14 +114,23 @@ export const MarkdownRenderer = memo(({ children, className, highlight, highligh
 
   // We need to override components that can contain text.
   const components: any = {
-      a: ({ node, children, ...props }: any) => (
-        <a {...props} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-             {processChildren(children)}
-        </a>
-      ),
+      // Math components — in react-markdown v10, remark-math outputs code elements with language-math class
       code: ({ node, className, children, ...props }: any) => {
+        const content = String(children).replace(/\n$/, '');
+        
+        // Inline math: $...$
+        if (className === 'language-math math-inline') {
+          const html = renderKatex(content, false);
+          return <span className="math-inline" dangerouslySetInnerHTML={{ __html: html }} />;
+        }
+        // Display math: $$...$$
+        if (className === 'language-math math-display') {
+          const html = renderKatex(content, true);
+          return <span className="math-display block my-2 overflow-x-auto" dangerouslySetInnerHTML={{ __html: html }} />;
+        }
+        
         const match = /language-(\w+)/.exec(className || '');
-        const isInline = !match && !String(children).includes('\n');
+        const isInline = !match && !content.includes('\n');
         return (
           <code 
             className={cn(
@@ -95,6 +144,11 @@ export const MarkdownRenderer = memo(({ children, className, highlight, highligh
           </code>
         );
       },
+      a: ({ node, children, ...props }: any) => (
+        <a {...props} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+             {processChildren(children)}
+        </a>
+      ),
       pre: ({ children }: any) => (
         <pre className="bg-muted p-0 rounded-md overflow-x-auto my-3 border border-border/50 max-w-full">
           {processChildren(children)}
@@ -137,14 +191,24 @@ export const MarkdownRenderer = memo(({ children, className, highlight, highligh
   };
 
   return (
-    <div className={cn("prose prose-sm dark:prose-invert max-w-none break-words", className)}>
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={components}
-      >
-        {children}
-      </ReactMarkdown>
-    </div>
+    <MarkdownErrorBoundary fallback={children}>
+      <div className={cn(
+        "prose prose-sm dark:prose-invert max-w-none break-words",
+        "[--tw-prose-body:currentColor]",
+        "[--tw-prose-headings:currentColor]",
+        "[--tw-prose-bold:currentColor]",
+        "[--tw-prose-links:rgb(var(--primary))]",
+        "[--tw-prose-code:currentColor]",
+        className,
+      )}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm, remarkMath]}
+          components={components}
+        >
+          {children}
+        </ReactMarkdown>
+      </div>
+    </MarkdownErrorBoundary>
   );
 });
 

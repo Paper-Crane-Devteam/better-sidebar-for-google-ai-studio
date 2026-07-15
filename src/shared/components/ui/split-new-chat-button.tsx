@@ -69,9 +69,9 @@ export const SplitNewChatButton = ({
       {/* Button row */}
       <div
         className={cn(
-          'flex items-stretch border border-primary/20 rounded bg-primary/5 transition-all',
-          'hover:bg-primary/10 hover:border-primary/30',
-          open && 'rounded-b-none border-b-transparent bg-primary/10 border-primary/30',
+          'flex items-stretch rounded bg-primary/5 transition-all',
+          'hover:bg-primary/10',
+          open && 'rounded-b-none bg-primary/10',
         )}
       >
         {/* Main button */}
@@ -112,9 +112,9 @@ export const SplitNewChatButton = ({
         )}
       </div>
 
-      {/* Dropdown panel — flush below, same width, shared border */}
+      {/* Dropdown panel — flush below, same width */}
       {open && hasDropdown && (
-        <div className="absolute left-0 right-0 top-full z-50 border border-border border-t-0 rounded-b bg-popover shadow-sm overflow-hidden animate-in fade-in slide-in-from-top-1 duration-100">
+        <div className="absolute left-0 right-0 top-full z-50 rounded-b bg-popover shadow-md overflow-hidden animate-in fade-in slide-in-from-top-1 duration-100">
           {dropdownItems.map((item, i) => (
             <SimpleTooltip key={i} content={item.tooltip} side="left">
               <button

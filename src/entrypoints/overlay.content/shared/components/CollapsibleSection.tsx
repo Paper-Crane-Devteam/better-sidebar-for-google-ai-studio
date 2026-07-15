@@ -144,7 +144,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
     <div
       ref={containerRef}
       className={cn(
-        'flex flex-col relative',
+        'flex flex-col relative border-t border-border/50',
         fillAvailable
           ? 'flex-1 min-h-0'
           : isExpanded && resizable

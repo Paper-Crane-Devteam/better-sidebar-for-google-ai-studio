@@ -1,0 +1,186 @@
+/**
+ * Hook: useInitConversationMessages
+ *
+ * Drives all side-effects for the shared conversation messages store:
+ *  - URL change detection → reset
+ *  - DB fetch on conversation change
+ *  - Interceptor event listeners → merge
+ *  - MutationObserver → inDom refresh
+ *
+ * Platform-agnostic: uses the registered PlatformDomAdapter for all
+ * DOM/URL/event operations. Works for both Gemini and AI Studio.
+ *
+ * Call this ONCE at the overlay app root. Consumers just read from the store.
+ */
+
+import { useEffect, useRef, useCallback } from 'react';
+import { useUrl } from '@/shared/hooks/useUrl';
+import { useAppStore } from '@/shared/lib/store';
+import { browser } from 'wxt/browser';
+import {
+  useConversationMessagesStore,
+  type ConversationMessage,
+} from '@/shared/lib/conversation-messages-store';
+import { getPlatformDomAdapter } from '@/shared/lib/platform-dom-adapter';
+import { dedupModelMessages } from '@/shared/lib/dedup-messages';
+
+// ── The Hook ─────────────────────────────────────────────────────────
+
+export function useInitConversationMessages() {
+  const { url, path } = useUrl();
+  const conversations = useAppStore((s) => s.conversations);
+
+  const pathRef = useRef(path);
+  const prevUrlRef = useRef(url);
+
+  const {
+    mergeMessages,
+    reset,
+    refreshDomPresence,
+    setIsLoading,
+    setFetchedForUrl,
+    setIsOnConversation,
+    fetchedForUrl,
+    messages,
+  } = useConversationMessagesStore();
+
+  useEffect(() => { pathRef.current = path; }, [path]);
+
+  // ── 1. URL change detection + DB fetch ─────────────────────────────
+  useEffect(() => {
+    const adapter = getPlatformDomAdapter();
+    if (!adapter) return;
+
+    const isUrlChange = url !== prevUrlRef.current;
+    if (isUrlChange) {
+      prevUrlRef.current = url;
+      reset();
+    }
+
+    const externalId = adapter.extractExternalId(path);
+    setIsOnConversation(!!externalId);
+
+    if (!externalId) {
+      reset();
+      return;
+    }
+
+    // Don't re-fetch if we already loaded for this URL
+    if (fetchedForUrl === url) return;
+
+    // Find by external_id (primary) or by id (fallback for AI Studio where id === external_id)
+    const convo = conversations.find(
+      (c) => c.external_id === externalId || c.id === externalId,
+    );
+    if (!convo) return;
+
+    setFetchedForUrl(url);
+    let cancelled = false;
+    setIsLoading(true);
+
+    (async () => {
+      try {
+        const response = await browser.runtime.sendMessage({
+          type: 'GET_MESSAGES_BY_CONVERSATION_ID',
+          payload: { conversationId: convo.id },
+        });
+        if (cancelled || !response?.success || !Array.isArray(response.data)) return;
+
+        // Guard: user may have navigated away while fetching
+        if (adapter.extractExternalId(pathRef.current) !== externalId) return;
+
+        const allMessages: any[] = response.data;
+        const idsToDelete = await dedupModelMessages(allMessages);
+
+        const dbMessages: ConversationMessage[] = allMessages
+          .filter(
+            (msg: any) =>
+              (msg.role === 'user' || msg.role === 'model') &&
+              msg.content &&
+              msg.message_type !== 'thought' &&
+              !idsToDelete.includes(msg.id),
+          )
+          .map((msg: any) => ({
+            id: msg.id,
+            content: msg.content,
+            role: msg.role as 'user' | 'model',
+            timestamp: msg.timestamp,
+            orderIndex: msg.order_index,
+            inDom: !!adapter.findMessageElement(msg.id),
+          }));
+
+        if (!cancelled) {
+          mergeMessages(dbMessages);
+        }
+      } catch (e) {
+        console.error('ConversationMessages: DB fetch failed', e);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [url, conversations]);
+
+  // ── 2. Interceptor event listeners ─────────────────────────────────
+  const handleInterceptorEvent = useCallback((event: Event) => {
+    const adapter = getPlatformDomAdapter();
+    if (!adapter) return;
+
+    const detail = (event as CustomEvent).detail;
+    const parsed = adapter.parseInterceptorEvent(detail);
+    if (!parsed) return;
+
+    const { conversationId: eventConvoId, messages: parsedMessages } = parsed;
+    const urlConvoId = adapter.extractExternalId(pathRef.current);
+    if (!urlConvoId || eventConvoId !== urlConvoId) return;
+
+    // Mark as on-conversation in case this fires before the DB fetch path runs
+    useConversationMessagesStore.getState().setIsOnConversation(true);
+
+    mergeMessages(parsedMessages);
+
+    // Re-check after platform renders new DOM elements
+    const delayedRefresh = () => {
+      const currentId = adapter.extractExternalId(pathRef.current);
+      if (currentId === eventConvoId) {
+        const refreshed = parsedMessages.map((m) => ({
+          ...m,
+          inDom: !!adapter.findMessageElement(m.id),
+        }));
+        mergeMessages(refreshed);
+      }
+    };
+    setTimeout(delayedRefresh, 2000);
+    setTimeout(delayedRefresh, 4000);
+  }, [mergeMessages]);
+
+  useEffect(() => {
+    const adapter = getPlatformDomAdapter();
+    if (!adapter) return;
+
+    for (const eventName of adapter.interceptorEvents) {
+      globalThis.addEventListener(eventName, handleInterceptorEvent);
+    }
+    return () => {
+      for (const eventName of adapter.interceptorEvents) {
+        globalThis.removeEventListener(eventName, handleInterceptorEvent);
+      }
+    };
+  }, [handleInterceptorEvent]);
+
+  // ── 3. DOM MutationObserver for inDom refresh ──────────────────────
+  useEffect(() => {
+    const adapter = getPlatformDomAdapter();
+    if (!adapter) return;
+
+    const scrollContainer = adapter.getChatScrollContainer();
+    if (!scrollContainer) return;
+
+    const observer = new MutationObserver(refreshDomPresence);
+    observer.observe(scrollContainer, { childList: true, subtree: true });
+    refreshDomPresence();
+
+    return () => observer.disconnect();
+  }, [messages.length, refreshDomPresence]);
+}

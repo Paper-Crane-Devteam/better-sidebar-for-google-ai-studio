@@ -23,6 +23,7 @@ export const NewChatButton = () => {
       <SplitNewChatButton
         icon={<UIcon icon="tabler:message-plus" className="h-4 w-4" />}
         label={t('explorerHeader.newChat')}
+        tooltip={t('tooltip.newChat')}
         onClick={handleNewChat}
       />
     </div>

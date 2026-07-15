@@ -17,8 +17,13 @@ import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useAppStore } from '@/shared/lib/store';
 import { initGeminiThemeSync, bindShadowRootToTheme } from '@/themes/platforms/gemini';
 import { useExclusiveContextMenuStore } from '../shared/components/ui/exclusive-context-menu';
+import { registerPlatformDomAdapter } from '@/shared/lib/platform-dom-adapter';
+import { geminiDomAdapter } from './lib/gemini-dom-adapter';
 
 export async function initGeminiOverlay(mainStyles: string): Promise<void> {
+  // Register Gemini DOM adapter (must be before any React tree mounts)
+  registerPlatformDomAdapter(geminiDomAdapter);
+
   console.log('Better Sidebar: Overlay (Gemini) Initialized');
 
   TooltipHelper.getInstance().initialize(mainStyles);

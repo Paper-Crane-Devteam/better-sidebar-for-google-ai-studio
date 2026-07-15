@@ -25,6 +25,10 @@ export interface OutlineNode {
   navigable: boolean;
   order: number;
   children: OutlineNode[];
+  /** Start character offset in the original model content (inclusive) */
+  sourceStart?: number;
+  /** End character offset in the original model content (exclusive) */
+  sourceEnd?: number;
 }
 
 export interface OutlineSection {

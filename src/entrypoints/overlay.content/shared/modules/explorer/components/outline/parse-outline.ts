@@ -30,7 +30,19 @@ interface ParsedItem {
   depth: number;
 }
 
-/** Find the depth of the last heading-type item in the list */
+/** Find the depth of the last real markdown heading (h1-h4) in the list.
+ *  Used to determine sibling depth for pseudo-headings (bold, list-item, etc.) */
+function getLastRealHeadingDepth(items: ParsedItem[]): number {
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (items[i].type === 'heading' && items[i].meta && /^h[1-4]$/.test(items[i].meta!)) {
+      return items[i].depth;
+    }
+  }
+  return 0;
+}
+
+/** Find the depth of the last heading-type item (any kind) in the list.
+ *  Used to nest content nodes (code, table, image, etc.) under their parent heading. */
 function getLastHeadingDepth(items: ParsedItem[]): number {
   for (let i = items.length - 1; i >= 0; i--) {
     if (items[i].type === 'heading') {
@@ -58,7 +70,10 @@ export function parseOutlineFromContent(
 ): OutlineNode[] {
   if (!content) return [];
   const items = extractItems(content);
-  return buildTree(items, messageId);
+  const tree = buildTree(items, messageId);
+  // Compute source ranges for heading nodes so copy can extract full original content
+  assignSourceRanges(tree, content);
+  return tree;
 }
 
 function extractItems(content: string): ParsedItem[] {
@@ -282,7 +297,8 @@ function processToken(
       if (boldMatch) {
         const text = boldMatch[1].trim();
         if (text.length <= 80) {
-          const parentDepth = getLastHeadingDepth(items);
+          // Use real heading depth so consecutive bold headers stay as siblings
+          const parentDepth = getLastRealHeadingDepth(items);
           items.push({
             type: 'heading',
             label: text,
@@ -335,4 +351,122 @@ function buildTree(items: ParsedItem[], messageId: string): OutlineNode[] {
   }
 
   return roots;
+}
+
+// ── Source range assignment ───────────────────────────────────────────
+// For each heading node, compute sourceStart/sourceEnd in the original content.
+// A heading's content spans from its own line to just before the next heading
+// at the same or higher level (or end of content).
+
+/**
+ * Flatten all heading nodes in DFS order, then assign sourceStart/sourceEnd
+ * by finding each heading's position in the original content and computing
+ * ranges based on sibling boundaries.
+ */
+function assignSourceRanges(roots: OutlineNode[], content: string): void {
+  // Collect all heading nodes in DFS order (flattened)
+  const allHeadings: OutlineNode[] = [];
+  function collectHeadings(nodes: OutlineNode[]) {
+    for (const node of nodes) {
+      if (node.type === 'heading') {
+        allHeadings.push(node);
+      }
+      collectHeadings(node.children);
+    }
+  }
+  collectHeadings(roots);
+
+  if (allHeadings.length === 0) return;
+
+  // For each heading, find its start position in the content
+  const lines = content.split('\n');
+  const lineOffsets: number[] = []; // character offset of each line start
+  let offset = 0;
+  for (const line of lines) {
+    lineOffsets.push(offset);
+    offset += line.length + 1; // +1 for \n
+  }
+
+  // Build an ordered list of heading positions by scanning content
+  interface HeadingPos {
+    node: OutlineNode;
+    lineIndex: number;
+    charStart: number;
+  }
+  const positions: HeadingPos[] = [];
+
+  // Track which headings we've already matched (avoid double-matching)
+  const matched = new Set<OutlineNode>();
+
+  for (let li = 0; li < lines.length; li++) {
+    const line = lines[li];
+    const trimmed = line.trim();
+
+    for (const heading of allHeadings) {
+      if (matched.has(heading)) continue;
+
+      let isMatch = false;
+
+      if (heading.meta && /^h[1-4]$/.test(heading.meta)) {
+        // Markdown heading: ### Title
+        const level = Number(heading.meta[1]);
+        const prefix = '#'.repeat(level) + ' ';
+        if (trimmed.startsWith(prefix) && stripInlineMarkdown(trimmed.slice(prefix.length).trim()) === heading.label) {
+          isMatch = true;
+        }
+      } else if (heading.meta === 'bold') {
+        // Bold header: **text**: or **text**
+        if (trimmed.includes(`**${heading.label}**`)) {
+          isMatch = true;
+        }
+      } else if (heading.meta === 'list-item') {
+        // List item with bold prefix or plain text
+        const stripped = trimmed.replace(/^[-*+]\s*/, '');
+        if (stripped.includes(heading.label) || (heading.rawContent && trimmed.includes(heading.rawContent.slice(0, 30)))) {
+          isMatch = true;
+        }
+      } else if (heading.meta === 'blockquote') {
+        if (trimmed.startsWith('>') && heading.label.startsWith('> ')) {
+          isMatch = true;
+        }
+      } else if (heading.meta === 'details') {
+        if (trimmed.includes('<summary>') && trimmed.includes(heading.label)) {
+          isMatch = true;
+        }
+      }
+
+      if (isMatch) {
+        matched.add(heading);
+        positions.push({
+          node: heading,
+          lineIndex: li,
+          charStart: lineOffsets[li],
+        });
+        break; // one match per line
+      }
+    }
+  }
+
+  // Sort positions by charStart (should already be in order, but ensure)
+  positions.sort((a, b) => a.charStart - b.charStart);
+
+  // Assign sourceStart/sourceEnd
+  // A heading's content ends where the next heading of same or lesser depth starts
+  for (let i = 0; i < positions.length; i++) {
+    const pos = positions[i];
+    pos.node.sourceStart = pos.charStart;
+
+    // Find the next heading at same or lesser depth (i.e., same or higher in hierarchy)
+    let endOffset = content.length;
+    for (let j = i + 1; j < positions.length; j++) {
+      if (positions[j].node.depth <= pos.node.depth) {
+        endOffset = positions[j].charStart;
+        break;
+      }
+    }
+    pos.node.sourceEnd = endOffset;
+  }
+
+  // For non-heading nodes (code-block, table, etc.), we don't assign source ranges
+  // since they already carry full rawContent. Only headings need section extraction.
 }

@@ -345,7 +345,7 @@
     "title": "Структура",
     "placeholder": "Откройте диалог, чтобы увидеть структуру",
     "search": "Поиск по структуре",
-    "searchPlaceholder": "Фильтр структуры...",
+    "searchPlaceholder": "Полнотекстовый поиск...",
     "filterAll": "Все",
     "filterHeadings": "Заголовки",
     "filterCode": "Код",

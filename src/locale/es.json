@@ -345,7 +345,7 @@
     "title": "Esquema",
     "placeholder": "Abre una conversación para ver su esquema",
     "search": "Buscar esquema",
-    "searchPlaceholder": "Filtrar esquema...",
+    "searchPlaceholder": "Búsqueda de texto completo...",
     "filterAll": "Todo",
     "filterHeadings": "Encabezados",
     "filterCode": "Código",

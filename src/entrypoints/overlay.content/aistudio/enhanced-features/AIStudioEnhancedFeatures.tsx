@@ -7,6 +7,7 @@ import { SnippetReaderDrawer } from '@/entrypoints/overlay.content/shared/module
 import { SettingsModal } from '@/entrypoints/overlay.content/shared/modules/settings/SettingsModal';
 import { WhatsNewDialog } from '@/entrypoints/overlay.content/shared/modules/whats-new/WhatsNewDialog';
 import { useAppStore } from '@/shared/lib/store';
+import { useInitConversationMessages } from '@/shared/hooks/useInitConversationMessages';
 
 /**
  * Container for all AI Studio enhanced features.
@@ -16,6 +17,9 @@ import { useAppStore } from '@/shared/lib/store';
 export const AIStudioEnhancedFeatures = () => {
   const isSettingsOpen = useAppStore((s) => s.ui.overlay.isSettingsOpen);
   const setIsSettingsOpen = useAppStore((s) => s.setSettingsOpen);
+
+  // Initialize the shared conversation messages store (DB fetch, interceptor, DOM observer)
+  useInitConversationMessages();
 
   return (
     <>

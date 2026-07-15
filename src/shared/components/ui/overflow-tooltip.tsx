@@ -30,6 +30,10 @@ export interface OverflowTooltipProps {
   positionRef?: React.RefObject<HTMLElement | null>;
   /** Whether to use a ResizeObserver to re-check overflow on element resize. Defaults to false. */
   watchResize?: boolean;
+  /** When true, the tooltip is interactive — users can hover over it to read/scroll content. */
+  interactive?: boolean;
+  /** Delay in ms before hiding the tooltip when interactive. Allows cursor to move to tooltip. */
+  hideDelay?: number;
 }
 
 /**
@@ -53,10 +57,13 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
   forceShow = false,
   positionRef,
   watchResize = false,
+  interactive = false,
+  hideDelay = 100,
 }) => {
   const triggerRef = useRef<HTMLDivElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -162,6 +169,12 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
   const handleMouseEnter = () => {
     if (!isOverflowing && !forceShow) return;
 
+    // Cancel any pending hide when re-entering the trigger
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+
     timeoutRef.current = setTimeout(() => {
       setIsVisible(true);
     }, showDelay);
@@ -172,6 +185,27 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
+
+    if (interactive) {
+      // Delay hide to allow cursor to move to the tooltip
+      hideTimeoutRef.current = setTimeout(() => {
+        setIsVisible(false);
+      }, hideDelay);
+    } else {
+      setIsVisible(false);
+    }
+  };
+
+  const handleTooltipMouseEnter = () => {
+    // Cancel the hide timeout when cursor enters the tooltip
+    if (hideTimeoutRef.current) {
+      clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+  };
+
+  const handleTooltipMouseLeave = () => {
+    // Hide tooltip when cursor leaves the tooltip
     setIsVisible(false);
   };
 
@@ -180,6 +214,9 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+      }
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
       }
     };
   }, []);
@@ -250,7 +287,8 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
           <div
             ref={tooltipRef}
             className={cn(
-              'fixed z-[2147483647] pointer-events-none',
+              'fixed z-[2147483647]',
+              interactive ? 'pointer-events-auto' : 'pointer-events-none',
               'px-3 py-2 rounded-md text-xs',
               'bg-foreground text-background dark:bg-foreground dark:text-background',
               'shadow-sm shadow-black/10 dark:shadow-black/20',
@@ -264,6 +302,8 @@ export const OverflowTooltip: React.FC<OverflowTooltipProps> = ({
               top: position.top,
               left: position.left,
             }}
+            onMouseEnter={interactive ? handleTooltipMouseEnter : undefined}
+            onMouseLeave={interactive ? handleTooltipMouseLeave : undefined}
           >
             {typeof content === 'function' ? content(isOverflowing) : (content ?? children)}
           </div>,

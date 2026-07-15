@@ -8,33 +8,33 @@ import { toast } from '@/shared/lib/toast';
 import type { OutlineNode } from '../types';
 import { getNodeIcon } from './getNodeIcon';
 
-function collectChildrenContent(children: OutlineNode[], maxLength = 300): string {
+/** Collect child content for tooltip preview (full content, no truncation) */
+function collectChildrenContent(children: OutlineNode[]): string {
   const parts: string[] = [];
-  let totalLen = 0;
 
   for (const child of children) {
-    if (totalLen >= maxLength) break;
-
     let text = '';
     if (child.type === 'code-block') {
       const lang = child.meta || '';
-      text = `\`\`\`${lang}\n${child.rawContent?.slice(0, 100) || ''}${(child.rawContent?.length || 0) > 100 ? '…' : ''}\n\`\`\``;
+      text = `\`\`\`${lang}\n${child.rawContent || ''}\n\`\`\``;
+    } else if (child.type === 'table') {
+      text = child.rawContent || child.label;
+    } else if (child.type === 'math') {
+      text = child.rawContent ? `$$\n${child.rawContent}\n$$` : child.label;
     } else if (child.rawContent) {
-      text = child.rawContent.slice(0, 100);
+      text = child.rawContent;
     } else {
       text = child.label;
     }
 
     if (text) {
       parts.push(text);
-      totalLen += text.length;
     }
 
-    if (child.children.length > 0 && totalLen < maxLength) {
-      const nested = collectChildrenContent(child.children, maxLength - totalLen);
+    if (child.children.length > 0) {
+      const nested = collectChildrenContent(child.children);
       if (nested) {
         parts.push(nested);
-        totalLen += nested.length;
       }
     }
   }
@@ -46,11 +46,14 @@ export function OutlineNodeItem({
   node,
   onNavigate,
   messageId,
+  modelContent,
   depth = 0,
 }: {
   node: OutlineNode;
   onNavigate: (messageId: string, headingLabel?: string, headingLevel?: string) => void;
   messageId: string;
+  /** Full model response content for source-range copy */
+  modelContent?: string;
   depth?: number;
 }) {
   const { t } = useI18n();
@@ -59,10 +62,25 @@ export function OutlineNodeItem({
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const parts: string[] = [];
-    if (node.label) parts.push(node.label);
-    if (node.rawContent && node.rawContent !== node.label) parts.push(node.rawContent);
-    const content = parts.join('\n\n');
+    let content: string | undefined;
+
+    // For heading nodes with source ranges, extract the full section from original content
+    if (node.type === 'heading' && node.sourceStart != null && node.sourceEnd != null && modelContent) {
+      content = modelContent.slice(node.sourceStart, node.sourceEnd).trim();
+    }
+
+    // Fallback: reconstruct from node data
+    if (!content) {
+      if (node.type === 'code-block') {
+        const lang = node.meta || '';
+        content = `\`\`\`${lang}\n${node.rawContent || node.label}\n\`\`\``;
+      } else if (node.rawContent) {
+        content = node.rawContent;
+      } else {
+        content = node.label;
+      }
+    }
+
     if (content) {
       navigator.clipboard.writeText(content);
       toast.success(t('toast.copiedToClipboard'), 1000);
@@ -73,7 +91,6 @@ export function OutlineNodeItem({
     const parts: string[] = [];
     if (node.type === 'heading') {
       if (node.meta === 'bold' || node.meta === 'list-item') {
-        // Bold headers & list items: show full rawContent (markdown rendered) in tooltip
         if (node.rawContent) {
           parts.push(node.rawContent);
         } else {
@@ -87,6 +104,21 @@ export function OutlineNodeItem({
         const childContent = collectChildrenContent(node.children);
         if (childContent) parts.push(childContent);
       }
+    } else if (node.type === 'code-block') {
+      // Wrap rawContent in fenced code block so MarkdownRenderer renders it properly
+      const lang = node.meta || '';
+      parts.push(`\`\`\`${lang}\n${node.rawContent || ''}\n\`\`\``);
+    } else if (node.type === 'table') {
+      // Tables: rawContent is already markdown table syntax
+      if (node.rawContent) parts.push(node.rawContent);
+      else parts.push(node.label);
+    } else if (node.type === 'math') {
+      // Math nodes: wrap rawContent in $$ so MarkdownRenderer renders it as a formula
+      if (node.rawContent) {
+        parts.push(`$$\n${node.rawContent}\n$$`);
+      } else {
+        parts.push(node.label);
+      }
     } else {
       if (node.label) parts.push(node.label);
       if (node.rawContent && node.rawContent !== node.label) parts.push(node.rawContent);
@@ -97,9 +129,13 @@ export function OutlineNodeItem({
   return (
     <div>
       <div
-        onClick={() => onNavigate(messageId, node.label, node.type === 'heading' ? node.meta : undefined)}
+        onClick={() => {
+          if (hasChildren) {
+            setIsExpanded(!isExpanded);
+          }
+        }}
         className={cn(
-          'group/node flex items-center gap-1 px-2 py-1 rounded-md relative',
+          'group/node flex items-center gap-1 px-2 py-1 rounded-md relative min-w-0',
           'transition-colors duration-100',
           'cursor-pointer hover:bg-accent/50',
         )}
@@ -128,13 +164,31 @@ export function OutlineNodeItem({
 
         <OverflowTooltip
           content={
-            <MarkdownRenderer className="text-xs [&_*]:!text-background [&_code]:!bg-background/10 [&_code]:!text-background max-h-[300px] overflow-y-auto">
-              {tooltipMarkdown}
-            </MarkdownRenderer>
+            tooltipMarkdown ? (
+              <MarkdownRenderer className="text-xs max-h-[300px] overflow-y-auto custom-scrollbar-inverted tooltip-markdown">
+                {tooltipMarkdown}
+              </MarkdownRenderer>
+            ) : undefined
           }
-          forceShow
+          forceShow={!!tooltipMarkdown}
+          interactive
           placement="right"
-          tooltipClassName="max-w-[400px]"
+          tooltipClassName={cn(
+            'max-w-[400px]',
+            // Fix markdown elements for inverted tooltip background (bg-foreground text-background)
+            '[&_.tooltip-markdown]:text-background',
+            '[&_.tooltip-markdown_strong]:text-background',
+            '[&_.tooltip-markdown_em]:text-background',
+            '[&_.tooltip-markdown_code]:bg-background/15 [&_.tooltip-markdown_code]:text-background',
+            '[&_.tooltip-markdown_pre]:bg-background/10 [&_.tooltip-markdown_pre]:border-background/20',
+            '[&_.tooltip-markdown_th]:bg-background/10 [&_.tooltip-markdown_th]:text-background [&_.tooltip-markdown_th]:border-background/20',
+            '[&_.tooltip-markdown_td]:text-background [&_.tooltip-markdown_td]:border-background/20',
+            '[&_.tooltip-markdown_table]:border-background/20',
+            '[&_.tooltip-markdown_a]:text-blue-300',
+            '[&_.tooltip-markdown_blockquote]:border-background/40',
+            // KaTeX formulas inherit color from parent
+            '[&_.tooltip-markdown_.katex]:text-background',
+          )}
           className={cn(
             'text-sm leading-snug truncate flex-1',
             node.type === 'heading'
@@ -174,6 +228,7 @@ export function OutlineNodeItem({
               node={child}
               onNavigate={onNavigate}
               messageId={messageId}
+              modelContent={modelContent}
               depth={depth + 1}
             />
           ))}

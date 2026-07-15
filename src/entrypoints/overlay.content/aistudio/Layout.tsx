@@ -12,8 +12,13 @@ import { applyShadowStyles, querySelectorDeep, waitForElement } from '@/shared/l
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { initAiStudioThemeSync, bindAiStudioShadowRootToTheme } from '@/themes/platforms/aistudio';
 import { useExclusiveContextMenuStore } from '../shared/components/ui/exclusive-context-menu';
+import { registerPlatformDomAdapter } from '@/shared/lib/platform-dom-adapter';
+import { aistudioDomAdapter } from './lib/aistudio-dom-adapter';
 
 export async function initAiStudioOverlay(mainStyles: string): Promise<void> {
+  // Register AI Studio DOM adapter (must be before any React tree mounts)
+  registerPlatformDomAdapter(aistudioDomAdapter);
+
   console.log('Better Sidebar: Overlay (AI Studio) Initialized');
 
   TooltipHelper.getInstance().initialize(mainStyles);

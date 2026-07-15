@@ -21,7 +21,7 @@ export function FilterChips({ filter, onFilterChange, stats }: FilterChipsProps)
 
   return (
     <div className="flex items-center gap-1">
-      {visibleFilters.map(({ key, label, icon, count }) => (
+      {visibleFilters.map(({ key, label, icon }) => (
         <button
           key={key}
           onClick={() => onFilterChange(key)}
@@ -35,9 +35,6 @@ export function FilterChips({ filter, onFilterChange, stats }: FilterChipsProps)
         >
           {icon}
           {label}
-          {count > 0 && (
-            <span className="text-[9px] opacity-60">{count}</span>
-          )}
         </button>
       ))}
     </div>

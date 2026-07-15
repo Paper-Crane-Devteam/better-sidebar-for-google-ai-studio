@@ -2,11 +2,9 @@ import React, { useState, useCallback, useRef } from 'react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { OutlineContent, OutlineContentHandle } from './outline/OutlineContent';
 import { useSettingsStore } from '@/shared/lib/settings-store';
-import { useAppStore } from '@/shared/lib/store';
-import { useCurrentConversationId } from '../../../hooks/useCurrentConversationId';
 import { Button } from '@/shared/components/ui/button';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
-import { Search, Crosshair } from 'lucide-react';
+import { Crosshair } from 'lucide-react';
 import { UIcon } from '@/shared/components/ui/icon';
 import { CollapsibleSection } from '../../../components/CollapsibleSection';
 
@@ -24,17 +22,6 @@ export const OutlineSection: React.FC<OutlineSectionProps> = ({ fillAvailable = 
   const [isExpanded, setIsExpanded] = useState(false);
   const { outlineHeight, setOutlineHeight } = useSettingsStore();
   const outlineRef = useRef<OutlineContentHandle>(null);
-
-  const { setActiveTab, setSearchOptions } = useAppStore();
-  const currentConversationId = useCurrentConversationId();
-
-  // Search in current chat: switch to Search tab with scope = current conversation
-  const handleSearchCurrentChat = useCallback(() => {
-    if (currentConversationId) {
-      setSearchOptions({ conversationId: currentConversationId, showOptions: true });
-    }
-    setActiveTab('search');
-  }, [currentConversationId, setActiveTab, setSearchOptions]);
 
   const handleLocateCurrent = useCallback(() => {
     outlineRef.current?.scrollToActive();
@@ -55,17 +42,6 @@ export const OutlineSection: React.FC<OutlineSectionProps> = ({ fillAvailable = 
       onHeightChange={setOutlineHeight}
       actions={
         <>
-          <SimpleTooltip content={t('search.currentConversationOnly')}>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5 text-muted-foreground hover:text-foreground"
-              onClick={handleSearchCurrentChat}
-            >
-              <Search className="h-3.5 w-3.5" />
-            </Button>
-          </SimpleTooltip>
-
           <SimpleTooltip content={t('menu.locateCurrent')}>
             <Button
               variant="ghost"

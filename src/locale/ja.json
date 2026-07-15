@@ -345,7 +345,7 @@
     "title": "アウトライン",
     "placeholder": "会話を開くとアウトラインが表示されます",
     "search": "アウトラインを検索",
-    "searchPlaceholder": "アウトラインを絞り込み...",
+    "searchPlaceholder": "全文検索...",
     "filterAll": "すべて",
     "filterHeadings": "見出し",
     "filterCode": "コード",
