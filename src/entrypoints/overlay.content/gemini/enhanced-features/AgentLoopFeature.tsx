@@ -15,7 +15,7 @@ import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/h
 import { showCapsuleDetailModal } from '@/entrypoints/overlay.content/shared/lib/capsule-modal';
 import {
   AgentCommandPopup,
-  AgentLoopConfirmDialog,
+  AgentLoopControlPanel,
   AgentLoopEngine,
   useAgentTrigger,
   useAgentLoopStore,
@@ -129,6 +129,14 @@ export const AgentLoopFeature: React.FC = () => {
     engineRef.current = engine;
     setTimeout(() => engine.start(20), 300);
   }, [getAdapter]);
+
+  const handleStop = useCallback(() => {
+    engineRef.current?.stop();
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    engineRef.current?.resume();
+  }, []);
 
   // ─── Capsule insertion ──────────────────────────────────────────────
 
@@ -252,7 +260,7 @@ export const AgentLoopFeature: React.FC = () => {
 
 
 
-      <AgentLoopConfirmDialog />
+      <AgentLoopControlPanel onStop={handleStop} onRetry={handleRetry} />
     </>
   );
 };

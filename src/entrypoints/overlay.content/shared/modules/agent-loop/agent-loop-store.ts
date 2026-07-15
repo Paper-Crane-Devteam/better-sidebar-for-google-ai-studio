@@ -27,12 +27,27 @@ export interface AgentLoopStoreState {
   /** Pending write confirmation (UI renders dialog when non-null) */
   pendingConfirmation: PendingConfirmation | null;
 
+  // ─── Control Panel Runtime Extensions ────────────────────────────────
+  /** Speed mode — auto-approve everything */
+  speedMode: boolean;
+  /** Whether speed mode risk warning was shown this session */
+  speedModeWarningShown: boolean;
+  /** Breakpoint round (null = no breakpoint) */
+  breakpointRound: number | null;
+  /** Accumulated token estimation */
+  tokenEstimation: number;
+  /** User instruction to inject into next round */
+  pendingInstruction: string | null;
+  /** Whether the control panel popover is open */
+  panelOpen: boolean;
+
   // Actions
   start: (maxRounds: number) => void;
   nextRound: () => void;
   setStatus: (status: AgentLoopStatus) => void;
   setCurrentTool: (tool: string | null) => void;
   addResult: (result: ToolCallResult) => void;
+  removeLastResult: () => void;
   pause: (reason?: string) => void;
   resume: () => void;
   stop: () => void;
@@ -40,6 +55,13 @@ export interface AgentLoopStoreState {
   setError: (message: string) => void;
   setSnapshotCreated: (created: boolean) => void;
   setPendingConfirmation: (confirmation: PendingConfirmation | null) => void;
+  setSpeedMode: (enabled: boolean) => void;
+  setSpeedModeWarningShown: () => void;
+  setBreakpointRound: (round: number | null) => void;
+  addTokens: (count: number) => void;
+  resetTokens: () => void;
+  setPendingInstruction: (instruction: string | null) => void;
+  setPanelOpen: (open: boolean) => void;
 }
 
 export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
@@ -53,6 +75,14 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
   snapshotCreated: false,
   pendingConfirmation: null,
 
+  // Control Panel runtime extensions
+  speedMode: false,
+  speedModeWarningShown: false,
+  breakpointRound: null,
+  tokenEstimation: 0,
+  pendingInstruction: null,
+  panelOpen: false,
+
   start: (maxRounds) =>
     set({
       status: 'waiting_ai',
@@ -62,6 +92,9 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
       currentResults: [],
       history: [],
       errorMessage: null,
+      tokenEstimation: 0,
+      speedMode: false,
+      pendingInstruction: null,
     }),
 
   nextRound: () =>
@@ -81,6 +114,11 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
       currentResults: [...state.currentResults, result],
     })),
 
+  removeLastResult: () =>
+    set((state) => ({
+      currentResults: state.currentResults.slice(0, -1),
+    })),
+
   pause: (reason) =>
     set({
       status: 'paused',
@@ -97,6 +135,7 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
     set((state) => ({
       status: 'idle',
       currentTool: null,
+      speedMode: false,
       // Preserve history for viewing
       history:
         state.currentResults.length > 0
@@ -115,6 +154,12 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
       errorMessage: null,
       snapshotCreated: false,
       pendingConfirmation: null,
+      speedMode: false,
+      speedModeWarningShown: false,
+      breakpointRound: null,
+      tokenEstimation: 0,
+      pendingInstruction: null,
+      panelOpen: false,
     }),
 
   setError: (message) =>
@@ -126,4 +171,13 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
   setSnapshotCreated: (created) => set({ snapshotCreated: created }),
 
   setPendingConfirmation: (confirmation) => set({ pendingConfirmation: confirmation }),
+
+  // Control Panel actions
+  setSpeedMode: (enabled) => set({ speedMode: enabled }),
+  setSpeedModeWarningShown: () => set({ speedModeWarningShown: true }),
+  setBreakpointRound: (round) => set({ breakpointRound: round }),
+  addTokens: (count) => set((state) => ({ tokenEstimation: state.tokenEstimation + count })),
+  resetTokens: () => set({ tokenEstimation: 0 }),
+  setPendingInstruction: (instruction) => set({ pendingInstruction: instruction }),
+  setPanelOpen: (open) => set({ panelOpen: open }),
 }));

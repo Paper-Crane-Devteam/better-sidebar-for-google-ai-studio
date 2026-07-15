@@ -1,4 +1,7 @@
 /**
+ * @deprecated Use `AgentLoopControlPanel` (control-panel/ConfirmationSection) instead.
+ * This full-screen confirmation dialog is kept as a fallback but no longer rendered by default.
+ *
  * AgentLoopConfirmDialog — Shows SQL write confirmation dialog.
  * Rendered when agent-loop-store.pendingConfirmation is non-null.
  */

@@ -124,15 +124,14 @@ export async function executeSql(params: ExecuteSqlParams): Promise<string> {
 
 /**
  * Request user confirmation for write operations.
- * Sets store state → UI renders confirmation dialog → resolves with user choice.
+ * Uses the control panel's confirmation strategy.
  */
 async function requestUserConfirmation(sql: string): Promise<boolean> {
-  const { useSettingsStore } = await import('@/shared/lib/settings-store');
-  const settings = useSettingsStore.getState();
-  const agentLoopSettings = (settings.enhancedFeatures.gemini as any).agentLoop;
+  const { requiresConfirmation } = await import('../control-panel/utils');
+  const toolCall = { name: 'execute_sql', params: { query: sql } };
 
-  if (agentLoopSettings && !agentLoopSettings.confirmWrites) {
-    return true;
+  if (!requiresConfirmation(toolCall)) {
+    return true; // Speed mode or no confirmation needed
   }
 
   return new Promise((resolve) => {
@@ -140,5 +139,7 @@ async function requestUserConfirmation(sql: string): Promise<boolean> {
       sql,
       resolve,
     });
+    // Auto-open panel when confirmation is needed
+    useAgentLoopStore.getState().setPanelOpen(true);
   });
 }

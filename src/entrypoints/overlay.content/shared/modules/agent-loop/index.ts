@@ -55,7 +55,13 @@ export type { PlatformId, PlatformInfo } from './adapters/adapter-factory';
 // UI Components
 export { AgentCommandPopup } from './AgentCommandPopup';
 export { AgentLoopStatusBar } from './AgentLoopStatusBar';
+/** @deprecated Use AgentLoopControlPanel instead */
 export { AgentLoopConfirmDialog } from './AgentLoopConfirmDialog';
+export { AgentLoopControlPanel } from './control-panel';
+
+// Control Panel Store
+export { useControlPanelStore } from './control-panel-store';
+export type { ControlPanelState } from './control-panel-store';
 
 // Renderer
 export { ConversationRenderer, injectRendererStyles, buildPromptMarker } from './renderer';

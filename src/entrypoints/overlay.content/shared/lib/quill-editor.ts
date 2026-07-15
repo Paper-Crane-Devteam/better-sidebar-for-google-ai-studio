@@ -399,6 +399,33 @@ export async function triggerSend(): Promise<void> {
 let sendInterceptorInstalled = false;
 
 /**
+ * Module-level registered onBeforeSend callback.
+ * Set by useEditorIntegration so that both Enter keydown and send button click
+ * share the same send-handling logic.
+ */
+let registeredBeforeSendHandler: ((editor: HTMLElement) => boolean) | null = null;
+
+/**
+ * Register a beforeSend handler that will be called by both keydown and click paths.
+ * Returns an unregister function.
+ */
+export function registerBeforeSendHandler(handler: (editor: HTMLElement) => boolean): () => void {
+  registeredBeforeSendHandler = handler;
+  return () => {
+    if (registeredBeforeSendHandler === handler) {
+      registeredBeforeSendHandler = null;
+    }
+  };
+}
+
+/**
+ * Get the currently registered beforeSend handler (used by useEditorIntegration).
+ */
+export function getRegisteredBeforeSendHandler(): ((editor: HTMLElement) => boolean) | null {
+  return registeredBeforeSendHandler;
+}
+
+/**
  * Install a click interceptor on the send button that expands all capsules
  * before Gemini processes the send. This handles the case where the user
  * clicks the send button instead of pressing Enter.
@@ -420,13 +447,7 @@ export function installSendButtonInterceptor(): void {
     const editor = getEditor();
     if (!editor) return;
 
-    // Check for prompt capsules (bs-prompt-capsule) — expand them in place
-    const promptCapsules = editor.querySelectorAll(`.${CAPSULE_CLASS}`);
-    if (promptCapsules.length > 0) {
-      expandCapsules(editor, CAPSULE_CLASS);
-    }
-
-    // Check for result capsules (bs-agent-result-capsule) — merge and expand
+    // Check for result capsules first (same priority as keydown handler)
     const resultCapsules = editor.querySelectorAll(`.${RESULT_CAPSULE_CLASS}`);
     if (resultCapsules.length > 0) {
       e.preventDefault();
@@ -443,6 +464,24 @@ export function installSendButtonInterceptor(): void {
 
       replaceAllContent(editor, wrappedResult);
       triggerSend();
+      return;
+    }
+
+    // Check for trigger capsules — use registered handler (shared with keydown)
+    const hasTriggerCapsules = editor.querySelector(`.${CAPSULE_CLASS}`) !== null;
+    if (hasTriggerCapsules && registeredBeforeSendHandler) {
+      const handled = registeredBeforeSendHandler(editor);
+      if (handled) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+    }
+
+    // Fallback: expand any remaining capsules in place, let platform send
+    const promptCapsules = editor.querySelectorAll(`.${CAPSULE_CLASS}`);
+    if (promptCapsules.length > 0) {
+      expandCapsules(editor, CAPSULE_CLASS);
     }
   }, true); // capture phase — fires before Gemini's handler
 }

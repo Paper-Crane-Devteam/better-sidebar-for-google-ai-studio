@@ -29,6 +29,7 @@ import {
   hasCapsules,
   replaceAllContent,
   triggerSend,
+  registerBeforeSendHandler,
 } from '@/entrypoints/overlay.content/shared/lib/quill-editor';
 
 export interface PopupPosition {
@@ -59,6 +60,13 @@ export function useEditorIntegration(config: EditorIntegrationConfig) {
     let suppressUntil = 0;
 
     suppressInputRef.current = () => { suppressUntil = Date.now() + 100; };
+
+    // Register the onBeforeSend handler so send-button clicks share the same logic as Enter key
+    const unregisterBeforeSend = configRef.current.onBeforeSend
+      ? registerBeforeSendHandler((editor) => {
+          return configRef.current.onBeforeSend?.(editor) ?? false;
+        })
+      : null;
 
     const onInput = () => {
       if (Date.now() < suppressUntil) return;
@@ -240,6 +248,7 @@ export function useEditorIntegration(config: EditorIntegrationConfig) {
     return () => {
       if (currentEditor) detachListeners(currentEditor);
       bodyObserver.disconnect();
+      unregisterBeforeSend?.();
     };
   }, [config.enabled]); // Only re-run if enabled changes
 

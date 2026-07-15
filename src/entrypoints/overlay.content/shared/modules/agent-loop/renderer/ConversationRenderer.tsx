@@ -1,13 +1,19 @@
 /**
  * ConversationRenderer — DOM observer for agent loop messages.
  *
- * Uses React + Shadow DOM to render widgets next to Gemini's model-response elements.
- * Widgets are appended as children of model-response (not inside .markdown)
- * to survive Angular's internal re-renders of markdown content.
+ * Rendering strategy for tool calls (方案2+方案1 组合):
  *
- * Two rendering paths:
- * 1. Static: Page load or conversation switch — scan existing elements
- * 2. Streaming: Real-time detection via MutationObserver during AI generation
+ * Streaming phase:
+ *   - Detect <bs_agent_tool> in streaming response
+ *   - Set the containing element to visibility:hidden (preserves layout)
+ *   - Show a skeleton overlay (absolute positioned at same location)
+ *
+ * Stable phase:
+ *   - aria-busy transitions to false + 500ms content stability check
+ *   - Remove skeleton overlay
+ *   - attachShadow on the original element, render widget inside
+ *   - Angular won't delete the element (it's part of its own tree)
+ *     and shadow DOM prevents Angular's content writes from showing
  */
 
 import ReactDOM from 'react-dom/client';
@@ -37,32 +43,29 @@ import {
 } from './constants';
 import { getBuiltInPromptById } from '../prompts/built-in-registry';
 import { ToolCallWidget } from './components/ToolCallWidget';
-import { StreamingToolWidget } from './components/StreamingToolWidget';
 import type { ParsedToolCall } from '../types';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const CHAT_CONTAINER_SELECTOR = 'infinite-scroller.chat-history, .conversation-container, chat-window';
-const SHADOW_HOST_CLASS = 'bs-agent-shadow-host';
-const STREAMING_HOST_CLASS = 'bs-agent-streaming-host';
+const SKELETON_OVERLAY_CLASS = 'bs-agent-skeleton-overlay';
+const SKELETON_MARKER_ATTR = 'data-bs-skeleton';
 
-/** Debounce for stability check before rendering (Angular re-render protection) */
-const STABILITY_DELAY_MS = 1200;
+/** After aria-busy=false, wait this long for content to stabilize */
+const POST_STREAM_STABILITY_MS = 500;
 
-/** Render debounce during streaming */
-const STREAM_RENDER_DEBOUNCE_MS = 100;
+/** For static renders (page load), debounce before rendering */
+const STATIC_STABILITY_MS = 800;
 
-// ─── Streaming State ─────────────────────────────────────────────────────────
+// ─── Skeleton State ──────────────────────────────────────────────────────────
 
-interface StreamingBlock {
+interface SkeletonEntry {
   modelResponse: HTMLElement;
-  markdownEl: HTMLElement;
-  shadowHost: HTMLElement;
-  reactRoot: ReactDOM.Root;
-  observer: MutationObserver;
-  lastContentLength: number;
-  isComplete: boolean;
-  debounceTimer: ReturnType<typeof setTimeout> | null;
+  hiddenElements: HTMLElement[];
+  overlayEl: HTMLElement;
+  /** Content snapshot for stability check */
+  lastContent: string;
+  stabilityTimer: ReturnType<typeof setTimeout> | null;
 }
 
 // ─── Renderer Class ──────────────────────────────────────────────────────────
@@ -72,44 +75,14 @@ export class ConversationRenderer {
   private container: HTMLElement | null = null;
   private pollInterval: ReturnType<typeof setInterval> | null = null;
   private pendingResponses = new Set<HTMLElement>();
-  private streamingBlocks = new Map<HTMLElement, StreamingBlock>();
+  private skeletons = new Map<HTMLElement, SkeletonEntry>();
   private stabilityTimers = new Map<HTMLElement, ReturnType<typeof setTimeout>>();
   private reactRoots: ReactDOM.Root[] = [];
 
   start(): void {
     if (this.observer) return;
     console.log('[Renderer] start() called');
-
-    this.observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        for (const node of mutation.addedNodes) {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            this.processNode(node as HTMLElement);
-          }
-        }
-        if (mutation.type === 'attributes' && mutation.attributeName === 'aria-busy') {
-          const target = mutation.target as HTMLElement;
-          if (target.getAttribute('aria-busy') === 'false') {
-            const modelResp = target.closest('model-response') as HTMLElement | null;
-            if (modelResp && this.pendingResponses.has(modelResp)) {
-              this.pendingResponses.delete(modelResp);
-              this.processModelResponse(modelResp);
-            }
-            if (modelResp) {
-              this.finalizeStreamingBlock(modelResp);
-            }
-          }
-        }
-        if (mutation.type === 'childList' || mutation.type === 'characterData') {
-          const target = mutation.target as HTMLElement;
-          const modelResp = target?.closest?.('model-response') as HTMLElement | null;
-          if (modelResp && !modelResp.classList.contains(TOOL_CALL_RENDERED_CLASS)) {
-            this.checkStreamingToolCall(modelResp);
-          }
-        }
-      }
-    });
-
+    this.observer = this.createObserver();
     this.attachToContainer();
 
     if (!this.container) {
@@ -134,8 +107,8 @@ export class ConversationRenderer {
     this.observer = null;
     this.container = null;
     this.pendingResponses.clear();
+    this.cleanupSkeletons();
     this.cleanupStabilityTimers();
-    this.cleanupStreamingBlocks();
     this.cleanupReactRoots();
     if (this.pollInterval) {
       clearInterval(this.pollInterval);
@@ -148,39 +121,11 @@ export class ConversationRenderer {
     this.observer?.disconnect();
     this.container = null;
     this.pendingResponses.clear();
+    this.cleanupSkeletons();
     this.cleanupStabilityTimers();
-    this.cleanupStreamingBlocks();
 
     if (!this.observer) {
-      this.observer = new MutationObserver((mutations) => {
-        for (const mutation of mutations) {
-          for (const node of mutation.addedNodes) {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              this.processNode(node as HTMLElement);
-            }
-          }
-          if (mutation.type === 'attributes' && mutation.attributeName === 'aria-busy') {
-            const target = mutation.target as HTMLElement;
-            if (target.getAttribute('aria-busy') === 'false') {
-              const modelResp = target.closest('model-response') as HTMLElement | null;
-              if (modelResp && this.pendingResponses.has(modelResp)) {
-                this.pendingResponses.delete(modelResp);
-                this.processModelResponse(modelResp);
-              }
-              if (modelResp) {
-                this.finalizeStreamingBlock(modelResp);
-              }
-            }
-          }
-          if (mutation.type === 'childList' || mutation.type === 'characterData') {
-            const target = mutation.target as HTMLElement;
-            const modelResp = target?.closest?.('model-response') as HTMLElement | null;
-            if (modelResp && !modelResp.classList.contains(TOOL_CALL_RENDERED_CLASS)) {
-              this.checkStreamingToolCall(modelResp);
-            }
-          }
-        }
-      });
+      this.observer = this.createObserver();
     }
 
     if (!this.attachToContainer()) {
@@ -201,23 +146,52 @@ export class ConversationRenderer {
 
   scanExisting(): void {
     const container = this.getConversationContainer();
-    if (!container) {
-      console.log('[Renderer] scanExisting() — no container');
-      return;
-    }
+    if (!container) return;
     const userQueries = container.querySelectorAll('user-query');
     const modelResponses = container.querySelectorAll('model-response');
-    console.log('[Renderer] scanExisting() — user-query:', userQueries.length, 'model-response:', modelResponses.length);
     userQueries.forEach((el) => this.processUserQuery(el as HTMLElement));
     modelResponses.forEach((el) => this.processModelResponse(el as HTMLElement));
   }
 
-  // ─── Private: Container ────────────────────────────────────────────
+  // ─── Observer Factory ──────────────────────────────────────────────
+
+  private createObserver(): MutationObserver {
+    return new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        // New nodes added
+        for (const node of mutation.addedNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            this.processNode(node as HTMLElement);
+          }
+        }
+        // aria-busy changed
+        if (mutation.type === 'attributes' && mutation.attributeName === 'aria-busy') {
+          const target = mutation.target as HTMLElement;
+          if (target.getAttribute('aria-busy') === 'false') {
+            const modelResp = target.closest('model-response') as HTMLElement | null;
+            if (modelResp && this.pendingResponses.has(modelResp)) {
+              this.pendingResponses.delete(modelResp);
+              this.onStreamingComplete(modelResp);
+            }
+          }
+        }
+        // Content mutations during streaming — check for tool tags
+        if (mutation.type === 'childList' || mutation.type === 'characterData') {
+          const target = mutation.target as HTMLElement;
+          const modelResp = target?.closest?.('model-response') as HTMLElement | null;
+          if (modelResp && !modelResp.classList.contains(TOOL_CALL_RENDERED_CLASS)) {
+            this.checkForToolCall(modelResp);
+          }
+        }
+      }
+    });
+  }
+
+  // ─── Container ─────────────────────────────────────────────────────
 
   private attachToContainer(): boolean {
     const container = this.getConversationContainer();
     if (container && this.observer) {
-      console.log('[Renderer] attachToContainer() success:', container.tagName, container.className?.slice(0, 60));
       this.container = container;
       this.observer.observe(container, {
         childList: true,
@@ -229,7 +203,6 @@ export class ConversationRenderer {
       this.scanExisting();
       return true;
     }
-    console.log('[Renderer] attachToContainer() failed');
     return false;
   }
 
@@ -237,7 +210,7 @@ export class ConversationRenderer {
     return document.querySelector(CHAT_CONTAINER_SELECTOR);
   }
 
-  // ─── Private: Node Processing ──────────────────────────────────────
+  // ─── Node Processing ───────────────────────────────────────────────
 
   private processNode(el: HTMLElement): void {
     if (el.matches?.('user-query')) this.processUserQuery(el);
@@ -248,11 +221,11 @@ export class ConversationRenderer {
 
     const parentModelResp = el.closest?.('model-response') as HTMLElement | null;
     if (parentModelResp && !parentModelResp.classList.contains(TOOL_CALL_RENDERED_CLASS)) {
-      this.processModelResponse(parentModelResp);
+      this.checkForToolCall(parentModelResp);
     }
   }
 
-  // ─── User Query ────────────────────────────────────────────────────
+  // ─── User Query (unchanged) ────────────────────────────────────────
 
   private processUserQuery(el: HTMLElement): void {
     if (el.classList.contains(PROMPT_RENDERED_CLASS)) return;
@@ -277,11 +250,6 @@ export class ConversationRenderer {
     }
   }
 
-  /**
-   * Render a prompt-type user query:
-   * - Marker line + base prompt + prompt content → collapsed into a single capsule
-   * - "## User Request" section → displayed as plain text
-   */
   private renderPromptUserQuery(
     el: HTMLElement,
     textLines: NodeListOf<Element>,
@@ -295,7 +263,6 @@ export class ConversationRenderer {
     const prompt = getBuiltInPromptById(promptId);
     const title = prompt?.title || promptId;
 
-    // Split at "## User Request" to separate capsule content from user text
     const userRequestSeparator = '## User Request';
     const separatorIdx = fullText.indexOf(userRequestSeparator);
 
@@ -309,14 +276,12 @@ export class ConversationRenderer {
       capsuleContent = fullText;
     }
 
-    // Hide all original text lines
     textLines.forEach((line) => {
       (line as HTMLElement).style.display = 'none';
     });
 
     const insertTarget = textLines[0]?.parentElement || el;
 
-    // Create prompt capsule
     const displayText = buildPromptCapsuleText(title);
     const capsuleEl = createClickableCapsule(displayText, {
       className: CAPSULE_CLASS,
@@ -327,7 +292,6 @@ export class ConversationRenderer {
     const wrapper = document.createElement('div');
     wrapper.appendChild(capsuleEl);
 
-    // Show user text after capsule if present
     if (userText) {
       const userTextEl = document.createElement('div');
       userTextEl.className = 'query-text-line';
@@ -338,17 +302,11 @@ export class ConversationRenderer {
     insertTarget.insertBefore(wrapper, insertTarget.firstChild);
   }
 
-  /**
-   * Render a result-type user query:
-   * - Each <bs_agent_result>...</bs_agent_result> → individual capsule
-   * - Text outside result tags → displayed as plain text
-   */
   private renderResultUserQuery(
     el: HTMLElement,
     textLines: NodeListOf<Element>,
     fullText: string,
   ): void {
-    // Hide all original text lines
     textLines.forEach((line) => {
       (line as HTMLElement).style.display = 'none';
     });
@@ -356,7 +314,6 @@ export class ConversationRenderer {
     const insertTarget = textLines[0]?.parentElement || el;
     const wrapper = document.createElement('div');
 
-    // Parse and render each segment (result blocks + plain text between them)
     const resultRegex = new RegExp(
       `<${RESULT_TAG}>([\\s\\S]*?)<\\/${RESULT_TAG}>`,
       'g',
@@ -366,7 +323,6 @@ export class ConversationRenderer {
     let match: RegExpExecArray | null;
 
     while ((match = resultRegex.exec(fullText)) !== null) {
-      // Plain text before this result block
       const beforeText = fullText.slice(lastIndex, match.index).trim();
       if (beforeText) {
         const textEl = document.createElement('div');
@@ -375,7 +331,6 @@ export class ConversationRenderer {
         wrapper.appendChild(textEl);
       }
 
-      // Create result capsule
       const resultContent = match[1].trim();
       const headingMatch = resultContent.match(/^### (.+)/m);
       const label = headingMatch ? headingMatch[1].trim() : 'Tool Result';
@@ -391,7 +346,6 @@ export class ConversationRenderer {
       lastIndex = match.index + match[0].length;
     }
 
-    // Remaining plain text after last result block
     const afterText = fullText.slice(lastIndex).trim();
     if (afterText) {
       const textEl = document.createElement('div');
@@ -403,91 +357,220 @@ export class ConversationRenderer {
     insertTarget.insertBefore(wrapper, insertTarget.firstChild);
   }
 
-  // ─── Model Response ────────────────────────────────────────────────
+  // ─── Model Response: Entry Point ───────────────────────────────────
 
   private processModelResponse(el: HTMLElement): void {
     if (el.classList.contains(TOOL_CALL_RENDERED_CLASS)) return;
 
-    const markdownEl = el.querySelector('.markdown');
+    const markdownEl = el.querySelector('.markdown') as HTMLElement;
     if (!markdownEl) return;
 
     const isBusy = markdownEl.getAttribute('aria-busy') === 'true';
     if (isBusy) {
       this.pendingResponses.add(el);
-      this.checkStreamingToolCall(el);
+      this.checkForToolCall(el);
       return;
     }
 
     const allText = markdownEl.textContent || '';
     if (!allText.includes(`<${TOOL_CALL_TAG}>`)) return;
 
-    // Stability debounce: wait for Angular to stop re-rendering
+    // Static path: debounce then render
+    this.scheduleStableRender(el);
+  }
+
+  // ─── Streaming Detection: Show Skeleton ────────────────────────────
+
+  /**
+   * Check if a model-response contains a tool call tag.
+   * If streaming (aria-busy=true) and tool call found → show skeleton.
+   */
+  private checkForToolCall(modelResp: HTMLElement): void {
+    if (modelResp.classList.contains(TOOL_CALL_RENDERED_CLASS)) return;
+    if (this.skeletons.has(modelResp)) return; // Already showing skeleton
+
+    const markdownEl = modelResp.querySelector('.markdown') as HTMLElement;
+    if (!markdownEl) return;
+
+    const isBusy = markdownEl.getAttribute('aria-busy') === 'true';
+    if (!isBusy) return; // Static content goes through processModelResponse
+
+    const allText = markdownEl.textContent || '';
+    if (!allText.includes(`<${TOOL_CALL_TAG}>`)) return;
+
+    this.showSkeleton(modelResp, markdownEl);
+  }
+
+  /**
+   * Show skeleton overlay:
+   * 1. Find elements containing the tool call tag
+   * 2. Set visibility:hidden on them (preserves layout space)
+   * 3. Create an absolute-positioned skeleton overlay at the model-response level
+   */
+  private showSkeleton(modelResp: HTMLElement, markdownEl: HTMLElement): void {
+    const openTag = `<${TOOL_CALL_TAG}>`;
+    const hiddenElements: HTMLElement[] = [];
+
+    // Find and hide elements containing tool tags
+    for (const child of markdownEl.children) {
+      const el = child as HTMLElement;
+      if (el.textContent?.includes(openTag)) {
+        el.style.visibility = 'hidden';
+        el.setAttribute(SKELETON_MARKER_ATTR, 'true');
+        hiddenElements.push(el);
+      }
+    }
+
+    if (hiddenElements.length === 0) return;
+
+    // Create skeleton overlay — positioned relative to model-response
+    const overlay = document.createElement('div');
+    overlay.className = SKELETON_OVERLAY_CLASS;
+    overlay.style.cssText = `
+      position: relative;
+      margin: 8px 0;
+      border-radius: 8px;
+      overflow: hidden;
+      height: 48px;
+      background: linear-gradient(90deg, 
+        var(--skeleton-bg, rgba(128,128,128,0.08)) 25%, 
+        var(--skeleton-shine, rgba(128,128,128,0.15)) 50%, 
+        var(--skeleton-bg, rgba(128,128,128,0.08)) 75%
+      );
+      background-size: 200% 100%;
+      animation: bs-skeleton-shimmer 1.5s ease-in-out infinite;
+      border: 1px solid rgba(128,128,128,0.1);
+    `;
+
+    // Inject keyframes if not already
+    if (!document.getElementById('bs-skeleton-keyframes')) {
+      const style = document.createElement('style');
+      style.id = 'bs-skeleton-keyframes';
+      style.textContent = `
+        @keyframes bs-skeleton-shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // Insert overlay after the last hidden element (inside .markdown, but as a non-text sibling)
+    const lastHidden = hiddenElements[hiddenElements.length - 1];
+    lastHidden.insertAdjacentElement('afterend', overlay);
+
+    const entry: SkeletonEntry = {
+      modelResponse: modelResp,
+      hiddenElements,
+      overlayEl: overlay,
+      lastContent: markdownEl.textContent || '',
+      stabilityTimer: null,
+    };
+    this.skeletons.set(modelResp, entry);
+  }
+
+  // ─── Streaming Complete: Transition to Stable ──────────────────────
+
+  /**
+   * Called when aria-busy transitions to false.
+   * Start stability check — wait POST_STREAM_STABILITY_MS,
+   * verify content hasn't changed, then render stable widget.
+   */
+  private onStreamingComplete(modelResp: HTMLElement): void {
+    if (modelResp.classList.contains(TOOL_CALL_RENDERED_CLASS)) return;
+
+    const markdownEl = modelResp.querySelector('.markdown') as HTMLElement;
+    if (!markdownEl) return;
+
+    const currentContent = markdownEl.textContent || '';
+
+    const skeleton = this.skeletons.get(modelResp);
+    if (skeleton) {
+      skeleton.lastContent = currentContent;
+      // Start stability timer
+      if (skeleton.stabilityTimer) clearTimeout(skeleton.stabilityTimer);
+      skeleton.stabilityTimer = setTimeout(() => {
+        this.checkStabilityAndRender(modelResp);
+      }, POST_STREAM_STABILITY_MS);
+    } else {
+      // No skeleton was shown (maybe tool call appeared right at the end)
+      this.scheduleStableRender(modelResp);
+    }
+  }
+
+  /**
+   * After POST_STREAM_STABILITY_MS, check if content is still the same.
+   * If yes → render. If changed → wait again.
+   */
+  private checkStabilityAndRender(modelResp: HTMLElement): void {
+    if (modelResp.classList.contains(TOOL_CALL_RENDERED_CLASS)) return;
+
+    const markdownEl = modelResp.querySelector('.markdown') as HTMLElement;
+    if (!markdownEl) return;
+
+    const skeleton = this.skeletons.get(modelResp);
+    if (!skeleton) {
+      this.scheduleStableRender(modelResp);
+      return;
+    }
+
+    const currentContent = markdownEl.textContent || '';
+    if (currentContent !== skeleton.lastContent) {
+      // Content still changing — reset timer
+      skeleton.lastContent = currentContent;
+      skeleton.stabilityTimer = setTimeout(() => {
+        this.checkStabilityAndRender(modelResp);
+      }, POST_STREAM_STABILITY_MS);
+      return;
+    }
+
+    // Content stable — render!
+    this.removeSkeleton(modelResp);
+    this.renderStable(modelResp, markdownEl, currentContent);
+  }
+
+  /**
+   * For static pages (not streaming), simple debounce then render.
+   */
+  private scheduleStableRender(el: HTMLElement): void {
     const existingTimer = this.stabilityTimers.get(el);
     if (existingTimer) clearTimeout(existingTimer);
 
     const timer = setTimeout(() => {
       this.stabilityTimers.delete(el);
-      this.renderModelResponseStable(el);
-    }, STABILITY_DELAY_MS);
+      const markdownEl = el.querySelector('.markdown') as HTMLElement;
+      if (!markdownEl) return;
+      const text = markdownEl.textContent || '';
+      if (!text.includes(`<${TOOL_CALL_TAG}>`)) return;
+      this.renderStable(el, markdownEl, text);
+    }, STATIC_STABILITY_MS);
     this.stabilityTimers.set(el, timer);
   }
 
-  private renderModelResponseStable(el: HTMLElement): void {
-    if (el.classList.contains(TOOL_CALL_RENDERED_CLASS)) return;
+  // ─── Stable Render: Shadow DOM on Original Element ─────────────────
 
-    const markdownEl = el.querySelector('.markdown') as HTMLElement;
-    if (!markdownEl) return;
-
-    const allText = markdownEl.textContent || '';
+  /**
+   * Final render — uses attachShadow on the original <p> element.
+   * The element stays in Angular's tree (won't be removed),
+   * but shadow DOM takes over its visual rendering.
+   */
+  private renderStable(modelResp: HTMLElement, markdownEl: HTMLElement, allText: string): void {
+    if (modelResp.classList.contains(TOOL_CALL_RENDERED_CLASS)) return;
     if (!allText.includes(`<${TOOL_CALL_TAG}>`)) return;
 
-    console.log('[Renderer] renderModelResponseStable — rendering. Text length:', allText.length);
-    el.classList.add(TOOL_CALL_RENDERED_CLASS);
-    el.setAttribute(TOOL_CALL_ATTR, 'true');
+    console.log('[Renderer] renderStable — rendering');
+    modelResp.classList.add(TOOL_CALL_RENDERED_CLASS);
+    modelResp.setAttribute(TOOL_CALL_ATTR, 'true');
 
-    this.renderToolCallWidgets(el, markdownEl, allText);
-  }
-
-  // ─── Tool Call Widget Rendering ────────────────────────────────────
-
-  private renderToolCallWidgets(modelResp: HTMLElement, markdownEl: HTMLElement, allText: string): void {
-    const toolCallRegex = new RegExp(
-      `<${TOOL_CALL_TAG}>([\\s\\S]*?)<\\/${TOOL_CALL_TAG}>`,
-      'g',
-    );
-
-    let match: RegExpExecArray | null;
-    const toolCalls: Array<{ fullMatch: string; content: string }> = [];
-    while ((match = toolCallRegex.exec(allText)) !== null) {
-      toolCalls.push({ fullMatch: match[0], content: match[1].trim() });
-    }
-
-    console.log('[Renderer] renderToolCallWidgets — found:', toolCalls.length);
-    if (toolCalls.length === 0) return;
-
-    // Walk through direct children (or block-level descendants) of .markdown,
-    // find elements whose textContent contains a tool_call tag, hide them, and mount widget after each.
     const openTag = `<${TOOL_CALL_TAG}>`;
-    const closeTag = `</${TOOL_CALL_TAG}>`;
-    const processedEls = new Set<HTMLElement>();
     let widgetIdx = 0;
 
-    // Collect candidate block elements — prefer direct children of .markdown
-    const candidates: HTMLElement[] = [];
-    for (const child of markdownEl.children) {
-      candidates.push(child as HTMLElement);
-    }
-
-    for (const candidate of candidates) {
+    for (const child of Array.from(markdownEl.children)) {
+      const candidate = child as HTMLElement;
       const text = candidate.textContent || '';
       if (!text.includes(openTag)) continue;
-      if (processedEls.has(candidate)) continue;
 
-      // This element contains at least one tool call — hide it
-      processedEls.add(candidate);
-      candidate.style.display = 'none';
-
-      // Extract all tool calls within this single element
+      // Extract tool calls from this element
       const localRegex = new RegExp(`<${TOOL_CALL_TAG}>([\\s\\S]*?)<\\/${TOOL_CALL_TAG}>`, 'g');
       let localMatch: RegExpExecArray | null;
       const localToolCalls: Array<{ fullMatch: string; content: string }> = [];
@@ -495,146 +578,77 @@ export class ConversationRenderer {
         localToolCalls.push({ fullMatch: localMatch[0], content: localMatch[1].trim() });
       }
 
-      // Mount one shadow host right after the hidden element, containing all tool calls from it
-      const host = document.createElement('div');
-      host.className = SHADOW_HOST_CLASS;
-      candidate.insertAdjacentElement('afterend', host);
+      if (localToolCalls.length === 0) continue;
 
-      const shadow = host.attachShadow({ mode: 'open' });
-      applyShadowStyles(shadow, mainStyles);
+      // Try to attach shadow DOM to the element
+      try {
+        // Clear original content (shadow takes over rendering)
+        candidate.textContent = '';
+        candidate.style.visibility = 'visible';
+        candidate.removeAttribute(SKELETON_MARKER_ATTR);
 
-      const rootContainer = document.createElement('div');
-      rootContainer.className = 'shadow-body';
-      shadow.appendChild(rootContainer);
-      this.syncDarkMode(rootContainer);
+        // Style the host element
+        candidate.style.display = 'block';
+        candidate.style.padding = '0';
+        candidate.style.margin = '8px 0';
 
-      const reactRoot = ReactDOM.createRoot(rootContainer);
-      this.reactRoots.push(reactRoot);
+        const shadow = candidate.attachShadow({ mode: 'open' });
+        applyShadowStyles(shadow, mainStyles);
 
-      const widgets = localToolCalls.map((tc, i) => {
-        const { toolName, description, query } = this.extractToolInfo(tc.fullMatch);
-        return (
-          <ToolCallWidget
-            key={`${widgetIdx}-${i}`}
-            toolName={toolName}
-            description={description}
-            query={query}
-            rawText={tc.fullMatch}
-            parseToolCall={this.parseToolCallFromText.bind(this)}
-            executeToolCall={this.executeToolCallFn.bind(this)}
-            fillResultToEditor={this.fillResultToEditor.bind(this)}
-          />
+        const rootContainer = document.createElement('div');
+        rootContainer.className = 'shadow-body';
+        shadow.appendChild(rootContainer);
+        this.syncDarkMode(rootContainer);
+
+        const reactRoot = ReactDOM.createRoot(rootContainer);
+        this.reactRoots.push(reactRoot);
+
+        const widgets = localToolCalls.map((tc, i) => {
+          const { toolName, description, query } = this.extractToolInfo(tc.fullMatch);
+          return (
+            <ToolCallWidget
+              key={`${widgetIdx}-${i}`}
+              toolName={toolName}
+              description={description}
+              query={query}
+              rawText={tc.fullMatch}
+              parseToolCall={this.parseToolCallFromText.bind(this)}
+              executeToolCall={this.executeToolCallFn.bind(this)}
+              fillResultToEditor={this.fillResultToEditor.bind(this)}
+            />
+          );
+        });
+
+        reactRoot.render(
+          <ShadowRootProvider container={rootContainer}>
+            <div className="py-1">{widgets}</div>
+          </ShadowRootProvider>,
         );
-      });
 
-      reactRoot.render(
-        <ShadowRootProvider container={rootContainer}>
-          <div className="py-2">{widgets}</div>
-        </ShadowRootProvider>,
-      );
-
-      const capturedCandidate = candidate;
-      const capturedIdx = widgetIdx;
-      // Verify after 1.5s
-      setTimeout(() => {
-        if (!host.isConnected) {
-          console.warn('[Renderer] ⚠️ Shadow host removed — retrying', capturedIdx);
-          capturedCandidate.style.display = '';
-          modelResp.classList.remove(TOOL_CALL_RENDERED_CLASS);
-          modelResp.removeAttribute(TOOL_CALL_ATTR);
-          setTimeout(() => this.processModelResponse(modelResp), 2000);
-        } else {
-          console.log('[Renderer] ✅ Shadow host stable', capturedIdx);
-        }
-      }, 1500);
-
-      widgetIdx++;
-    }
-  }
-
-  // ─── Streaming Tool Call ───────────────────────────────────────────
-
-  private checkStreamingToolCall(modelResp: HTMLElement): void {
-    if (this.streamingBlocks.has(modelResp)) return;
-    if (modelResp.classList.contains(TOOL_CALL_RENDERED_CLASS)) return;
-
-    const markdownEl = modelResp.querySelector('.markdown') as HTMLElement;
-    if (!markdownEl) return;
-
-    // Only mount streaming widget when actually streaming (aria-busy === 'true').
-    // Static content (page load / conversation switch) should go through the stable render path.
-    const isBusy = markdownEl.getAttribute('aria-busy') === 'true';
-    if (!isBusy) return;
-
-    const allText = markdownEl.textContent || '';
-    if (!allText.includes(`<${TOOL_CALL_TAG}>`)) return;
-
-    const block = this.mountStreamingWidget(modelResp, markdownEl, allText);
-    if (!block) return;
-
-    this.streamingBlocks.set(modelResp, block);
-
-    const streamObserver = new MutationObserver(() => {
-      this.handleStreamingMutation(modelResp);
-    });
-    block.observer = streamObserver;
-    streamObserver.observe(markdownEl, { childList: true, subtree: true, characterData: true });
-  }
-
-  private handleStreamingMutation(modelResp: HTMLElement): void {
-    const block = this.streamingBlocks.get(modelResp);
-    if (!block || block.isComplete) return;
-
-    if (block.debounceTimer) clearTimeout(block.debounceTimer);
-    block.debounceTimer = setTimeout(() => {
-      this.updateStreamingWidget(block);
-    }, STREAM_RENDER_DEBOUNCE_MS);
-  }
-
-  private updateStreamingWidget(block: StreamingBlock): void {
-    const allText = block.markdownEl.textContent || '';
-    const openTag = `<${TOOL_CALL_TAG}>`;
-    const closeTag = `</${TOOL_CALL_TAG}>`;
-    const currentLength = allText.length;
-
-    if (currentLength === block.lastContentLength) return;
-    block.lastContentLength = currentLength;
-
-    const openIdx = allText.indexOf(openTag);
-    const closeIdx = allText.indexOf(closeTag, openIdx);
-    const isComplete = closeIdx !== -1;
-
-    const contentStart = openIdx + openTag.length;
-    const contentEnd = isComplete ? closeIdx : allText.length;
-    const partialContent = allText.slice(contentStart, contentEnd).trim();
-
-    let toolName = '…';
-    const nameMatch = partialContent.match(/"name"\s*:\s*"([^"]+)"/);
-    if (nameMatch) toolName = nameMatch[1];
-
-    const preview = partialContent.length > 120 ? partialContent.slice(0, 120) + '…' : partialContent;
-
-    // Re-render the streaming widget
-    block.reactRoot.render(
-      <ShadowRootProvider container={block.shadowHost.shadowRoot!.querySelector('.shadow-body')! as HTMLElement}>
-        <StreamingToolWidget toolName={toolName} preview={preview} isComplete={isComplete} />
-      </ShadowRootProvider>,
-    );
-
-    if (isComplete) {
-      block.isComplete = true;
-      block.observer.disconnect();
-      const isBusy = block.markdownEl.getAttribute('aria-busy') === 'true';
-      if (!isBusy) {
-        this.finalizeStreamingBlock(block.modelResponse);
+        widgetIdx++;
+      } catch (e) {
+        // attachShadow can fail if element already has shadow or is invalid host
+        console.warn('[Renderer] attachShadow failed, falling back to insertAdjacentElement', e);
+        this.renderFallback(modelResp, candidate, localToolCalls, widgetIdx);
+        widgetIdx++;
       }
     }
   }
 
-  private mountStreamingWidget(modelResp: HTMLElement, markdownEl: HTMLElement, currentText: string): StreamingBlock | null {
+  /**
+   * Fallback: if attachShadow fails, use the old approach (insert sibling).
+   */
+  private renderFallback(
+    modelResp: HTMLElement,
+    candidate: HTMLElement,
+    localToolCalls: Array<{ fullMatch: string; content: string }>,
+    widgetIdx: number,
+  ): void {
+    candidate.style.display = 'none';
+
     const host = document.createElement('div');
-    host.className = STREAMING_HOST_CLASS;
-    modelResp.appendChild(host);
+    host.className = 'bs-agent-shadow-host';
+    candidate.insertAdjacentElement('afterend', host);
 
     const shadow = host.attachShadow({ mode: 'open' });
     applyShadowStyles(shadow, mainStyles);
@@ -647,41 +661,46 @@ export class ConversationRenderer {
     const reactRoot = ReactDOM.createRoot(rootContainer);
     this.reactRoots.push(reactRoot);
 
-    let toolName = '…';
-    const nameMatch = currentText.match(/"name"\s*:\s*"([^"]+)"/);
-    if (nameMatch) toolName = nameMatch[1];
+    const widgets = localToolCalls.map((tc, i) => {
+      const { toolName, description, query } = this.extractToolInfo(tc.fullMatch);
+      return (
+        <ToolCallWidget
+          key={`${widgetIdx}-${i}`}
+          toolName={toolName}
+          description={description}
+          query={query}
+          rawText={tc.fullMatch}
+          parseToolCall={this.parseToolCallFromText.bind(this)}
+          executeToolCall={this.executeToolCallFn.bind(this)}
+          fillResultToEditor={this.fillResultToEditor.bind(this)}
+        />
+      );
+    });
 
     reactRoot.render(
       <ShadowRootProvider container={rootContainer}>
-        <StreamingToolWidget toolName={toolName} preview="" isComplete={false} />
+        <div className="py-1">{widgets}</div>
       </ShadowRootProvider>,
     );
-
-    return {
-      modelResponse: modelResp,
-      markdownEl,
-      shadowHost: host,
-      reactRoot,
-      observer: null!,
-      lastContentLength: currentText.length,
-      isComplete: false,
-      debounceTimer: null,
-    };
   }
 
-  private finalizeStreamingBlock(modelResp: HTMLElement): void {
-    const block = this.streamingBlocks.get(modelResp);
-    if (!block) return;
+  // ─── Skeleton Cleanup ──────────────────────────────────────────────
 
-    block.observer?.disconnect();
-    if (block.debounceTimer) clearTimeout(block.debounceTimer);
-    block.reactRoot.unmount();
-    block.shadowHost.remove();
-    this.streamingBlocks.delete(modelResp);
+  private removeSkeleton(modelResp: HTMLElement): void {
+    const skeleton = this.skeletons.get(modelResp);
+    if (!skeleton) return;
 
-    if (!modelResp.classList.contains(TOOL_CALL_RENDERED_CLASS)) {
-      this.processModelResponse(modelResp);
+    // Restore hidden elements visibility (renderStable will handle them)
+    for (const el of skeleton.hiddenElements) {
+      el.style.visibility = '';
+      el.removeAttribute(SKELETON_MARKER_ATTR);
     }
+
+    // Remove overlay
+    skeleton.overlayEl.remove();
+
+    if (skeleton.stabilityTimer) clearTimeout(skeleton.stabilityTimer);
+    this.skeletons.delete(modelResp);
   }
 
   // ─── Tool Execution Helpers ────────────────────────────────────────
@@ -792,19 +811,21 @@ export class ConversationRenderer {
 
   // ─── Cleanup ───────────────────────────────────────────────────────
 
+  private cleanupSkeletons(): void {
+    for (const [, entry] of this.skeletons) {
+      for (const el of entry.hiddenElements) {
+        el.style.visibility = '';
+        el.removeAttribute(SKELETON_MARKER_ATTR);
+      }
+      entry.overlayEl.remove();
+      if (entry.stabilityTimer) clearTimeout(entry.stabilityTimer);
+    }
+    this.skeletons.clear();
+  }
+
   private cleanupStabilityTimers(): void {
     for (const [, timer] of this.stabilityTimers) clearTimeout(timer);
     this.stabilityTimers.clear();
-  }
-
-  private cleanupStreamingBlocks(): void {
-    for (const [, block] of this.streamingBlocks) {
-      block.observer?.disconnect();
-      if (block.debounceTimer) clearTimeout(block.debounceTimer);
-      block.reactRoot.unmount();
-      block.shadowHost?.remove();
-    }
-    this.streamingBlocks.clear();
   }
 
   private cleanupReactRoots(): void {

@@ -102,6 +102,15 @@ export class AgentLoopEngine {
     while (getStore().currentRound <= getStore().maxRounds) {
       this.checkAbort();
 
+      // ── Breakpoint check ───────────────────────────────────────────────
+      const breakpoint = getStore().breakpointRound;
+      if (breakpoint !== null && getStore().currentRound === breakpoint) {
+        getStore().pause('已到达断点轮次');
+        getStore().setBreakpointRound(null);
+        agentEventBus.emit('loop:paused', { reason: 'breakpoint' });
+        return;
+      }
+
       // 1. Wait for AI response
       getStore().setStatus('waiting_ai');
       agentEventBus.emit('ai:response-waiting', undefined);
@@ -133,6 +142,9 @@ export class AgentLoopEngine {
         textLength: responseText.length,
         toolCallCount: toolCalls.length,
       });
+
+      // ── Token estimation for AI response ───────────────────────────────
+      getStore().addTokens(Math.round(responseText.length * 0.25));
 
       // 3. No tool calls → check circuit breaker for no-progress
       if (toolCalls.length === 0) {
@@ -211,6 +223,9 @@ export class AgentLoopEngine {
           result: result.substring(0, 200), // Truncate for event
           durationMs,
         });
+
+        // ── Token estimation for tool result ─────────────────────────────
+        getStore().addTokens(Math.round(result.length * 0.25));
 
         // ── Circuit breaker: failure tracking ────────────────────────────
         const failureResult = this.circuitBreaker.recordToolResult(
@@ -473,7 +488,16 @@ export class AgentLoopEngine {
   }
 
   private formatResults(results: string[], errors: string[]): string {
-    let output = '## Tool Execution Results\n\n';
+    let output = '';
+
+    // Inject user instruction if pending
+    const instruction = useAgentLoopStore.getState().pendingInstruction;
+    if (instruction) {
+      output += `## User Instruction\n\n${instruction}\n\n`;
+      useAgentLoopStore.getState().setPendingInstruction(null);
+    }
+
+    output += '## Tool Execution Results\n\n';
     output += results.join('\n\n---\n\n');
 
     if (errors.length > 0) {

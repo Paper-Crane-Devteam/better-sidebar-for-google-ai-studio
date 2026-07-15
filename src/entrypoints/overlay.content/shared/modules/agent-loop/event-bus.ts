@@ -47,6 +47,15 @@ export interface AgentEventMap {
   'user:confirmation-requested': { sql: string };
   'user:confirmation-responded': { confirmed: boolean; sql: string };
 
+  // ── Control Panel ──────────────────────────────────────────────────────
+  'control:speed-mode-changed': { enabled: boolean };
+  'control:instruction-injected': { instruction: string };
+  'control:tool-disabled': { toolName: string };
+  'control:tool-enabled': { toolName: string };
+  'control:breakpoint-set': { round: number | null };
+  'control:undo-requested': undefined;
+  'control:undo-completed': { success: boolean; error?: string };
+
   // ── Generic ────────────────────────────────────────────────────────────
   'debug:log': { level: 'info' | 'warn' | 'error'; message: string; data?: unknown };
 }
