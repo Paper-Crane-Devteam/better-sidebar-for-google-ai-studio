@@ -24,6 +24,7 @@ Em vez de fazer vocês esperarem pelas funções de exportação, estou lançand
 Já teve uma conversa de 50 turnos com o Gemini, mas tudo que você *realmente* queria guardar era aquele parágrafo genial ou aquele bloco de código impecável?
 Conheça os **Snippets**. Agora você pode extrair os melhores trechos de qualquer resposta da IA e salvar na sua biblioteca de Snippets dedicada. Adicionei gerenciamento por pastas, então aqueles lampejos de inspiração nunca mais vão se perder. (E sim, Snippets também podem ser exportados para Notion e Obsidian via Powerpack!)
 
+
 ## 📚 Um Sidebar renovado, liso como manteiga
 
 Nas últimas seis semanas, reconstruí a interface do Sidebar do zero. Mais limpa, mais organizada e, o mais importante, otimizei pesado a performance para **reduzir o lag nas animações**. Agora está incrivelmente fluido.

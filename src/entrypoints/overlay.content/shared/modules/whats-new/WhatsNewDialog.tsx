@@ -7,6 +7,7 @@ import { X, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { useI18n } from '@/shared/hooks/useI18n';
+import snippetDemoGif from '@/assets/images/snippet-demo.gif';
 
 export const WhatsNewDialog = () => {
   const { t } = useTranslation();
@@ -116,6 +117,16 @@ export const WhatsNewDialog = () => {
                   <MarkdownRenderer className="text-sm">
                     {markdown}
                   </MarkdownRenderer>
+
+                  {/* Inline media for specific versions */}
+                  {item.version === '2.8.0' && (
+                    <img
+                      src={snippetDemoGif}
+                      alt="Snippet Demo"
+                      className="rounded-md border border-border/50 shadow-sm w-full h-auto object-contain mt-4"
+                      loading="lazy"
+                    />
+                  )}
 
                   {/* Divider */}
                   {index < changelog.length - 1 && (

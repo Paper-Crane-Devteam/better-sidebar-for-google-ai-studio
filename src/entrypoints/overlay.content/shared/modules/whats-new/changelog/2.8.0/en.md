@@ -24,6 +24,7 @@ Instead of making you wait for the export features, I’m releasing the Powerpac
 Ever had a 50-turn conversation with Gemini, but all you *really* wanted to keep was that one brilliant paragraph or that single flawless code block? 
 Enter **Snippets**. You can now extract the highlights of any AI reply and save them to your dedicated Snippet library. I’ve even added folder management for Snippets, so your fleeting sparks of inspiration will never get lost again. (And yes, Snippets can also be exported to Notion and Obsidian via the Powerpack!)
 
+
 ## 📚 A Buttery-Smooth, Revamped Sidebar
 
 Over the past six weeks, I completely rebuilt the Sidebar UI from the ground up. It’s cleaner, highly organized, and most importantly, I've massively optimized the performance to **reduce animation lag**. It feels incredibly smooth now.
@@ -52,4 +53,3 @@ I also added a bunch of quality-of-life (and OCD-friendly) improvements:
 Thank you all so much for your patience over the last month and a half. I read every single Discord message and email, and your support is what keeps me coding late into the night. 
 
 Go try out the new version! If you run into any issues or have cool ideas, you know where to find me. See you in the next update (with Agents)! 👋
-

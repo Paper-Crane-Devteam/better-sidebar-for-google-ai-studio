@@ -24,6 +24,7 @@ En vez de haceros esperar por las funciones de exportación, lanzo el Powerpack 
 ¿Alguna vez tuviste una conversación de 50 turnos con Gemini, pero lo único que realmente querías guardar era ese párrafo brillante o ese bloque de código perfecto?
 Os presento **Snippets**. Ahora podéis extraer lo mejor de cualquier respuesta de la IA y guardarlo en vuestra biblioteca de Snippets. He añadido gestión por carpetas, así que esas chispas de inspiración fugaces ya nunca se perderán. (Y sí, los Snippets también se pueden exportar a Notion y Obsidian con el Powerpack.)
 
+
 ## 📚 Un Sidebar renovado, suave como la seda
 
 Durante las últimas seis semanas, reconstruí la interfaz del Sidebar desde cero. Más limpio, más organizado y, lo más importante, he optimizado masivamente el rendimiento para **reducir el lag en animaciones**. Ahora se siente increíblemente fluido.

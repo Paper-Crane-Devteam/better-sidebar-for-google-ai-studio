@@ -142,7 +142,7 @@ export const PowerPackPaywall = () => {
             <button
               onClick={() => {
                 const links = getPurchaseLinks();
-                window.open(isChinese ? links.afdian : links.gumroad, '_blank');
+                window.open(isChinese ? links.afdianPp : links.gumroadPp, '_blank');
                 close();
               }}
               className="inline-flex items-center gap-1 hover:text-foreground transition-colors underline underline-offset-2"
