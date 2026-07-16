@@ -11,7 +11,7 @@
     --sidebar-padding-y: 8px;
     --sidebar-icon-color: 68 71 70;
 
-    --background: 250 249 249; /* #faf9f9 - remy-surface */
+    --background: 253 253 253; /* #fdfdfd - lighter surface */
     --foreground: 31 31 31; /* #1f1f1f */
 
     --card: 255 255 255; /* #ffffff */
@@ -130,16 +130,17 @@
 }
 
 @layer components {
-  /* Sidebar Gradient - Gemini Specific (premium feel) */
+  /* Sidebar - Gemini Specific (flat, no gradient) */
   .theme-gemini .sidebar-nav,
   :host(.theme-gemini) .sidebar-nav {
-    background: linear-gradient(
-      to right,
-      color-mix(in srgb, rgb(var(--foreground)) 8%, rgb(var(--background))) 0%,
-      color-mix(in srgb, rgb(var(--foreground)) 4%, rgb(var(--background))) 50%,
-      rgb(var(--background)) 100%
-    );
-    border-right: 1px solid color-mix(in srgb, rgb(var(--foreground)) 6%, transparent);
+    background: rgb(var(--background));
+    border-right: 1px solid rgb(var(--border) / 0.5);
+  }
+
+  /* Content area (file tree, outline, etc.) - white background */
+  .theme-gemini .sidebar-nav + div,
+  :host(.theme-gemini) .sidebar-nav + div {
+    background: rgb(var(--card));
   }
 
   /* Active sidebar icon - Gemini Specific */

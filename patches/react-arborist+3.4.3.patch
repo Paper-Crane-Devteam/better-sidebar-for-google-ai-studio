@@ -1,0 +1,66 @@
+diff --git a/node_modules/react-arborist/dist/main/dnd/outer-drop-hook.js b/node_modules/react-arborist/dist/main/dnd/outer-drop-hook.js
+index b81f07d..210cc9c 100644
+--- a/node_modules/react-arborist/dist/main/dnd/outer-drop-hook.js
++++ b/node_modules/react-arborist/dist/main/dnd/outer-drop-hook.js
+@@ -5,6 +5,8 @@ const react_dnd_1 = require("react-dnd");
+ const context_1 = require("../context");
+ const compute_drop_1 = require("./compute-drop");
+ const dnd_slice_1 = require("../state/dnd-slice");
++const utils_1 = require("../utils");
++const create_root_1 = require("../data/create-root");
+ function useOuterDrop() {
+     const tree = (0, context_1.useTreeApi)();
+     // In case we drop an item at the bottom of the list
+@@ -39,6 +41,19 @@ function useOuterDrop() {
+                 tree.hideCursor();
+             }
+         },
++        drop: (_, m) => {
++            if (!m.canDrop())
++                return null;
++            let { parentId, index, dragIds } = tree.state.dnd;
++            (0, utils_1.safeRun)(tree.props.onMove, {
++                dragIds,
++                parentId: parentId === create_root_1.ROOT_ID ? null : parentId,
++                index: index === null ? 0 : index,
++                dragNodes: tree.dragNodes,
++                parentNode: tree.get(parentId),
++            });
++            tree.open(parentId);
++        },
+     }), [tree]);
+     drop(tree.listEl);
+ }
+diff --git a/node_modules/react-arborist/dist/module/dnd/outer-drop-hook.js b/node_modules/react-arborist/dist/module/dnd/outer-drop-hook.js
+index 7923010..fdd93c0 100644
+--- a/node_modules/react-arborist/dist/module/dnd/outer-drop-hook.js
++++ b/node_modules/react-arborist/dist/module/dnd/outer-drop-hook.js
+@@ -2,6 +2,8 @@ import { useDrop } from "react-dnd";
+ import { useTreeApi } from "../context";
+ import { computeDrop } from "./compute-drop";
+ import { actions as dnd } from "../state/dnd-slice";
++import { safeRun } from "../utils";
++import { ROOT_ID } from "../data/create-root";
+ export function useOuterDrop() {
+     const tree = useTreeApi();
+     // In case we drop an item at the bottom of the list
+@@ -36,6 +38,19 @@ export function useOuterDrop() {
+                 tree.hideCursor();
+             }
+         },
++        drop: (_, m) => {
++            if (!m.canDrop())
++                return null;
++            let { parentId, index, dragIds } = tree.state.dnd;
++            safeRun(tree.props.onMove, {
++                dragIds,
++                parentId: parentId === ROOT_ID ? null : parentId,
++                index: index === null ? 0 : index,
++                dragNodes: tree.dragNodes,
++                parentNode: tree.get(parentId),
++            });
++            tree.open(parentId);
++        },
+     }), [tree]);
+     drop(tree.listEl);
+ }

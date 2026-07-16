@@ -13,7 +13,7 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
-    "postinstall": "wxt prepare"
+    "postinstall": "patch-package && wxt prepare"
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
