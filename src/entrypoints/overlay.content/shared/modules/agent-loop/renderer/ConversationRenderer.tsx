@@ -47,7 +47,7 @@ import type { ParsedToolCall } from '../types';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const CHAT_CONTAINER_SELECTOR = 'infinite-scroller.chat-history, .conversation-container, chat-window';
+const CHAT_CONTAINER_SELECTOR = 'infinite-scroller.chat-history .conversation-container';
 const SKELETON_OVERLAY_CLASS = 'bs-agent-skeleton-overlay';
 const SKELETON_MARKER_ATTR = 'data-bs-skeleton';
 
