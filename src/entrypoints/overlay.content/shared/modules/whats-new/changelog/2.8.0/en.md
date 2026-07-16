@@ -14,7 +14,10 @@ First things first: **If you previously purchased the Supporter Pack, I have aut
 **💡 The Early Bird Strategy:**
 For new buyers, I want to be completely transparent. The ultimate killer feature of the Powerpack—**"AI Agent Local Takeover"** (where the AI can manage the plugin's data and act on your behalf)—is still in the oven. I've got the core engine running, but I want to polish it until it shines before releasing it. 
 Instead of making you wait for the export features, I’m releasing the Powerpack today at an **Early Bird Price** (e.g., $15). 
+
 **If you grab it now at this discounted rate, you will get the Agent feature completely for FREE when it officially launches (at which point the price will go up to $20).** Get in early, save some money, and enjoy the exports right now!
+
+**🛡️ 7-day no-questions-asked refund.** Not satisfied? Just email me within 7 days for a full refund. No forms, no hoops.
 
 ## ✂️ Save the Best for Last: Snippets
 

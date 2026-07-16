@@ -946,7 +946,8 @@
     "comingSoon": "近日公開",
     "comingSoon": "近日公開",
     "getPowerPack": "Power Pack を入手",
-    "popular": "人気"
+    "popular": "人気",
+    "refundPolicy": "7日間無条件返金保証"
   },
   "paywall": {
     "title": "Power Pack が必要です",
@@ -954,7 +955,8 @@
     "requiresPowerPack": "ご利用には Power Pack が必要です。",
     "includedFeatures": "含まれる機能",
     "getPowerPack": "Power Pack を入手",
-    "dismissHint": "Esc キーまたは外側をクリックで閉じます"
+    "dismissHint": "Esc キーまたは外側をクリックで閉じます",
+    "refundPolicy": "7日間無条件返金保証"
   },
   "supportPack": {
     "title": "サポートパック",

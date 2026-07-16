@@ -945,7 +945,8 @@
     "comingSoon": "Em breve",
     "comingSoon": "Em breve",
     "getPowerPack": "Obter Power Pack",
-    "popular": "POPULAR"
+    "popular": "POPULAR",
+    "refundPolicy": "Reembolso em 7 dias sem perguntas"
   },
   "paywall": {
     "title": "Power Pack Necessário",
@@ -953,7 +954,8 @@
     "requiresPowerPack": "requer Power Pack para uso.",
     "includedFeatures": "O que está incluído",
     "getPowerPack": "Obter Power Pack",
-    "dismissHint": "Pressione Esc ou clique fora para fechar"
+    "dismissHint": "Pressione Esc ou clique fora para fechar",
+    "refundPolicy": "Reembolso em 7 dias sem perguntas"
   },
   "supportPack": {
     "title": "Pacote de Suporte",

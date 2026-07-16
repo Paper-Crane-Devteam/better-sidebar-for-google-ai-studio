@@ -957,7 +957,8 @@
     "comingSoon": "即将推出",
     "comingSoon": "即将上线",
     "getPowerPack": "获取 Power Pack",
-    "popular": "热门"
+    "popular": "热门",
+    "refundPolicy": "7 天无理由退款"
   },
   "paywall": {
     "title": "需要 Power Pack",
@@ -965,7 +966,8 @@
     "requiresPowerPack": "需要 Power Pack 才能使用。",
     "includedFeatures": "包含功能",
     "getPowerPack": "获取 Power Pack",
-    "dismissHint": "按 Esc 或点击外部区域关闭"
+    "dismissHint": "按 Esc 或点击外部区域关闭",
+    "refundPolicy": "7 天无理由退款"
   },
   "supportPack": {
     "title": "支持包",

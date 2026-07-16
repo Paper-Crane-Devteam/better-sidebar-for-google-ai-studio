@@ -217,6 +217,9 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
 
       {/* Platform links by product */}
       <div className="space-y-2 text-xs text-muted-foreground">
+        <p className="text-center text-xs text-muted-foreground">
+          {t('packs.refundPolicy')}
+        </p>
         <div className="flex items-center justify-center gap-3">
           <span>Power Pack:</span>
           <button

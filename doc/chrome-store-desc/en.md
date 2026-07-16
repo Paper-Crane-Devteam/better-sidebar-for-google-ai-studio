@@ -5,17 +5,34 @@ Meet BETTER SIDEBAR FOR GEMINI & AI STUDIO — the ultimate workflow booster for
 
 We transform the default interface into a powerful, organized knowledge base. Stop scrolling endlessly through conversation history and start working efficiently.
 
-🔥 WHAT'S NEW (v2.7.0)
+🔥 WHAT'S NEW (v2.8.0)
 
-✨ Features:
-• ⌨️ Hotkey Support: Keyboard shortcuts for faster navigation and operations.
+🚀 Powerpack — Second Brain Integration:
+• Export conversations to Notion and Obsidian with perfect formatting and code block preservation.
+• Batch Export: Select multiple conversations and export them all at once.
+• Coming soon: AI Agent Local Takeover — let the AI manage plugin data and act on your behalf.
+• 7-day no-questions-asked refund on all paid packs.
 
-🐛 Fixes:
-• 💬 Improved Markdown styling in search preview messages for a better reading experience.
+✂️ Snippets:
+• Extract the best parts of any AI reply and save them to a dedicated Snippet library.
+• Folder management for Snippets to keep your sparks of inspiration organized.
+• Snippets can also be exported to Notion/Obsidian via the Powerpack.
 
-❤️ Supporter Pack:
-• 🎨 AI-Generated Custom Themes: Use AI to generate any custom theme you can imagine — cyberpunk, pastel, retro, anything goes.
-• 🎉 New sponsorship channel launched (Aifadian) for our Chinese users. Thank you all for your incredible support!
+📚 Revamped Sidebar:
+• Completely rebuilt UI — cleaner, better organized, massively reduced animation lag.
+• 👀 Conversation Outline: See the structure of long conversations at a glance.
+• 📝 Chat Remarks: Add custom descriptions/notes to individual chats.
+• ✨ Rich Tooltips: Hover to see creation date, description, and tags.
+• 📌 Folder Pinning & Drag-to-Reorder: Pin favorite folders to the top and reorder freely.
+• 🎯 Locate Active Chat: Auto-expand and snap to your current active conversation.
+
+⚡ Workflow Boosters:
+• Default Homes for Gems & Notebooks: Assign a default folder — new chats auto-sort themselves.
+• Magic Slash / Commands: Type "/" in Gemini input to instantly summon your Prompt Library.
+
+🎨 Visuals:
+• 10 new exclusive themes for Supporter Pack.
+• Markdown Changelog: Browse past update history in beautifully rendered Markdown.
 
 ---
 
@@ -42,7 +59,16 @@ Visualize your workflow with "Today", "Yesterday", and "Last Week" groupings.
 Batch-delete conversations with real server-side removal. No more ghost chats.
 
 📤 Conversation Export
-Export conversations as Markdown, Plain Text, or JSON for documentation or backup.
+Export individual conversations as Markdown, Plain Text, or JSON for documentation or backup. Batch export available with Powerpack.
+
+✂️ Snippets
+Extract highlights from any AI reply into a dedicated Snippet library with folder management.
+
+👀 Conversation Outline
+Pop open an Outline view to see the structure of long conversations at a glance.
+
+📝 Chat Remarks & Rich Tooltips
+Add descriptions to chats; hover for creation date, tags, and notes.
 
 ---
 
@@ -60,7 +86,7 @@ AI Studio:
 • Auto-hide run settings panel
 
 🎨 Themes
-3 exclusive themes available via Supporter Pack. Light/dark mode auto-detected.
+13 exclusive themes available via Supporter Pack (including AI-generated custom themes). Light/dark mode auto-detected.
 
 ---
 
@@ -77,6 +103,9 @@ Build your personal library of reusable prompts. Supports option variables, prom
 
 ☁️ Google Drive Auto Sync
 Automatically sync your settings, prompts, and config data to Google Drive in the background. Always backed up.
+
+🔗 Powerpack — Export to Notion & Obsidian
+Seamlessly export conversations and snippets to Notion and Obsidian with full formatting preserved. Batch export: select multiple conversations and export them all at once. 7-day no-questions-asked refund.
 
 ---
 

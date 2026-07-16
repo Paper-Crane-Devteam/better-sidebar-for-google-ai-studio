@@ -154,7 +154,7 @@ export const PowerPackPaywall = () => {
 
           {/* Dismiss text */}
           <p className="text-center text-[11px] text-muted-foreground/70">
-            {t('paywall.dismissHint')}
+            {t('paywall.refundPolicy')} · {t('paywall.dismissHint')}
           </p>
         </div>
       </div>

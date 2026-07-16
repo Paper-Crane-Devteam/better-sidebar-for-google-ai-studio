@@ -945,7 +945,8 @@
     "comingSoon": "Скоро",
     "comingSoon": "Скоро",
     "getPowerPack": "Получить Power Pack",
-    "popular": "ПОПУЛЯРНЫЙ"
+    "popular": "ПОПУЛЯРНЫЙ",
+    "refundPolicy": "Возврат без вопросов в течение 7 дней"
   },
   "paywall": {
     "title": "Требуется Power Pack",
@@ -953,7 +954,8 @@
     "requiresPowerPack": "для использования необходим Power Pack.",
     "includedFeatures": "Что включено",
     "getPowerPack": "Получить Power Pack",
-    "dismissHint": "Нажмите Esc или кликните за пределами для закрытия"
+    "dismissHint": "Нажмите Esc или кликните за пределами для закрытия",
+    "refundPolicy": "Возврат без вопросов в течение 7 дней"
   },
   "supportPack": {
     "title": "Пакет поддержки",

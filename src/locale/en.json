@@ -960,7 +960,8 @@
     "ppFeatureExport": "Export conversations & snippets to Obsidian and Notion",
     "comingSoon": "Coming Soon",
     "getPowerPack": "Get Power Pack",
-    "popular": "POPULAR"
+    "popular": "POPULAR",
+    "refundPolicy": "7-day no-questions-asked refund"
   },
   "paywall": {
     "title": "Power Pack Required",
@@ -968,7 +969,8 @@
     "requiresPowerPack": "requires Power Pack to use.",
     "includedFeatures": "What's included",
     "getPowerPack": "Get Power Pack",
-    "dismissHint": "Press Esc or click outside to dismiss"
+    "dismissHint": "Press Esc or click outside to dismiss",
+    "refundPolicy": "7-day no-questions-asked refund"
   },
   "supportPack": {
     "title": "Support Pack",

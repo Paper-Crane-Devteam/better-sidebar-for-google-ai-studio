@@ -14,7 +14,10 @@ Lo primero: **Si ya compraste el Supporter Pack, te he actualizado automáticame
 **💡 La estrategia Early Bird:**
 Para los nuevos compradores, quiero ser totalmente transparente. La función estrella del Powerpack — **"AI Agent Local Takeover"** (el AI gestiona los datos del plugin y actúa en tu nombre) — todavía está en el horno. El motor principal ya funciona, pero quiero pulirlo bien antes de lanzarlo.
 En vez de haceros esperar por las funciones de exportación, lanzo el Powerpack hoy a un **precio Early Bird** (ej. $15).
+
 **Si lo compras ahora a este precio reducido, recibirás la función Agent completamente GRATIS cuando se lance oficialmente (momento en que el precio subirá a $20).** Entra temprano, ahorra dinero y disfruta de las exportaciones ya mismo.
+
+**🛡️ Reembolso sin preguntas en 7 días.** ¿No te convence? Escríbeme en 7 días y te devuelvo el dinero. Sin formularios ni complicaciones.
 
 ## ✂️ Lo mejor para el final: Snippets
 

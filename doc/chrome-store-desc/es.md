@@ -6,17 +6,34 @@ Organiza conversaciones en carpetas, busca en todos los mensajes, exporta chats,
 
 Transformamos la interfaz predeterminada en una base de conocimientos poderosa y organizada. Deja de desplazarte sin fin por el historial y comienza a trabajar eficientemente.
 
-🔥 NOVEDADES (v2.7.0)
+🔥 NOVEDADES (v2.8.0)
 
-✨ Nuevas funciones:
-• ⌨️ Atajos de teclado: Nuevas teclas rápidas (Hotkeys) para una navegación y operación más eficiente.
+🚀 Powerpack — Integración con Second Brain:
+• Exporta conversaciones a Notion y Obsidian con formato y bloques de código perfectamente preservados.
+• Exportación por lotes: Selecciona múltiples conversaciones y expórtalas de una vez.
+• Próximamente: AI Agent Local Takeover — deja que la IA gestione los datos del plugin y actúe en tu nombre.
+• Reembolso sin preguntas en 7 días en todos los packs de pago.
 
-🐛 Correcciones:
-• 💬 Mejora del estilo Markdown en la vista previa de búsqueda para una mejor experiencia de lectura.
+✂️ Snippets:
+• Extrae lo mejor de cualquier respuesta de IA y guárdalo en tu biblioteca de Snippets.
+• Gestión de carpetas para Snippets — tus chispas de inspiración nunca más se perderán.
+• Los Snippets también se pueden exportar a Notion/Obsidian vía Powerpack.
 
-❤️ Supporter Pack:
-• 🎨 Temas personalizados con IA: Usa IA para generar cualquier tema que puedas imaginar — cyberpunk, pastel, retro, lo que quieras.
-• 🎉 Nuevo canal de patrocinio lanzado. ¡Gracias por vuestro increíble apoyo!
+📚 Barra lateral renovada:
+• UI completamente reconstruida — más limpia, mejor organizada, con lag de animación drásticamente reducido.
+• 👀 Esquema de conversación: Ve la estructura de conversaciones largas de un vistazo.
+• 📝 Notas de chat: Añade descripciones/notas personalizadas a chats individuales.
+• ✨ Tooltips enriquecidos: Pasa el cursor para ver fecha de creación, descripción y etiquetas.
+• 📌 Carpetas fijadas y arrastrar para reordenar: Fija tus carpetas favoritas arriba y reordénalas libremente.
+• 🎯 Localizar chat activo: Expande automáticamente y salta a tu conversación activa actual.
+
+⚡ Potenciadores de workflow:
+• Carpetas predeterminadas para Gems y Notebooks: Asigna una carpeta por defecto — los nuevos chats se clasifican solos.
+• Comandos mágicos con barra /: Escribe "/" en la entrada de Gemini para invocar tu Biblioteca de Prompts.
+
+🎨 Visual:
+• 10 nuevos temas exclusivos para Supporter Pack.
+• Changelog en Markdown: Navega por el historial de actualizaciones en Markdown.
 
 ---
 
@@ -43,7 +60,16 @@ Visualiza tu flujo de trabajo con agrupaciones de "Hoy", "Ayer" y "Semana Pasada
 Elimina conversaciones por lotes con eliminación real del lado del servidor. No más chats fantasma.
 
 📥 Exportar Conversaciones
-Exporta conversaciones como Markdown, texto plano o JSON.
+Exporta conversaciones individuales como Markdown, texto plano o JSON. Exportación por lotes disponible con Powerpack.
+
+✂️ Snippets
+Extrae lo mejor de cualquier respuesta de IA en una biblioteca de Snippets con gestión de carpetas.
+
+👀 Esquema de Conversación
+Abre la vista de esquema para ver la estructura de conversaciones largas de un vistazo.
+
+📝 Notas de Chat y Tooltips Enriquecidos
+Añade descripciones a los chats; pasa el cursor para ver fecha, etiquetas y notas.
 
 ---
 
@@ -61,7 +87,7 @@ AI Studio:
 • Ocultar automáticamente el panel de configuración de ejecución
 
 🎨 Temas
-3 temas exclusivos (Supporter Pack). Detección automática de modo claro/oscuro.
+13 temas exclusivos (Supporter Pack, incluyendo temas generados por IA). Detección automática de modo claro/oscuro.
 
 ---
 
@@ -78,6 +104,9 @@ Construye tu biblioteca personal de prompts reutilizables. Soporta variables de 
 
 ☁️ Sincronización Automática con Google Drive
 Configuraciones y biblioteca de prompts se sincronizan automáticamente con Google Drive en segundo plano.
+
+🔗 Powerpack — Exportar a Notion y Obsidian
+Exporta conversaciones y snippets a Notion y Obsidian sin perder formato. Exportación por lotes: selecciona múltiples conversaciones y expórtalas de una vez. Reembolso sin preguntas en 7 días.
 
 ---
 
