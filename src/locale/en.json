@@ -153,7 +153,9 @@
     "createPrompt": "Create Prompt",
     "editPrompt": "Edit Prompt",
     "noPrompts": "No prompts yet.",
-    "selectAnOption": "Select an option"
+    "selectAnOption": "Select an option",
+    "slashTip": "Tip: Type / in the input box to quickly insert a prompt.",
+    "slashTipDismiss": "Got it"
   },
   "snippets": {
     "createSnippet": "New Snippet",

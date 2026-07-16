@@ -19,6 +19,7 @@ import { CreatePromptForm } from './components/CreatePromptForm';
 import { PromptPreviewContent } from './components/PromptPreviewContent';
 import { PromptIconDisplay } from './lib/prompt-icons';
 import { modal } from '@/shared/lib/modal';
+import { SlashTip } from './components/SlashTip';
 
 interface PromptsTabProps {
   menuActions?: {
@@ -282,6 +283,9 @@ export const PromptsTab = ({ menuActions }: PromptsTabProps) => {
           </ContextMenuItem>
         </ContextMenuContent>
       </ExclusiveContextMenu>
+
+      {/* Slash tip - shown only once */}
+      <SlashTip />
     </div>
   );
 };

@@ -151,7 +151,9 @@
     "createPrompt": "Создать промпт",
     "editPrompt": "Редактировать промпт",
     "noPrompts": "Промптов пока нет.",
-    "selectAnOption": "Выберите вариант"
+    "selectAnOption": "Выберите вариант",
+    "slashTip": "Совет: введите / в поле ввода, чтобы быстро вставить промпт.",
+    "slashTipDismiss": "Понятно"
   },
   "snippets": {
     "createSnippet": "Новый фрагмент",

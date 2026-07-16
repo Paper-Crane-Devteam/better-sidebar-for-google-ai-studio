@@ -151,7 +151,9 @@
     "createPrompt": "Criar Prompt",
     "editPrompt": "Editar Prompt",
     "noPrompts": "Nenhum prompt ainda.",
-    "selectAnOption": "Selecione uma opção"
+    "selectAnOption": "Selecione uma opção",
+    "slashTip": "Dica: Digite / na caixa de entrada para inserir rapidamente um prompt.",
+    "slashTipDismiss": "Entendi"
   },
   "snippets": {
     "createSnippet": "Novo Trecho",

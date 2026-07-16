@@ -153,7 +153,9 @@
     "createPrompt": "创建 Prompt",
     "editPrompt": "编辑 Prompt",
     "noPrompts": "暂无 Prompt",
-    "selectAnOption": "请选择"
+    "selectAnOption": "请选择",
+    "slashTip": "提示：在输入框中输入 / 可快速插入 Prompt。",
+    "slashTipDismiss": "知道了"
   },
   "snippets": {
     "createSnippet": "新建片段",

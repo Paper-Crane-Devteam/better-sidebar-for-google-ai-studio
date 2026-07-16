@@ -151,7 +151,9 @@
     "createPrompt": "プロンプトを作成",
     "editPrompt": "プロンプトを編集",
     "noPrompts": "プロンプトがありません",
-    "selectAnOption": "選択してください"
+    "selectAnOption": "選択してください",
+    "slashTip": "ヒント：入力欄で / を入力すると、プロンプトをすばやく挿入できます。",
+    "slashTipDismiss": "了解"
   },
   "snippets": {
     "createSnippet": "新規スニペット",
