@@ -1,11 +1,12 @@
 /**
- * AgentLoopStatusBar — Non-blocking status indicator shown while Agent Loop is running.
- * Displays current round, executing tool, and provides stop/retry controls.
+ * AgentLoopStatusBar — Non-blocking status indicator for Agent Loop.
+ * Shows a compact pill with current activity status + action buttons.
+ * Persists after loop ends so user can review the session history via the panel.
  *
  * Uses forwardRef so it can serve as Radix Popover.Trigger via `asChild`.
  */
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useMemo } from 'react';
 import { useAgentLoopStore } from './agent-loop-store';
 
 interface AgentLoopStatusBarProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -17,66 +18,83 @@ export const AgentLoopStatusBar = forwardRef<HTMLDivElement, AgentLoopStatusBarP
   ({ onStop, onRetry, ...props }, ref) => {
     const status = useAgentLoopStore((s) => s.status);
     const currentRound = useAgentLoopStore((s) => s.currentRound);
-    const maxRounds = useAgentLoopStore((s) => s.maxRounds);
     const currentTool = useAgentLoopStore((s) => s.currentTool);
+    const currentResults = useAgentLoopStore((s) => s.currentResults);
+    const history = useAgentLoopStore((s) => s.history);
     const errorMessage = useAgentLoopStore((s) => s.errorMessage);
     const speedMode = useAgentLoopStore((s) => s.speedMode);
 
-    if (status === 'idle') return null;
+    // Total tool calls across all rounds
+    const totalToolCalls = useMemo(() => {
+      return currentResults.length + history.reduce((sum, h) => sum + h.results.length, 0);
+    }, [currentResults, history]);
 
-    const getStatusText = () => {
+    // Don't render if never started (no history and idle)
+    if (status === 'idle' && currentRound === 0 && history.length === 0) return null;
+
+    const getStatusDisplay = () => {
       switch (status) {
         case 'waiting_ai':
-          return 'Waiting for AI response...';
+          return { text: 'Thinking...', icon: '🧠' };
         case 'parsing':
-          return 'Parsing tool calls...';
+          return { text: 'Parsing...', icon: '📋' };
         case 'executing':
-          return currentTool ? `Executing: ${currentTool}` : 'Executing tools...';
+          return { text: currentTool ? `${currentTool}` : 'Executing...', icon: '⚙️' };
         case 'sending':
-          return 'Sending results...';
+          return { text: 'Sending...', icon: '📤' };
         case 'paused':
-          return errorMessage || 'Paused';
+          return { text: errorMessage || 'Paused', icon: '⏸️' };
         case 'error':
-          return errorMessage || 'Error occurred';
+          return { text: errorMessage || 'Error', icon: '❌' };
+        case 'idle':
+          return { text: `${totalToolCalls} tools · ${currentRound} rounds`, icon: '✅' };
         default:
-          return '';
+          return { text: '', icon: '' };
       }
     };
 
+    const { text, icon } = getStatusDisplay();
     const isActive = ['waiting_ai', 'parsing', 'executing', 'sending'].includes(status);
     const isPaused = status === 'paused';
     const isError = status === 'error';
+    const isIdle = status === 'idle';
 
     return (
       <div
         ref={ref}
         {...props}
-        className={`fixed bottom-20 left-1/2 z-[99998] flex -translate-x-1/2 cursor-pointer items-center gap-3 rounded-full border px-4 py-2 shadow-lg ${
+        className={`fixed bottom-20 left-1/2 z-[99998] flex -translate-x-1/2 cursor-pointer items-center gap-2.5 rounded-full border px-4 py-2 shadow-lg transition-all duration-200 ${
           speedMode
             ? 'border-orange-500/50 bg-orange-500/10'
             : isError
               ? 'border-destructive/30 bg-destructive/10'
               : isPaused
                 ? 'border-warning/30 bg-warning/10'
-                : 'border-primary/30 bg-primary/10'
+                : isIdle
+                  ? 'border-border/50 bg-muted/80'
+                  : 'border-primary/30 bg-primary/10'
         }`}
       >
-        {/* Spinner */}
-        {isActive && (
+        {/* Activity indicator */}
+        {isActive ? (
           <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        ) : (
+          <span className="text-xs">{icon}</span>
         )}
 
-        {/* Speed mode indicator */}
-        {speedMode && <span className="text-xs text-orange-500">⚡</span>}
+        {/* Speed mode badge */}
+        {speedMode && <span className="text-[10px] font-bold text-orange-500">⚡</span>}
 
-        {/* Round indicator */}
-        <span className="text-xs font-medium text-foreground">
-          Round {currentRound}/{maxRounds}
-        </span>
+        {/* Round badge (only during active execution) */}
+        {!isIdle && (
+          <span className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-[10px] font-medium text-foreground">
+            R{currentRound}
+          </span>
+        )}
 
         {/* Status text */}
-        <span className="max-w-[200px] truncate text-xs text-muted-foreground">
-          {getStatusText()}
+        <span className="max-w-[180px] truncate text-xs text-muted-foreground">
+          {text}
         </span>
 
         {/* Action buttons */}
@@ -110,9 +128,14 @@ export const AgentLoopStatusBar = forwardRef<HTMLDivElement, AgentLoopStatusBarP
               }}
               className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted/80 transition-colors"
             >
-              Stop
+              Dismiss
             </button>
           </div>
+        )}
+
+        {/* Idle state: view details hint */}
+        {isIdle && (
+          <span className="text-[10px] text-muted-foreground/60">Click to view</span>
         )}
       </div>
     );

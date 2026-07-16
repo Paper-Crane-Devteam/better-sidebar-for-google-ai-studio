@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { useAppStore } from '@/shared/lib/store';
-import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Star, Image as ImageIcon, MessageSquare } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
@@ -25,8 +24,7 @@ export const FavoritesList = ({
   const { favorites, conversations, conversationTags, toggleFavorite } =
     useAppStore();
   const currentConversationId = useCurrentConversationId();
-  const layoutDensity = useSettingsStore((state) => state.layoutDensity);
-  const rowHeight = layoutDensity === 'compact' ? 32 : 38;
+  const rowHeight = 32;
 
   const favoriteItems = useMemo(() => {
     const items: any[] = [];

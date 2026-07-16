@@ -1,6 +1,7 @@
 /**
  * AgentLoopControlPanel — Root component.
  * Wraps the existing StatusBar as a Popover trigger, opens control panel above it.
+ * StatusBar persists after loop ends so users can review session history.
  */
 
 import React, { useEffect } from 'react';

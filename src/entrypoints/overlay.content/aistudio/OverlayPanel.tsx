@@ -54,7 +54,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const { path } = useUrl();
 
   const [, setContainer] = useState<HTMLDivElement | null>(null);
-  const layoutDensity = useSettingsStore((state) => state.layoutDensity);
   const newChatBehavior = useSettingsStore((state) => state.newChatBehavior);
   const shortcuts = useSettingsStore((state) => state.shortcuts);
   const hasSettingsBadge = useBadgeStore((s) => s.isGroupVisible('settings.'));
@@ -233,7 +232,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     <div
       ref={setContainer}
       className={`flex bg-background text-foreground ${className || 'h-full'} relative`}
-      data-density={layoutDensity}
     >
       {/* Sidebar Tabs */}
       <div className="sidebar-nav border-r flex flex-col items-center bg-muted/20 shrink-0">

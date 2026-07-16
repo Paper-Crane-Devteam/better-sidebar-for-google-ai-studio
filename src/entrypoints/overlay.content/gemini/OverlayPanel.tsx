@@ -65,7 +65,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const { t } = useI18n();
   const { path } = useUrl();
 
-  const layoutDensity = useSettingsStore((state) => state.layoutDensity);
   const shortcuts = useSettingsStore((state) => state.shortcuts);
   const hasSettingsBadge = useBadgeStore((s) => s.isGroupVisible('settings.'));
 
@@ -188,7 +187,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   return (
     <div
       className={`flex bg-background text-foreground ${className || 'h-full'} relative overflow-hidden`}
-      data-density={layoutDensity}
     >
       {/* Sidebar Tabs */}
       <div className="sidebar-nav flex flex-col items-center shrink-0">

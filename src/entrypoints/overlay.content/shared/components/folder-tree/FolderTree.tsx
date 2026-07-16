@@ -2,7 +2,6 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 import { Tree, NodeRendererProps, RowRendererProps } from 'react-arborist';
 import { FolderTreeNodeData, FolderTreeHandle } from './types';
 import { useFolderTree, UseFolderTreeOptions } from './useFolderTree';
-import { useSettingsStore } from '@/shared/lib/settings-store';
 
 export interface FolderTreeProps extends UseFolderTreeOptions {
   /** Tree data (already transformed into hierarchy) */
@@ -13,7 +12,7 @@ export interface FolderTreeProps extends UseFolderTreeOptions {
   renderNode: (props: NodeRendererProps<FolderTreeNodeData>) => React.ReactElement;
   /** Custom row renderer (optional, e.g. FolderTintRow) */
   renderRow?: (props: RowRendererProps<FolderTreeNodeData>) => React.ReactElement;
-  /** Override row height (defaults to density-based) */
+  /** Override row height (defaults to 32) */
   rowHeight?: number;
 }
 
@@ -31,8 +30,7 @@ export const FolderTree = forwardRef<FolderTreeHandle, FolderTreeProps>(
       handleToggle,
     } = useFolderTree(hookOptions);
 
-    const layoutDensity = useSettingsStore((s) => s.layoutDensity);
-    const rowHeight = rowHeightProp ?? (layoutDensity === 'compact' ? 32 : 38);
+    const rowHeight = rowHeightProp ?? 32;
 
     useImperativeHandle(ref, () => ({
       collapseAll: () => {

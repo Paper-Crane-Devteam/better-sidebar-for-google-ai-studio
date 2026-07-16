@@ -32,7 +32,7 @@
 
     --radius: 0.5rem;
 
-    /* Density Variables - Default (Compact) */
+    /* Density Variables */
     --density-row-height: 28px;
     --density-icon-size: 12px;
     --density-font-size: 13px;
@@ -42,17 +42,6 @@
 
     /* Font Family Defaults */
     --font-sans: 'Inter', 'Microsoft YaHei', 'PingFang SC', 'Noto Sans SC', sans-serif;
-  }
-
-  /* Relaxed Mode */
-  [data-density='relaxed'],
-  :host([data-density='relaxed']) {
-    --density-row-height: 36px;
-    --density-icon-size: 18px;
-    --density-font-size: 14px;
-    --density-padding-x: 12px;
-    --density-padding-y: 8px;
-    --density-gap: 8px;
   }
 
   .dark,
@@ -99,15 +88,6 @@
     --sidebar-gap: 8px;
     --sidebar-padding-y: 8px;
     // --sidebar-icon-color: 68 71 70;
-  }
-
-  .theme-aistudio [data-density='relaxed'],
-  :host(.theme-aistudio) [data-density='relaxed'] {
-    /* AI Studio Relaxed - Slightly bigger */
-    --sidebar-width: 56px;
-    --sidebar-button-size: 44px;
-    --sidebar-gap: 12px;
-    --sidebar-padding-y: 12px;
   }
 
   /* Custom Slider Styles */

@@ -94,14 +94,6 @@
     --ring: 168 199 250; /* Approximated blue-100 for focus ring */
   }
 
-  /* Relaxed Mode - Theme Specific Overrides */
-  .theme-chatgpt [data-density='relaxed'],
-  :host(.theme-chatgpt) [data-density='relaxed'] {
-    --sidebar-width: 60px;
-    --sidebar-button-size: 44px;
-    --sidebar-gap: 12px;
-    --sidebar-padding-y: 12px;
-  }
 }
 
 /* ChatGPT Scrollbar */
