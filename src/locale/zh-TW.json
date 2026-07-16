@@ -8,6 +8,8 @@
     "hide": "隱藏",
     "edit": "編輯",
     "save": "儲存",
+    "saved": "已儲存",
+    "copy": "複製",
     "close": "關閉",
     "loading": "載入中...",
     "settings": "設定",
@@ -785,6 +787,17 @@
     "noTagsAvailable": "沒有可用的標籤。",
     "saveChanges": "儲存變更",
     "cancel": "取消"
+  },
+  "slashCommand": {
+    "promptLibrary": "提示詞庫",
+    "noResults": "未找到符合的提示詞",
+    "results": "個結果",
+    "navigate": "導覽",
+    "select": "選取",
+    "dismiss": "關閉",
+    "fillVariables": "填寫變數",
+    "insert": "插入",
+    "promptInserted": "提示詞已插入"
   },
   "filterBar": {
     "all": "全部"

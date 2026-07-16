@@ -8,6 +8,8 @@
     "hide": "Ocultar",
     "edit": "Editar",
     "save": "Salvar",
+    "saved": "Salvo",
+    "copy": "Copiar",
     "close": "Fechar",
     "loading": "Carregando...",
     "settings": "Configurações",
@@ -785,6 +787,17 @@
     "noTagsAvailable": "Nenhuma tag disponível.",
     "saveChanges": "Salvar alterações",
     "cancel": "Cancelar"
+  },
+  "slashCommand": {
+    "promptLibrary": "Biblioteca de Prompts",
+    "noResults": "Nenhum prompt correspondente encontrado",
+    "results": "resultados",
+    "navigate": "navegar",
+    "select": "selecionar",
+    "dismiss": "fechar",
+    "fillVariables": "Preencher Variáveis",
+    "insert": "Inserir",
+    "promptInserted": "Prompt inserido"
   },
   "filterBar": {
     "all": "Todos"
