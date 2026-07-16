@@ -1,8 +1,8 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import { Button } from '../../../components/ui/button';
 import { Separator } from '../../../components/ui/separator';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
-import { Moon, Sun, Monitor, Check, Sparkles, Eye, ShoppingCart, Wand2, Download, Trash2 } from 'lucide-react';
+import { Moon, Sun, Monitor, Check, Sparkles, Eye, ShoppingCart, Wand2, Download, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useLicenseStore, isLicenseValid } from '@/shared/lib/license-store';
 import { openPurchasePage } from '@/shared/lib/license-links';
@@ -25,6 +25,9 @@ import { ImportThemeModalContentStateful, handleImportTheme } from '../component
 
 /** Preview duration: 5 minutes */
 const PREVIEW_DURATION_MS = 5 * 60 * 1000;
+
+/** Number of theme cards per page */
+const THEMES_PER_PAGE = 4;
 
 /**
  * Module-level preview timer — survives component unmount/remount.
@@ -68,6 +71,66 @@ const themePreviewColors: Record<
     accent: '#00ff41',
     secondary: '#ffb000',
   },
+  'nord-aurora': {
+    bg: '#2e3440',
+    fg: '#eceff4',
+    accent: '#88c0d0',
+    secondary: '#3b4252',
+  },
+  'cyberpunk-neon': {
+    bg: '#0a0a0f',
+    fg: '#e8e8f0',
+    accent: '#ff0080',
+    secondary: '#00c8ff',
+  },
+  'paper-ink': {
+    bg: '#faf9f6',
+    fg: '#1a1a1a',
+    accent: '#2c3e6b',
+    secondary: '#ebebeb',
+  },
+  solarized: {
+    bg: '#002b36',
+    fg: '#839496',
+    accent: '#2aa198',
+    secondary: '#b58900',
+  },
+  'rose-pine': {
+    bg: '#191724',
+    fg: '#e0def4',
+    accent: '#ebbcba',
+    secondary: '#f6c177',
+  },
+  'tokyo-night': {
+    bg: '#1a1b26',
+    fg: '#a9b1d6',
+    accent: '#7aa2f7',
+    secondary: '#bb9af7',
+  },
+  'catppuccin-mocha': {
+    bg: '#1e1e2e',
+    fg: '#cdd6f4',
+    accent: '#b4befe',
+    secondary: '#fab387',
+  },
+  dracula: {
+    bg: '#282a36',
+    fg: '#f8f8f2',
+    accent: '#bd93f9',
+    secondary: '#50fa7b',
+  },
+  'ocean-breeze': {
+    bg: '#f8fbfd',
+    fg: '#1e3a4c',
+    accent: '#0077b6',
+    secondary: '#ff6b6b',
+  },
+  'midnight-purple': {
+    bg: '#0d0d14',
+    fg: '#e4e4f0',
+    accent: '#8b5cf6',
+    secondary: '#6366f1',
+  },
 };
 
 /** Map theme preset ID to i18n keys */
@@ -83,6 +146,46 @@ const themeI18nKeys: Record<BuiltinThemePresetId, { name: string; description: s
   'retro-terminal': {
     name: 'themeSettings.retroTerminalName',
     description: 'themeSettings.retroTerminalDescription',
+  },
+  'nord-aurora': {
+    name: 'themeSettings.nordAuroraName',
+    description: 'themeSettings.nordAuroraDescription',
+  },
+  'cyberpunk-neon': {
+    name: 'themeSettings.cyberpunkNeonName',
+    description: 'themeSettings.cyberpunkNeonDescription',
+  },
+  'paper-ink': {
+    name: 'themeSettings.paperInkName',
+    description: 'themeSettings.paperInkDescription',
+  },
+  solarized: {
+    name: 'themeSettings.solarizedName',
+    description: 'themeSettings.solarizedDescription',
+  },
+  'rose-pine': {
+    name: 'themeSettings.rosePineName',
+    description: 'themeSettings.rosePineDescription',
+  },
+  'tokyo-night': {
+    name: 'themeSettings.tokyoNightName',
+    description: 'themeSettings.tokyoNightDescription',
+  },
+  'catppuccin-mocha': {
+    name: 'themeSettings.catppuccinMochaName',
+    description: 'themeSettings.catppuccinMochaDescription',
+  },
+  dracula: {
+    name: 'themeSettings.draculaName',
+    description: 'themeSettings.draculaDescription',
+  },
+  'ocean-breeze': {
+    name: 'themeSettings.oceanBreezeName',
+    description: 'themeSettings.oceanBreezeDescription',
+  },
+  'midnight-purple': {
+    name: 'themeSettings.midnightPurpleName',
+    description: 'themeSettings.midnightPurpleDescription',
   },
 };
 
@@ -263,84 +366,22 @@ export const ThemeSettings = () => {
         <PreviewBanner t={t} />
       )}
 
-      {/* All themes in a unified grid */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Default Theme Card (v2) */}
-        <ThemeCard
-          name={t('themeSettings.default')}
-          description={t('themeSettings.defaultDescription')}
-          colors={{
-            bg: '#faf9f9',
-            fg: '#1f1f1f',
-            accent: '#0b57d0',
-            secondary: '#f0f4f9',
-          }}
-          isActive={isDefaultTheme}
-          onClick={handleDefaultClick}
-        />
-
-        {/* Gemini Classic Card — only on Gemini platform */}
-        {isGemini && (
-          <ThemeCard
-            name={t('themeSettings.classic')}
-            description={t('themeSettings.classicDescription')}
-            colors={{
-              bg: '#e9eef6',
-              fg: '#1f1f1f',
-              accent: '#0b57d0',
-              secondary: '#dde3ea',
-            }}
-            isActive={isClassicTheme}
-            onClick={handleClassicClick}
-          />
-        )}
-
-        {/* Custom presets */}
-        {themePresetIds.map((id) => {
-          const preset = themeRegistry[id];
-          const colors = themePreviewColors[id];
-          const isPreviewing = isPreviewActive && previewThemeId === id;
-          const i18nKeys = themeI18nKeys[id];
-          return (
-            <ThemeCard
-              key={id}
-              name={t(i18nKeys.name)}
-              description={t(i18nKeys.description)}
-              colors={colors}
-              isActive={customTheme === id}
-              isPremium={preset.isPremium}
-              hasLicense={hasLicense}
-              isPreviewing={isPreviewing}
-              onClick={() => handleThemeClick(id)}
-            />
-          );
-        })}
-
-        {/* User-created themes */}
-        {userThemes.map((ut) => {
-          // Extract preview colors from the theme's variables
-          const getVar = (prop: string) =>
-            ut.variables.find((v) => v.property === prop)?.value ?? '';
-          const colors = {
-            bg: getVar('--gem-sys-color--surface') || '#888',
-            fg: getVar('--gem-sys-color--on-surface') || '#000',
-            accent: getVar('--gem-sys-color--primary') || '#666',
-            secondary: getVar('--gem-sys-color--secondary-container') || '#aaa',
-          };
-          return (
-            <ThemeCard
-              key={ut.id}
-              name={ut.name}
-              description={ut.description}
-              colors={colors}
-              isActive={customTheme === ut.id}
-              isUserTheme
-              onClick={() => handleThemeClick(ut.id)}
-              onDelete={() => handleDeleteUserTheme(ut.id)}
-            />
-          );
-        })}
-      </div>
+      {/* Paginated theme grid */}
+      <PaginatedThemeGrid
+        t={t}
+        customTheme={customTheme}
+        isDefaultTheme={isDefaultTheme}
+        isClassicTheme={isClassicTheme}
+        isGemini={isGemini}
+        isPreviewActive={isPreviewActive}
+        previewThemeId={previewThemeId}
+        hasLicense={hasLicense}
+        userThemes={userThemes}
+        handleDefaultClick={handleDefaultClick}
+        handleClassicClick={handleClassicClick}
+        handleThemeClick={handleThemeClick}
+        handleDeleteUserTheme={handleDeleteUserTheme}
+      />
 
       {/* AI Theme Generator Section */}
       <div className="space-y-3">
@@ -398,6 +439,187 @@ function PreviewBanner({ t }: { t: (key: string) => string }) {
         <ShoppingCart className="h-3 w-3 mr-1" />
         {t('themeSettings.buyNow')}
       </Button>
+    </div>
+  );
+}
+
+/** Paginated theme grid — shows 4 themes per page with dot indicators */
+function PaginatedThemeGrid({
+  t,
+  customTheme,
+  isDefaultTheme,
+  isClassicTheme,
+  isGemini,
+  isPreviewActive,
+  previewThemeId,
+  hasLicense,
+  userThemes,
+  handleDefaultClick,
+  handleClassicClick,
+  handleThemeClick,
+  handleDeleteUserTheme,
+}: {
+  t: (key: string) => string;
+  customTheme: string | null;
+  isDefaultTheme: boolean;
+  isClassicTheme: boolean;
+  isGemini: boolean;
+  isPreviewActive: boolean;
+  previewThemeId: string | null;
+  hasLicense: boolean;
+  userThemes: Array<{ id: string; name: string; description: string; variables: Array<{ property: string; value: string }> }>;
+  handleDefaultClick: () => void;
+  handleClassicClick: () => void;
+  handleThemeClick: (id: string) => void;
+  handleDeleteUserTheme: (id: string) => void;
+}) {
+  const [currentPage, setCurrentPage] = useState(0);
+
+  // Build all theme card descriptors into a flat array
+  const allCards = useMemo(() => {
+    const cards: Array<{
+      key: string;
+      name: string;
+      description: string;
+      colors: { bg: string; fg: string; accent: string; secondary: string };
+      isActive: boolean;
+      isPremium?: boolean;
+      isPreviewing?: boolean;
+      isUserTheme?: boolean;
+      onClick: () => void;
+      onDelete?: () => void;
+    }> = [];
+
+    // Default theme
+    cards.push({
+      key: '__default__',
+      name: t('themeSettings.default'),
+      description: t('themeSettings.defaultDescription'),
+      colors: { bg: '#faf9f9', fg: '#1f1f1f', accent: '#0b57d0', secondary: '#f0f4f9' },
+      isActive: isDefaultTheme,
+      onClick: handleDefaultClick,
+    });
+
+    // Classic (Gemini only)
+    if (isGemini) {
+      cards.push({
+        key: '__classic__',
+        name: t('themeSettings.classic'),
+        description: t('themeSettings.classicDescription'),
+        colors: { bg: '#e9eef6', fg: '#1f1f1f', accent: '#0b57d0', secondary: '#dde3ea' },
+        isActive: isClassicTheme,
+        onClick: handleClassicClick,
+      });
+    }
+
+    // Built-in presets
+    for (const id of themePresetIds) {
+      const preset = themeRegistry[id];
+      const colors = themePreviewColors[id];
+      const i18nKeys = themeI18nKeys[id];
+      cards.push({
+        key: id,
+        name: t(i18nKeys.name),
+        description: t(i18nKeys.description),
+        colors,
+        isActive: customTheme === id,
+        isPremium: preset.isPremium,
+        isPreviewing: isPreviewActive && previewThemeId === id,
+        onClick: () => handleThemeClick(id),
+      });
+    }
+
+    // User-created themes
+    for (const ut of userThemes) {
+      const getVar = (prop: string) =>
+        ut.variables.find((v) => v.property === prop)?.value ?? '';
+      const colors = {
+        bg: getVar('--gem-sys-color--surface') || '#888',
+        fg: getVar('--gem-sys-color--on-surface') || '#000',
+        accent: getVar('--gem-sys-color--primary') || '#666',
+        secondary: getVar('--gem-sys-color--secondary-container') || '#aaa',
+      };
+      cards.push({
+        key: ut.id,
+        name: ut.name,
+        description: ut.description,
+        colors,
+        isActive: customTheme === ut.id,
+        isUserTheme: true,
+        onClick: () => handleThemeClick(ut.id),
+        onDelete: () => handleDeleteUserTheme(ut.id),
+      });
+    }
+
+    return cards;
+  }, [t, customTheme, isDefaultTheme, isClassicTheme, isGemini, isPreviewActive, previewThemeId, hasLicense, userThemes, handleDefaultClick, handleClassicClick, handleThemeClick, handleDeleteUserTheme]);
+
+  const totalPages = Math.ceil(allCards.length / THEMES_PER_PAGE);
+  const pagedCards = allCards.slice(
+    currentPage * THEMES_PER_PAGE,
+    (currentPage + 1) * THEMES_PER_PAGE
+  );
+
+  // Clamp page if items removed
+  if (currentPage >= totalPages && totalPages > 0) {
+    setCurrentPage(totalPages - 1);
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* 2×2 Grid */}
+      <div className="grid grid-cols-2 gap-3">
+        {pagedCards.map((card) => (
+          <ThemeCard
+            key={card.key}
+            name={card.name}
+            description={card.description}
+            colors={card.colors}
+            isActive={card.isActive}
+            isPremium={card.isPremium}
+            hasLicense={hasLicense}
+            isPreviewing={card.isPreviewing}
+            isUserTheme={card.isUserTheme}
+            onClick={card.onClick}
+            onDelete={card.onDelete}
+          />
+        ))}
+      </div>
+
+      {/* Pagination dots */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            disabled={currentPage === 0}
+            onClick={() => setCurrentPage((p) => p - 1)}
+          >
+            <ChevronLeft className="h-3 w-3" />
+          </Button>
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                className={`h-2 w-2 rounded-full transition-colors ${
+                  i === currentPage ? 'bg-primary' : 'bg-muted-foreground/30'
+                }`}
+                onClick={() => setCurrentPage(i)}
+              />
+            ))}
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            disabled={currentPage === totalPages - 1}
+            onClick={() => setCurrentPage((p) => p + 1)}
+          >
+            <ChevronRight className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

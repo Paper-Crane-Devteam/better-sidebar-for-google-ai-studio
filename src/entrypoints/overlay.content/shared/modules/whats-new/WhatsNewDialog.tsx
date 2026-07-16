@@ -1,8 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWhatsNew } from './useWhatsNew';
-import { getChangelog, CURRENT_VERSION, changelogItemToMarkdown } from './changelog';
-import type { ChangeLogItem } from './changelog';
+import { getChangelog, CURRENT_VERSION, getEntryMarkdown } from './changelog';
+import type { ChangeLogEntry } from './changelog';
 import { X, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
@@ -91,8 +91,8 @@ export const WhatsNewDialog = () => {
             className="border-x px-10 py-8 space-y-12"
             style={{ backgroundColor: 'var(--panel-bg)' }}
           >
-            {changelog.map((item: ChangeLogItem, index: number) => {
-              const markdown = changelogItemToMarkdown(item);
+            {changelog.map((item: ChangeLogEntry, index: number) => {
+              const markdown = getEntryMarkdown(item);
               const isLatest = index === 0;
 
               return (

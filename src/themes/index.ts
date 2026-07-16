@@ -18,6 +18,16 @@ import type { BuiltinThemePresetId, ThemePreset, ThemeRegistry } from './types';
 import { grimoire } from './presets/grimoire';
 import { cupertinoGlass } from './presets/cupertino-glass';
 import { retroTerminal } from './presets/retro-terminal';
+import { nordAurora } from './presets/nord-aurora';
+import { cyberpunkNeon } from './presets/cyberpunk-neon';
+import { paperInk } from './presets/paper-ink';
+import { solarized } from './presets/solarized';
+import { rosePine } from './presets/rose-pine';
+import { tokyoNight } from './presets/tokyo-night';
+import { catppuccinMocha } from './presets/catppuccin-mocha';
+import { dracula } from './presets/dracula';
+import { oceanBreeze } from './presets/ocean-breeze';
+import { midnightPurple } from './presets/midnight-purple';
 import { useUserThemeStore, userThemeToPreset } from './user-themes';
 
 /** Built-in theme presets (static) */
@@ -25,6 +35,16 @@ const builtinRegistry: Record<BuiltinThemePresetId, ThemePreset> = {
   grimoire,
   'cupertino-glass': cupertinoGlass,
   'retro-terminal': retroTerminal,
+  'nord-aurora': nordAurora,
+  'cyberpunk-neon': cyberpunkNeon,
+  'paper-ink': paperInk,
+  solarized,
+  'rose-pine': rosePine,
+  'tokyo-night': tokyoNight,
+  'catppuccin-mocha': catppuccinMocha,
+  dracula,
+  'ocean-breeze': oceanBreeze,
+  'midnight-purple': midnightPurple,
 };
 
 /**
@@ -57,4 +77,14 @@ export const themePresetIds: BuiltinThemePresetId[] = [
   'cupertino-glass',
   'grimoire',
   'retro-terminal',
+  'nord-aurora',
+  'cyberpunk-neon',
+  'paper-ink',
+  'solarized',
+  'rose-pine',
+  'tokyo-night',
+  'catppuccin-mocha',
+  'dracula',
+  'ocean-breeze',
+  'midnight-purple',
 ];

@@ -16,10 +16,10 @@ import { useI18n } from '@/shared/hooks/useI18n';
 import { cn } from '@/shared/lib/utils/utils';
 
 const FEATURES = [
-  { icon: 'fluent-color:bot-sparkle-24', key: 'ppFeatureAgent' },
-  { icon: 'fluent-color:database-24', key: 'ppFeatureWrite' },
-  { icon: 'fluent-color:history-24', key: 'ppFeatureHistory' },
-  { icon: 'fluent-color:share-android-24', key: 'ppFeatureExport' },
+  { icon: 'fluent-color:bot-sparkle-24', key: 'ppFeatureAgent', comingSoon: true },
+  { icon: 'fluent-color:database-24', key: 'ppFeatureWrite', comingSoon: true },
+  { icon: 'fluent-color:history-24', key: 'ppFeatureHistory', comingSoon: true },
+  { icon: 'fluent-color:share-android-24', key: 'ppFeatureExport', comingSoon: false },
 ] as const;
 
 export const PowerPackPaywall = () => {
@@ -105,12 +105,17 @@ export const PowerPackPaywall = () => {
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               {t('paywall.includedFeatures')}
             </p>
-            {FEATURES.map(({ icon: iconName, key }) => (
+            {FEATURES.map(({ icon: iconName, key, comingSoon }) => (
               <div key={key} className="flex items-center gap-2">
                 <div className="h-6 w-6 rounded-md bg-violet-500/10 flex items-center justify-center shrink-0">
                   <UIcon icon={iconName} width={14} height={14} />
                 </div>
                 <span className="text-sm">{t(`packs.${key}`)}</span>
+                {comingSoon && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 whitespace-nowrap">
+                    {t('packs.comingSoon')}
+                  </span>
+                )}
               </div>
             ))}
           </div>
