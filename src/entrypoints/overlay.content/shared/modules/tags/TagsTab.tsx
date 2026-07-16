@@ -54,7 +54,7 @@ export const TagsTab = ({ menuActions }: TagsTabProps) => {
   return (
     <div className="flex flex-col h-full w-full">
       {/* Header */}
-      <div className="p-3 border-b flex items-center justify-between h-12 shrink-0">
+      <div className="p-3 border-b border-border/50 flex items-center justify-between h-12 shrink-0">
         <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground/70">
           {t('tabs.tags')}
         </h1>
@@ -64,7 +64,7 @@ export const TagsTab = ({ menuActions }: TagsTabProps) => {
       </div>
 
       {/* Create Tag Input */}
-      <div className="p-3 border-b flex gap-2">
+      <div className="p-3 border-b border-border/50 flex gap-2">
         <Input
           placeholder={t('tags.newTagName')}
           value={newTagName}

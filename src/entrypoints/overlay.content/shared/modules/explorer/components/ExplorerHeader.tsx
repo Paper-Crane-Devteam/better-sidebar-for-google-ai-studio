@@ -28,6 +28,7 @@ import type { FilterState, ExplorerTypeFilter } from '../../../types/filter';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { BatchToolbar } from './batch/BatchToolbar';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
+import { Input } from '@/entrypoints/overlay.content/shared/components/ui/input';
 import { CollapsibleSection } from '../../../components/CollapsibleSection';
 
 // ── Type Filter Dropdown ────────────────────────────────────────────
@@ -361,12 +362,12 @@ export const ExplorerHeader = ({
 
               <div className="flex-1 relative">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                <input
+                <Input
                   ref={searchInputRef}
                   value={localQuery}
                   onChange={handleSearchChange}
                   placeholder={t('tooltip.search')}
-                  className="flex h-7 w-full rounded-sm border border-border/60 bg-transparent pl-7 pr-7 text-xs shadow-sm transition-colors placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="h-7 rounded-sm pl-7 pr-7 text-xs"
                   onKeyDown={(e) => {
                     if (e.key === 'Escape') {
                       handleClearSearch();

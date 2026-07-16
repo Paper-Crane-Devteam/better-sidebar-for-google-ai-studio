@@ -5,6 +5,7 @@ import { useOutline } from './useOutline';
 import { FilterChips } from './components/FilterChips';
 import { OutlineSectionItem } from './components/OutlineSectionItem';
 import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/entrypoints/overlay.content/shared/components/ui/input';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { debounce } from 'lodash';
 
@@ -104,12 +105,12 @@ export const OutlineContent = forwardRef<OutlineContentHandle>((_, ref) => {
 
         <div className="flex-1 relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
-          <input
+          <Input
             ref={searchInputRef}
             value={localQuery}
             onChange={handleSearchChange}
             placeholder={t('outline.searchPlaceholder')}
-            className="flex h-7 w-full rounded-sm border border-border/60 bg-transparent pl-7 pr-7 text-xs shadow-sm transition-colors placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-7 rounded-sm pl-7 pr-7 text-xs"
             onKeyDown={(e) => {
               if (e.key === 'Escape') {
                 handleClearSearch();
