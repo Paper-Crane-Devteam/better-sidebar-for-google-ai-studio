@@ -111,6 +111,8 @@ export const SnippetReaderDrawer = () => {
 
   const { isOpen, folderId, activeSnippetId } = ui.snippets.readerDrawer;
   const { sortOrder } = ui.snippets;
+  const activeTab = ui.overlay.activeTab;
+  const shouldShow = isOpen && activeTab === 'snippets';
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const cardRefsMap = useRef<Map<string, HTMLDivElement>>(new Map());
   const hasScrolledRef = useRef(false);
@@ -163,7 +165,7 @@ export const SnippetReaderDrawer = () => {
 
   // Handle open/close animation
   useEffect(() => {
-    if (isOpen) {
+    if (shouldShow) {
       hasScrolledRef.current = false;
       requestAnimationFrame(() => {
         setIsVisible(true);
@@ -171,7 +173,7 @@ export const SnippetReaderDrawer = () => {
     } else {
       setIsVisible(false);
     }
-  }, [isOpen]);
+  }, [shouldShow]);
 
   // Scroll to active snippet using refs (Shadow DOM safe)
   const scrollToSnippet = useCallback((snippetId: string, behavior: ScrollBehavior = 'instant') => {
