@@ -441,7 +441,7 @@ export const ExplorerTab = ({
 
       {/* CHATS Section (collapsible, VSCode-style) */}
       <div
-        className={`flex flex-col min-h-0 ${isChatsSectionExpanded ? 'flex-1' : ''}`}
+        className={`group/chats flex flex-col min-h-0 ${isChatsSectionExpanded ? 'flex-1' : ''}`}
       >
       <ExplorerHeader
         onNewFolder={handleNewFolder}

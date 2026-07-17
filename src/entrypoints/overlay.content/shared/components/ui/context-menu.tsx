@@ -3,7 +3,7 @@ import * as ContextMenuPrimitive from "@radix-ui/react-context-menu"
 import { Check, ChevronRight, Circle } from "lucide-react"
 
 import { cn } from "@/shared/lib/utils/utils"
-import { useShadowRoot } from "@/shared/components/ShadowRootContext"
+import { getPopupLayerContainer } from "@/shared/lib/popup-layer"
 
 const ContextMenu = ContextMenuPrimitive.Root
 
@@ -42,9 +42,9 @@ const ContextMenuSubContent = React.forwardRef<
   React.ElementRef<typeof ContextMenuPrimitive.SubContent>,
   React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.SubContent>
 >(({ className, ...props }, ref) => {
-  const container = useShadowRoot();
+  const portalContainer = getPopupLayerContainer() ?? undefined;
   return (
-    <ContextMenuPrimitive.Portal container={container}>
+    <ContextMenuPrimitive.Portal container={portalContainer}>
       <ContextMenuPrimitive.SubContent
         ref={ref}
         className={cn(
@@ -62,9 +62,9 @@ const ContextMenuContent = React.forwardRef<
   React.ElementRef<typeof ContextMenuPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Content>
 >(({ className, ...props }, ref) => {
-  const container = useShadowRoot();
+  const portalContainer = getPopupLayerContainer() ?? undefined;
   return (
-    <ContextMenuPrimitive.Portal container={container}>
+    <ContextMenuPrimitive.Portal container={portalContainer}>
       <ContextMenuPrimitive.Content
         ref={ref}
         className={cn(

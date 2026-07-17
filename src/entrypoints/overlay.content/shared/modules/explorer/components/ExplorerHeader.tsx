@@ -344,6 +344,7 @@ export const ExplorerHeader = ({
         onToggle={onToggleChatsSection}
         actions={chatsSectionActions}
         contentClassName="flex-1 min-h-0"
+        actionsVisibilityClass="opacity-0 group-hover/chats:opacity-100"
       >
         <div className="animate-in fade-in slide-in-from-top-1 duration-150">
             {/* Search row with filter funnel on left */}

@@ -12,6 +12,7 @@ import { SaveSnippetFeature } from './SaveSnippetFeature';
 import { SnippetDragDrawer } from '@/entrypoints/overlay.content/shared/modules/snippets/components/SnippetDragFolderView';
 import { GlobalModal } from '@/shared/components/GlobalModal';
 import { GlobalPopoverPicker } from '@/shared/components/GlobalPopoverPicker';
+import { GlobalToast } from '@/shared/components/GlobalToast';
 import { SnippetReaderDrawer } from '@/entrypoints/overlay.content/shared/modules/snippets/components/SnippetReaderDrawer';
 import { SettingsModal } from '@/entrypoints/overlay.content/shared/modules/settings/SettingsModal';
 import { WhatsNewDialog } from '@/entrypoints/overlay.content/shared/modules/whats-new/WhatsNewDialog';
@@ -55,6 +56,7 @@ export const GeminiEnhancedFeatures = () => {
       <WhatsNewDialog />
       <GlobalModal />
       <GlobalPopoverPicker />
+      <GlobalToast />
     </>
   );
 };

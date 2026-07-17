@@ -34,7 +34,6 @@ import { SnippetsTab } from '../shared/modules/snippets/SnippetsTab';
 import { FirstInstallPrompt } from '../shared/modules/whats-new/FirstInstallPrompt';
 import '@/index.scss';
 import { ProfilePickerDialog } from '../shared/components/ProfilePickerDialog';
-import { GlobalToast } from '@/shared/components/GlobalToast';
 import { PowerPackPaywall } from '@/shared/components/PowerPackPaywall';
 import { useAppInit } from '../shared/hooks/useAppInit';
 import { OverlayToggle } from '../shared/components/OverlayToggle';
@@ -463,7 +462,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       <FirstInstallPrompt />
       <ProfilePickerDialog />
       <RatingPromptDialog />
-      <GlobalToast />
       <PowerPackPaywall />
       <HotkeyCheatsheet />
       {guidedTour.showPrompt && isSidebarExpanded && (

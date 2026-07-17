@@ -30,7 +30,6 @@ import { FirstInstallPrompt } from '../shared/modules/whats-new/FirstInstallProm
 import { RatingPromptDialog } from '../shared/modules/feedback/RatingPromptDialog';
 import '@/index.scss';
 import { ProfilePickerDialog } from '../shared/components/ProfilePickerDialog';
-import { GlobalToast } from '@/shared/components/GlobalToast';
 import { PowerPackPaywall } from '@/shared/components/PowerPackPaywall';
 import { useAppInit } from '../shared/hooks/useAppInit';
 import { OverlayToggle } from '../shared/components/OverlayToggle';
@@ -421,7 +420,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       <RatingPromptDialog />
 
       <ProfilePickerDialog />
-      <GlobalToast />
       <PowerPackPaywall />
       <HotkeyCheatsheet />
       {showSqlInterface && <SqlExecutor onClose={() => setShowSqlInterface(false)} />}

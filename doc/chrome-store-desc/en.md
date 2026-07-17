@@ -10,7 +10,7 @@ We transform the default interface into a powerful, organized knowledge base. St
 🚀 Powerpack — Second Brain Integration:
 • Export conversations to Notion and Obsidian with perfect formatting and code block preservation.
 • Batch Export: Select multiple conversations and export them all at once.
-• Coming soon: AI Agent Local Takeover — let the AI manage plugin data and act on your behalf.
+• Coming soon: AI Agent Local Takeover — let the AI manage extension data and act on your behalf.
 • 7-day no-questions-asked refund on all paid packs.
 
 ✂️ Snippets:
