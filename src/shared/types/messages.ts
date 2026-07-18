@@ -460,6 +460,11 @@ export type ExtensionMessage = (
       type: 'NOTION_API_REQUEST';
       payload: { endpoint: string; method: string; body?: any; apiKey: string };
     }
+  // Permission page (open via background to avoid popup blocker)
+  | {
+      type: 'OPEN_PERMISSION_PAGE';
+      payload: { origin: string };
+    }
 ) & { platform?: string };
 
 export interface ExtensionResponse {

@@ -37,14 +37,16 @@ export async function requestHostPermission(origin: string): Promise<boolean> {
 }
 
 /**
- * Open the permission grant page in a new tab.
- * Use this from content scripts where chrome.permissions.request() is not available.
- * Returns a promise that resolves to true once permission is granted (via storage listener).
+ * Open the permission grant page in a popup window via background.
+ * Use this from content scripts where chrome.permissions.request() is not available
+ * and window.open() is blocked by the popup blocker.
+ *
+ * Sends a message to the background service worker which creates a popup window
+ * using chrome.windows.create(). The popup page handles the permission request
+ * and signals the result via browser.storage.local.
  */
 export function openPermissionPage(origin: string): Promise<boolean> {
   return new Promise((resolve) => {
-    const permUrl = browser.runtime.getURL(`/permissions.html?origins=${encodeURIComponent(origin)}`);
-
     // Listen for the grant signal from the permissions page
     const listener = (changes: Record<string, { oldValue?: any; newValue?: any }>) => {
       if ('_permission_granted' in changes) {
@@ -56,8 +58,14 @@ export function openPermissionPage(origin: string): Promise<boolean> {
     };
     browser.storage.local.onChanged.addListener(listener);
 
-    // Open the permission page in a new tab
-    window.open(permUrl, '_blank');
+    // Ask background to open the permission page as a popup window
+    // (content script can't use window.open() or chrome.permissions.request())
+    browser.runtime.sendMessage({
+      type: 'OPEN_PERMISSION_PAGE',
+      payload: { origin },
+    }).catch((err) => {
+      console.error('[HostPermission] Failed to send OPEN_PERMISSION_PAGE message:', err);
+    });
 
     // Timeout: if user doesn't grant within 2 minutes, resolve false
     setTimeout(() => {
