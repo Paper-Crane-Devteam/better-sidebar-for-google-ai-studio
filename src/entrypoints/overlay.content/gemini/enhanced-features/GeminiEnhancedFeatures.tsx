@@ -48,7 +48,7 @@ export const GeminiEnhancedFeatures = () => {
       <QuickResendFeature />
       <AutoHideInputFeature />
       <SlashCommandFeature />
-      <AgentLoopFeature />
+      {/* <AgentLoopFeature /> */}
       <SaveSnippetFeature />
       <SnippetDragDrawer />
       <SnippetReaderDrawer />
