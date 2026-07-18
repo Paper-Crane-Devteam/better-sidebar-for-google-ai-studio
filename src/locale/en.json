@@ -55,7 +55,7 @@
     "privacyPolicy": "Privacy Policy",
     "disclaimer": "Disclaimer",
     "termsOfService": "Terms of Service",
-    "sponsor": "Sponsor",
+    "sponsor": "Share",
     "about": "About",
     "appearance": "Appearance",
     "theme": "Theme",
@@ -212,11 +212,17 @@
     "viewChangelog": "View Changelog"
   },
   "sponsor": {
-    "title": "Support Us",
+    "title": "Share with Friends",
     "enjoying": "Enjoying Better Sidebar?",
-    "description": "This is a free, open-source project built with love ❤️ If it makes your workflow better, a rating, a GitHub star, sharing with friends, or buying us a coffee means the world to us!",
+    "shareDescription": "Share it with friends and help more people discover this free, open-source productivity tool ❤️",
     "sponsorOnGithub": "Star on GitHub",
-    "buyMeACoffee": "Buy me a Coffee ☕"
+    "copyLink": "Copy Link & Text",
+    "copied": "Copied",
+    "weibo": "Weibo",
+    "xiaohongshu": "Xiaohongshu",
+    "wechat": "WeChat",
+    "wechatScan": "Scan or long press to share with friends",
+    "xiaohongshuCopied": "Text copied! Paste it on Xiaohongshu 📝"
   },
   "data": {
     "librarySync": "Data Sync",
@@ -847,7 +853,10 @@
     "enjoyingIt": "Enjoying Better Sidebar? Show some love",
     "rateUs": "Rate 👍",
     "starOnGithub": "Star ⭐",
-    "buyMeACoffee": "Coffee ☕"
+    "buyMeACoffee": "Coffee ☕",
+    "showAllVersions": "Show all versions",
+    "hidePatchVersions": "Major only",
+    "patch": "Patch"
   },
   "smartScrollbar": {
     "conversationOutline": "Conversation Outline",

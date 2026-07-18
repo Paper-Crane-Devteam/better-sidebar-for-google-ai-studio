@@ -55,7 +55,7 @@
     "privacyPolicy": "隐私政策",
     "disclaimer": "免责声明",
     "termsOfService": "服务条款",
-    "sponsor": "赞助",
+    "sponsor": "分享",
     "about": "关于",
     "appearance": "外观",
     "theme": "主题",
@@ -212,11 +212,17 @@
     "viewChangelog": "查看更新日志"
   },
   "sponsor": {
-    "title": "支持我们",
+    "title": "分享给朋友",
     "enjoying": "喜欢 Better Sidebar 吗？",
-    "description": "这是一个免费的开源项目，靠爱发电 ❤️ 如果它让你用得顺手，给个好评、点颗星、分享给朋友，或者请我喝杯咖啡，都是对我们最大的鼓励！",
+    "shareDescription": "帮我们分享一下，让更多人发现这个免费开源的效率工具 ❤️",
     "sponsorOnGithub": "去 GitHub 点颗星",
-    "buyMeACoffee": "请我喝杯咖啡 ☕"
+    "copyLink": "复制链接和文案",
+    "copied": "已复制",
+    "weibo": "微博",
+    "xiaohongshu": "小红书",
+    "wechat": "微信",
+    "wechatScan": "扫码或长按识别，分享给好友",
+    "xiaohongshuCopied": "文案已复制，去小红书粘贴发布吧 📝"
   },
   "data": {
     "librarySync": "数据同步",
@@ -862,7 +868,10 @@
     "enjoyingIt": "觉得好用？支持一下",
     "rateUs": "好评 👍",
     "starOnGithub": "点星 ⭐",
-    "buyMeACoffee": "咖啡 ☕"
+    "buyMeACoffee": "咖啡 ☕",
+    "showAllVersions": "显示所有版本",
+    "hidePatchVersions": "仅大版本",
+    "patch": "修复"
   },
   "smartScrollbar": {
     "conversationOutline": "对话大纲",

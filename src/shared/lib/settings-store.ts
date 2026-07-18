@@ -84,6 +84,8 @@ interface SettingsState {
   };
   /** Persisted height of the outline panel in pixels */
   outlineHeight: number;
+  /** Cached page index for the theme grid pagination (session-only, not persisted) */
+  themeGridPage: number;
 
   // Actions
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
@@ -112,6 +114,7 @@ interface SettingsState {
   setLastSelectedNotebookId: (id: string | null) => void;
   setNotionConfig: (config: Partial<SettingsState['integrations']['notion']>) => void;
   setOutlineHeight: (height: number) => void;
+  setThemeGridPage: (page: number) => void;
 }
 
 const storage: StateStorage = {
@@ -227,6 +230,7 @@ export const useSettingsStore = create<SettingsState>()(
         },
       },
       outlineHeight: 200,
+      themeGridPage: 0,
 
       setTheme: (theme) => {
         set({ theme });
@@ -299,11 +303,17 @@ export const useSettingsStore = create<SettingsState>()(
           },
         })),
       setOutlineHeight: (height) => set({ outlineHeight: height }),
+      setThemeGridPage: (page) => set({ themeGridPage: page }),
     }),
     {
       name: getStorageName(),
       storage: createJSONStorage(() => storage),
       version: 4,
+      partialize: (state) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { themeGridPage, ...rest } = state;
+        return rest;
+      },
       migrate: (persistedState: any, version: number) => {
         if (version === 0) {
           const oldEnhanced = persistedState.enhancedFeatures || {};

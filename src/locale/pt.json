@@ -55,7 +55,7 @@
     "privacyPolicy": "Política de Privacidade",
     "disclaimer": "Aviso Legal",
     "termsOfService": "Termos de Serviço",
-    "sponsor": "Patrocinador",
+    "sponsor": "Compartilhar",
     "about": "Sobre",
     "appearance": "Aparência",
     "theme": "Tema",
@@ -212,11 +212,17 @@
     "viewChangelog": "Ver registro de alterações"
   },
   "sponsor": {
-    "title": "Apoie-nos",
+    "title": "Compartilhar",
     "enjoying": "Gostando do Better Sidebar?",
-    "description": "Este é um projeto gratuito e de código aberto feito com amor ❤️ Se ele melhora seu fluxo de trabalho, uma avaliação, uma estrela no GitHub, compartilhar com amigos ou nos pagar um café significa muito para nós.",
+    "shareDescription": "Compartilhe com amigos e ajude mais pessoas a descobrir esta ferramenta gratuita e de código aberto ❤️",
     "sponsorOnGithub": "Dar estrela no GitHub",
-    "buyMeACoffee": "Me pague um café ☕"
+    "copyLink": "Copiar Link e Texto",
+    "copied": "Copiado",
+    "weibo": "Weibo",
+    "xiaohongshu": "Xiaohongshu",
+    "wechat": "WeChat",
+    "wechatScan": "Escaneie ou pressione para compartilhar",
+    "xiaohongshuCopied": "Texto copiado! Cole no Xiaohongshu 📝"
   },
   "data": {
     "librarySync": "Sincronização de Dados",
@@ -863,7 +869,10 @@
     "enjoyingIt": "Gostando? Mostre seu apoio",
     "rateUs": "Avaliar 👍",
     "starOnGithub": "Estrela ⭐",
-    "buyMeACoffee": "Café ☕"
+    "buyMeACoffee": "Café ☕",
+    "showAllVersions": "Mostrar todas as versões",
+    "hidePatchVersions": "Apenas principais",
+    "patch": "Correção"
   },
   "smartScrollbar": {
     "conversationOutline": "Esboço da Conversa",

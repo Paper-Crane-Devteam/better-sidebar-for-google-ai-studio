@@ -55,7 +55,7 @@
     "privacyPolicy": "Политика конфиденциальности",
     "disclaimer": "Отказ от ответственности",
     "termsOfService": "Условия использования",
-    "sponsor": "Спонсор",
+    "sponsor": "Поделиться",
     "about": "О программе",
     "appearance": "Внешний вид",
     "theme": "Тема",
@@ -212,11 +212,17 @@
     "viewChangelog": "Просмотреть журнал изменений"
   },
   "sponsor": {
-    "title": "Поддержите нас",
+    "title": "Поделиться",
     "enjoying": "Нравится Better Sidebar?",
-    "description": "Это бесплатный проект с открытым исходным кодом, созданный с любовью ❤️ Если он улучшает ваш рабочий процесс, оценка, звезда на GitHub, рекомендация друзьям или чашка кофе — всё это очень много значит для нас.",
+    "shareDescription": "Поделитесь с друзьями и помогите большему количеству людей узнать об этом бесплатном инструменте ❤️",
     "sponsorOnGithub": "Поставить звезду на GitHub",
-    "buyMeACoffee": "Угостить кофе ☕"
+    "copyLink": "Копировать ссылку и текст",
+    "copied": "Скопировано",
+    "weibo": "Weibo",
+    "xiaohongshu": "Xiaohongshu",
+    "wechat": "WeChat",
+    "wechatScan": "Сканируйте или нажмите, чтобы поделиться",
+    "xiaohongshuCopied": "Текст скопирован! Вставьте в Xiaohongshu 📝"
   },
   "data": {
     "librarySync": "Синхронизация данных",
@@ -863,7 +869,10 @@
     "enjoyingIt": "Нравится? Поддержите нас",
     "rateUs": "Оценить 👍",
     "starOnGithub": "Звезда ⭐",
-    "buyMeACoffee": "Кофе ☕"
+    "buyMeACoffee": "Кофе ☕",
+    "showAllVersions": "Показать все версии",
+    "hidePatchVersions": "Только основные",
+    "patch": "Патч"
   },
   "smartScrollbar": {
     "conversationOutline": "Структура диалога",

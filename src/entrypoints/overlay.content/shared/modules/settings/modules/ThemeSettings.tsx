@@ -473,7 +473,8 @@ function PaginatedThemeGrid({
   handleThemeClick: (id: string) => void;
   handleDeleteUserTheme: (id: string) => void;
 }) {
-  const [currentPage, setCurrentPage] = useState(0);
+  const currentPage = useSettingsStore((s) => s.themeGridPage);
+  const setCurrentPage = useSettingsStore((s) => s.setThemeGridPage);
 
   // Build all theme card descriptors into a flat array
   const allCards = useMemo(() => {
@@ -594,7 +595,7 @@ function PaginatedThemeGrid({
             size="icon"
             className="h-6 w-6"
             disabled={currentPage === 0}
-            onClick={() => setCurrentPage((p) => p - 1)}
+            onClick={() => setCurrentPage(currentPage - 1)}
           >
             <ChevronLeft className="h-3 w-3" />
           </Button>
@@ -614,7 +615,7 @@ function PaginatedThemeGrid({
             size="icon"
             className="h-6 w-6"
             disabled={currentPage === totalPages - 1}
-            onClick={() => setCurrentPage((p) => p + 1)}
+            onClick={() => setCurrentPage(currentPage + 1)}
           >
             <ChevronRight className="h-3 w-3" />
           </Button>

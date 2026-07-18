@@ -55,7 +55,7 @@
     "privacyPolicy": "プライバシーポリシー",
     "disclaimer": "免責事項",
     "termsOfService": "利用規約",
-    "sponsor": "スポンサー",
+    "sponsor": "シェア",
     "about": "について",
     "appearance": "外観",
     "theme": "テーマ",
@@ -212,11 +212,17 @@
     "viewChangelog": "更新履歴を見る"
   },
   "sponsor": {
-    "title": "応援する",
+    "title": "友達にシェア",
     "enjoying": "Better Sidebar を気に入っていただけましたか？",
-    "description": "無料のオープンソースプロジェクトです ❤️ 役に立てているなら、レビュー・GitHub スター・お友達への紹介・コーヒーのご支援、どれも大きな励みになります！",
+    "shareDescription": "友達にシェアして、このオープンソースツールをもっと多くの人に届けましょう ❤️",
     "sponsorOnGithub": "GitHub でスターを付ける",
-    "buyMeACoffee": "コーヒーをおごる ☕"
+    "copyLink": "リンクとテキストをコピー",
+    "copied": "コピーしました",
+    "weibo": "Weibo",
+    "xiaohongshu": "Xiaohongshu",
+    "wechat": "WeChat",
+    "wechatScan": "スキャンまたは長押しして共有",
+    "xiaohongshuCopied": "テキストをコピーしました 📝"
   },
   "data": {
     "librarySync": "データ同期",
@@ -864,7 +870,10 @@
     "enjoyingIt": "気に入ったら応援してください",
     "rateUs": "評価 👍",
     "starOnGithub": "スター ⭐",
-    "buyMeACoffee": "コーヒー ☕"
+    "buyMeACoffee": "コーヒー ☕",
+    "showAllVersions": "すべてのバージョンを表示",
+    "hidePatchVersions": "メジャーのみ",
+    "patch": "パッチ"
   },
   "smartScrollbar": {
     "conversationOutline": "会話アウトライン",
