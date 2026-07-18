@@ -101,9 +101,9 @@
     background: transparent;
   }
 
-  /* Text fade mask when action bar is visible */
-  .group:hover > .node-text-content,
-  .group.node-menu-active > .node-text-content {
+  /* Text fade mask when action bar is visible (but not during editing) */
+  .group:hover > .node-text-content:not(.is-editing),
+  .group.node-menu-active > .node-text-content:not(.is-editing) {
     -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent 100%);
     mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent 100%);
   }
