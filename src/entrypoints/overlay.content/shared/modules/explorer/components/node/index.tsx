@@ -359,13 +359,10 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
     isFolder && node.data.data?.is_pinned && 'node-item-pinned',
     // Favorited file indicator
     isFile && isFavorite && 'node-item-favorited',
-    // Expand right padding on hover to make room for action buttons (skip while renaming)
-    hasHoverActions && !node.isEditing && 'group-hover:pr-8',
     // Drag-over state
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40',
     // Context menu or dropdown open state
     isMenuActive && !folderColor && 'bg-accent/50',
-    isMenuActive && hasHoverActions && 'pr-8',
     isMenuActive && 'node-menu-active',
   );
 

@@ -104,8 +104,8 @@
   /* Text fade mask when action bar is visible */
   .group:hover > .node-text-content,
   .group.node-menu-active > .node-text-content {
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent 100%);
-    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent 100%);
   }
 
   /* Folder child tint (for items inside uncolored folders) */

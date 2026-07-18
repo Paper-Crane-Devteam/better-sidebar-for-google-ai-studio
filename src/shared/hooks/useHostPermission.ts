@@ -1,8 +1,9 @@
 /**
  * Reusable hook for checking and requesting optional host permissions.
  *
- * Works with any origin declared in `optional_host_permissions`.
- * The permission request must be triggered from a user gesture (click).
+ * Works from content script context — opens an extension tab to handle
+ * the actual chrome.permissions.request() call since content scripts
+ * can't call it directly.
  *
  * Usage:
  * ```tsx
@@ -18,14 +19,14 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { hasHostPermission, requestHostPermission, removeHostPermission } from '@/shared/lib/host-permission';
+import { hasHostPermission, openPermissionPage, removeHostPermission } from '@/shared/lib/host-permission';
 
 export interface UseHostPermissionReturn {
   /** Whether the permission is currently granted */
   granted: boolean;
   /** Whether a permission request is in progress */
   requesting: boolean;
-  /** Request the permission (must be called from user gesture) */
+  /** Request the permission (opens extension tab for user to confirm) */
   request: () => Promise<boolean>;
   /** Revoke the permission */
   revoke: () => Promise<boolean>;
@@ -46,10 +47,21 @@ export function useHostPermission(origin: string): UseHostPermissionReturn {
     void refresh();
   }, [refresh]);
 
+  // Listen for permission grant signal from the permissions page
+  useEffect(() => {
+    const listener = (changes: Record<string, { oldValue?: any; newValue?: any }>) => {
+      if ('_permission_granted' in changes) {
+        void refresh();
+      }
+    };
+    browser.storage.local.onChanged.addListener(listener);
+    return () => browser.storage.local.onChanged.removeListener(listener);
+  }, [refresh]);
+
   const request = useCallback(async (): Promise<boolean> => {
     setRequesting(true);
     try {
-      const result = await requestHostPermission(origin);
+      const result = await openPermissionPage(origin);
       setGranted(result);
       return result;
     } finally {

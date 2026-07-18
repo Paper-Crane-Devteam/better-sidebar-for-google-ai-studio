@@ -281,10 +281,8 @@ export const NotebookNode = ({
     isActive && 'node-item-selected',
     !isActive && isCurrentConversation && 'node-item-current',
     isNotebook && node.data.data?.is_pinned && 'node-item-pinned',
-    hasHoverActions && 'group-hover:pr-8',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40',
     isMenuActive && 'bg-accent/50',
-    isMenuActive && hasHoverActions && 'pr-8',
     isMenuActive && 'node-menu-active',
   );
 
