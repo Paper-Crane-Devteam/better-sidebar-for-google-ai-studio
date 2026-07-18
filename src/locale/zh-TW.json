@@ -470,6 +470,8 @@
   "integrations": {
     "title": "整合",
     "notionDescription": "連接 Notion，將片段和對話直接匯出為頁面。",
+    "notionPermissionHint": "使用 Notion 整合需要授權擴充功能存取 Notion API。點擊下方按鈕授權。",
+    "notionGrantPermission": "授權存取 Notion API",
     "notionApiKey": "API Key（Integration Token）",
     "notionApiKeyHint": "在以下網址建立內部整合：",
     "notionParentPage": "目標頁面",

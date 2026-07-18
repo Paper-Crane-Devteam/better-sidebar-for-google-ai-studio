@@ -471,6 +471,8 @@
   "integrations": {
     "title": "連携",
     "notionDescription": "Notion に接続して、スニペットや会話をページとして直接エクスポートします。",
+    "notionPermissionHint": "Notion 連携を使用するには、拡張機能に Notion API へのアクセス許可が必要です。下のボタンをクリックしてアクセスを許可してください。",
+    "notionGrantPermission": "Notion API アクセスを許可",
     "notionApiKey": "API キー（インテグレーショントークン）",
     "notionApiKeyHint": "以下で内部インテグレーションを作成してください",
     "notionParentPage": "対象ページ",

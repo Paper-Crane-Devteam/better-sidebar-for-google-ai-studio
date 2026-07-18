@@ -455,6 +455,8 @@
   "integrations": {
     "title": "Integrations",
     "notionDescription": "Connect to Notion to export snippets and chats directly as pages.",
+    "notionPermissionHint": "To use Notion integration, the extension needs permission to access the Notion API. Click below to grant access.",
+    "notionGrantPermission": "Grant Notion API Access",
     "notionApiKey": "API Key (Integration Token)",
     "notionApiKeyHint": "Create an internal integration at",
     "notionParentPage": "Target Page",

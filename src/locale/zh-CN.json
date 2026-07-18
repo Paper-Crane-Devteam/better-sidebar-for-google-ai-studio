@@ -470,6 +470,8 @@
   "integrations": {
     "title": "集成",
     "notionDescription": "连接 Notion，将片段和对话直接导出为页面。",
+    "notionPermissionHint": "使用 Notion 集成需要授权扩展访问 Notion API。点击下方按钮授权。",
+    "notionGrantPermission": "授权访问 Notion API",
     "notionApiKey": "API Key（Integration Token）",
     "notionApiKeyHint": "在以下地址创建内部集成：",
     "notionParentPage": "目标页面",

@@ -30,6 +30,8 @@ export default defineConfig({
       'https://aistudio.google.com/*',
       'https://gemini.google.com/*',
       // 'https://chatgpt.com/*',
+    ],
+    optional_host_permissions: [
       'https://api.notion.com/*',
     ],
     // Temporarily disabled: sidepanel entry point (action button)

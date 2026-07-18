@@ -470,6 +470,8 @@
   "integrations": {
     "title": "Интеграции",
     "notionDescription": "Подключитесь к Notion для экспорта фрагментов и диалогов непосредственно как страницы.",
+    "notionPermissionHint": "Для использования интеграции с Notion расширению необходимо разрешение на доступ к API Notion. Нажмите ниже, чтобы предоставить доступ.",
+    "notionGrantPermission": "Предоставить доступ к API Notion",
     "notionApiKey": "API-ключ (токен интеграции)",
     "notionApiKeyHint": "Создайте внутреннюю интеграцию на",
     "notionParentPage": "Целевая страница",

@@ -470,6 +470,8 @@
   "integrations": {
     "title": "Integraciones",
     "notionDescription": "Conectar con Notion para exportar fragmentos y conversaciones directamente como páginas.",
+    "notionPermissionHint": "Para usar la integración con Notion, la extensión necesita permiso para acceder a la API de Notion. Haz clic abajo para conceder acceso.",
+    "notionGrantPermission": "Conceder acceso a la API de Notion",
     "notionApiKey": "API Key (Token de integración)",
     "notionApiKeyHint": "Crea una integración interna en",
     "notionParentPage": "Página de destino",
