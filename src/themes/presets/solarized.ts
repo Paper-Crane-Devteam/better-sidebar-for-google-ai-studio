@@ -167,6 +167,8 @@ body.bs-theme--solarized *:not(.material-symbols-outlined):not(.material-symbols
     { property: '--input', value: '71 91 98' },               // #475b62
     { property: '--ring', value: '42 161 152' },
     { property: '--sidebar-icon-color', value: '147 161 161' },
+    { property: '--highlight', value: '181 137 0' },            // #b58900 - yellow
+    { property: '--highlight-foreground', value: '0 43 54' },
     { property: '--font-sans', value: '"Inconsolata", "SF Mono", "Fira Code", monospace' },
     { property: '--gem-sys-color--primary-container', value: '#0a4a46' },
     { property: '--gem-sys-color--on-primary-container', value: '#2aa198' },

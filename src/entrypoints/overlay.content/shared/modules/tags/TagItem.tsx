@@ -111,7 +111,7 @@ export const TagItem = ({ tag }: TagItemProps) => {
             )}
             style={tag.color ? { '--tag-color': tag.color } as React.CSSProperties : undefined}
           >
-            <div className="flex items-center gap-2 overflow-hidden" style={tag.color ? { color: tag.color } : undefined}>
+            <div className="flex items-center gap-2 overflow-hidden node-text-content" style={tag.color ? { color: tag.color } : undefined}>
               <TagIcon className="h-4 w-4 shrink-0" />
               <span className="truncate font-medium">{tag.name}</span>
             </div>

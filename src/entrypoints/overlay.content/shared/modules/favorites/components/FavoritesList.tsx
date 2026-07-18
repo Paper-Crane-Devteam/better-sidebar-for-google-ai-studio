@@ -175,7 +175,7 @@ export const FavoritesList = ({
                   >
                     <Star
                       className={cn(
-                        'h-3.5 w-3.5 fill-current text-yellow-500 fill-yellow-500',
+                        'h-3.5 w-3.5 fill-current text-highlight fill-highlight',
                       )}
                     />
                   </Button>

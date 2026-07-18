@@ -232,14 +232,14 @@ export const Node = ({
   const quickActions: ActionButtonDef[] = [];
   if (isFile && isFavorite) {
     quickActions.push({
-      icon: <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />,
+      icon: <Star className="h-3.5 w-3.5 fill-highlight text-highlight" />,
       tooltip: t('tooltip.removeFromFavorites'),
       onClick: (e: React.MouseEvent) => {
         e.stopPropagation();
         e.preventDefault();
         toggleFavorite(node.data.id, 'prompt', isFavorite);
       },
-      className: 'text-yellow-400 hover:text-yellow-500',
+      className: 'text-highlight hover:text-highlight/80',
     });
   }
   if (isFile && onPreview) {

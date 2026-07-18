@@ -167,6 +167,8 @@ body.bs-theme--dracula *:not(.material-symbols-outlined):not(.material-symbols-r
     { property: '--input', value: '82 86 114' },              // #525672
     { property: '--ring', value: '189 147 249' },
     { property: '--sidebar-icon-color', value: '224 224 216' },
+    { property: '--highlight', value: '80 250 123' },           // #50fa7b - green
+    { property: '--highlight-foreground', value: '40 42 54' },
     { property: '--font-sans', value: '"Fira Code", "SF Mono", "Cascadia Code", monospace' },
     { property: '--gem-sys-color--primary-container', value: '#44305e' },
     { property: '--gem-sys-color--on-primary-container', value: '#bd93f9' },

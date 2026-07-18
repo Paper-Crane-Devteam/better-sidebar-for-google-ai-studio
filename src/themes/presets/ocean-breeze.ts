@@ -166,6 +166,8 @@ body.bs-theme--ocean-breeze *:not(.material-symbols-outlined):not(.material-symb
     { property: '--input', value: '200 220 232' },            // #c8dce8
     { property: '--ring', value: '0 119 182' },
     { property: '--sidebar-icon-color', value: '58 85 104' },
+    { property: '--highlight', value: '255 107 107' },          // #ff6b6b - coral red
+    { property: '--highlight-foreground', value: '255 255 255' },
     { property: '--font-sans', value: '"Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif' },
     { property: '--gem-sys-color--primary-container', value: '#cce5f5' },
     { property: '--gem-sys-color--on-primary-container', value: '#005580' },

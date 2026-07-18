@@ -202,6 +202,8 @@ body.bs-theme--cyberpunk-neon [contenteditable="true"]:focus {
     { property: '--input', value: '30 30 48' },               // #1e1e30
     { property: '--ring', value: '255 0 128' },
     { property: '--sidebar-icon-color', value: '176 176 200' },
+    { property: '--highlight', value: '0 200 255' },            // #00c8ff - electric blue
+    { property: '--highlight-foreground', value: '0 0 0' },
     { property: '--font-sans', value: '"Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif' },
     { property: '--gem-sys-color--primary-container', value: '#2a0020' },
     { property: '--gem-sys-color--on-primary-container', value: '#ff66b2' },

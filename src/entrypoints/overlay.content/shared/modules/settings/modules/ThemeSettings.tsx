@@ -63,7 +63,7 @@ const themePreviewColors: Record<
     bg: '#ffffff',
     fg: '#1d1d1f',
     accent: '#007aff',
-    secondary: '#e5e5ea',
+    secondary: '#ff9500',
   },
   'retro-terminal': {
     bg: '#0a0a0a',
@@ -75,7 +75,7 @@ const themePreviewColors: Record<
     bg: '#2e3440',
     fg: '#eceff4',
     accent: '#88c0d0',
-    secondary: '#3b4252',
+    secondary: '#bf616a',
   },
   'cyberpunk-neon': {
     bg: '#0a0a0f',
@@ -87,7 +87,7 @@ const themePreviewColors: Record<
     bg: '#faf9f6',
     fg: '#1a1a1a',
     accent: '#2c3e6b',
-    secondary: '#ebebeb',
+    secondary: '#b76e2c',
   },
   solarized: {
     bg: '#002b36',

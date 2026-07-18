@@ -111,7 +111,7 @@ export const FolderTreeNodeContent = ({
         </div>
       )}
 
-      <div className="flex-1 min-w-0 flex items-center justify-between overflow-hidden">
+      <div className="flex-1 min-w-0 flex items-center justify-between overflow-hidden node-text-content">
         <div className="min-w-0 flex items-center gap-1 overflow-hidden">
           {namePrefix}
           {node.isEditing ? (

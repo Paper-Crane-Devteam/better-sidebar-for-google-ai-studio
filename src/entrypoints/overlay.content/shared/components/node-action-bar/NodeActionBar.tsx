@@ -24,10 +24,6 @@ export interface NodeActionBarProps {
   menuItems?: MenuEntryDef[];
   /** Force the bar to be visible (e.g. when context menu is open) */
   forceVisible?: boolean;
-  /** Custom inline style for the bar background (colored folders) */
-  barStyle?: React.CSSProperties;
-  /** Custom inline style for the gradient mask (colored folders) */
-  gradientStyle?: React.CSSProperties;
   /** Callback when the dropdown open state changes (so parent can track it) */
   onDropdownOpenChange?: (open: boolean) => void;
 }
@@ -36,8 +32,6 @@ export const NodeActionBar = ({
   actions,
   menuItems,
   forceVisible,
-  barStyle,
-  gradientStyle,
   onDropdownOpenChange,
 }: NodeActionBarProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -90,17 +84,11 @@ export const NodeActionBar = ({
         'node-action-bar',
         (forceVisible || isDropdownOpen) && 'visible',
       )}
-      style={barStyle}
       data-tooltip-suppress
       onClick={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
       onContextMenu={(e) => e.stopPropagation()}
     >
-      {/* Gradient fade mask */}
-      <div
-        className="absolute inset-y-0 -left-6 w-6 pointer-events-none [background:inherit] [mask-image:linear-gradient(to_right,transparent,black)]"
-        style={gradientStyle}
-      />
 
       {/* Quick action buttons */}
       {actions?.map((action, i) => (

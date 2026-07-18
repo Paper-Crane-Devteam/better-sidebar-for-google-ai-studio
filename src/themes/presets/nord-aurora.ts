@@ -167,6 +167,8 @@ body.bs-theme--nord-aurora *:not(.material-symbols-outlined):not(.material-symbo
     { property: '--input', value: '67 76 94' },               // #434c5e
     { property: '--ring', value: '136 192 208' },
     { property: '--sidebar-icon-color', value: '216 222 233' },
+    { property: '--highlight', value: '191 97 106' },           // #bf616a - nord red (aurora)
+    { property: '--highlight-foreground', value: '236 239 244' },
     { property: '--font-sans', value: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif' },
     { property: '--gem-sys-color--primary-container', value: '#2e4a54' },
     { property: '--gem-sys-color--on-primary-container', value: '#88c0d0' },

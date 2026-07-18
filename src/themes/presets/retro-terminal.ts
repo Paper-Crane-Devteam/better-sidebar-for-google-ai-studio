@@ -276,6 +276,8 @@ body.bs-theme--retro-terminal rich-textarea {
     { property: '--input', value: '26 58 26' },
     { property: '--ring', value: '0 255 65' },
     { property: '--sidebar-icon-color', value: '0 204 51' },  // #00cc33
+    { property: '--highlight', value: '255 176 0' },            // #ffb000 - amber
+    { property: '--highlight-foreground', value: '0 0 0' },
     { property: '--font-sans', value: '"Fira Code", "JetBrains Mono", "Cascadia Code", "Consolas", "Microsoft YaHei", monospace' },
     { property: '--gem-sys-color--primary-container', value: '#0a2a0a' },
     { property: '--gem-sys-color--on-primary-container', value: '#00ff41' },

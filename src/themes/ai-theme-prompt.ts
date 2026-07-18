@@ -138,6 +138,8 @@ Output ONLY a valid JSON object (no markdown code fences, no explanation) with t
     { "property": "--input", "value": "R G B" },
     { "property": "--ring", "value": "R G B" },
     { "property": "--sidebar-icon-color", "value": "R G B" },
+    { "property": "--highlight", "value": "R G B" },
+    { "property": "--highlight-foreground", "value": "R G B" },
     // These two use hex format (not RGB triplet):
     { "property": "--gem-sys-color--primary-container", "value": "#hex" },
     { "property": "--gem-sys-color--on-primary-container", "value": "#hex" }
@@ -154,4 +156,5 @@ Output ONLY a valid JSON object (no markdown code fences, no explanation) with t
 - "id" must be kebab-case (lowercase, hyphens only), unique, and descriptive
 - Replace all "R G B" and "#hex" placeholders with actual color values
 - Design a cohesive color palette — all colors should work harmoniously together
+- "--highlight" is a distinctive accent color used for favorites indicators, turn badges, and decorative touches. It should be a vibrant, recognizable color that complements the primary color but is visually distinct from it (e.g. amber for a blue-primary theme, coral for a teal-primary theme)
 - For dark themes: use dark surfaces with light text; for light themes: use light surfaces with dark text`;
