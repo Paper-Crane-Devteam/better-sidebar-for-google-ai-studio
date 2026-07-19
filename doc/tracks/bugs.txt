@@ -39,4 +39,11 @@
 -25. rescan not import hidden gem
 -26. ai studio create chat not in selected folder
 -27. smart scroll bar first message appear twice
-28.will add entry when temporary chat is created
+-28.will add entry when temporary chat is created
+29. tag hover mask too long
+30. notion grant permission always show
+31. timeline entry height too short
+32. old user inbox icon not right
+33. gdrive sync toast popup below modal(z index management)
+34. aistudio slash command
+35. powerpack modal below snippet drawer
