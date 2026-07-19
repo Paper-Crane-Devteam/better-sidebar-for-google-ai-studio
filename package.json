@@ -1,7 +1,7 @@
 {
   "name": "better-sidebar-for-google-ai-studio",
   "type": "module",
-  "version": "2.7.1",
+  "version": "2.8.1",
   "private": true,
   "description": "Organize Gemini & AI Studio chats: folders, tags, full-text search, prompt library, chat export, Google Drive sync, themes & more.",
   "author": "Paper Crane Devteam",
@@ -13,7 +13,9 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
-    "postinstall": "wxt prepare"
+    "postinstall": "patch-package && wxt prepare",
+    "release": "bash scripts/release.sh",
+    "publishGumroad": "gumroad products page publish eklogd ./landing.html --json --no-input --non-interactive"
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",

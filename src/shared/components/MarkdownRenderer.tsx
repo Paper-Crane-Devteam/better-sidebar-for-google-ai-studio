@@ -188,6 +188,13 @@ export const MarkdownRenderer = memo(({ children, className, highlight, highligh
           {processChildren(children)}
         </td>
       ),
+      img: ({ node, ...props }: any) => (
+        <img
+          {...props}
+          className="rounded-md border border-border/50 shadow-sm w-full h-auto object-contain my-4"
+          loading="lazy"
+        />
+      ),
   };
 
   return (

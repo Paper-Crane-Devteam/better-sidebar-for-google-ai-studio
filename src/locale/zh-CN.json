@@ -55,7 +55,7 @@
     "privacyPolicy": "隐私政策",
     "disclaimer": "免责声明",
     "termsOfService": "服务条款",
-    "sponsor": "赞助",
+    "sponsor": "分享",
     "about": "关于",
     "appearance": "外观",
     "theme": "主题",
@@ -153,7 +153,9 @@
     "createPrompt": "创建 Prompt",
     "editPrompt": "编辑 Prompt",
     "noPrompts": "暂无 Prompt",
-    "selectAnOption": "请选择"
+    "selectAnOption": "请选择",
+    "slashTip": "提示：在输入框中输入 / 可快速插入 Prompt。",
+    "slashTipDismiss": "知道了"
   },
   "snippets": {
     "createSnippet": "新建片段",
@@ -210,11 +212,17 @@
     "viewChangelog": "查看更新日志"
   },
   "sponsor": {
-    "title": "支持我们",
+    "title": "分享给朋友",
     "enjoying": "喜欢 Better Sidebar 吗？",
-    "description": "这是一个免费的开源项目，靠爱发电 ❤️ 如果它让你用得顺手，给个好评、点颗星、分享给朋友，或者请我喝杯咖啡，都是对我们最大的鼓励！",
+    "shareDescription": "帮我们分享一下，让更多人发现这个免费开源的效率工具 ❤️",
     "sponsorOnGithub": "去 GitHub 点颗星",
-    "buyMeACoffee": "请我喝杯咖啡 ☕"
+    "copyLink": "复制链接和文案",
+    "copied": "已复制",
+    "weibo": "微博",
+    "xiaohongshu": "小红书",
+    "wechat": "微信",
+    "wechatScan": "扫码或长按识别，分享给好友",
+    "xiaohongshuCopied": "文案已复制，去小红书粘贴发布吧 📝"
   },
   "data": {
     "librarySync": "数据同步",
@@ -462,6 +470,8 @@
   "integrations": {
     "title": "集成",
     "notionDescription": "连接 Notion，将片段和对话直接导出为页面。",
+    "notionPermissionHint": "使用 Notion 集成需要授权扩展访问 Notion API。点击下方按钮授权。",
+    "notionGrantPermission": "授权访问 Notion API",
     "notionApiKey": "API Key（Integration Token）",
     "notionApiKeyHint": "在以下地址创建内部集成：",
     "notionParentPage": "目标页面",
@@ -860,7 +870,10 @@
     "enjoyingIt": "觉得好用？支持一下",
     "rateUs": "好评 👍",
     "starOnGithub": "点星 ⭐",
-    "buyMeACoffee": "咖啡 ☕"
+    "buyMeACoffee": "咖啡 ☕",
+    "showAllVersions": "显示所有版本",
+    "hidePatchVersions": "仅大版本",
+    "patch": "修复"
   },
   "smartScrollbar": {
     "conversationOutline": "对话大纲",
@@ -892,6 +905,26 @@
     "grimoireDescription": "羊皮纸质感，温暖做旧色调，衬线字体，沉浸式奇幻体验",
     "retroTerminalName": "复古终端机",
     "retroTerminalDescription": "纯黑底色，荧光绿文字，等宽字体，硬核极客命令控制台",
+    "nordAuroraName": "北极光",
+    "nordAuroraDescription": "北欧极地冷色调暗色主题，冰蓝霜绿点缀，宁静专注",
+    "cyberpunkNeonName": "赛博霓虹",
+    "cyberpunkNeonDescription": "未来都市霓虹灯光，品红电光蓝渐变，强烈视觉冲击",
+    "paperInkName": "纸与墨",
+    "paperInkDescription": "极致专注阅读体验，温暖纸张底色，优雅衬线字体",
+    "solarizedName": "日蚀",
+    "solarizedDescription": "经典 Solarized Dark 配色，温冷色调平衡，护眼舒适",
+    "rosePineName": "玫瑰松",
+    "rosePineDescription": "柔和暗色主题，低饱和玫瑰粉与金色点缀，优雅安静",
+    "tokyoNightName": "东京之夜",
+    "tokyoNightDescription": "深蓝黑底色，紫/蓝/桃色点缀，东京都市夜景氛围",
+    "catppuccinMochaName": "卡布奇诺",
+    "catppuccinMochaDescription": "温暖柔和的暗色主题，薰衣草与桃色色调",
+    "draculaName": "德古拉",
+    "draculaDescription": "经典暗色主题，鲜艳紫色、绿色和粉色点缀",
+    "oceanBreezeName": "海风",
+    "oceanBreezeDescription": "清新明亮的浅色主题，海洋蓝与珊瑚色点缀",
+    "midnightPurpleName": "午夜紫",
+    "midnightPurpleDescription": "深邃纯黑底色，紫色与靛蓝渐变点缀",
     "previewBannerText": "预览模式 — 主题将在 5 分钟后恢复默认。购买支持包可永久使用。",
     "buyNow": "立即购买",
     "aiGeneratorTitle": "没有想要的主题？",
@@ -934,8 +967,10 @@
     "ppFeatureWrite": "无需动手 —— 让 AI 帮你重命名、移动、归档和清理",
     "ppFeatureHistory": "完整时间线 —— AI 可分析和操作你的全部历史，不限最近 7 天",
     "ppFeatureExport": "对话和片段一键导出到 Obsidian 和 Notion",
+    "comingSoon": "即将上线",
     "getPowerPack": "获取 Power Pack",
-    "popular": "热门"
+    "popular": "热门",
+    "refundPolicy": "7 天无理由退款"
   },
   "paywall": {
     "title": "需要 Power Pack",
@@ -943,7 +978,8 @@
     "requiresPowerPack": "需要 Power Pack 才能使用。",
     "includedFeatures": "包含功能",
     "getPowerPack": "获取 Power Pack",
-    "dismissHint": "按 Esc 或点击外部区域关闭"
+    "dismissHint": "按 Esc 或点击外部区域关闭",
+    "refundPolicy": "7 天无理由退款"
   },
   "supportPack": {
     "title": "支持包",

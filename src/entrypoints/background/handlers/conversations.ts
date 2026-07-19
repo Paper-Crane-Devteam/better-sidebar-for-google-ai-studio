@@ -9,7 +9,8 @@ import type {
 } from '@/shared/types/messages';
 import type { MessageSender } from '../types';
 import { notifyDataUpdated } from '../notify';
-import { resolveGemNotebookFolderId } from './resolve-sync-folder';
+import { resolveGemNotebookFolderId, resolveSyncFolderId } from './resolve-sync-folder';
+import { isInboxFolder } from '@/shared/constants/inbox';
 import { triggerAutoSync, triggerPageLoadSync } from './gdrive-sync';
 
 export async function handleConversations(
@@ -108,14 +109,23 @@ export async function handleConversations(
       return { success: true };
     }
     case 'MOVE_CONVERSATION': {
-      await conversationRepo.move(message.payload.id, message.payload.folderId);
+      let targetFolderId = message.payload.folderId;
+      // If moving to an inbox folder, resolve it first to handle legacy/missing folders
+      if (targetFolderId && isInboxFolder(targetFolderId)) {
+        targetFolderId = await resolveSyncFolderId(message.platform ?? 'aistudio');
+      }
+      await conversationRepo.move(message.payload.id, targetFolderId);
       triggerAutoSync();
       return { success: true };
     }
     case 'MOVE_CONVERSATIONS': {
+      let targetFolderId = message.payload.folderId;
+      if (targetFolderId && isInboxFolder(targetFolderId)) {
+        targetFolderId = await resolveSyncFolderId(message.platform ?? 'aistudio');
+      }
       await conversationRepo.moveMultiple(
         message.payload.ids,
-        message.payload.folderId,
+        targetFolderId,
       );
       triggerAutoSync();
       return { success: true };

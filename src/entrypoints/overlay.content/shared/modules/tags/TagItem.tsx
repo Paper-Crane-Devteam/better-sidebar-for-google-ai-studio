@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Tag } from '@/shared/types/db';
 import { useAppStore } from '@/shared/lib/store';
-import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Tag as TagIcon } from 'lucide-react';
 import { Input } from '@/entrypoints/overlay.content/shared/components/ui/input';
 import { cn } from '@/shared/lib/utils/utils';
@@ -22,8 +21,7 @@ interface TagItemProps {
 export const TagItem = ({ tag }: TagItemProps) => {
   const { t } = useI18n();
   const { deleteTag, updateTag } = useAppStore();
-  const layoutDensity = useSettingsStore((state) => state.layoutDensity);
-  const rowHeight = layoutDensity === 'compact' ? 32 : 38;
+  const rowHeight = 32;
 
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(tag.name);
@@ -113,7 +111,7 @@ export const TagItem = ({ tag }: TagItemProps) => {
             )}
             style={tag.color ? { '--tag-color': tag.color } as React.CSSProperties : undefined}
           >
-            <div className="flex items-center gap-2 overflow-hidden" style={tag.color ? { color: tag.color } : undefined}>
+            <div className="flex items-center gap-2 overflow-hidden node-text-content" style={tag.color ? { color: tag.color } : undefined}>
               <TagIcon className="h-4 w-4 shrink-0" />
               <span className="truncate font-medium">{tag.name}</span>
             </div>

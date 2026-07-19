@@ -6,7 +6,7 @@
  */
 
 /** Built-in theme preset identifiers */
-export type BuiltinThemePresetId = 'grimoire' | 'cupertino-glass' | 'retro-terminal';
+export type BuiltinThemePresetId = 'grimoire' | 'cupertino-glass' | 'retro-terminal' | 'nord-aurora' | 'cyberpunk-neon' | 'paper-ink' | 'solarized' | 'rose-pine' | 'tokyo-night' | 'catppuccin-mocha' | 'dracula' | 'ocean-breeze' | 'midnight-purple';
 
 /** Theme preset ID — built-in or user-created (any string) */
 export type ThemePresetId = BuiltinThemePresetId | (string & {});

@@ -63,7 +63,7 @@ export class GeminiAgentAdapter implements AgentPlatformAdapter {
 
       // Observe the conversation container for changes
       const chatContainer = document.querySelector(
-        'chat-window, .conversation-container, main'
+        'chat-window .conversation-container'
       );
       if (chatContainer) {
         observer.observe(chatContainer, {

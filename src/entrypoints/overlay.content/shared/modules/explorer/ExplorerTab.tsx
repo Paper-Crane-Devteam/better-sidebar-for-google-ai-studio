@@ -205,16 +205,27 @@ export const ExplorerTab = ({
 
         if (needsRename) {
           // Wait for PromptCreateScanner to save the conversation to DB,
-          // then fetchData to load it into the store, THEN rename.
-          // (For AI Studio, CreatePrompt title injection means this rarely triggers,
-          //  but it's still needed for Gemini where title comes from the response.)
+          // then move to correct folder first (avoids flicker), THEN rename.
           await new Promise((r) => setTimeout(r, 300));
+          try {
+            await browser.runtime.sendMessage({
+              type: 'MOVE_CONVERSATION',
+              payload: { id, folderId: targetFolderId },
+            });
+          } catch (e) {
+            console.error(
+              'Better Sidebar for Gemini & AI Studio: Failed to move new conversation to folder',
+              e,
+            );
+          }
           await fetchData(true);
           try {
             await renameItem(id, userTitle, 'file');
           } catch (e) {
             console.error('Better Sidebar: Failed to rename new conversation', e);
           }
+          // Already moved and refreshed — skip the MOVE below
+          return;
         }
       } else {
         // Legacy path: no pending entry, use selected node
@@ -229,9 +240,6 @@ export const ExplorerTab = ({
           }
         }
       }
-
-      // Always refresh so the new item appears immediately
-      fetchData(true);
 
       // If no folder was explicitly chosen, check gem/notebook default folder, then fallback to inbox
       if (!targetFolderId) {
@@ -257,17 +265,22 @@ export const ExplorerTab = ({
       }
 
       try {
+        // Move first, THEN refresh — avoids flicker where the conversation
+        // briefly appears at root (folder_id=null from PromptCreateScanner)
+        // before being moved to its target folder.
         await browser.runtime.sendMessage({
           type: 'MOVE_CONVERSATION',
           payload: { id, folderId: targetFolderId },
         });
-        fetchData(true);
       } catch (e) {
         console.error(
           'Better Sidebar for Gemini & AI Studio: Failed to move new conversation to folder',
           e,
         );
       }
+
+      // Refresh after MOVE so the conversation appears directly in its target folder
+      fetchData(true);
     };
 
     globalThis.addEventListener('BETTER_SIDEBAR_PROMPT_CREATE', handleCreate);
@@ -441,7 +454,7 @@ export const ExplorerTab = ({
 
       {/* CHATS Section (collapsible, VSCode-style) */}
       <div
-        className={`flex flex-col min-h-0 ${isChatsSectionExpanded ? 'flex-1' : ''}`}
+        className={`group/chats flex flex-col min-h-0 ${isChatsSectionExpanded ? 'flex-1' : ''}`}
       >
       <ExplorerHeader
         onNewFolder={handleNewFolder}

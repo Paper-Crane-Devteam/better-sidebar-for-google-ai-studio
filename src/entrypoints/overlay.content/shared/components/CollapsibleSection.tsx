@@ -37,6 +37,16 @@ interface CollapsibleSectionProps {
 
   /** When true, the section fills all remaining vertical space instead of using a fixed height */
   fillAvailable?: boolean;
+
+  // ── Hover scope ────────────────────────────────────────────────────
+
+  /**
+   * Custom className for the actions container to control visibility.
+   * When set, this replaces the default internal hover-based opacity logic.
+   * Use Tailwind group-hover classes like "opacity-0 group-hover/chats:opacity-100"
+   * when actions should respond to a parent group hover instead of self hover.
+   */
+  actionsVisibilityClass?: string;
 }
 
 const DEFAULT_MIN_HEIGHT = 80;
@@ -78,6 +88,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
   minHeight = DEFAULT_MIN_HEIGHT,
   maxHeightRatio = DEFAULT_MAX_HEIGHT_RATIO,
   fillAvailable = false,
+  actionsVisibilityClass,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -206,7 +217,9 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
           <div
             className={cn(
               'flex items-center gap-0 transition-opacity',
-              isHovered ? 'opacity-100' : 'opacity-0',
+              actionsVisibilityClass
+                ? actionsVisibilityClass
+                : isHovered ? 'opacity-100' : 'opacity-0',
             )}
             onClick={(e) => e.stopPropagation()}
           >

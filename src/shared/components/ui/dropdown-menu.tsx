@@ -3,7 +3,7 @@ import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { Check, ChevronRight, Circle } from "lucide-react"
 
 import { cn } from "../../lib/utils/utils"
-import { useShadowRoot } from "../ShadowRootContext"
+import { getPopupLayerContainer } from "../../lib/popup-layer"
 
 const DropdownMenu = DropdownMenuPrimitive.Root
 
@@ -12,9 +12,9 @@ const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
 const DropdownMenuGroup = DropdownMenuPrimitive.Group
 
 const DropdownMenuPortal = ({ children, container, ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Portal>) => {
-  const shadowRootContainer = useShadowRoot()
+  const portalContainer = container ?? getPopupLayerContainer() ?? undefined
   return (
-    <DropdownMenuPrimitive.Portal container={container ?? shadowRootContainer ?? undefined} {...props}>
+    <DropdownMenuPrimitive.Portal container={portalContainer} {...props}>
       {children}
     </DropdownMenuPrimitive.Portal>
   )
@@ -50,9 +50,9 @@ const DropdownMenuSubContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubContent>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubContent>
 >(({ className, ...props }, ref) => {
-  const container = useShadowRoot();
+  const portalContainer = getPopupLayerContainer() ?? undefined;
   return (
-    <DropdownMenuPrimitive.Portal container={container ?? undefined}>
+    <DropdownMenuPrimitive.Portal container={portalContainer}>
       <DropdownMenuPrimitive.SubContent
         ref={ref}
         className={cn(
@@ -71,8 +71,7 @@ const DropdownMenuContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content> & { container?: HTMLElement | null }
 >(({ className, sideOffset = 4, container, ...props }, ref) => {
-  const shadowRootContainer = useShadowRoot()
-  const portalContainer = container ?? shadowRootContainer ?? undefined
+  const portalContainer = container ?? getPopupLayerContainer() ?? undefined
   return (
     <DropdownMenuPrimitive.Portal container={portalContainer}>
       <DropdownMenuPrimitive.Content

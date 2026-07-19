@@ -111,6 +111,8 @@ export const SnippetReaderDrawer = () => {
 
   const { isOpen, folderId, activeSnippetId } = ui.snippets.readerDrawer;
   const { sortOrder } = ui.snippets;
+  const activeTab = ui.overlay.activeTab;
+  const shouldShow = isOpen && activeTab === 'snippets';
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const cardRefsMap = useRef<Map<string, HTMLDivElement>>(new Map());
   const hasScrolledRef = useRef(false);
@@ -163,7 +165,7 @@ export const SnippetReaderDrawer = () => {
 
   // Handle open/close animation
   useEffect(() => {
-    if (isOpen) {
+    if (shouldShow) {
       hasScrolledRef.current = false;
       requestAnimationFrame(() => {
         setIsVisible(true);
@@ -171,7 +173,7 @@ export const SnippetReaderDrawer = () => {
     } else {
       setIsVisible(false);
     }
-  }, [isOpen]);
+  }, [shouldShow]);
 
   // Scroll to active snippet using refs (Shadow DOM safe)
   const scrollToSnippet = useCallback((snippetId: string, behavior: ScrollBehavior = 'instant') => {
@@ -187,29 +189,29 @@ export const SnippetReaderDrawer = () => {
 
   // Initial scroll to active snippet
   useEffect(() => {
-    if (isOpen && isVisible && activeSnippetId && !hasScrolledRef.current) {
+    if (shouldShow && isVisible && activeSnippetId && !hasScrolledRef.current) {
       const timer = setTimeout(() => {
         scrollToSnippet(activeSnippetId, 'instant');
         hasScrolledRef.current = true;
       }, 150);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, isVisible, activeSnippetId, scrollToSnippet]);
+  }, [shouldShow, isVisible, activeSnippetId, scrollToSnippet]);
 
   // Scroll to snippet when activeSnippetId changes while drawer is already open
   const prevActiveSnippetIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (isOpen && isVisible && activeSnippetId && hasScrolledRef.current) {
+    if (shouldShow && isVisible && activeSnippetId && hasScrolledRef.current) {
       if (prevActiveSnippetIdRef.current && prevActiveSnippetIdRef.current !== activeSnippetId) {
         setTimeout(() => scrollToSnippet(activeSnippetId, 'smooth'), 50);
       }
     }
     prevActiveSnippetIdRef.current = activeSnippetId;
-  }, [isOpen, isVisible, activeSnippetId, scrollToSnippet]);
+  }, [shouldShow, isVisible, activeSnippetId, scrollToSnippet]);
 
   // ESC key to close
   useEffect(() => {
-    if (!isOpen) return;
+    if (!shouldShow) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         closeSnippetReaderDrawer();
@@ -217,7 +219,7 @@ export const SnippetReaderDrawer = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, closeSnippetReaderDrawer]);
+  }, [shouldShow, closeSnippetReaderDrawer]);
 
   const handleCopy = useCallback((snippet: Snippet) => {
     if (snippet.content) {
@@ -314,7 +316,7 @@ export const SnippetReaderDrawer = () => {
   // Compute the sidebar width from the actual sidebar element (Gemini or AI Studio)
   const [sidebarWidth, setSidebarWidth] = useState(360);
   useEffect(() => {
-    if (!isOpen) return;
+    if (!shouldShow) return;
     const sidebarEl = (document.querySelector('bard-sidenav') ||
       document.getElementById('better-sidebar-for-google-ai-studio-sidebar-wrapper')) as HTMLElement | null;
     if (sidebarEl) {
@@ -335,9 +337,9 @@ export const SnippetReaderDrawer = () => {
         resizeObserver.disconnect();
       };
     }
-  }, [isOpen]);
+  }, [shouldShow]);
 
-  if (!isOpen) return null;
+  if (!shouldShow) return null;
 
   return (
     <div

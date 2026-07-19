@@ -39,7 +39,6 @@ interface SettingsState {
   customTheme: ThemePresetId | null;
   /** Gemini sidebar base style: 'default' (v2) or 'classic' (pre-v2 blue-tinted) */
   geminiStyle: 'default' | 'classic';
-  layoutDensity: 'compact' | 'relaxed';
   newChatBehavior: 'current-tab' | 'new-tab';
   autoScanLibrary: boolean;
   overlayPosition: { x: number; y: number };
@@ -85,12 +84,13 @@ interface SettingsState {
   };
   /** Persisted height of the outline panel in pixels */
   outlineHeight: number;
+  /** Cached page index for the theme grid pagination (session-only, not persisted) */
+  themeGridPage: number;
 
   // Actions
   setTheme: (theme: 'light' | 'dark' | 'system') => void;
   setCustomTheme: (themeId: ThemePresetId | null) => void;
   setGeminiStyle: (style: 'default' | 'classic') => void;
-  setLayoutDensity: (density: 'compact' | 'relaxed') => void;
   setNewChatBehavior: (behavior: 'current-tab' | 'new-tab') => void;
   setAutoScanLibrary: (enabled: boolean) => void;
   setOverlayPosition: (position: { x: number; y: number }) => void;
@@ -114,6 +114,7 @@ interface SettingsState {
   setLastSelectedNotebookId: (id: string | null) => void;
   setNotionConfig: (config: Partial<SettingsState['integrations']['notion']>) => void;
   setOutlineHeight: (height: number) => void;
+  setThemeGridPage: (page: number) => void;
 }
 
 const storage: StateStorage = {
@@ -167,7 +168,6 @@ export const useSettingsStore = create<SettingsState>()(
       theme: 'system',
       customTheme: null,
       geminiStyle: 'default',
-      layoutDensity: 'compact',
       newChatBehavior: 'current-tab',
       autoScanLibrary: false,
       overlayPosition: { x: 16, y: 16 },
@@ -230,6 +230,7 @@ export const useSettingsStore = create<SettingsState>()(
         },
       },
       outlineHeight: 200,
+      themeGridPage: 0,
 
       setTheme: (theme) => {
         set({ theme });
@@ -254,7 +255,6 @@ export const useSettingsStore = create<SettingsState>()(
       setGeminiStyle: (style) => {
         set({ geminiStyle: style });
       },
-      setLayoutDensity: (layoutDensity) => set({ layoutDensity }),
       setNewChatBehavior: (newChatBehavior) => set({ newChatBehavior }),
       setAutoScanLibrary: (autoScanLibrary) => set({ autoScanLibrary }),
       setOverlayPosition: (overlayPosition) => set({ overlayPosition }),
@@ -303,11 +303,17 @@ export const useSettingsStore = create<SettingsState>()(
           },
         })),
       setOutlineHeight: (height) => set({ outlineHeight: height }),
+      setThemeGridPage: (page) => set({ themeGridPage: page }),
     }),
     {
       name: getStorageName(),
       storage: createJSONStorage(() => storage),
       version: 4,
+      partialize: (state) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { themeGridPage, ...rest } = state;
+        return rest;
+      },
       migrate: (persistedState: any, version: number) => {
         if (version === 0) {
           const oldEnhanced = persistedState.enhancedFeatures || {};

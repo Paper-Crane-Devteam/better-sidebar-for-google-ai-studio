@@ -67,7 +67,7 @@ export const PendingEntryNode = ({ style, phase, title, dragHandle }: PendingEnt
         className={cn(
           'flex items-center h-full px-1 pr-2 gap-1.5 rounded-sm',
           phase === 'editing' && '',
-          phase === 'idle' && 'group relative cursor-grab bg-accent/30 border border-dashed border-border',
+          phase === 'idle' && 'group relative cursor-grab bg-accent/40',
           phase === 'intercepted' && 'bg-accent/20',
         )}
       >
@@ -139,7 +139,7 @@ export const PendingEntryNode = ({ style, phase, title, dragHandle }: PendingEnt
 
         {/* Action buttons for idle phase */}
         {phase === 'idle' && (
-          <div className="invisible group-hover:visible flex items-center gap-1 absolute right-0 pr-2 top-0 bottom-0 bg-accent/30">
+          <div className="invisible group-hover:visible flex items-center gap-1 absolute right-0 pr-2 top-0 bottom-0 bg-accent/40">
             <div className="absolute inset-y-0 -left-4 w-4 pointer-events-none [background:inherit] [mask-image:linear-gradient(to_right,transparent,black)]" />
             <SimpleTooltip content={t('node.rename')}>
               <div

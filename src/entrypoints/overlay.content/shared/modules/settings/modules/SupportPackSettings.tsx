@@ -188,14 +188,17 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
             <FeatureItem
               icon={<UIcon icon="fluent-color:bot-sparkle-24" width={14} height={14} />}
               text={t('packs.ppFeatureAgent')}
+              badge={t('packs.comingSoon')}
             />
             <FeatureItem
               icon={<UIcon icon="fluent-color:database-24" width={14} height={14} />}
               text={t('packs.ppFeatureWrite')}
+              badge={t('packs.comingSoon')}
             />
             <FeatureItem
               icon={<UIcon icon="fluent-color:history-24" width={14} height={14} />}
               text={t('packs.ppFeatureHistory')}
+              badge={t('packs.comingSoon')}
             />
             <FeatureItem
               icon={<UIcon icon="fluent-color:share-android-24" width={14} height={14} />}
@@ -214,6 +217,9 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
 
       {/* Platform links by product */}
       <div className="space-y-2 text-xs text-muted-foreground">
+        <p className="text-center text-xs text-muted-foreground">
+          {t('packs.refundPolicy')}
+        </p>
         <div className="flex items-center justify-center gap-3">
           <span>Power Pack:</span>
           <button
@@ -356,11 +362,16 @@ function ActivationInput({ t }: { t: (key: string) => string }) {
 }
 
 /** A single feature bullet point */
-function FeatureItem({ icon, text }: { icon: React.ReactNode; text: string }) {
+function FeatureItem({ icon, text, badge }: { icon: React.ReactNode; text: string; badge?: string }) {
   return (
     <div className="flex items-center gap-2 py-1">
       <div className="shrink-0">{icon}</div>
       <span className="text-xs">{text}</span>
+      {badge && (
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 whitespace-nowrap">
+          {badge}
+        </span>
+      )}
     </div>
   );
 }

@@ -232,14 +232,14 @@ export const Node = ({
   const quickActions: ActionButtonDef[] = [];
   if (isFile && isFavorite) {
     quickActions.push({
-      icon: <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />,
+      icon: <Star className="h-3.5 w-3.5 fill-highlight text-highlight" />,
       tooltip: t('tooltip.removeFromFavorites'),
       onClick: (e: React.MouseEvent) => {
         e.stopPropagation();
         e.preventDefault();
         toggleFavorite(node.data.id, 'prompt', isFavorite);
       },
-      className: 'text-yellow-400 hover:text-yellow-500',
+      className: 'text-highlight hover:text-highlight/80',
     });
   }
   if (isFile && onPreview) {
@@ -289,13 +289,11 @@ export const Node = ({
 
   const commonClasses = cn(
     'flex items-center gap-1.5 px-1 cursor-pointer group relative pr-2 h-full no-underline outline-none text-density font-medium text-foreground/80',
-    !node.isEditing && (isFile ? 'group-hover:pr-14' : 'group-hover:pr-8'),
     !((node.isSelected && !isFile) || isBatchSelected) && 'hover:bg-accent/50',
     ((node.isSelected && !isFile) || isBatchSelected) && 'node-item-selected',
     !isFile && node.data.data?.is_pinned && 'node-item-pinned',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40',
     isMenuActive && 'bg-accent/50',
-    isMenuActive && (isFile ? 'pr-14' : 'pr-8'),
     isMenuActive && 'node-menu-active',
   );
 

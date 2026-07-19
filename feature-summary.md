@@ -274,8 +274,8 @@
 
 ## Settings Store (shared/lib/settings-store.ts)
 - Zustand with persistence (chrome.storage.local)
-- Settings: theme, layoutDensity, newChatBehavior, autoScanLibrary, overlayPosition, explorer (viewMode, sortOrder, ignoredFolders), shortcuts (favorites, build, dashboard, documentation, originalUI)
-- Actions: setTheme, setLayoutDensity, setNewChatBehavior, setAutoScanLibrary, setOverlayPosition, setExplorerViewMode, setExplorerSortOrder, setExplorerIgnoredFolders; shortcuts toggles control overlay sidebar buttons (Favorites tab, Build, Dashboard, Documentation, Original UI)
+- Settings: theme, newChatBehavior, autoScanLibrary, overlayPosition, explorer (viewMode, sortOrder, ignoredFolders), shortcuts (favorites, build, dashboard, documentation, originalUI)
+- Actions: setTheme, setNewChatBehavior, setAutoScanLibrary, setOverlayPosition, setExplorerViewMode, setExplorerSortOrder, setExplorerIgnoredFolders; shortcuts toggles control overlay sidebar buttons (Favorites tab, Build, Dashboard, Documentation, Original UI)
 
 ## Utilities (shared/lib/utils.ts)
 - cn(): Tailwind class name merger

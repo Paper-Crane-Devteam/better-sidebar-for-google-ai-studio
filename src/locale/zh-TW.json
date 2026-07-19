@@ -8,6 +8,8 @@
     "hide": "隱藏",
     "edit": "編輯",
     "save": "儲存",
+    "saved": "已儲存",
+    "copy": "複製",
     "close": "關閉",
     "loading": "載入中...",
     "settings": "設定",
@@ -53,7 +55,7 @@
     "privacyPolicy": "隱私權政策",
     "disclaimer": "免責聲明",
     "termsOfService": "服務條款",
-    "sponsor": "贊助",
+    "sponsor": "分享",
     "about": "關於",
     "appearance": "外觀",
     "theme": "主題",
@@ -151,7 +153,9 @@
     "createPrompt": "建立 Prompt",
     "editPrompt": "編輯 Prompt",
     "noPrompts": "尚無 Prompt",
-    "selectAnOption": "請選擇"
+    "selectAnOption": "請選擇",
+    "slashTip": "提示：在輸入框中輸入 / 可快速插入 Prompt。",
+    "slashTipDismiss": "知道了"
   },
   "snippets": {
     "createSnippet": "新增片段",
@@ -208,11 +212,17 @@
     "viewChangelog": "查看更新日誌"
   },
   "sponsor": {
-    "title": "支持我們",
+    "title": "分享給朋友",
     "enjoying": "喜歡 Better Sidebar 嗎？",
-    "description": "這是一個免費的開源專案，靠愛發電 ❤️ 如果它讓你用得順手，給個好評、點顆星、分享給朋友，或者請我喝杯咖啡，都是對我們最大的鼓勵！",
+    "shareDescription": "幫我們分享一下，讓更多人發現這個免費開源的效率工具 ❤️",
     "sponsorOnGithub": "去 GitHub 點顆星",
-    "buyMeACoffee": "請我喝杯咖啡 ☕"
+    "copyLink": "複製連結和文案",
+    "copied": "已複製",
+    "weibo": "微博",
+    "xiaohongshu": "小紅書",
+    "wechat": "微信",
+    "wechatScan": "掃碼或長按識別，分享給好友",
+    "xiaohongshuCopied": "文案已複製，去小紅書貼上發布吧 📝"
   },
   "data": {
     "librarySync": "資料同步",
@@ -460,6 +470,8 @@
   "integrations": {
     "title": "整合",
     "notionDescription": "連接 Notion，將片段和對話直接匯出為頁面。",
+    "notionPermissionHint": "使用 Notion 整合需要授權擴充功能存取 Notion API。點擊下方按鈕授權。",
+    "notionGrantPermission": "授權存取 Notion API",
     "notionApiKey": "API Key（Integration Token）",
     "notionApiKeyHint": "在以下網址建立內部整合：",
     "notionParentPage": "目標頁面",
@@ -784,6 +796,17 @@
     "saveChanges": "儲存變更",
     "cancel": "取消"
   },
+  "slashCommand": {
+    "promptLibrary": "提示詞庫",
+    "noResults": "未找到符合的提示詞",
+    "results": "個結果",
+    "navigate": "導覽",
+    "select": "選取",
+    "dismiss": "關閉",
+    "fillVariables": "填寫變數",
+    "insert": "插入",
+    "promptInserted": "提示詞已插入"
+  },
   "filterBar": {
     "all": "全部"
   },
@@ -848,7 +871,10 @@
     "enjoyingIt": "覺得好用？支持一下",
     "rateUs": "好評 👍",
     "starOnGithub": "點星 ⭐",
-    "buyMeACoffee": "咖啡 ☕"
+    "buyMeACoffee": "咖啡 ☕",
+    "showAllVersions": "顯示所有版本",
+    "hidePatchVersions": "僅大版本",
+    "patch": "修補"
   },
   "smartScrollbar": {
     "conversationOutline": "對話大綱",
@@ -880,6 +906,26 @@
     "grimoireDescription": "羊皮紙質感，溫暖做舊色調，襯線字體，沉浸式奇幻體驗",
     "retroTerminalName": "復古終端機",
     "retroTerminalDescription": "純黑底色，螢光綠文字，等寬字體，硬核極客命令控制台",
+    "nordAuroraName": "北極光",
+    "nordAuroraDescription": "北歐極地冷色調暗色主題，冰藍霜綠點綴，寧靜專注",
+    "cyberpunkNeonName": "賽博霓虹",
+    "cyberpunkNeonDescription": "未來都市霓虹燈光，品紅電光藍漸變，強烈視覺衝擊",
+    "paperInkName": "紙與墨",
+    "paperInkDescription": "極致專注閱讀體驗，溫暖紙張底色，優雅襯線字體",
+    "solarizedName": "日蝕",
+    "solarizedDescription": "經典 Solarized Dark 配色，溫冷色調平衡，護眼舒適",
+    "rosePineName": "玫瑰松",
+    "rosePineDescription": "柔和暗色主題，低飽和玫瑰粉與金色點綴，優雅安靜",
+    "tokyoNightName": "東京之夜",
+    "tokyoNightDescription": "深藍黑底色，紫/藍/桃色點綴，東京都市夜景氛圍",
+    "catppuccinMochaName": "卡布奇諾",
+    "catppuccinMochaDescription": "溫暖柔和的暗色主題，薰衣草與桃色色調",
+    "draculaName": "德古拉",
+    "draculaDescription": "經典暗色主題，鮮艷紫色、綠色和粉色點綴",
+    "oceanBreezeName": "海風",
+    "oceanBreezeDescription": "清新明亮的淺色主題，海洋藍與珊瑚色點綴",
+    "midnightPurpleName": "午夜紫",
+    "midnightPurpleDescription": "深邃純黑底色，紫色與靛藍漸變點綴",
     "previewBannerText": "預覽模式 — 主題將在 5 分鐘後恢復預設。購買可永久使用。",
     "buyNow": "立即購買",
     "aiGeneratorTitle": "沒有想要的主題？",
@@ -922,8 +968,11 @@
     "ppFeatureWrite": "無需動手 —— 讓 AI 幫你重新命名、移動、合併和清理",
     "ppFeatureHistory": "完整時間線 —— AI 可分析和操作你的全部歷史紀錄，不限最近 7 天",
     "ppFeatureExport": "對話和片段一鍵匯出到 Obsidian 和 Notion",
+    "comingSoon": "即將推出",
+    "comingSoon": "即將上線",
     "getPowerPack": "取得 Power Pack",
-    "popular": "熱門"
+    "popular": "熱門",
+    "refundPolicy": "7 天無理由退款"
   },
   "paywall": {
     "title": "需要 Power Pack",
@@ -931,7 +980,8 @@
     "requiresPowerPack": "需要 Power Pack 才能使用。",
     "includedFeatures": "包含功能",
     "getPowerPack": "取得 Power Pack",
-    "dismissHint": "按 Esc 或點擊外部區域關閉"
+    "dismissHint": "按 Esc 或點擊外部區域關閉",
+    "refundPolicy": "7 天無理由退款"
   },
   "supportPack": {
     "title": "支持包",

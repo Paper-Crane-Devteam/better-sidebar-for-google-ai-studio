@@ -30,9 +30,12 @@
     --input: 225 225 225; /* #e1e1e1 */
     --ring: 36 131 226; /* #2483e2 */
 
+    --highlight: 234 179 8; /* #eab308 - amber accent for badges, indicators */
+    --highlight-foreground: 255 255 255;
+
     --radius: 0.5rem;
 
-    /* Density Variables - Default (Compact) */
+    /* Density Variables */
     --density-row-height: 28px;
     --density-icon-size: 12px;
     --density-font-size: 13px;
@@ -42,17 +45,6 @@
 
     /* Font Family Defaults */
     --font-sans: 'Inter', 'Microsoft YaHei', 'PingFang SC', 'Noto Sans SC', sans-serif;
-  }
-
-  /* Relaxed Mode */
-  [data-density='relaxed'],
-  :host([data-density='relaxed']) {
-    --density-row-height: 36px;
-    --density-icon-size: 18px;
-    --density-font-size: 14px;
-    --density-padding-x: 12px;
-    --density-padding-y: 8px;
-    --density-gap: 8px;
   }
 
   .dark,
@@ -87,6 +79,9 @@
     --border: 42 42 42; /* rgb(42, 42, 42) */
     --input: 62 62 62; /* #3e3e3e */
     --ring: 135 169 255; /* #87a9ff */
+
+    --highlight: 251 191 36; /* #fbbf24 - amber for dark mode */
+    --highlight-foreground: 0 0 0;
   }
 
   /* AI Studio Theme Specifics */
@@ -99,15 +94,6 @@
     --sidebar-gap: 8px;
     --sidebar-padding-y: 8px;
     // --sidebar-icon-color: 68 71 70;
-  }
-
-  .theme-aistudio [data-density='relaxed'],
-  :host(.theme-aistudio) [data-density='relaxed'] {
-    /* AI Studio Relaxed - Slightly bigger */
-    --sidebar-width: 56px;
-    --sidebar-button-size: 44px;
-    --sidebar-gap: 12px;
-    --sidebar-padding-y: 12px;
   }
 
   /* Custom Slider Styles */

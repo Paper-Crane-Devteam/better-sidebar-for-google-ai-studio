@@ -286,10 +286,8 @@ export const GemNode = ({
     isActive && 'node-item-selected',
     !isActive && isCurrentConversation && 'node-item-current',
     isGem && node.data.data?.is_pinned && 'node-item-pinned',
-    hasHoverActions && 'group-hover:pr-8',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40',
     isMenuActive && 'bg-accent/50',
-    isMenuActive && hasHoverActions && 'pr-8',
     isMenuActive && 'node-menu-active',
   );
 
@@ -339,14 +337,14 @@ export const GemNode = ({
                       }]
                     : isFile && isFavorite
                       ? [{
-                          icon: <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />,
+                          icon: <Star className="h-3.5 w-3.5 fill-highlight text-highlight" />,
                           tooltip: t('tooltip.removeFromFavorites'),
                           onClick: (e: React.MouseEvent) => {
                             e.stopPropagation();
                             e.preventDefault();
                             toggleFavorite(node.data.id, 'conversation', isFavorite);
                           },
-                          className: 'text-yellow-400 hover:text-yellow-500',
+                          className: 'text-highlight hover:text-highlight/80',
                         }]
                       : []
                 }

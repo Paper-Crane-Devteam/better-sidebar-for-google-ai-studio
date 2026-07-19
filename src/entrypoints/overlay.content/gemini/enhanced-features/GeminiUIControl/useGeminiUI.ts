@@ -231,8 +231,7 @@ export const useGeminiUI = () => {
         if (isSidebarExpanded) {
           topBarActions.style.left = `${storeSidebarWidth + 1}px`;
         } else {
-          const density = useSettingsStore.getState().layoutDensity;
-          topBarActions.style.left = density === 'compact' ? '57px' : '65px';
+          topBarActions.style.left = '57px';
         }
       }
     });

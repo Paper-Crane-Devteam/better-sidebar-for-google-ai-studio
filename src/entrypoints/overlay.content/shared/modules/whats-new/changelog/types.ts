@@ -1,5 +1,8 @@
-export const CURRENT_VERSION = '2.7.0';
+export const CURRENT_VERSION = '2.8.0';
 
+/**
+ * Legacy structured changelog item (used for versions < 2.8.0).
+ */
 export interface ChangeLogItem {
   version: string;
   date: string;
@@ -12,7 +15,29 @@ export interface ChangeLogItem {
 }
 
 /**
- * Convert a ChangeLogItem to a markdown string for rendering.
+ * Markdown-based changelog entry (used for versions >= 2.8.0).
+ * Content is loaded directly from .md files per locale.
+ */
+export interface ChangeLogMarkdownEntry {
+  version: string;
+  date: string;
+  markdown: string;
+}
+
+/**
+ * Unified changelog entry — either markdown-based or legacy structured.
+ */
+export type ChangeLogEntry = ChangeLogMarkdownEntry | ChangeLogItem;
+
+/**
+ * Type guard: check if an entry is markdown-based.
+ */
+export function isMarkdownEntry(entry: ChangeLogEntry): entry is ChangeLogMarkdownEntry {
+  return 'markdown' in entry;
+}
+
+/**
+ * Convert a legacy ChangeLogItem to a markdown string for rendering.
  */
 export function changelogItemToMarkdown(item: ChangeLogItem): string {
   const lines: string[] = [];
@@ -42,4 +67,14 @@ export function changelogItemToMarkdown(item: ChangeLogItem): string {
   }
 
   return lines.join('\n');
+}
+
+/**
+ * Get the markdown content from a ChangeLogEntry (works for both formats).
+ */
+export function getEntryMarkdown(entry: ChangeLogEntry): string {
+  if (isMarkdownEntry(entry)) {
+    return entry.markdown;
+  }
+  return changelogItemToMarkdown(entry);
 }

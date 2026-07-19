@@ -52,6 +52,10 @@ export default {
           foreground: "rgb(var(--card-foreground) / <alpha-value>)",
         },
         'sidebar-icon': "rgb(var(--sidebar-icon-color) / <alpha-value>)",
+        highlight: {
+          DEFAULT: "rgb(var(--highlight) / <alpha-value>)",
+          foreground: "rgb(var(--highlight-foreground) / <alpha-value>)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '../../components/ui/button';
-import { X, Settings, Heart, Info, LayoutTemplate, Database, SlidersHorizontal, Palette, Keyboard, Plug } from 'lucide-react';
+import { X, Settings, Share2, Info, LayoutTemplate, Database, SlidersHorizontal, Palette, Keyboard, Plug } from 'lucide-react';
 import { UIcon } from '@/shared/components/ui/icon';
 import { GeneralSettings } from './modules/GeneralSettings';
 import { ThemeSettings } from './modules/ThemeSettings';
@@ -140,7 +140,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
                     <div className="h-px bg-border my-2 mx-2" />
                     
                     <NavButton id="supportpack" label={t('packs.title')} icon={PacksIcon} activeSection={activeSection} setActiveSection={setActiveSection} />
-                    <NavButton id="sponsor" label={t('settings.sponsor')} icon={Heart} activeSection={activeSection} setActiveSection={setActiveSection} />
+                    <NavButton id="sponsor" label={t('settings.sponsor')} icon={Share2} activeSection={activeSection} setActiveSection={setActiveSection} />
                     
                     <div className="flex-1" />
                     <NavButton id="about" label={t('settings.about')} icon={Info} activeSection={activeSection} setActiveSection={setActiveSection} />

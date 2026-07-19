@@ -111,8 +111,11 @@ export const FolderTreeNodeContent = ({
         </div>
       )}
 
-      <div className="flex-1 min-w-0 flex items-center justify-between overflow-hidden">
-        <div className="min-w-0 flex items-center gap-1 overflow-hidden">
+      <div className={cn(
+        "flex-1 min-w-0 flex items-center justify-between overflow-hidden node-text-content",
+        node.isEditing && "is-editing",
+      )}>
+        <div className="flex-1 min-w-0 flex items-center gap-1 overflow-hidden">
           {namePrefix}
           {node.isEditing ? (
             <RenameForm node={node} newName={newName} setNewName={setNewName} />

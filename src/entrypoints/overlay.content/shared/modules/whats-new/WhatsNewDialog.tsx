@@ -1,18 +1,30 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWhatsNew } from './useWhatsNew';
-import { getChangelog, CURRENT_VERSION, changelogItemToMarkdown } from './changelog';
-import type { ChangeLogItem } from './changelog';
-import { X, Sparkles } from 'lucide-react';
+import { getChangelog, CURRENT_VERSION, getEntryMarkdown } from './changelog';
+import type { ChangeLogEntry } from './changelog';
+import { X, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { useI18n } from '@/shared/hooks/useI18n';
+import snippetDemoGif from '@/assets/images/snippet-demo.gif';
+
+/**
+ * Check if a version is a "major" release (first two segments: X.Y).
+ * A patch version like 2.4.1 is considered minor; 2.4.0 is major.
+ */
+function isMajorVersion(version: string): boolean {
+  const parts = version.split('.');
+  const patch = parseInt(parts[2] ?? '0', 10);
+  return patch === 0;
+}
 
 export const WhatsNewDialog = () => {
   const { t } = useTranslation();
   const { currentLanguage } = useI18n();
   const { isOpen, closeWhatsNew } = useWhatsNew();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [showAll, setShowAll] = useState(false);
 
   // Close on Escape key
   useEffect(() => {
@@ -36,6 +48,10 @@ export const WhatsNewDialog = () => {
   if (!isOpen) return null;
 
   const changelog = getChangelog();
+  const filteredChangelog = showAll
+    ? changelog
+    : changelog.filter((item) => isMajorVersion(item.version));
+  const hasPatchVersions = changelog.some((item) => !isMajorVersion(item.version));
 
   return (
     // The entire overlay is scrollable — like browsing a web page
@@ -75,7 +91,7 @@ export const WhatsNewDialog = () => {
               <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-yellow-500/10">
                 <Sparkles className="w-6 h-6 text-yellow-500 fill-yellow-500" />
               </div>
-              <div>
+              <div className="flex-1">
                 <h1 className="text-xl font-bold tracking-tight">
                   {t('whatsNew.title', { version: CURRENT_VERSION })}
                 </h1>
@@ -83,6 +99,26 @@ export const WhatsNewDialog = () => {
                   {t('whatsNew.changelogSubtitle')}
                 </p>
               </div>
+              {hasPatchVersions && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted-foreground hover:text-foreground gap-1"
+                  onClick={() => setShowAll(!showAll)}
+                >
+                  {showAll ? (
+                    <>
+                      {t('whatsNew.hidePatchVersions')}
+                      <ChevronUp className="w-3 h-3" />
+                    </>
+                  ) : (
+                    <>
+                      {t('whatsNew.showAllVersions')}
+                      <ChevronDown className="w-3 h-3" />
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
 
@@ -91,15 +127,20 @@ export const WhatsNewDialog = () => {
             className="border-x px-10 py-8 space-y-12"
             style={{ backgroundColor: 'var(--panel-bg)' }}
           >
-            {changelog.map((item: ChangeLogItem, index: number) => {
-              const markdown = changelogItemToMarkdown(item);
+            {filteredChangelog.map((item: ChangeLogEntry, index: number) => {
+              const markdown = getEntryMarkdown(item);
               const isLatest = index === 0;
+              const isPatch = !isMajorVersion(item.version);
 
               return (
                 <article key={item.version}>
                   {/* Version header */}
                   <div className="flex items-baseline gap-3 mb-5">
-                    <h2 className={`text-base font-semibold ${isLatest ? 'text-primary' : 'text-foreground'}`}>
+                    <h2 className={`font-semibold ${
+                      isPatch
+                        ? 'text-sm text-muted-foreground'
+                        : `text-base ${isLatest ? 'text-primary' : 'text-foreground'}`
+                    }`}>
                       v{item.version}
                     </h2>
                     <span className="text-xs text-muted-foreground">
@@ -110,16 +151,31 @@ export const WhatsNewDialog = () => {
                         Latest
                       </span>
                     )}
+                    {isPatch && (
+                      <span className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                        {t('whatsNew.patch')}
+                      </span>
+                    )}
                   </div>
 
                   {/* Markdown body */}
-                  <MarkdownRenderer className="text-sm">
+                  <MarkdownRenderer className={isPatch ? 'text-xs' : 'text-sm'}>
                     {markdown}
                   </MarkdownRenderer>
 
+                  {/* Inline media for specific versions */}
+                  {item.version === '2.8.0' && (
+                    <img
+                      src={snippetDemoGif}
+                      alt="Snippet Demo"
+                      className="rounded-md border border-border/50 shadow-sm w-full h-auto object-contain mt-4"
+                      loading="lazy"
+                    />
+                  )}
+
                   {/* Divider */}
-                  {index < changelog.length - 1 && (
-                    <div className="mt-10 border-b border-border/40" />
+                  {index < filteredChangelog.length - 1 && (
+                    <div className={`border-b border-border/40 ${isPatch ? 'mt-6' : 'mt-10'}`} />
                   )}
                 </article>
               );

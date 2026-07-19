@@ -8,6 +8,8 @@
     "hide": "Ocultar",
     "edit": "Editar",
     "save": "Guardar",
+    "saved": "Guardado",
+    "copy": "Copiar",
     "close": "Cerrar",
     "loading": "Cargando...",
     "settings": "Configuración",
@@ -53,7 +55,7 @@
     "privacyPolicy": "Política de Privacidad",
     "disclaimer": "Descargo de Responsabilidad",
     "termsOfService": "Términos de Servicio",
-    "sponsor": "Patrocinador",
+    "sponsor": "Compartir",
     "about": "Acerca de",
     "appearance": "Apariencia",
     "theme": "Tema",
@@ -151,7 +153,9 @@
     "createPrompt": "Crear prompt",
     "editPrompt": "Editar prompt",
     "noPrompts": "Aún no hay prompts.",
-    "selectAnOption": "Selecciona una opción"
+    "selectAnOption": "Selecciona una opción",
+    "slashTip": "Consejo: Escribe / en el cuadro de entrada para insertar rápidamente un prompt.",
+    "slashTipDismiss": "Entendido"
   },
   "snippets": {
     "createSnippet": "Nuevo Fragmento",
@@ -208,11 +212,17 @@
     "viewChangelog": "Ver registro de cambios"
   },
   "sponsor": {
-    "title": "Apóyanos",
+    "title": "Compartir",
     "enjoying": "¿Te gusta Better Sidebar?",
-    "description": "Es un proyecto gratuito y de código abierto, hecho con amor ❤️ Si te resulta útil, una reseña, una estrella en GitHub, compartirlo con amigos o invitarnos a un café son el mejor apoyo que puedes darnos.",
+    "shareDescription": "Compártelo con amigos y ayuda a más personas a descubrir esta herramienta gratuita y de código abierto ❤️",
     "sponsorOnGithub": "Dar estrella en GitHub",
-    "buyMeACoffee": "Invítame un café ☕"
+    "copyLink": "Copiar Enlace y Texto",
+    "copied": "Copiado",
+    "weibo": "Weibo",
+    "xiaohongshu": "Xiaohongshu",
+    "wechat": "WeChat",
+    "wechatScan": "Escanea o mantén presionado para compartir",
+    "xiaohongshuCopied": "¡Texto copiado! Pégalo en Xiaohongshu 📝"
   },
   "data": {
     "librarySync": "Sincronización de Datos",
@@ -460,6 +470,8 @@
   "integrations": {
     "title": "Integraciones",
     "notionDescription": "Conectar con Notion para exportar fragmentos y conversaciones directamente como páginas.",
+    "notionPermissionHint": "Para usar la integración con Notion, la extensión necesita permiso para acceder a la API de Notion. Haz clic abajo para conceder acceso.",
+    "notionGrantPermission": "Conceder acceso a la API de Notion",
     "notionApiKey": "API Key (Token de integración)",
     "notionApiKeyHint": "Crea una integración interna en",
     "notionParentPage": "Página de destino",
@@ -784,6 +796,17 @@
     "saveChanges": "Guardar cambios",
     "cancel": "Cancelar"
   },
+  "slashCommand": {
+    "promptLibrary": "Biblioteca de Prompts",
+    "noResults": "No se encontraron prompts",
+    "results": "resultados",
+    "navigate": "navegar",
+    "select": "seleccionar",
+    "dismiss": "cerrar",
+    "fillVariables": "Rellenar Variables",
+    "insert": "Insertar",
+    "promptInserted": "Prompt insertado"
+  },
   "filterBar": {
     "all": "Todos"
   },
@@ -848,7 +871,10 @@
     "enjoyingIt": "¿Te gusta? Muéstranos tu apoyo",
     "rateUs": "Valorar 👍",
     "starOnGithub": "Estrella ⭐",
-    "buyMeACoffee": "Café ☕"
+    "buyMeACoffee": "Café ☕",
+    "showAllVersions": "Mostrar todas las versiones",
+    "hidePatchVersions": "Solo mayores",
+    "patch": "Parche"
   },
   "smartScrollbar": {
     "conversationOutline": "Esquema de Conversación",
@@ -880,6 +906,26 @@
     "grimoireDescription": "Estética de pergamino antiguo con tonos cálidos y tipografía serif",
     "retroTerminalName": "Retro Terminal",
     "retroTerminalDescription": "Estética de terminal CRT con texto verde neón y tipografía monoespaciada",
+    "nordAuroraName": "Nord Aurora",
+    "nordAuroraDescription": "Tema oscuro inspirado en el Ártico con azules fríos y acentos verde escarcha",
+    "cyberpunkNeonName": "Cyberpunk Neon",
+    "cyberpunkNeonDescription": "Estética futurista neón con magenta y azul eléctrico sobre negro profundo",
+    "paperInkName": "Paper & Ink",
+    "paperInkDescription": "Tema minimalista enfocado en la lectura con tonos papel cálidos y tipografía serif elegante",
+    "solarizedName": "Solarized",
+    "solarizedDescription": "Paleta clásica Solarized Dark con tonos cálidos y fríos equilibrados",
+    "rosePineName": "Rosé Pine",
+    "rosePineDescription": "Tema oscuro suave con acentos rosa apagado y dorado",
+    "tokyoNightName": "Tokyo Night",
+    "tokyoNightDescription": "Azul-negro profundo con acentos púrpura, azul y durazno inspirados en las luces de Tokio",
+    "catppuccinMochaName": "Catppuccin Mocha",
+    "catppuccinMochaDescription": "Tema oscuro pastel cálido con tonos lavanda y durazno",
+    "draculaName": "Dracula",
+    "draculaDescription": "Tema oscuro clásico con vibrantes acentos púrpura, verde y rosa",
+    "oceanBreezeName": "Ocean Breeze",
+    "oceanBreezeDescription": "Tema claro fresco con acentos azul océano y coral",
+    "midnightPurpleName": "Midnight Purple",
+    "midnightPurpleDescription": "Negro profundo con acentos de degradado púrpura e índigo",
     "previewBannerText": "Modo vista previa — el tema volverá al predeterminado en 5 minutos. Compra para conservarlo.",
     "buyNow": "Comprar",
     "aiGeneratorTitle": "¿No encuentras lo que buscas?",
@@ -922,8 +968,11 @@
     "ppFeatureWrite": "Espacio de trabajo sin intervención — pide a la IA que renombre, mueva, fusione o limpie por ti",
     "ppFeatureHistory": "Línea temporal completa — la IA analiza y actúa sobre todo tu historial, no solo los últimos 7 días",
     "ppFeatureExport": "Exporta conversaciones y fragmentos a Obsidian y Notion",
+    "comingSoon": "Próximamente",
+    "comingSoon": "Próximamente",
     "getPowerPack": "Obtener Power Pack",
-    "popular": "POPULAR"
+    "popular": "POPULAR",
+    "refundPolicy": "Reembolso sin preguntas en 7 días"
   },
   "paywall": {
     "title": "Se requiere Power Pack",
@@ -931,7 +980,8 @@
     "requiresPowerPack": "requiere Power Pack para usar.",
     "includedFeatures": "Qué incluye",
     "getPowerPack": "Obtener Power Pack",
-    "dismissHint": "Pulsa Esc o haz clic fuera para cerrar"
+    "dismissHint": "Pulsa Esc o haz clic fuera para cerrar",
+    "refundPolicy": "Reembolso sin preguntas en 7 días"
   },
   "supportPack": {
     "title": "Pack de Soporte",

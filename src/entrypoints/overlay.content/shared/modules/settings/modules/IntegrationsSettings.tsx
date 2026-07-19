@@ -11,7 +11,9 @@ import {
 } from '@/shared/components/ui/select';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { Loader2, Check, X, RefreshCw, ExternalLink } from 'lucide-react';
+import { useHostPermission } from '@/shared/hooks/useHostPermission';
+import { NOTION_ORIGIN } from '@/shared/lib/host-permission';
+import { Loader2, Check, X, RefreshCw, ExternalLink, ShieldCheck } from 'lucide-react';
 import {
   testNotionConnection,
   searchNotionPages,
@@ -30,6 +32,8 @@ export const IntegrationsSettings = () => {
     cachedPages,
     lastFetchedAt,
   } = integrations.notion;
+
+  const notionPermission = useHostPermission(NOTION_ORIGIN);
 
   const [apiKeyInput, setApiKeyInput] = useState(apiKey);
   const [testing, setTesting] = useState(false);
@@ -135,125 +139,148 @@ export const IntegrationsSettings = () => {
         <Separator />
       </div>
 
-      {/* Step 1: API Key */}
-      <div className="space-y-3">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          {t('integrations.step1')}
-        </p>
-        <label className="text-sm font-medium">{t('integrations.notionApiKey')}</label>
-        <p className="text-xs text-muted-foreground">
-          {t('integrations.notionApiKeyHint')}{' '}
-          <a
-            href="https://www.notion.so/my-integrations"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline inline-flex items-center gap-0.5"
-          >
-            notion.so/my-integrations
-            <ExternalLink className="h-3 w-3" />
-          </a>
-        </p>
-        <div className="flex gap-2">
-          <Input
-            type="password"
-            value={apiKeyInput}
-            onChange={(e) => setApiKeyInput(e.target.value)}
-            placeholder="ntn_..."
-            className="flex-1 font-mono text-xs"
-          />
+      {/* Gate: Host permission required first */}
+      {!notionPermission.granted ? (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            {t('integrations.notionPermissionHint')}
+          </p>
           <Button
-            size="sm"
-            onClick={handleSaveApiKey}
-            disabled={!apiKeyInput.trim() || testing}
+            onClick={notionPermission.request}
+            disabled={notionPermission.requesting}
+            className="gap-2"
           >
-            {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : t('common.save')}
+            {notionPermission.requesting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ShieldCheck className="h-4 w-4" />
+            )}
+            {t('integrations.notionGrantPermission')}
           </Button>
-          {apiKey && (
-            <Button size="sm" variant="ghost" onClick={handleClearApiKey}>
-              {t('integrations.disconnect')}
-            </Button>
-          )}
         </div>
-
-        {/* Connection status */}
-        {connectionStatus === 'ok' && (
-          <div className="flex items-center gap-2 text-sm text-green-600">
-            <Check className="h-4 w-4" />
-            {t('integrations.connected')}: {connectionName}
-          </div>
-        )}
-        {connectionStatus === 'error' && (
-          <div className="flex items-center gap-2 text-sm text-destructive">
-            <X className="h-4 w-4" />
-            {t('integrations.connectionFailed')}: {connectionError}
-          </div>
-        )}
-      </div>
-
-      {/* Step 2: Select parent page (only show when connected) */}
-      {connectionStatus === 'ok' && (
+      ) : (
         <>
-          <Separator />
+          {/* Step 1: API Key */}
           <div className="space-y-3">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              {t('integrations.step2')}
+              {t('integrations.step1')}
             </p>
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">{t('integrations.notionParentPage')}</label>
+            <label className="text-sm font-medium">{t('integrations.notionApiKey')}</label>
+            <p className="text-xs text-muted-foreground">
+              {t('integrations.notionApiKeyHint')}{' '}
+              <a
+                href="https://www.notion.so/my-integrations"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline inline-flex items-center gap-1"
+              >
+                notion.so/my-integrations
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </p>
+            <div className="flex gap-2">
+              <Input
+                type="password"
+                value={apiKeyInput}
+                onChange={(e) => setApiKeyInput(e.target.value)}
+                placeholder="ntn_..."
+                className="flex-1 font-mono text-xs"
+              />
               <Button
                 size="sm"
-                variant="ghost"
-                className="h-7 px-2 text-xs"
-                onClick={handleRefreshPages}
-                disabled={loadingPages}
+                onClick={handleSaveApiKey}
+                disabled={!apiKeyInput.trim() || testing}
               >
-                {loadingPages ? (
-                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                ) : (
-                  <RefreshCw className="h-3 w-3 mr-1" />
-                )}
-                {t('integrations.refresh')}
+                {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : t('common.save')}
               </Button>
+              {apiKey && (
+                <Button size="sm" variant="ghost" onClick={handleClearApiKey}>
+                  {t('integrations.disconnect')}
+                </Button>
+              )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {t('integrations.notionParentPageHint')}
-            </p>
 
-            {loadingPages ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {t('common.loading')}
+            {/* Connection status */}
+            {connectionStatus === 'ok' && (
+              <div className="flex items-center gap-2 text-sm text-green-600">
+                <Check className="h-4 w-4" />
+                {t('integrations.connected')}: {connectionName}
               </div>
-            ) : pages.length > 0 ? (
-              <Select
-                value={parentPageId || undefined}
-                onValueChange={(value) => {
-                  const page = pages.find((p) => p.id === value);
-                  if (page) {
-                    setNotionConfig({ parentPageId: page.id, parentPageTitle: page.title });
-                  }
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t('integrations.selectPage')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {pages.map((page) => (
-                    <SelectItem key={page.id} value={page.id}>
-                      {page.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <div className="text-xs text-muted-foreground py-2 space-y-1">
-                <p>{t('integrations.noPagesFound')}</p>
-                <p className="text-amber-600 dark:text-amber-400">
-                  {t('integrations.noPagesPermissionHint')}
-                </p>
+            )}
+            {connectionStatus === 'error' && (
+              <div className="flex items-center gap-2 text-sm text-destructive">
+                <X className="h-4 w-4" />
+                {t('integrations.connectionFailed')}: {connectionError}
               </div>
             )}
           </div>
+
+          {/* Step 2: Select parent page (only show when connected) */}
+          {connectionStatus === 'ok' && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  {t('integrations.step2')}
+                </p>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">{t('integrations.notionParentPage')}</label>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-xs"
+                    onClick={handleRefreshPages}
+                    disabled={loadingPages}
+                  >
+                    {loadingPages ? (
+                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                    ) : (
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                    )}
+                    {t('integrations.refresh')}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t('integrations.notionParentPageHint')}
+                </p>
+
+                {loadingPages ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t('common.loading')}
+                  </div>
+                ) : pages.length > 0 ? (
+                  <Select
+                    value={parentPageId || undefined}
+                    onValueChange={(value) => {
+                      const page = pages.find((p) => p.id === value);
+                      if (page) {
+                        setNotionConfig({ parentPageId: page.id, parentPageTitle: page.title });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={t('integrations.selectPage')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {pages.map((page) => (
+                        <SelectItem key={page.id} value={page.id}>
+                          {page.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="text-xs text-muted-foreground py-2 space-y-1">
+                    <p>{t('integrations.noPagesFound')}</p>
+                    <p className="text-amber-600 dark:text-amber-400">
+                      {t('integrations.noPagesPermissionHint')}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

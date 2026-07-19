@@ -2,7 +2,6 @@ import React, { useMemo, forwardRef, useImperativeHandle } from 'react';
 import { Tree, NodeRendererProps } from 'react-arborist';
 import { useArboristTree, STORAGE_KEY } from '../hooks/useArboristTree';
 import { useAppStore } from '@/shared/lib/store';
-import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Node } from './node';
 import { FolderTintRow } from './node/FolderTintRow';
 import { NodeData, ArboristTreeHandle } from '../types';
@@ -29,10 +28,9 @@ export const TimelineView = forwardRef<ArboristTreeHandle, TimelineViewProps>(
     const { t, currentLanguage } = useI18n();
     const { conversationTags, ui, favorites, setExplorerBatchSelection } =
       useAppStore();
-    const { layoutDensity } = useSettingsStore();
     const { tags: tagFilter, typeFilter, onlyFavorites } = ui.explorer;
 
-    const rowHeight = layoutDensity === 'compact' ? 28 : 36;
+    const rowHeight = 28;
 
     useImperativeHandle(ref, () => ({
       collapseAll: () => {

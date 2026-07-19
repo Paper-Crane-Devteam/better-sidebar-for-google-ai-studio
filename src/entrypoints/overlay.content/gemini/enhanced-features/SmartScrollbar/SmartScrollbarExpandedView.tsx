@@ -133,7 +133,7 @@ export const SmartScrollbarExpandedView: React.FC<Props> = ({
                       'transition-colors duration-150',
                       isActive
                         ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
-                        : 'bg-muted/60 text-muted-foreground group-hover:bg-muted',
+                        : 'bg-highlight/15 text-highlight group-hover:bg-highlight/25',
                     )}
                   >
                     {index + 1}

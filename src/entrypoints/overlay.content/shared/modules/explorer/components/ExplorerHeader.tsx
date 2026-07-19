@@ -28,6 +28,7 @@ import type { FilterState, ExplorerTypeFilter } from '../../../types/filter';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { BatchToolbar } from './batch/BatchToolbar';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
+import { Input } from '@/entrypoints/overlay.content/shared/components/ui/input';
 import { CollapsibleSection } from '../../../components/CollapsibleSection';
 
 // ── Type Filter Dropdown ────────────────────────────────────────────
@@ -255,7 +256,7 @@ export const ExplorerHeader = ({
   );
 
   return (
-    <div className="flex flex-col bg-background">
+    <div className="flex flex-col">
       {/* Row 1: Library title | cloud, (divider), sort, new folder, menu */}
       <div className="px-3 py-2 flex items-center justify-between border-b border-border/50 h-12 shrink-0">
         <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground/70">
@@ -343,6 +344,7 @@ export const ExplorerHeader = ({
         onToggle={onToggleChatsSection}
         actions={chatsSectionActions}
         contentClassName="flex-1 min-h-0"
+        actionsVisibilityClass="opacity-0 group-hover/chats:opacity-100"
       >
         <div className="animate-in fade-in slide-in-from-top-1 duration-150">
             {/* Search row with filter funnel on left */}
@@ -361,12 +363,12 @@ export const ExplorerHeader = ({
 
               <div className="flex-1 relative">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                <input
+                <Input
                   ref={searchInputRef}
                   value={localQuery}
                   onChange={handleSearchChange}
                   placeholder={t('tooltip.search')}
-                  className="flex h-7 w-full rounded-sm border border-border/60 bg-transparent pl-7 pr-7 text-xs shadow-sm transition-colors placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="h-7 rounded-sm pl-7 pr-7 text-xs"
                   onKeyDown={(e) => {
                     if (e.key === 'Escape') {
                       handleClearSearch();

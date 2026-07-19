@@ -25,7 +25,7 @@ import { useDataManagement } from '../hooks/useDataManagement';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { ImportHistoryDialog } from '@/entrypoints/overlay.content/aistudio/modules/search/components/ImportHistoryDialog';
 import { GDriveSyncSection } from '@/entrypoints/overlay.content/shared/components/GDriveSyncSection';
-import { PLATFORM_CONFIG, Platform } from '@/shared/types/platform';
+import { detectPlatform, PLATFORM_CONFIG, Platform } from '@/shared/types/platform';
 import type { Profile } from '@/shared/lib/profile-registry';
 import { modal } from '@/shared/lib/modal';
 import { toast } from '@/shared/lib/toast';
@@ -33,6 +33,8 @@ import dayjs from 'dayjs';
 
 export const DataSettings = () => {
   const { t } = useI18n();
+  const platform = detectPlatform();
+  const isAIStudio = platform === Platform.AI_STUDIO;
   const [isImportHistoryOpen, setIsImportHistoryOpen] = useState(false);
   const { exportData, importData, resetData, scanLibrary, isLoading } =
     useDataManagement();
@@ -219,6 +221,7 @@ export const DataSettings = () => {
               {t('data.scanLibrary')}
             </Button>
           </div>
+          {isAIStudio && (
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <span className="text-sm font-medium">
@@ -239,6 +242,7 @@ export const DataSettings = () => {
               {t('data.importConversationData')}
             </Button>
           </div>
+          )}
         </div>
       </div>
 
@@ -520,10 +524,12 @@ export const DataSettings = () => {
         </div>
       </div>
 
+      {isAIStudio && (
       <ImportHistoryDialog
         isOpen={isImportHistoryOpen}
         onClose={() => setIsImportHistoryOpen(false)}
       />
+      )}
     </div>
   );
 };

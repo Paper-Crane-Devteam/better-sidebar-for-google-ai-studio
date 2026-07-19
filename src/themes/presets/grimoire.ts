@@ -226,6 +226,8 @@ body.bs-theme--grimoire h3 {
     { property: '--input', value: '224 212 192' },            // #e0d4c0
     { property: '--ring', value: '139 32 32' },
     { property: '--sidebar-icon-color', value: '92 74 56' },  // #5c4a38
+    { property: '--highlight', value: '139 105 20' },           // #8b6914 - antique gold
+    { property: '--highlight-foreground', value: '255 248 232' },
     { property: '--font-sans', value: '"STKaiti", "KaiTi", "Noto Serif SC", "Source Han Serif SC", "Merriweather", Georgia, "Times New Roman", serif' },
     { property: '--gem-sys-color--primary-container', value: '#f5d5c8' },
     { property: '--gem-sys-color--on-primary-container', value: '#5c1010' },

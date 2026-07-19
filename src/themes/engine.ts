@@ -23,6 +23,7 @@ const SIDEBAR_VARIABLE_PROPS = [
   '--gem-sys-color--primary-container', '--gem-sys-color--on-primary-container',
   '--radius', '--popover-blur', '--popover-bg',
   '--panel-blur', '--panel-bg', '--overlay-bg', '--overlay-blur',
+  '--highlight', '--highlight-foreground',
 ] as const;
 
 /** Direct CSS style properties that sidebar themes may set. */

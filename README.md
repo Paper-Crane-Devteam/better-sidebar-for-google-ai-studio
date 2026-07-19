@@ -15,23 +15,34 @@ If you use **Gemini** or **Google AI Studio** heavily, you know the struggle: yo
 
 We built this extension to fix that. It gives you a clean, organized sidebar with folders, tags, and a powerful search engine that actually works across **both platforms**—all while keeping your data 100% local and private.
 
-## 🚀 What's New in v2.6.0
+## 🚀 What's New in v2.8.0
 
-### 🎛️ AI Studio UI Controls
+### 🚀 Powerpack — Second Brain Integration
 
-Configurable sidebar width, auto-hide input box, and auto-hide run settings panel — tailor your workspace to your preference.
+Export your conversations seamlessly to **Notion** and **Obsidian** with full formatting and code block preservation. Batch export multiple conversations at once. Coming soon: AI Agent Local Takeover. All paid packs come with a **7-day no-questions-asked refund**.
 
-### 💬 Quick New Chat
+### ✂️ Snippets
 
-Creating a new conversation now instantly shows an entry. Set the title before the chat is even created for a smoother workflow.
+Extract the best parts of any AI reply and save them to a dedicated Snippet library with folder management. Snippets can also be exported via the Powerpack.
 
-### 🎨 Gemini UI Settings
+### 📚 Revamped Sidebar
 
-New Gemini UI configuration options in the settings panel, plus adaptation to the latest Gemini UI redesign.
+Completely rebuilt from the ground up — cleaner layout, better organization, and massively reduced animation lag. New additions include:
+- **Conversation Outline** — see the structure of long chats at a glance
+- **Chat Remarks** — add custom descriptions/notes to individual chats
+- **Rich Tooltips** — hover to see creation date, description, and tags
+- **Folder Pinning & Drag-to-Reorder** — pin favorite folders to the top
+- **Locate Active Chat** — auto-expand and snap to your current conversation
 
-### ❤️ Supporter Pack
+### ⚡ Workflow Boosters
 
-3 exclusive themes are now available as a Supporter Pack. All core features remain 100% free — this extension is built in spare time, and your support helps keep it maintained and growing.
+- **Default Homes for Gems & Notebooks** — new chats auto-sort into assigned folders
+- **Magic Slash `/` Commands** — type `/` in Gemini to summon your Prompt Library
+- **Batch Export** — select multiple conversations and export them all at once
+
+### 🎨 Visuals & Themes
+
+10 new exclusive themes for Supporter Pack. The changelog is now rendered in beautiful Markdown with browsable history.
 
 ---
 
@@ -63,6 +74,14 @@ Here is what Better Sidebar can do for you:
 | 📊 **Timeline View** | Visualize your workflow with a "Today", "Yesterday", and "Last Week" timeline. |
 | 🖼️ **Watermark-Free Downloads** | Automatically remove watermarks when downloading generated images in Gemini, including Pro HD images. |
 | 📥 **Conversation Export** | Export your conversations as Markdown, Plain Text, or JSON for documentation or backup. |
+| ✂️ **Snippets** | Extract highlights from any AI reply into a dedicated Snippet library with folder management. |
+| 🔗 **Powerpack — Notion & Obsidian Export** | Seamlessly export conversations and snippets to Notion and Obsidian with full formatting preserved. Batch export supported. |
+| 👀 **Conversation Outline** | See the structure of long conversations at a glance with the new Outline view. |
+| 📝 **Chat Remarks & Rich Tooltips** | Add descriptions to chats; hover for creation date, tags, and notes. |
+| 📌 **Folder Pinning** | Pin favorite folders to the top and drag-to-reorder for effortless organization. |
+| 🎯 **Locate Active Chat** | One click to auto-expand and snap to your current active conversation in the tree. |
+| ⚡ **Magic Slash Commands** | Type `/` in Gemini's input to instantly summon your Prompt Library. |
+| 🏠 **Default Homes** | Assign default folders to Gems & Notebooks — new chats auto-sort themselves. |
 | 🌗 **Theme Sync** | Automatically matches the platform's light/dark mode. |
 | 🔒 **Privacy First** | Everything is stored locally in your browser (SQLite). We don't see your data, ever. |
 | 💾 **Data Control** | Export your data (SQL dump) anytime. You own your data. |
@@ -93,6 +112,13 @@ We're just getting started. Here is what's on our mind:
 - [x] **Auto Google Drive Sync** (Done in v2.5.0!)
 - [x] **AI Studio UI Controls** (Done in v2.6.0!)
 - [x] **Supporter Pack** (Done in v2.6.0!)
+- [x] **Hotkey Support** (Done in v2.7.0!)
+- [x] **AI-Generated Custom Themes** (Done in v2.7.0!)
+- [x] **Powerpack — Notion & Obsidian Export** (Done in v2.8.0!)
+- [x] **Snippets** (Done in v2.8.0!)
+- [x] **Conversation Outline** (Done in v2.8.0!)
+- [x] **Sidebar UI Rebuild** (Done in v2.8.0!)
+- [ ] **AI Agent Local Takeover**: Let AI manage plugin data and act on your behalf (coming soon in Powerpack).
 - [ ] **Additional Platform Support**: Maybe bring this to ChatGPT or Claude?
 - [ ] **AI Auto-Tagging**: Using a local LLM to help organize your chats automatically.
 

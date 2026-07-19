@@ -123,7 +123,7 @@ async function mountDesktopLayout(
   mainStyles: string,
 ): Promise<DesktopLayoutHandle | null> {
   try {
-    // 0. Override bard-sidenav CSS variables based on density settings
+    // 0. Override bard-sidenav CSS variables
     const bardSidenav = await waitForElement('bard-sidenav');
     if (!bardSidenav) {
       console.error('Better Sidebar: bard-sidenav not found');
@@ -139,7 +139,6 @@ async function mountDesktopLayout(
     );
 
     const updateSidebarWidths = (
-      density: 'compact' | 'relaxed',
       enabled: boolean,
     ) => {
       if (!bardSidenav) return;
@@ -163,25 +162,11 @@ async function mountDesktopLayout(
         return;
       }
 
-      if (density === 'compact') {
-        bardSidenavEl.style.setProperty('--bard-sidenav-closed-width', '56px');
-        bardSidenavEl.style.setProperty('--bard-sidenav-open-width', '345px');
-      } else {
-        bardSidenavEl.style.setProperty('--bard-sidenav-closed-width', '64px');
-        bardSidenavEl.style.setProperty('--bard-sidenav-open-width', '360px');
-      }
+      bardSidenavEl.style.setProperty('--bard-sidenav-closed-width', '56px');
+      bardSidenavEl.style.setProperty('--bard-sidenav-open-width', '345px');
     };
 
-    // Subscribe to density changes
-    const unsubDensity = useSettingsStore.subscribe((state) => {
-      const enabled = useAppStore.getState().ui.overlay.isOpen;
-      updateSidebarWidths(state.layoutDensity, enabled);
-    });
-
-    // 0.5. Monitor bard-sidenav width to detect open/close state
-    // Use a trailing-edge debounce so we only commit the final state after
-    // the native CSS transition settles (~200ms idle), avoiding repeated
-    // React re-renders during the animation.
+    // Subscribe to overlay state changes via resize observer
     let resizeTimer: ReturnType<typeof setTimeout> | null = null;
     const resizeObserver = new ResizeObserver((entries) => {
       if (resizeTimer) clearTimeout(resizeTimer);
@@ -189,8 +174,7 @@ async function mountDesktopLayout(
         const lastEntry = entries[entries.length - 1];
         if (!lastEntry) return;
         const width = lastEntry.contentRect.width;
-        const density = useSettingsStore.getState().layoutDensity;
-        const closedWidth = density === 'compact' ? 56 : 64;
+        const closedWidth = 56;
         const isSidebarExpanded = width > closedWidth + 10;
 
         const currentExpanded =
@@ -209,7 +193,6 @@ async function mountDesktopLayout(
         'Better Sidebar: Failed to find .sidenav-with-history-container',
       );
       resizeObserver.disconnect();
-      unsubDensity();
       return null;
     }
 
@@ -250,8 +233,7 @@ async function mountDesktopLayout(
     let wrapperEl: HTMLElement | null = null;
 
     const updateState = (enabled: boolean) => {
-      const density = useSettingsStore.getState().layoutDensity;
-      updateSidebarWidths(density, enabled);
+      updateSidebarWidths(enabled);
 
       // Manage Wrapper
       if (enabled) {
@@ -393,7 +375,6 @@ async function mountDesktopLayout(
     return {
       destroy: () => {
         console.log('Better Sidebar: Destroying desktop layout');
-        unsubDensity();
         unsubOverlay();
         if (resizeTimer) clearTimeout(resizeTimer);
         resizeObserver.disconnect();

@@ -8,6 +8,8 @@
     "hide": "Ocultar",
     "edit": "Editar",
     "save": "Salvar",
+    "saved": "Salvo",
+    "copy": "Copiar",
     "close": "Fechar",
     "loading": "Carregando...",
     "settings": "Configurações",
@@ -53,7 +55,7 @@
     "privacyPolicy": "Política de Privacidade",
     "disclaimer": "Aviso Legal",
     "termsOfService": "Termos de Serviço",
-    "sponsor": "Patrocinador",
+    "sponsor": "Compartilhar",
     "about": "Sobre",
     "appearance": "Aparência",
     "theme": "Tema",
@@ -151,7 +153,9 @@
     "createPrompt": "Criar Prompt",
     "editPrompt": "Editar Prompt",
     "noPrompts": "Nenhum prompt ainda.",
-    "selectAnOption": "Selecione uma opção"
+    "selectAnOption": "Selecione uma opção",
+    "slashTip": "Dica: Digite / na caixa de entrada para inserir rapidamente um prompt.",
+    "slashTipDismiss": "Entendi"
   },
   "snippets": {
     "createSnippet": "Novo Trecho",
@@ -208,11 +212,17 @@
     "viewChangelog": "Ver registro de alterações"
   },
   "sponsor": {
-    "title": "Apoie-nos",
+    "title": "Compartilhar",
     "enjoying": "Gostando do Better Sidebar?",
-    "description": "Este é um projeto gratuito e de código aberto feito com amor ❤️ Se ele melhora seu fluxo de trabalho, uma avaliação, uma estrela no GitHub, compartilhar com amigos ou nos pagar um café significa muito para nós.",
+    "shareDescription": "Compartilhe com amigos e ajude mais pessoas a descobrir esta ferramenta gratuita e de código aberto ❤️",
     "sponsorOnGithub": "Dar estrela no GitHub",
-    "buyMeACoffee": "Me pague um café ☕"
+    "copyLink": "Copiar Link e Texto",
+    "copied": "Copiado",
+    "weibo": "Weibo",
+    "xiaohongshu": "Xiaohongshu",
+    "wechat": "WeChat",
+    "wechatScan": "Escaneie ou pressione para compartilhar",
+    "xiaohongshuCopied": "Texto copiado! Cole no Xiaohongshu 📝"
   },
   "data": {
     "librarySync": "Sincronização de Dados",
@@ -460,6 +470,8 @@
   "integrations": {
     "title": "Integrações",
     "notionDescription": "Conecte-se ao Notion para exportar trechos e conversas diretamente como páginas.",
+    "notionPermissionHint": "Para usar a integração com o Notion, a extensão precisa de permissão para acessar a API do Notion. Clique abaixo para conceder acesso.",
+    "notionGrantPermission": "Conceder acesso à API do Notion",
     "notionApiKey": "API Key (Token de integração)",
     "notionApiKeyHint": "Crie uma integração interna em",
     "notionParentPage": "Página de destino",
@@ -784,6 +796,17 @@
     "saveChanges": "Salvar alterações",
     "cancel": "Cancelar"
   },
+  "slashCommand": {
+    "promptLibrary": "Biblioteca de Prompts",
+    "noResults": "Nenhum prompt correspondente encontrado",
+    "results": "resultados",
+    "navigate": "navegar",
+    "select": "selecionar",
+    "dismiss": "fechar",
+    "fillVariables": "Preencher Variáveis",
+    "insert": "Inserir",
+    "promptInserted": "Prompt inserido"
+  },
   "filterBar": {
     "all": "Todos"
   },
@@ -848,7 +871,10 @@
     "enjoyingIt": "Gostando? Mostre seu apoio",
     "rateUs": "Avaliar 👍",
     "starOnGithub": "Estrela ⭐",
-    "buyMeACoffee": "Café ☕"
+    "buyMeACoffee": "Café ☕",
+    "showAllVersions": "Mostrar todas as versões",
+    "hidePatchVersions": "Apenas principais",
+    "patch": "Correção"
   },
   "smartScrollbar": {
     "conversationOutline": "Esboço da Conversa",
@@ -880,6 +906,26 @@
     "grimoireDescription": "Estética de pergaminho antigo com tons quentes e tipografia serifada",
     "retroTerminalName": "Retro Terminal",
     "retroTerminalDescription": "Estética de terminal CRT com texto verde neon e tipografia monoespaçada",
+    "nordAuroraName": "Nord Aurora",
+    "nordAuroraDescription": "Tema escuro inspirado no Ártico com azuis frios e acentos verde gelo",
+    "cyberpunkNeonName": "Cyberpunk Neon",
+    "cyberpunkNeonDescription": "Estética neon futurista com magenta e azul elétrico sobre preto profundo",
+    "paperInkName": "Paper & Ink",
+    "paperInkDescription": "Tema minimalista focado na leitura com tons quentes de papel e tipografia serifada elegante",
+    "solarizedName": "Solarized",
+    "solarizedDescription": "Paleta clássica Solarized Dark com tons quentes e frios equilibrados",
+    "rosePineName": "Rosé Pine",
+    "rosePineDescription": "Tema escuro suave com acentos rosa suave e dourado",
+    "tokyoNightName": "Tokyo Night",
+    "tokyoNightDescription": "Azul-preto profundo com acentos roxo, azul e pêssego inspirados nas luzes de Tóquio",
+    "catppuccinMochaName": "Catppuccin Mocha",
+    "catppuccinMochaDescription": "Tema escuro pastel quente com tons de lavanda e pêssego",
+    "draculaName": "Dracula",
+    "draculaDescription": "Tema escuro clássico com vibrantes acentos roxo, verde e rosa",
+    "oceanBreezeName": "Ocean Breeze",
+    "oceanBreezeDescription": "Tema claro fresco com acentos azul oceano e coral",
+    "midnightPurpleName": "Midnight Purple",
+    "midnightPurpleDescription": "Preto profundo com acentos de gradiente roxo e índigo",
     "previewBannerText": "Modo de pré-visualização — o tema voltará ao padrão em 5 minutos. Compre para mantê-lo permanentemente.",
     "buyNow": "Comprar agora",
     "aiGeneratorTitle": "Não encontrou o que procura?",
@@ -922,8 +968,11 @@
     "ppFeatureWrite": "Espaço de trabalho sem intervenção — peça à IA para renomear, mover, mesclar ou limpar para você",
     "ppFeatureHistory": "Linha do tempo completa — a IA analisa e age sobre todo o seu histórico, não apenas os últimos 7 dias",
     "ppFeatureExport": "Exporte conversas e snippets para Obsidian e Notion",
+    "comingSoon": "Em breve",
+    "comingSoon": "Em breve",
     "getPowerPack": "Obter Power Pack",
-    "popular": "POPULAR"
+    "popular": "POPULAR",
+    "refundPolicy": "Reembolso em 7 dias sem perguntas"
   },
   "paywall": {
     "title": "Power Pack Necessário",
@@ -931,7 +980,8 @@
     "requiresPowerPack": "requer Power Pack para uso.",
     "includedFeatures": "O que está incluído",
     "getPowerPack": "Obter Power Pack",
-    "dismissHint": "Pressione Esc ou clique fora para fechar"
+    "dismissHint": "Pressione Esc ou clique fora para fechar",
+    "refundPolicy": "Reembolso em 7 dias sem perguntas"
   },
   "supportPack": {
     "title": "Pacote de Suporte",

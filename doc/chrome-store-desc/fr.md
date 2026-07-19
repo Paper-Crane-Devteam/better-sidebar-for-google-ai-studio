@@ -6,17 +6,34 @@ Organisez vos conversations dans des dossiers, recherchez dans tous les messages
 
 Nous transformons l'interface par défaut en une base de connaissances puissante et organisée. Arrêtez de faire défiler sans fin l'historique et commencez à travailler efficacement.
 
-🔥 NOUVEAUTÉS (v2.7.0)
+🔥 NOUVEAUTÉS (v2.8.0)
 
-✨ Nouvelles fonctionnalités :
-• ⌨️ Raccourcis clavier : Nouvelles touches de raccourci (Hotkeys) pour une navigation et des opérations plus rapides.
+🚀 Powerpack — Intégration Second Brain :
+• Exportez vos conversations vers Notion et Obsidian avec un formatage et des blocs de code parfaitement préservés.
+• Export par lots : Sélectionnez plusieurs conversations et exportez-les d'un coup.
+• Bientôt : AI Agent Local Takeover — laissez l'IA gérer les données du plugin et agir en votre nom.
+• Remboursement sans condition sous 7 jours pour tous les packs payants.
 
-🐛 Corrections :
-• 💬 Amélioration du style Markdown dans l'aperçu de recherche pour une meilleure lisibilité.
+✂️ Snippets :
+• Extrayez les meilleurs passages de n'importe quelle réponse IA dans votre bibliothèque de Snippets.
+• Gestion par dossiers pour les Snippets — vos étincelles d'inspiration ne seront plus jamais perdues.
+• Les Snippets peuvent aussi être exportés vers Notion/Obsidian via le Powerpack.
 
-❤️ Supporter Pack :
-• 🎨 Thèmes personnalisés par IA : Utilisez l'IA pour générer n'importe quel thème — cyberpunk, pastel, rétro, tout est possible.
-• 🎉 Nouveau canal de parrainage lancé. Merci pour votre incroyable soutien !
+📚 Barre latérale entièrement repensée :
+• UI entièrement reconstruite — plus propre, mieux organisée, lag d'animation considérablement réduit.
+• 👀 Plan de conversation : Voyez la structure des longues conversations d'un coup d'œil.
+• 📝 Notes de chat : Ajoutez des descriptions/notes personnalisées aux chats individuels.
+• ✨ Infobulles enrichies : Survolez pour voir la date de création, la description et les tags.
+• 📌 Dossiers épinglés et glisser-réorganiser : Épinglez vos dossiers favoris en haut et réorganisez librement.
+• 🎯 Localiser le chat actif : Dépliez automatiquement et sautez à votre conversation active.
+
+⚡ Boosters de workflow :
+• Dossiers par défaut pour Gems et Notebooks : Assignez un dossier par défaut — les nouveaux chats se classent automatiquement.
+• Commandes magiques / : Tapez « / » dans Gemini pour invoquer instantanément votre Bibliothèque de Prompts.
+
+🎨 Visuel :
+• 10 nouveaux thèmes exclusifs pour le Supporter Pack.
+• Changelog en Markdown : Parcourez l'historique des mises à jour en Markdown.
 
 ---
 
@@ -43,7 +60,16 @@ Visualisez votre workflow avec les groupes « Aujourd'hui », « Hier » et « S
 Suppression par lots avec suppression réelle côté serveur. Fini les chats fantômes.
 
 📥 Export des Conversations
-Exportez vos conversations en Markdown, texte brut ou JSON.
+Exportez vos conversations individuelles en Markdown, texte brut ou JSON. Export par lots disponible avec Powerpack.
+
+✂️ Snippets
+Extrayez les meilleurs passages de n'importe quelle réponse IA dans une bibliothèque de Snippets avec gestion par dossiers.
+
+👀 Plan de Conversation
+Ouvrez la vue Plan pour voir la structure des longues conversations d'un coup d'œil.
+
+📝 Notes de Chat et Infobulles Enrichies
+Ajoutez des descriptions aux chats ; survolez pour voir la date de création, les tags et les notes.
 
 ---
 
@@ -61,7 +87,7 @@ AI Studio :
 • Masquage automatique du panneau de paramètres d'exécution
 
 🎨 Thèmes
-3 thèmes exclusifs (Supporter Pack). Détection automatique du mode clair/sombre.
+13 thèmes exclusifs (Supporter Pack, incluant des thèmes générés par IA). Détection automatique du mode clair/sombre.
 
 ---
 
@@ -78,6 +104,9 @@ Construisez votre bibliothèque de prompts réutilisables. Supporte les variable
 
 ☁️ Synchronisation Automatique Google Drive
 Paramètres et bibliothèque de prompts synchronisés automatiquement avec Google Drive en arrière-plan.
+
+🔗 Powerpack — Export vers Notion & Obsidian
+Exportez conversations et snippets vers Notion et Obsidian avec un formatage parfaitement préservé. Export par lots : sélectionnez plusieurs conversations et exportez-les d'un coup. Remboursement sans condition sous 7 jours.
 
 ---
 

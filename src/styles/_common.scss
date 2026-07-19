@@ -96,19 +96,16 @@
     @apply bg-accent/60;
   }
 
-  /* Node hover action bar – solid background that follows the node state */
+  /* Node hover action bar – transparent background, text fades via mask */
   .node-action-bar {
-    @apply bg-background;
+    background: transparent;
   }
-  .node-item-selected .node-action-bar {
-    @apply bg-accent;
-  }
-  .node-item-current .node-action-bar {
-    background-color: color-mix(in srgb, rgb(var(--accent)) 60%, rgb(var(--background)));
-  }
-  .group:hover:not(.node-item-selected):not(.node-item-current) > .node-action-bar,
-  .group.node-menu-active:not(.node-item-selected):not(.node-item-current) > .node-action-bar {
-    background-color: color-mix(in srgb, rgb(var(--accent)) 50%, rgb(var(--background)));
+
+  /* Text fade mask when action bar is visible (but not during editing) */
+  .group:hover > .node-text-content:not(.is-editing),
+  .group.node-menu-active > .node-text-content:not(.is-editing) {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent 100%);
   }
 
   /* Folder child tint (for items inside uncolored folders) */
@@ -132,7 +129,7 @@
     }
   }
 
-  /* Favorited item indicator — same bar style but with yellow/amber color */
+  /* Favorited item indicator — uses theme highlight color */
   .node-item-favorited {
     position: relative;
     &::before {
@@ -143,7 +140,7 @@
       bottom: 4px;
       width: 2px;
       border-radius: 1px;
-      background-color: #eab308;
+      background-color: rgb(var(--highlight));
       opacity: 0.7;
     }
   }

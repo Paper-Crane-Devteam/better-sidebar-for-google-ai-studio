@@ -8,6 +8,8 @@
     "hide": "Скрыть",
     "edit": "Редактировать",
     "save": "Сохранить",
+    "saved": "Сохранено",
+    "copy": "Копировать",
     "close": "Закрыть",
     "loading": "Загрузка...",
     "move": "Переместить",
@@ -53,7 +55,7 @@
     "privacyPolicy": "Политика конфиденциальности",
     "disclaimer": "Отказ от ответственности",
     "termsOfService": "Условия использования",
-    "sponsor": "Спонсор",
+    "sponsor": "Поделиться",
     "about": "О программе",
     "appearance": "Внешний вид",
     "theme": "Тема",
@@ -151,7 +153,9 @@
     "createPrompt": "Создать промпт",
     "editPrompt": "Редактировать промпт",
     "noPrompts": "Промптов пока нет.",
-    "selectAnOption": "Выберите вариант"
+    "selectAnOption": "Выберите вариант",
+    "slashTip": "Совет: введите / в поле ввода, чтобы быстро вставить промпт.",
+    "slashTipDismiss": "Понятно"
   },
   "snippets": {
     "createSnippet": "Новый фрагмент",
@@ -208,11 +212,17 @@
     "viewChangelog": "Просмотреть журнал изменений"
   },
   "sponsor": {
-    "title": "Поддержите нас",
+    "title": "Поделиться",
     "enjoying": "Нравится Better Sidebar?",
-    "description": "Это бесплатный проект с открытым исходным кодом, созданный с любовью ❤️ Если он улучшает ваш рабочий процесс, оценка, звезда на GitHub, рекомендация друзьям или чашка кофе — всё это очень много значит для нас.",
+    "shareDescription": "Поделитесь с друзьями и помогите большему количеству людей узнать об этом бесплатном инструменте ❤️",
     "sponsorOnGithub": "Поставить звезду на GitHub",
-    "buyMeACoffee": "Угостить кофе ☕"
+    "copyLink": "Копировать ссылку и текст",
+    "copied": "Скопировано",
+    "weibo": "Weibo",
+    "xiaohongshu": "Xiaohongshu",
+    "wechat": "WeChat",
+    "wechatScan": "Сканируйте или нажмите, чтобы поделиться",
+    "xiaohongshuCopied": "Текст скопирован! Вставьте в Xiaohongshu 📝"
   },
   "data": {
     "librarySync": "Синхронизация данных",
@@ -460,6 +470,8 @@
   "integrations": {
     "title": "Интеграции",
     "notionDescription": "Подключитесь к Notion для экспорта фрагментов и диалогов непосредственно как страницы.",
+    "notionPermissionHint": "Для использования интеграции с Notion расширению необходимо разрешение на доступ к API Notion. Нажмите ниже, чтобы предоставить доступ.",
+    "notionGrantPermission": "Предоставить доступ к API Notion",
     "notionApiKey": "API-ключ (токен интеграции)",
     "notionApiKeyHint": "Создайте внутреннюю интеграцию на",
     "notionParentPage": "Целевая страница",
@@ -784,6 +796,17 @@
     "saveChanges": "Сохранить изменения",
     "cancel": "Отмена"
   },
+  "slashCommand": {
+    "promptLibrary": "Библиотека промптов",
+    "noResults": "Подходящих промптов не найдено",
+    "results": "результатов",
+    "navigate": "навигация",
+    "select": "выбрать",
+    "dismiss": "закрыть",
+    "fillVariables": "Заполнить переменные",
+    "insert": "Вставить",
+    "promptInserted": "Промпт вставлен"
+  },
   "filterBar": {
     "all": "Все"
   },
@@ -848,7 +871,10 @@
     "enjoyingIt": "Нравится? Поддержите нас",
     "rateUs": "Оценить 👍",
     "starOnGithub": "Звезда ⭐",
-    "buyMeACoffee": "Кофе ☕"
+    "buyMeACoffee": "Кофе ☕",
+    "showAllVersions": "Показать все версии",
+    "hidePatchVersions": "Только основные",
+    "patch": "Патч"
   },
   "smartScrollbar": {
     "conversationOutline": "Структура диалога",
@@ -880,6 +906,26 @@
     "grimoireDescription": "Эстетика древнего пергамента с тёплыми тонами и шрифтами с засечками",
     "retroTerminalName": "Retro Terminal",
     "retroTerminalDescription": "Эстетика CRT-терминала с неоново-зелёным текстом и моноширинным шрифтом",
+    "nordAuroraName": "Nord Aurora",
+    "nordAuroraDescription": "Тёмная тема в арктическом стиле с холодными синими тонами и морозно-зелёными акцентами",
+    "cyberpunkNeonName": "Cyberpunk Neon",
+    "cyberpunkNeonDescription": "Футуристическая неоновая эстетика с маджентой и электрическим синим на глубоком чёрном",
+    "paperInkName": "Paper & Ink",
+    "paperInkDescription": "Минималистичная тема для чтения с тёплыми бумажными тонами и элегантной шрифтовой типографикой",
+    "solarizedName": "Solarized",
+    "solarizedDescription": "Классическая палитра Solarized Dark со сбалансированными тёплыми и холодными тонами",
+    "rosePineName": "Rosé Pine",
+    "rosePineDescription": "Мягкая тёмная тема с приглушёнными розовыми и золотыми акцентами",
+    "tokyoNightName": "Tokyo Night",
+    "tokyoNightDescription": "Глубокий сине-чёрный с фиолетовыми, синими и персиковыми акцентами в стиле ночного Токио",
+    "catppuccinMochaName": "Catppuccin Mocha",
+    "catppuccinMochaDescription": "Тёплая пастельная тёмная тема с лавандовыми и персиковыми тонами",
+    "draculaName": "Dracula",
+    "draculaDescription": "Классическая тёмная тема с яркими фиолетовыми, зелёными и розовыми акцентами",
+    "oceanBreezeName": "Ocean Breeze",
+    "oceanBreezeDescription": "Свежая светлая тема с океанскими голубыми и коралловыми акцентами",
+    "midnightPurpleName": "Midnight Purple",
+    "midnightPurpleDescription": "Глубокий чёрный с фиолетовыми и индиго градиентными акцентами",
     "previewBannerText": "Режим предпросмотра — тема вернётся к стандартной через 5 минут. Приобретите, чтобы сохранить навсегда.",
     "buyNow": "Купить",
     "aiGeneratorTitle": "Не нашли подходящую тему?",
@@ -922,8 +968,11 @@
     "ppFeatureWrite": "Рабочее пространство без рук — попросите ИИ переименовать, переместить, объединить или навести порядок за вас",
     "ppFeatureHistory": "Полная хронология — ИИ анализирует и работает со всей историей, а не только за последние 7 дней",
     "ppFeatureExport": "Экспорт бесед и сниппетов в Obsidian и Notion",
+    "comingSoon": "Скоро",
+    "comingSoon": "Скоро",
     "getPowerPack": "Получить Power Pack",
-    "popular": "ПОПУЛЯРНЫЙ"
+    "popular": "ПОПУЛЯРНЫЙ",
+    "refundPolicy": "Возврат без вопросов в течение 7 дней"
   },
   "paywall": {
     "title": "Требуется Power Pack",
@@ -931,7 +980,8 @@
     "requiresPowerPack": "для использования необходим Power Pack.",
     "includedFeatures": "Что включено",
     "getPowerPack": "Получить Power Pack",
-    "dismissHint": "Нажмите Esc или кликните за пределами для закрытия"
+    "dismissHint": "Нажмите Esc или кликните за пределами для закрытия",
+    "refundPolicy": "Возврат без вопросов в течение 7 дней"
   },
   "supportPack": {
     "title": "Пакет поддержки",

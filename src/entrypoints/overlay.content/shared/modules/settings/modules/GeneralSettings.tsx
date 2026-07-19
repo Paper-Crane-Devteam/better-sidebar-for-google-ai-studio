@@ -18,8 +18,6 @@ import {
 export const GeneralSettings = () => {
   const { t } = useI18n();
   const {
-    layoutDensity,
-    setLayoutDensity,
     newChatBehavior,
     setNewChatBehavior,
     shortcuts,
@@ -105,35 +103,6 @@ export const GeneralSettings = () => {
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <span className="text-sm font-medium">
-                {t('settings.layoutDensity')}
-              </span>
-              <p className="text-xs text-muted-foreground">
-                {t('settings.layoutDensityDescription')}
-              </p>
-            </div>
-            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border">
-              <Button
-                variant={layoutDensity === 'relaxed' ? 'secondary' : 'ghost'}
-                size="sm"
-                className="h-7 px-3 text-xs"
-                onClick={() => setLayoutDensity('relaxed')}
-              >
-                {t('settings.relaxed')}
-              </Button>
-              <Button
-                variant={layoutDensity === 'compact' ? 'secondary' : 'ghost'}
-                size="sm"
-                className="h-7 px-3 text-xs"
-                onClick={() => setLayoutDensity('compact')}
-              >
-                {t('settings.compact')}
-              </Button>
-            </div>
           </div>
 
         </div>

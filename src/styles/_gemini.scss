@@ -11,7 +11,7 @@
     --sidebar-padding-y: 8px;
     --sidebar-icon-color: 68 71 70;
 
-    --background: 250 249 249; /* #faf9f9 - remy-surface */
+    --background: 253 253 253; /* #fdfdfd - lighter surface */
     --foreground: 31 31 31; /* #1f1f1f */
 
     --card: 255 255 255; /* #ffffff */
@@ -38,6 +38,9 @@
     --border: 225 227 225; /* #e1e3e1 - outline-low */
     --input: 196 199 197; /* #c4c7c5 - outline-variant */
     --ring: 11 87 208;
+
+    --highlight: 234 179 8; /* #eab308 - amber accent for badges, indicators */
+    --highlight-foreground: 255 255 255;
 
     --radius: 16px;
 
@@ -83,19 +86,14 @@
     --input: 122 122 122; /* #7a7a7a - icon-separator */
     --ring: 168 199 250;
 
+    --highlight: 251 191 36; /* #fbbf24 - amber for dark mode */
+    --highlight-foreground: 0 0 0;
+
     /* Custom Gemini Colors */
     --gem-sys-color--primary-container: #1f3760;
     --gem-sys-color--on-primary-container: #d3e3fd;
   }
 
-  /* Relaxed Mode - Theme Specific Overrides */
-  .theme-gemini [data-density='relaxed'],
-  :host(.theme-gemini) [data-density='relaxed'] {
-    --sidebar-width: 64px;
-    --sidebar-button-size: 40px;
-    --sidebar-gap: 12px;
-    --sidebar-padding-y: 12px;
-  }
 }
 
 /* Gemini Scrollbar */
@@ -138,16 +136,17 @@
 }
 
 @layer components {
-  /* Sidebar Gradient - Gemini Specific (premium feel) */
+  /* Sidebar - Gemini Specific (flat, no gradient) */
   .theme-gemini .sidebar-nav,
   :host(.theme-gemini) .sidebar-nav {
-    background: linear-gradient(
-      to right,
-      color-mix(in srgb, rgb(var(--foreground)) 8%, rgb(var(--background))) 0%,
-      color-mix(in srgb, rgb(var(--foreground)) 4%, rgb(var(--background))) 50%,
-      rgb(var(--background)) 100%
-    );
-    border-right: 1px solid color-mix(in srgb, rgb(var(--foreground)) 6%, transparent);
+    background: rgb(var(--background));
+    border-right: 1px solid rgb(var(--border) / 0.5);
+  }
+
+  /* Content area (file tree, outline, etc.) - white background */
+  .theme-gemini .sidebar-nav + div,
+  :host(.theme-gemini) .sidebar-nav + div {
+    background: rgb(var(--card));
   }
 
   /* Active sidebar icon - Gemini Specific */
@@ -170,21 +169,7 @@
     background-color: color-mix(in srgb, var(--gem-sys-color--primary-container) 60%, transparent);
   }
 
-  /* Node action bar - Gemini Specific */
-  .theme-gemini .node-item-selected .node-action-bar,
-  :host(.theme-gemini) .node-item-selected .node-action-bar {
-    background-color: var(--gem-sys-color--primary-container);
-  }
-  .theme-gemini .node-item-current .node-action-bar,
-  :host(.theme-gemini) .node-item-current .node-action-bar {
-    background-color: color-mix(in srgb, var(--gem-sys-color--primary-container) 60%, rgb(var(--background)));
-  }
-  .theme-gemini .group:hover:not(.node-item-selected):not(.node-item-current) > .node-action-bar,
-  :host(.theme-gemini) .group:hover:not(.node-item-selected):not(.node-item-current) > .node-action-bar,
-  .theme-gemini .group.node-menu-active:not(.node-item-selected):not(.node-item-current) > .node-action-bar,
-  :host(.theme-gemini) .group.node-menu-active:not(.node-item-selected):not(.node-item-current) > .node-action-bar {
-    background-color: color-mix(in srgb, rgb(var(--accent)) 50%, rgb(var(--background)));
-  }
+  /* Node action bar - Gemini Specific (transparent, text uses mask fade) */
 
   /* Custom Slider Styles */
   .theme-gemini .ui-slider,

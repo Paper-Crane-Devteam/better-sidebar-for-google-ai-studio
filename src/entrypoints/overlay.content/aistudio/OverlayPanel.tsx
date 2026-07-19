@@ -30,7 +30,6 @@ import { FirstInstallPrompt } from '../shared/modules/whats-new/FirstInstallProm
 import { RatingPromptDialog } from '../shared/modules/feedback/RatingPromptDialog';
 import '@/index.scss';
 import { ProfilePickerDialog } from '../shared/components/ProfilePickerDialog';
-import { GlobalToast } from '@/shared/components/GlobalToast';
 import { PowerPackPaywall } from '@/shared/components/PowerPackPaywall';
 import { useAppInit } from '../shared/hooks/useAppInit';
 import { OverlayToggle } from '../shared/components/OverlayToggle';
@@ -54,7 +53,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const { path } = useUrl();
 
   const [, setContainer] = useState<HTMLDivElement | null>(null);
-  const layoutDensity = useSettingsStore((state) => state.layoutDensity);
   const newChatBehavior = useSettingsStore((state) => state.newChatBehavior);
   const shortcuts = useSettingsStore((state) => state.shortcuts);
   const hasSettingsBadge = useBadgeStore((s) => s.isGroupVisible('settings.'));
@@ -233,7 +231,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     <div
       ref={setContainer}
       className={`flex bg-background text-foreground ${className || 'h-full'} relative`}
-      data-density={layoutDensity}
     >
       {/* Sidebar Tabs */}
       <div className="sidebar-nav border-r flex flex-col items-center bg-muted/20 shrink-0">
@@ -423,7 +420,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       <RatingPromptDialog />
 
       <ProfilePickerDialog />
-      <GlobalToast />
       <PowerPackPaywall />
       <HotkeyCheatsheet />
       {showSqlInterface && <SqlExecutor onClose={() => setShowSqlInterface(false)} />}

@@ -38,7 +38,6 @@ const handlers = [
   handleNotebooks,
   handleSnippets,
   handleNotionProxy,
-  handleMisc,
   handleGdriveSync,
 ];
 
@@ -52,6 +51,11 @@ export async function handleMessage(
   sender: MessageSender,
 ): Promise<ExtensionResponse> {
   try {
+    // Handle messages that don't need DB before waiting for dbReady
+    // OPEN_PERMISSION_PAGE and OPEN_URL just need to interact with browser APIs
+    const miscResult = await handleMisc(message, sender);
+    if (miscResult !== null) return miscResult;
+
     await dbReady;
 
     // Detect platform from sender tab and inject into message payload if not present
