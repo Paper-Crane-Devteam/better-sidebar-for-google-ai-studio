@@ -59,7 +59,7 @@ export const FilterBar = ({ filter, allTags, showSearch = true }: FilterBarProps
     <>
       {/* Search Input Area */}
       {showSearch && search.isOpen && (
-        <div className="px-3 py-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-in slide-in-from-top-2 duration-200">
+        <div className="px-3 py-2 border-b border-border/50 animate-in slide-in-from-top-2 duration-200">
           <div className="relative">
             <Input
               ref={searchInputRef}
@@ -90,7 +90,7 @@ export const FilterBar = ({ filter, allTags, showSearch = true }: FilterBarProps
 
       {/* Tags Selection Area */}
       {tags.isOpen && (
-        <div className="px-3 py-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-in slide-in-from-top-2 duration-200">
+        <div className="px-3 py-2 border-b border-border/50 animate-in slide-in-from-top-2 duration-200">
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
             <Button
               variant={tags.selected.length === 0 ? "secondary" : "ghost"}
