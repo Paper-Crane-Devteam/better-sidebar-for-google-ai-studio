@@ -1,4 +1,6 @@
-export { ConversationRenderer } from './ConversationRenderer';
+export { ConversationOverlay } from './ConversationOverlay';
+export { ConversationViewSwitcher } from './ConversationViewSwitcher';
+export { useConversationMessages } from './useConversationMessages';
 export { injectRendererStyles } from './renderer-styles';
 export {
   buildPromptMarker,

@@ -41,7 +41,11 @@ export interface AgentLoopStoreState {
   /** Whether the control panel popover is open */
   panelOpen: boolean;
 
+  /** View rendering mode: 'custom' (our overlay) or 'original' (native DOM) */
+  viewMode: 'custom' | 'original';
+
   // Actions
+  setViewMode: (mode: 'custom' | 'original') => void;
   start: (maxRounds: number) => void;
   nextRound: () => void;
   setStatus: (status: AgentLoopStatus) => void;
@@ -82,6 +86,9 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
   tokenEstimation: 0,
   pendingInstruction: null,
   panelOpen: false,
+  viewMode: 'custom',
+
+  setViewMode: (mode) => set({ viewMode: mode }),
 
   start: (maxRounds) =>
     set({

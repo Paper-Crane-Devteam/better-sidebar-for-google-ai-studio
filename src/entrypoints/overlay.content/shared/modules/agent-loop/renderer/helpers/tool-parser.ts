@@ -7,8 +7,16 @@ import type { ParsedToolCall } from '../../types';
 
 const KNOWN_TOOLS = ['execute_sql', 'sync_conversation_messages', 'export', 'complete_task'];
 
+export interface ExtractedToolCall {
+  toolCall: ParsedToolCall;
+  rawText: string;
+  matchString: string;
+  startIndex: number;
+  endIndex: number;
+}
+
 /**
- * Parse a tool call from raw text containing <bs_agent_tool>...</bs_agent_tool> tags.
+ * Parse a single tool call string or content block.
  */
 export function parseToolCallFromText(text: string): ParsedToolCall | null {
   const tagRegex = new RegExp(`<${TOOL_CALL_TAG}>([\\s\\S]*?)<\\/${TOOL_CALL_TAG}>`);
@@ -49,6 +57,31 @@ export function parseToolCallFromText(text: string): ParsedToolCall | null {
     }
   }
   return null;
+}
+
+/**
+ * Extract ALL tool calls from a response text, returning their parsed info and indices.
+ */
+export function parseAllToolCallsFromText(text: string): ExtractedToolCall[] {
+  const tagRegex = new RegExp(`<${TOOL_CALL_TAG}>([\\s\\S]*?)<\\/${TOOL_CALL_TAG}>`, 'g');
+  const results: ExtractedToolCall[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = tagRegex.exec(text)) !== null) {
+    const fullMatch = match[0];
+    const parsed = parseToolCallFromText(fullMatch);
+    if (parsed) {
+      results.push({
+        toolCall: parsed,
+        rawText: match[1].trim(),
+        matchString: fullMatch,
+        startIndex: match.index,
+        endIndex: match.index + fullMatch.length,
+      });
+    }
+  }
+
+  return results;
 }
 
 /**

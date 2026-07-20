@@ -1,40 +1,49 @@
 /**
- * ToolCallWidget — React component rendered inside Shadow DOM
- * for each detected <bs_agent_tool> block in model responses.
+ * ToolCallWidget — React component rendered inside Custom Model Response cards
+ * for each detected tool call block in model responses.
  */
 
 import React, { useState, useCallback } from 'react';
 import { cn } from '@/shared/lib/utils';
-import { Settings, Play, Loader2, AlertCircle, ChevronRight, ChevronDown } from 'lucide-react';
+import { Settings, Play, Loader2, AlertCircle, ChevronRight, ChevronDown, CheckCircle2 } from 'lucide-react';
 import type { ParsedToolCall } from '../../types';
+import { parseToolCallFromText, extractToolInfo } from '../helpers/tool-parser';
+import { executeToolCallFn, fillResultToEditor as defaultFillResult } from '../helpers/tool-executor';
 
 interface ToolCallWidgetProps {
-  toolName: string;
+  toolName?: string;
   description?: string;
   query?: string;
   rawText: string;
-  parseToolCall: (text: string) => ParsedToolCall | null;
-  executeToolCall: (parsed: ParsedToolCall) => Promise<string>;
-  fillResultToEditor: (toolName: string, result: string) => void;
+  parseToolCall?: (text: string) => ParsedToolCall | null;
+  executeToolCall?: (parsed: ParsedToolCall) => Promise<string>;
+  fillResultToEditor?: (toolName: string, result: string) => void;
 }
 
 export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
-  toolName,
-  description,
-  query,
+  toolName: propToolName,
+  description: propDescription,
+  query: propQuery,
   rawText,
-  parseToolCall,
-  executeToolCall,
-  fillResultToEditor,
+  parseToolCall = parseToolCallFromText,
+  executeToolCall = executeToolCallFn,
+  fillResultToEditor = defaultFillResult,
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [executing, setExecuting] = useState(false);
+  const [completed, setCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const info = extractToolInfo(rawText);
+  const toolName = propToolName || info.toolName;
+  const description = propDescription || info.description;
+  const query = propQuery || info.query;
 
   const handleRun = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
     setError(null);
     setExecuting(true);
+    setCompleted(false);
 
     try {
       const parsed = parseToolCall(rawText);
@@ -47,6 +56,7 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
 
       const result = await executeToolCall(parsed);
       fillResultToEditor(parsed.description || parsed.name, result);
+      setCompleted(true);
     } catch (err) {
       console.error('[ToolCallWidget] Execute error:', err);
       setError('执行失败');
@@ -61,44 +71,49 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
     : '';
 
   return (
-    <div className="my-2 overflow-hidden rounded-lg border border-emerald-500/30 bg-emerald-500/5">
+    <div className="my-2 overflow-hidden rounded-lg border border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-950/20 text-foreground shadow-sm">
       {/* Header */}
       <div
-        className="flex items-center gap-2 px-3 py-1.5 text-xs cursor-pointer select-none hover:bg-emerald-500/10 transition-colors"
+        className="flex items-center gap-2 px-3 py-2 text-xs cursor-pointer select-none hover:bg-emerald-500/15 transition-colors"
         onClick={() => setExpanded(!expanded)}
       >
-        <span className="flex h-5 w-5 items-center justify-center rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-          <Settings className="h-3 w-3" />
+        <span className="flex h-5 w-5 items-center justify-center rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+          <Settings className="h-3.5 w-3.5" />
         </span>
-        <span className="font-mono font-medium text-emerald-700 dark:text-emerald-300 text-xs">
+        <span className="font-mono font-semibold text-emerald-700 dark:text-emerald-300 text-xs">
           {toolName}
         </span>
         {description && (
-          <span className="ml-2 max-w-[300px] truncate text-muted-foreground text-[11px]">
+          <span className="ml-1 max-w-[280px] truncate text-muted-foreground text-[11px]">
             {description}
           </span>
         )}
         {!description && previewText && (
-          <span className="ml-2 max-w-[240px] truncate text-muted-foreground font-mono text-[11px]">
+          <span className="ml-1 max-w-[240px] truncate text-muted-foreground font-mono text-[11px]">
             {previewText}
           </span>
         )}
 
-        {/* Run button */}
+        {/* Run / Status button */}
         <button
+          type="button"
           onClick={handleRun}
           disabled={executing}
           className={cn(
-            'ml-auto inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer border',
-            error
+            'ml-auto inline-flex items-center gap-1 rounded px-2.5 py-1 text-[11px] font-medium transition-all cursor-pointer border shadow-xs',
+            completed
+              ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-500/40'
+              : error
               ? 'bg-destructive/15 text-destructive border-destructive/30'
-              : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/25 border-emerald-500/30',
+              : 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/30 border-emerald-500/30',
             executing && 'opacity-60 cursor-wait',
           )}
-          title="执行此工具调用"
+          title="手动执行此工具调用"
         >
           {executing ? (
             <><Loader2 className="h-3 w-3 animate-spin" /> 执行中...</>
+          ) : completed ? (
+            <><CheckCircle2 className="h-3 w-3 text-emerald-500" /> 已完成</>
           ) : error ? (
             <><AlertCircle className="h-3 w-3" /> {error}</>
           ) : (
@@ -108,13 +123,13 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
 
         {/* Toggle icon */}
         <span className="text-muted-foreground ml-1">
-          {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          {expanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
         </span>
       </div>
 
       {/* Body (collapsible) */}
       {expanded && (
-        <div className="border-t border-emerald-500/15 px-3 py-2 text-xs text-muted-foreground font-mono whitespace-pre-wrap max-h-[300px] overflow-y-auto">
+        <div className="border-t border-emerald-500/20 bg-background/50 px-3 py-2 text-xs text-muted-foreground font-mono whitespace-pre-wrap max-h-[300px] overflow-y-auto">
           {rawText}
         </div>
       )}

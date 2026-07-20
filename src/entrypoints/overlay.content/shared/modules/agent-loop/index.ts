@@ -64,5 +64,5 @@ export { useControlPanelStore } from './control-panel-store';
 export type { ControlPanelState } from './control-panel-store';
 
 // Renderer
-export { ConversationRenderer, injectRendererStyles, buildPromptMarker } from './renderer';
+export { ConversationOverlay, ConversationViewSwitcher, injectRendererStyles, buildPromptMarker } from './renderer';
 export { TOOL_TAG } from './engine/ToolCallParser';

@@ -20,7 +20,8 @@ import {
   useAgentTrigger,
   useAgentLoopStore,
   getBasePrompt,
-  ConversationRenderer,
+  ConversationOverlay,
+  ConversationViewSwitcher,
   injectRendererStyles,
   buildPromptMarker,
 } from '@/entrypoints/overlay.content/shared/modules/agent-loop';
@@ -52,7 +53,6 @@ export const AgentLoopFeature: React.FC = () => {
   }, []);
 
   const engineRef = useRef<AgentLoopEngine | null>(null);
-  const rendererRef = useRef<ConversationRenderer | null>(null);
   const [isSlashCommandActive, setIsSlashCommandActive] = useState(false);
 
   const {
@@ -75,29 +75,12 @@ export const AgentLoopFeature: React.FC = () => {
   const getSelectedPromptRef = useRef(getSelectedPrompt);
   getSelectedPromptRef.current = getSelectedPrompt;
 
-  // ─── Initialize renderer ────────────────────────────────────────────
-
-  const conversationId = useCurrentConversationId();
+  // ─── Initialize renderer styles & editor interceptors ──────────────
 
   useEffect(() => {
     injectRendererStyles();
     installSendButtonInterceptor();
-    const renderer = new ConversationRenderer();
-    renderer.start();
-    rendererRef.current = renderer;
-    return () => renderer.stop();
   }, []);
-
-  // ─── Reattach renderer on conversation switch ───────────────────────
-
-  useEffect(() => {
-    if (!rendererRef.current) return;
-    // Small delay to let Gemini finish DOM swap
-    const timer = setTimeout(() => {
-      rendererRef.current?.reattach();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [conversationId]);
 
   // ─── Result capsule click handler (shows content in modal) ──────────
 
@@ -240,6 +223,9 @@ export const AgentLoopFeature: React.FC = () => {
 
   return (
     <>
+      <ConversationViewSwitcher />
+      <ConversationOverlay />
+
       {triggerState.isOpen && (
         <AgentCommandPopup
           matches={triggerState.matches}
