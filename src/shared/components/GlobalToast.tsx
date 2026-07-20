@@ -2,6 +2,7 @@ import React from 'react';
 import { useToastStore } from '@/shared/lib/toast';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils'; // Assuming cn utility exists, usually does in shadcn projects
+import { Z_INDEX } from '@/shared/lib/z-index';
 
 const icons = {
   success: <CheckCircle className="h-5 w-5 text-green-500" />,
@@ -30,7 +31,10 @@ export const GlobalToast = () => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[10000] flex flex-col gap-2 pointer-events-none w-full max-w-sm items-center px-4">
+    <div
+      className="fixed top-4 left-1/2 -translate-x-1/2 flex flex-col gap-2 pointer-events-none w-full max-w-sm items-center px-4"
+      style={{ zIndex: Z_INDEX.TOAST }}
+    >
       {toasts.map((toast) => (
         <div
           key={toast.id}

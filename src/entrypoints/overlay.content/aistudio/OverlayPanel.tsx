@@ -27,10 +27,7 @@ import { TagsTab } from '../shared/modules/tags/TagsTab';
 import { FeedbackTab } from '../shared/modules/feedback/FeedbackTab';
 import { SnippetsTab } from '../shared/modules/snippets/SnippetsTab';
 import { FirstInstallPrompt } from '../shared/modules/whats-new/FirstInstallPrompt';
-import { RatingPromptDialog } from '../shared/modules/feedback/RatingPromptDialog';
 import '@/index.scss';
-import { ProfilePickerDialog } from '../shared/components/ProfilePickerDialog';
-import { PowerPackPaywall } from '@/shared/components/PowerPackPaywall';
 import { useAppInit } from '../shared/hooks/useAppInit';
 import { OverlayToggle } from '../shared/components/OverlayToggle';
 import { toast } from '@/shared/lib/toast';
@@ -43,7 +40,7 @@ import { Platform } from '@/shared/types/platform';
 import { useBadgeStore } from '@/shared/lib/badge-store';
 import { BadgeDot } from '@/shared/components/ui/badge-dot';
 import { useHotkeyListener } from '@/shared/hooks/useHotkeyListener';
-import { HotkeyCheatsheet } from '../shared/components/HotkeyCheatsheet';
+
 
 export const OverlayPanel = ({ className }: { className?: string }) => {
   const moduleConfig = useModuleConfig();
@@ -417,11 +414,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
         )}
       </div>
       <FirstInstallPrompt />
-      <RatingPromptDialog />
 
-      <ProfilePickerDialog />
-      <PowerPackPaywall />
-      <HotkeyCheatsheet />
       {showSqlInterface && <SqlExecutor onClose={() => setShowSqlInterface(false)} />}
     </div>
   );

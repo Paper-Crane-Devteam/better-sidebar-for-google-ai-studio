@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/button';
 import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { useI18n } from '@/shared/hooks/useI18n';
 import snippetDemoGif from '@/assets/images/snippet-demo.gif';
+import { Z_INDEX } from '@/shared/lib/z-index';
 
 /**
  * Check if a version is a "major" release (first two segments: X.Y).
@@ -59,7 +60,7 @@ export const WhatsNewDialog = () => {
       ref={scrollRef}
       className="fixed inset-0 overflow-y-auto animate-in fade-in-0 duration-200"
       style={{
-        zIndex: 10000,
+        zIndex: Z_INDEX.MODAL,
         backgroundColor: 'var(--overlay-bg)',
         backdropFilter: 'var(--overlay-blur)',
         WebkitBackdropFilter: 'var(--overlay-blur)',

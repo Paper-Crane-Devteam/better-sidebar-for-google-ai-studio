@@ -3,6 +3,7 @@ import { cn } from '@/shared/lib/utils/utils';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { useConversationNodes } from './useConversationNodes';
 import type { ConversationNode } from './types';
+import { Z_INDEX } from '@/shared/lib/z-index';
 
 /**
  * Maximum visible height for the dot container (px).
@@ -53,7 +54,7 @@ export const SmartScrollbar: React.FC = () => {
   return (
     <div
       className={cn(
-        'fixed right-5 top-1/2 -translate-y-1/2 z-[38]',
+        'fixed right-5 top-1/2 -translate-y-1/2',
         'flex flex-col items-center',
         'border border-border/40 rounded-full',
         'bg-transparent',
@@ -61,10 +62,14 @@ export const SmartScrollbar: React.FC = () => {
         'transition-opacity duration-200',
         isDisabled && 'opacity-40 pointer-events-none',
       )}
-      style={{ maxHeight: `${MAX_HEIGHT}px` }}
+      style={{
+        zIndex: Z_INDEX.SMART_SCROLLBAR,
+        maxHeight: `${MAX_HEIGHT}px`,
+        height: userNodes.length === 0 ? 'auto' : undefined,
+      }}
+      ref={containerRef}
     >
       <div
-        ref={containerRef}
         className={cn(
           'flex flex-col items-center gap-0',
           'overflow-y-auto overflow-x-visible',

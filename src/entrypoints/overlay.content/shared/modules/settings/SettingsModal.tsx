@@ -16,6 +16,7 @@ import { useI18n } from '@/shared/hooks/useI18n';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 import { useBadgeStore } from '@/shared/lib/badge-store';
 import { BadgeDot } from '@/shared/components/ui/badge-dot';
+import { Z_INDEX } from '@/shared/lib/z-index';
 
 /** Wrapper to use a fluent-color iconify icon as a NavButton icon component */
 const PacksIcon = ({ className }: { className?: string }) => (
@@ -109,7 +110,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
     };
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center animate-in fade-in-0" style={{ backgroundColor: 'var(--overlay-bg)', backdropFilter: 'var(--overlay-blur)', WebkitBackdropFilter: 'var(--overlay-blur)' }}>
+        <div className="fixed inset-0 flex items-center justify-center animate-in fade-in-0" style={{ zIndex: Z_INDEX.MODAL, backgroundColor: 'var(--overlay-bg)', backdropFilter: 'var(--overlay-blur)', WebkitBackdropFilter: 'var(--overlay-blur)' }}>
             <div className="relative w-[800px] h-[600px] max-h-[90vh] border rounded-lg shadow-lg flex overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4" style={{ backgroundColor: 'var(--panel-bg)', backdropFilter: 'var(--panel-blur)', WebkitBackdropFilter: 'var(--panel-blur)' }}>
                 {/* Close Button */}
                 <Button

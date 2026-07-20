@@ -21,8 +21,6 @@ export function mountEnhancedFeatures(mainStyles: string) {
     enhancedWrapper.style.width = '0';
     enhancedWrapper.style.height = '0';
     enhancedWrapper.style.overflow = 'visible';
-    // Keep below sidebar reader drawer (z-9998) but above normal page content
-    enhancedWrapper.style.zIndex = '40';
     document.body.appendChild(enhancedWrapper);
 
     const enhancedShadow = enhancedWrapper.attachShadow({ mode: 'open' });

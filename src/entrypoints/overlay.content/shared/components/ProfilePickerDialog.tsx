@@ -12,6 +12,7 @@ import { Input } from '@/shared/components/ui/input';
 import { ScrollArea } from '@/shared/components/ui/scroll-area';
 import { PLATFORM_CONFIG, Platform } from '@/shared/types/platform';
 import { useI18n } from '@/shared/hooks/useI18n';
+import { Z_INDEX } from '@/shared/lib/z-index';
 
 export const ProfilePickerDialog: React.FC = () => {
   const { pickerOpen, pickerData, closePicker, setLoading, loading } =
@@ -129,11 +130,11 @@ export const ProfilePickerDialog: React.FC = () => {
   return (
     <div
       className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0"
-      style={{ zIndex: 200 }}
+      style={{ zIndex: Z_INDEX.MODAL }}
     >
       <div
         className="fixed left-[50%] top-[50%] flex w-full max-w-md max-h-[80vh] translate-x-[-50%] translate-y-[-50%] flex-col border bg-background shadow-lg duration-200 sm:rounded-lg animate-in fade-in-0 zoom-in-95 overflow-hidden"
-        style={{ zIndex: 201 }}
+        style={{ zIndex: Z_INDEX.MODAL + 1 }}
       >
         {/* Header */}
         <div className="shrink-0 px-6 pt-6 pb-4 border-b">

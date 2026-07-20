@@ -2,6 +2,7 @@ import React from 'react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { Button } from '@/entrypoints/overlay.content/shared/components/ui/button';
 import { Compass, X } from 'lucide-react';
+import { Z_INDEX } from '@/shared/lib/z-index';
 
 interface TourPromptDialogProps {
   isOpen: boolean;
@@ -21,7 +22,7 @@ export const TourPromptDialog: React.FC<TourPromptDialogProps> = ({
   return (
     <div
       className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-8 fade-in-0"
-      style={{ zIndex: 99 }}
+      style={{ zIndex: Z_INDEX.MODAL }}
     >
       <div className="relative w-full max-w-sm bg-background border rounded-xl shadow-2xl flex flex-col p-6">
         <Button

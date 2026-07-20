@@ -33,8 +33,6 @@ import { NotebooksTab } from '../shared/modules/notebooks/NotebooksTab';
 import { SnippetsTab } from '../shared/modules/snippets/SnippetsTab';
 import { FirstInstallPrompt } from '../shared/modules/whats-new/FirstInstallPrompt';
 import '@/index.scss';
-import { ProfilePickerDialog } from '../shared/components/ProfilePickerDialog';
-import { PowerPackPaywall } from '@/shared/components/PowerPackPaywall';
 import { useAppInit } from '../shared/hooks/useAppInit';
 import { OverlayToggle } from '../shared/components/OverlayToggle';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -44,23 +42,17 @@ import { useModuleConfig } from './useModuleConfig';
 import { toast } from '@/shared/lib/toast';
 import { detectAccount } from '@/entrypoints/content/shared/detect-account';
 import { Platform } from '@/shared/types/platform';
-import { RatingPromptDialog } from '../shared/modules/feedback/RatingPromptDialog';
-import { GuidedTour } from '../shared/modules/guided-tour/GuidedTour';
-import { TourPromptDialog } from '../shared/modules/guided-tour/TourPromptDialog';
-import { useGuidedTour } from '../shared/modules/guided-tour/useGuidedTour';
-import { GEMINI_TOUR_STEPS } from '../shared/modules/guided-tour/tour-steps';
 import { useBadgeStore } from '@/shared/lib/badge-store';
 import { BadgeDot } from '@/shared/components/ui/badge-dot';
 
 import { useHotkeyListener } from '@/shared/hooks/useHotkeyListener';
-import { HotkeyCheatsheet } from '../shared/components/HotkeyCheatsheet';
+
 import { toggleGeminiSidebar } from '@/shared/lib/dom-selectors';
 
 export const OverlayPanel = ({ className }: { className?: string }) => {
   const moduleConfig = useModuleConfig();
   useAppInit();
   useHotkeyListener();
-  const guidedTour = useGuidedTour();
   const { t } = useI18n();
   const { path } = useUrl();
 
@@ -460,27 +452,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
         )}
       </div>
       <FirstInstallPrompt />
-      <ProfilePickerDialog />
-      <RatingPromptDialog />
-      <PowerPackPaywall />
-      <HotkeyCheatsheet />
-      {guidedTour.showPrompt && isSidebarExpanded && (
-        <TourPromptDialog
-          isOpen={guidedTour.showPrompt}
-          onStartTour={guidedTour.acceptTour}
-          onSkip={guidedTour.dismissPrompt}
-        />
-      )}
-      {guidedTour.isActive && isSidebarExpanded && (
-        <GuidedTour
-          steps={GEMINI_TOUR_STEPS}
-          currentStep={guidedTour.currentStep}
-          isActive={guidedTour.isActive}
-          onNext={guidedTour.nextStep}
-          onPrev={guidedTour.prevStep}
-          onSkip={guidedTour.skipTour}
-        />
-      )}
       {showSqlInterface && <SqlExecutor onClose={() => setShowSqlInterface(false)} />}
     </div>
   );

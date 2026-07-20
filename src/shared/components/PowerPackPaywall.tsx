@@ -14,6 +14,7 @@ import { usePaywallStore } from '@/shared/lib/powerpack-paywall';
 import { openPurchasePage, getPurchaseLinks } from '@/shared/lib/license-links';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { cn } from '@/shared/lib/utils/utils';
+import { Z_INDEX } from '@/shared/lib/z-index';
 
 const FEATURES = [
   { icon: 'fluent-color:bot-sparkle-24', key: 'ppFeatureAgent', comingSoon: true },
@@ -44,7 +45,7 @@ export const PowerPackPaywall = () => {
     <div
       className="fixed inset-0 flex items-center justify-center animate-in fade-in-0 duration-200"
       style={{
-        zIndex: 10001,
+        zIndex: Z_INDEX.MODAL,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         backdropFilter: 'blur(4px)',
         WebkitBackdropFilter: 'blur(4px)',

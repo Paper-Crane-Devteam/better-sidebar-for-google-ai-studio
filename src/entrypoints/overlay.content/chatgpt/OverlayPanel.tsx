@@ -27,11 +27,7 @@ import { TagsTab } from '../shared/modules/tags/TagsTab';
 import { FeedbackTab } from '../shared/modules/feedback/FeedbackTab';
 import { SnippetsTab } from '../shared/modules/snippets/SnippetsTab';
 import { FirstInstallPrompt } from '../shared/modules/whats-new/FirstInstallPrompt';
-import { RatingPromptDialog } from '../shared/modules/feedback/RatingPromptDialog';
 import '@/index.scss';
-import { ProfilePickerDialog } from '../shared/components/ProfilePickerDialog';
-import { GlobalToast } from '@/shared/components/GlobalToast';
-import { PowerPackPaywall } from '@/shared/components/PowerPackPaywall';
 import { useAppInit } from '../shared/hooks/useAppInit';
 import { OverlayToggle } from '../shared/components/OverlayToggle';
 import { toast } from '@/shared/lib/toast';
@@ -355,10 +351,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       </div>
       <FirstInstallPrompt />
 
-      <ProfilePickerDialog />
-      <RatingPromptDialog />
-      <GlobalToast />
-      <PowerPackPaywall />
       {showSqlInterface && <SqlExecutor onClose={() => setShowSqlInterface(false)} />}
     </div>
   );

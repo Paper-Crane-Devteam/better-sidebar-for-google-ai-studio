@@ -16,6 +16,15 @@
     --space-8: 32px;   /* large: page-level spacing */
     --space-10: 40px;  /* extra: hero spacing */
     --space-12: 48px;  /* max: page margins */
+
+    /* ─── Z-Index System ──────────────────────────────────────────────── */
+    --z-index-smart-scrollbar: 38;
+    --z-index-sidebar: 999;
+    --z-index-drawer: 9998;
+    --z-index-modal: 10000;
+    --z-index-toast: 10010;
+    --z-index-popup: 20000;
+    --z-index-max: 2147483647;
   }
 
   /* Sidebar Classes */

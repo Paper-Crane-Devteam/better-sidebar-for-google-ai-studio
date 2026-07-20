@@ -18,6 +18,14 @@ import { SettingsModal } from '@/entrypoints/overlay.content/shared/modules/sett
 import { WhatsNewDialog } from '@/entrypoints/overlay.content/shared/modules/whats-new/WhatsNewDialog';
 import { useAppStore } from '@/shared/lib/store';
 import { useInitConversationMessages } from '@/shared/hooks/useInitConversationMessages';
+import { ProfilePickerDialog } from '@/entrypoints/overlay.content/shared/components/ProfilePickerDialog';
+import { RatingPromptDialog } from '@/entrypoints/overlay.content/shared/modules/feedback/RatingPromptDialog';
+import { PowerPackPaywall } from '@/shared/components/PowerPackPaywall';
+import { HotkeyCheatsheet } from '@/entrypoints/overlay.content/shared/components/HotkeyCheatsheet';
+import { TourPromptDialog } from '@/entrypoints/overlay.content/shared/modules/guided-tour/TourPromptDialog';
+import { GuidedTour } from '@/entrypoints/overlay.content/shared/modules/guided-tour/GuidedTour';
+import { useGuidedTour } from '@/entrypoints/overlay.content/shared/modules/guided-tour/useGuidedTour';
+import { GEMINI_TOUR_STEPS } from '@/entrypoints/overlay.content/shared/modules/guided-tour/tour-steps';
 
 /**
  * Container for all Gemini enhanced features.
@@ -27,6 +35,8 @@ import { useInitConversationMessages } from '@/shared/hooks/useInitConversationM
 export const GeminiEnhancedFeatures = () => {
   const isSettingsOpen = useAppStore((s) => s.ui.overlay.isSettingsOpen);
   const setIsSettingsOpen = useAppStore((s) => s.setSettingsOpen);
+  const isSidebarExpanded = useAppStore((s) => s.ui.overlay.isSidebarExpanded);
+  const guidedTour = useGuidedTour();
 
   // Initialize the shared conversation messages store (DB fetch, interceptor, DOM observer)
   useInitConversationMessages();
@@ -54,6 +64,27 @@ export const GeminiEnhancedFeatures = () => {
       <SnippetReaderDrawer />
       <SettingsModal open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
       <WhatsNewDialog />
+      <ProfilePickerDialog />
+      <RatingPromptDialog />
+      <PowerPackPaywall />
+      <HotkeyCheatsheet />
+      {guidedTour.showPrompt && isSidebarExpanded && (
+        <TourPromptDialog
+          isOpen={guidedTour.showPrompt}
+          onStartTour={guidedTour.acceptTour}
+          onSkip={guidedTour.dismissPrompt}
+        />
+      )}
+      {guidedTour.isActive && isSidebarExpanded && (
+        <GuidedTour
+          steps={GEMINI_TOUR_STEPS}
+          currentStep={guidedTour.currentStep}
+          isActive={guidedTour.isActive}
+          onNext={guidedTour.nextStep}
+          onPrev={guidedTour.prevStep}
+          onSkip={guidedTour.skipTour}
+        />
+      )}
       <GlobalModal />
       <GlobalPopoverPicker />
       <GlobalToast />

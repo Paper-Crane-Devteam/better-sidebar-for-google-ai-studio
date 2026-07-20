@@ -346,7 +346,6 @@ export const runMigrations = async (db: any) => {
         );
       }
     });
-
     // Migration: Add default_folder_id to notebooks if missing
     await step('add default_folder_id to notebooks', async () => {
       if (!(await hasColumn('notebooks', 'default_folder_id'))) {
@@ -354,6 +353,94 @@ export const runMigrations = async (db: any) => {
         await db.run(
           'ALTER TABLE notebooks ADD COLUMN default_folder_id TEXT',
         );
+      }
+    });
+
+    // Migration: Migrate legacy conversation inbox folders to deterministic IDs
+    await step('migrate legacy conversation inbox folders', async () => {
+      const legacyFolders = await db.run(`
+        SELECT * FROM folders 
+        WHERE id NOT LIKE '__default_sync_folder__%' 
+          AND name IN ('Inbox', 'Imported', '收件箱', 'Bandeja de entrada', 'Входящие', 'Caixa de entrada', '受信トレイ', '收件匣')
+      `);
+
+      for (const folder of legacyFolders) {
+        const platform = folder.platform || 'aistudio';
+        const inboxId = `__default_sync_folder__${platform}`;
+
+        // Check if the deterministic inbox folder already exists
+        const exists = await db.run('SELECT 1 FROM folders WHERE id = ?', [inboxId]);
+        if (exists.length === 0) {
+          // Create the deterministic inbox folder copying properties from the legacy folder
+          await db.run(
+            `INSERT INTO folders (id, name, parent_id, platform, color, order_index, is_pinned, created_at, updated_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              inboxId,
+              folder.name,
+              folder.parent_id || null,
+              platform,
+              folder.color || null,
+              folder.order_index ?? 0,
+              folder.is_pinned ?? 0,
+              folder.created_at ?? Math.floor(Date.now() / 1000),
+              folder.updated_at ?? Math.floor(Date.now() / 1000),
+            ],
+          );
+        }
+
+        // Re-parent conversations and subfolders, and update gem/notebook defaults
+        await db.run('UPDATE conversations SET folder_id = ? WHERE folder_id = ?', [inboxId, folder.id]);
+        await db.run('UPDATE folders SET parent_id = ? WHERE parent_id = ?', [inboxId, folder.id]);
+        
+        if (await hasColumn('gems', 'default_folder_id')) {
+          await db.run('UPDATE gems SET default_folder_id = ? WHERE default_folder_id = ?', [inboxId, folder.id]);
+        }
+        if (await hasColumn('notebooks', 'default_folder_id')) {
+          await db.run('UPDATE notebooks SET default_folder_id = ? WHERE default_folder_id = ?', [inboxId, folder.id]);
+        }
+
+        // Delete the legacy folder
+        await db.run('DELETE FROM folders WHERE id = ?', [folder.id]);
+        console.log(`Worker: Migrated legacy conversation inbox ${folder.id} to ${inboxId}`);
+      }
+    });
+
+    // Migration: Migrate legacy snippet inbox folders to deterministic IDs
+    await step('migrate legacy snippet inbox folders', async () => {
+      const snippetInboxId = '__snippet_inbox__';
+      const legacySnippetFolders = await db.run(`
+        SELECT * FROM snippet_folders 
+        WHERE id != ? 
+          AND name IN ('Inbox', '收件箱', 'Входящие', 'Caixa de entrada', '收件匣', '受信トレイ', 'Bandeja de entrada')
+      `, [snippetInboxId]);
+
+      for (const folder of legacySnippetFolders) {
+        // Check if deterministic snippet inbox already exists
+        const exists = await db.run('SELECT 1 FROM snippet_folders WHERE id = ?', [snippetInboxId]);
+        if (exists.length === 0) {
+          await db.run(
+            `INSERT INTO snippet_folders (id, name, parent_id, order_index, is_pinned, created_at, updated_at) 
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              snippetInboxId,
+              folder.name,
+              folder.parent_id || null,
+              folder.order_index ?? 0,
+              folder.is_pinned ?? 0,
+              folder.created_at ?? Math.floor(Date.now() / 1000),
+              folder.updated_at ?? Math.floor(Date.now() / 1000),
+            ],
+          );
+        }
+
+        // Re-parent snippets and subfolders
+        await db.run('UPDATE snippets SET folder_id = ? WHERE folder_id = ?', [snippetInboxId, folder.id]);
+        await db.run('UPDATE snippet_folders SET parent_id = ? WHERE parent_id = ?', [snippetInboxId, folder.id]);
+
+        // Delete the legacy folder
+        await db.run('DELETE FROM snippet_folders WHERE id = ?', [folder.id]);
+        console.log(`Worker: Migrated legacy snippet inbox ${folder.id} to ${snippetInboxId}`);
       }
     });
 

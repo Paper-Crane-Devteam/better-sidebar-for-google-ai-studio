@@ -16,11 +16,24 @@
  * This works from any context (content script, background, extension page).
  */
 export async function hasHostPermission(origin: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    chrome.permissions.contains({ origins: [origin] }, (result) => {
-      resolve(result);
+  if (typeof chrome !== 'undefined' && chrome.permissions?.contains) {
+    return new Promise((resolve) => {
+      chrome.permissions.contains({ origins: [origin] }, (result) => {
+        resolve(result);
+      });
     });
-  });
+  }
+
+  try {
+    const response = await browser.runtime.sendMessage({
+      type: 'CHECK_HOST_PERMISSION',
+      payload: { origin },
+    });
+    return !!response?.data?.granted;
+  } catch (err) {
+    console.error('[HostPermission] Failed to check host permission via background:', err);
+    return false;
+  }
 }
 
 /**
@@ -48,15 +61,18 @@ export async function requestHostPermission(origin: string): Promise<boolean> {
 export function openPermissionPage(origin: string): Promise<boolean> {
   return new Promise((resolve) => {
     // Listen for the grant signal from the permissions page
-    const listener = (changes: Record<string, { oldValue?: any; newValue?: any }>) => {
-      if ('_permission_granted' in changes) {
-        browser.storage.local.onChanged.removeListener(listener);
+    const listener = (
+      changes: Record<string, { oldValue?: any; newValue?: any }>,
+      areaName: string,
+    ) => {
+      if (areaName === 'local' && '_permission_granted' in changes) {
+        browser.storage.onChanged.removeListener(listener);
         // Clean up the temp key
         void browser.storage.local.remove('_permission_granted');
         resolve(true);
       }
     };
-    browser.storage.local.onChanged.addListener(listener);
+    browser.storage.onChanged.addListener(listener);
 
     // Ask background to open the permission page as a popup window
     // (content script can't use window.open() or chrome.permissions.request())
@@ -69,7 +85,7 @@ export function openPermissionPage(origin: string): Promise<boolean> {
 
     // Timeout: if user doesn't grant within 2 minutes, resolve false
     setTimeout(() => {
-      browser.storage.local.onChanged.removeListener(listener);
+      browser.storage.onChanged.removeListener(listener);
       resolve(false);
     }, 120_000);
   });
@@ -79,11 +95,24 @@ export function openPermissionPage(origin: string): Promise<boolean> {
  * Remove a previously granted host permission.
  */
 export async function removeHostPermission(origin: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    chrome.permissions.remove({ origins: [origin] }, (removed) => {
-      resolve(removed);
+  if (typeof chrome !== 'undefined' && chrome.permissions?.remove) {
+    return new Promise((resolve) => {
+      chrome.permissions.remove({ origins: [origin] }, (removed) => {
+        resolve(removed);
+      });
     });
-  });
+  }
+
+  try {
+    const response = await browser.runtime.sendMessage({
+      type: 'REMOVE_HOST_PERMISSION',
+      payload: { origin },
+    });
+    return !!response?.data?.removed;
+  } catch (err) {
+    console.error('[HostPermission] Failed to remove host permission via background:', err);
+    return false;
+  }
 }
 
 // ─── Predefined origins ──────────────────────────────────────────

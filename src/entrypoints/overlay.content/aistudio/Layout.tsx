@@ -195,8 +195,12 @@ function mountAIStudioEnhancedFeatures(mainStyles: string) {
   try {
     const enhancedWrapper = document.createElement('div');
     enhancedWrapper.id = 'better-sidebar-aistudio-enhanced-features';
-    enhancedWrapper.style.position = 'relative';
-    enhancedWrapper.style.zIndex = '40';
+    enhancedWrapper.style.position = 'absolute';
+    enhancedWrapper.style.top = '0';
+    enhancedWrapper.style.left = '0';
+    enhancedWrapper.style.width = '0';
+    enhancedWrapper.style.height = '0';
+    enhancedWrapper.style.overflow = 'visible';
     document.body.appendChild(enhancedWrapper);
 
     const enhancedShadow = enhancedWrapper.attachShadow({ mode: 'open' });

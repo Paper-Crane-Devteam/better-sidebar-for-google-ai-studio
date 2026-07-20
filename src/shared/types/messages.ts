@@ -465,6 +465,14 @@ export type ExtensionMessage = (
       type: 'OPEN_PERMISSION_PAGE';
       payload: { origin: string };
     }
+  | {
+      type: 'CHECK_HOST_PERMISSION';
+      payload: { origin: string };
+    }
+  | {
+      type: 'REMOVE_HOST_PERMISSION';
+      payload: { origin: string };
+    }
 ) & { platform?: string };
 
 export interface ExtensionResponse {

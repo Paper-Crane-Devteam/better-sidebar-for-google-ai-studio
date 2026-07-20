@@ -30,7 +30,7 @@ export const TimelineView = forwardRef<ArboristTreeHandle, TimelineViewProps>(
       useAppStore();
     const { tags: tagFilter, typeFilter, onlyFavorites } = ui.explorer;
 
-    const rowHeight = 28;
+    const rowHeight = 32;
 
     useImperativeHandle(ref, () => ({
       collapseAll: () => {
@@ -223,8 +223,16 @@ export const TimelineView = forwardRef<ArboristTreeHandle, TimelineViewProps>(
       // Sort children within groups by date descending
       sortedGroups.forEach((group) => {
         group.children!.sort((a, b) => {
-          let dateA = a.data?.last_active_at || a.data?.updated_at || a.data?.created_at || 0;
-          let dateB = b.data?.last_active_at || b.data?.updated_at || b.data?.created_at || 0;
+          let dateA =
+            a.data?.last_active_at ||
+            a.data?.updated_at ||
+            a.data?.created_at ||
+            0;
+          let dateB =
+            b.data?.last_active_at ||
+            b.data?.updated_at ||
+            b.data?.created_at ||
+            0;
           if (dateA > 0 && dateA < 100000000000) dateA *= 1000;
           if (dateB > 0 && dateB < 100000000000) dateB *= 1000;
 
@@ -268,7 +276,9 @@ export const TimelineView = forwardRef<ArboristTreeHandle, TimelineViewProps>(
           searchTerm={searchTerm}
           searchMatch={(node, term) =>
             node.data.name.toLowerCase().includes(term.toLowerCase()) ||
-            (node.data.data?.description || '').toLowerCase().includes(term.toLowerCase())
+            (node.data.data?.description || '')
+              .toLowerCase()
+              .includes(term.toLowerCase())
           }
           disableDrag={true}
           disableDrop={true}

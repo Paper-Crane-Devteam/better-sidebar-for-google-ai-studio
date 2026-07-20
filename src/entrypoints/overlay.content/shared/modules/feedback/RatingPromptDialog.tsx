@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAppStore } from '@/shared/lib/store';
+import { Z_INDEX } from '@/shared/lib/z-index';
 
 export const RatingPromptDialog = () => {
   const { t } = useI18n();
@@ -207,7 +208,7 @@ export const RatingPromptDialog = () => {
   return (
     <div
       className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-8 fade-in-0"
-      style={{ zIndex: 99999 }}
+      style={{ zIndex: Z_INDEX.MODAL }}
     >
       <div className="relative w-full max-w-sm bg-background border rounded-xl shadow-2xl flex flex-col p-6">
         <Button

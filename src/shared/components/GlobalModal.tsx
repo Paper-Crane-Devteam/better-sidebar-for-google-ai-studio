@@ -3,8 +3,9 @@ import { useModalStore } from '@/shared/lib/modal';
 import { Button } from './ui/button';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { cn } from '@/shared/lib/utils/utils';
+import { Z_INDEX } from '@/shared/lib/z-index';
 
-const BASE_Z = 10001;
+const BASE_Z = Z_INDEX.MODAL;
 
 export const GlobalModal = () => {
   const { t } = useI18n();

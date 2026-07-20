@@ -7,6 +7,10 @@ import { GlobalToast } from '@/shared/components/GlobalToast';
 import { SnippetReaderDrawer } from '@/entrypoints/overlay.content/shared/modules/snippets/components/SnippetReaderDrawer';
 import { SettingsModal } from '@/entrypoints/overlay.content/shared/modules/settings/SettingsModal';
 import { WhatsNewDialog } from '@/entrypoints/overlay.content/shared/modules/whats-new/WhatsNewDialog';
+import { ProfilePickerDialog } from '@/entrypoints/overlay.content/shared/components/ProfilePickerDialog';
+import { RatingPromptDialog } from '@/entrypoints/overlay.content/shared/modules/feedback/RatingPromptDialog';
+import { PowerPackPaywall } from '@/shared/components/PowerPackPaywall';
+import { HotkeyCheatsheet } from '@/entrypoints/overlay.content/shared/components/HotkeyCheatsheet';
 import { useAppStore } from '@/shared/lib/store';
 import { useInitConversationMessages } from '@/shared/hooks/useInitConversationMessages';
 
@@ -31,6 +35,10 @@ export const AIStudioEnhancedFeatures = () => {
       <SnippetReaderDrawer />
       <SettingsModal open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
       <WhatsNewDialog />
+      <ProfilePickerDialog />
+      <RatingPromptDialog />
+      <PowerPackPaywall />
+      <HotkeyCheatsheet />
       <GlobalModal />
       <GlobalToast />
     </>

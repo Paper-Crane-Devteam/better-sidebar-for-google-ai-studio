@@ -5,6 +5,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { OverlayPanel } from './OverlayPanel';
+import { ChatGPTEnhancedFeatures } from './enhanced-features/ChatGPTEnhancedFeatures';
 import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
 import { applyShadowStyles, waitForElement } from '@/shared/lib/utils';
@@ -197,10 +198,58 @@ export async function initChatGPTOverlay(mainStyles: string): Promise<void> {
     };
 
     renderContent();
+    mountChatGPTEnhancedFeatures(mainStyles);
 
     // Restore console.error after a delay
     setTimeout(() => {
       console.error = originalError;
     }, 1000);
   });
+}
+
+/**
+ * Mount ChatGPT enhanced features (overlays, toasts, paywalls) in document.body
+ */
+function mountChatGPTEnhancedFeatures(mainStyles: string) {
+  try {
+    const enhancedWrapper = document.createElement('div');
+    enhancedWrapper.id = 'better-sidebar-chatgpt-enhanced-features';
+    enhancedWrapper.style.position = 'absolute';
+    enhancedWrapper.style.top = '0';
+    enhancedWrapper.style.left = '0';
+    enhancedWrapper.style.width = '0';
+    enhancedWrapper.style.height = '0';
+    enhancedWrapper.style.overflow = 'visible';
+    document.body.appendChild(enhancedWrapper);
+
+    const enhancedShadow = enhancedWrapper.attachShadow({ mode: 'open' });
+    applyShadowStyles(enhancedShadow, mainStyles);
+
+    const enhancedRoot = document.createElement('div');
+    enhancedRoot.classList.add('shadow-body', 'theme-chatgpt');
+
+    const syncEnhancedTheme = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      if (isDark) enhancedRoot.classList.add('dark');
+      else enhancedRoot.classList.remove('dark');
+    };
+    syncEnhancedTheme();
+    new MutationObserver(syncEnhancedTheme).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    enhancedShadow.appendChild(enhancedRoot);
+
+    const reactRoot = ReactDOM.createRoot(enhancedRoot);
+    reactRoot.render(
+      <ShadowRootProvider container={enhancedRoot}>
+        <ChatGPTEnhancedFeatures />
+      </ShadowRootProvider>,
+    );
+
+    console.log('Better Sidebar: ChatGPT enhanced features mounted');
+  } catch (e) {
+    console.error('Better Sidebar: ChatGPT enhanced features initialization failed', e);
+  }
 }

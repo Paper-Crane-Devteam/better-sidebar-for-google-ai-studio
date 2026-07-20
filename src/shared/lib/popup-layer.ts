@@ -12,6 +12,7 @@
 const ENHANCED_FEATURES_IDS = [
   'better-sidebar-enhanced-features',        // Gemini
   'better-sidebar-aistudio-enhanced-features', // AI Studio
+  'better-sidebar-chatgpt-enhanced-features',  // ChatGPT
 ];
 
 /** Get the enhanced-features shadow DOM container for portaling popups. */

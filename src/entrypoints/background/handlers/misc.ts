@@ -37,5 +37,25 @@ export async function handleMisc(
     return { success: true };
   }
 
+  if (message.type === 'CHECK_HOST_PERMISSION') {
+    const { origin } = message.payload;
+    const granted = await new Promise<boolean>((resolve) => {
+      chrome.permissions.contains({ origins: [origin] }, (result) => {
+        resolve(result);
+      });
+    });
+    return { success: true, data: { granted } };
+  }
+
+  if (message.type === 'REMOVE_HOST_PERMISSION') {
+    const { origin } = message.payload;
+    const removed = await new Promise<boolean>((resolve) => {
+      chrome.permissions.remove({ origins: [origin] }, (result) => {
+        resolve(result);
+      });
+    });
+    return { success: true, data: { removed } };
+  }
+
   return null;
 }

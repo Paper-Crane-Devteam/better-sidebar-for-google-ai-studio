@@ -49,13 +49,16 @@ export function useHostPermission(origin: string): UseHostPermissionReturn {
 
   // Listen for permission grant signal from the permissions page
   useEffect(() => {
-    const listener = (changes: Record<string, { oldValue?: any; newValue?: any }>) => {
-      if ('_permission_granted' in changes) {
+    const listener = (
+      changes: Record<string, { oldValue?: any; newValue?: any }>,
+      areaName: string,
+    ) => {
+      if (areaName === 'local' && '_permission_granted' in changes) {
         void refresh();
       }
     };
-    browser.storage.local.onChanged.addListener(listener);
-    return () => browser.storage.local.onChanged.removeListener(listener);
+    browser.storage.onChanged.addListener(listener);
+    return () => browser.storage.onChanged.removeListener(listener);
   }, [refresh]);
 
   const request = useCallback(async (): Promise<boolean> => {

@@ -3,6 +3,7 @@ import { List, PanelRightOpen } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { useI18n } from '@/shared/hooks/useI18n';
+import { Z_INDEX } from '@/shared/lib/z-index';
 
 interface Props {
   nodeCount: number;
@@ -24,10 +25,11 @@ export const SmartScrollbarMinimizedView: React.FC<Props> = ({
   return (
     <div
       className={cn(
-        'fixed right-0 top-1/2 -translate-y-1/2 z-[38]',
+        'fixed right-0 top-1/2 -translate-y-1/2',
         'flex flex-col items-end',
         'transition-all duration-300 ease-out',
       )}
+      style={{ zIndex: Z_INDEX.SMART_SCROLLBAR }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
