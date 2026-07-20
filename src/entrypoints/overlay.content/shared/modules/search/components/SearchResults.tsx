@@ -235,7 +235,7 @@ const MatchItem = ({
 
     const renderWrapper = (content: React.ReactNode) => (
       <div className="text-xs text-muted-foreground py-1 px-2 hover:bg-accent/30 cursor-pointer rounded">
-        <div className="font-mono text-[10px] mb-0.5 opacity-70 flex items-center gap-1">
+        <div className="font-sans text-[11px] mb-0.5 text-muted-foreground flex items-center gap-1">
           {showPlatformIcon && platform && (
             <img
               src={PLATFORM_CONFIG[platform as Platform].icon}
@@ -246,7 +246,7 @@ const MatchItem = ({
           {match.role === 'user' ? userLabel : modelLabel} •{' '}
           {dayjs(match.timestamp * 1000).format('ll')}
         </div>
-        <div className="line-clamp-4 break-words whitespace-pre-wrap font-mono text-[11px] leading-relaxed">
+        <div className="line-clamp-4 break-words whitespace-pre-wrap font-sans text-[13px] text-foreground leading-relaxed">
           {content}
         </div>
       </div>
@@ -286,8 +286,25 @@ const MatchItem = ({
 
     const index = matchResult.index;
     const matchLength = matchResult[0].length;
-    const start = Math.max(0, index - 40);
-    const end = Math.min(text.length, index + matchLength + 60);
+    let start = Math.max(0, index - 40);
+    let end = Math.min(text.length, index + matchLength + 60);
+
+    // Adjust start to previous word boundary to avoid cutting words in half
+    if (start > 0) {
+      const spaceIndex = text.indexOf(' ', start);
+      if (spaceIndex !== -1 && spaceIndex < index) {
+        start = spaceIndex + 1;
+      }
+    }
+
+    // Adjust end to next word boundary to avoid cutting words in half
+    if (end < text.length) {
+      const spaceIndex = text.lastIndexOf(' ', end);
+      if (spaceIndex !== -1 && spaceIndex > index + matchLength) {
+        end = spaceIndex;
+      }
+    }
+
     const snippet =
       (start > 0 ? '...' : '') +
       text.substring(start, end) +
@@ -298,7 +315,7 @@ const MatchItem = ({
       i % 2 === 1 ? (
         <span
           key={i}
-          className="bg-yellow-500/30 text-foreground font-medium rounded-[2px]"
+          className="bg-highlight/65 text-foreground rounded-[2px]"
         >
           {part}
         </span>

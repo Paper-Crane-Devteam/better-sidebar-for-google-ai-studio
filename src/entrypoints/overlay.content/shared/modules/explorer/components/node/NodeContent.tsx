@@ -3,6 +3,7 @@ import { Info } from 'lucide-react';
 import { NodeProps } from './types';
 import { FolderTreeNodeContent } from '../../../../components/folder-tree';
 import { useNodeTooltip } from '../../../../hooks/useNodeTooltip';
+import { useAppStore } from '@/shared/lib/store';
 
 interface NodeContentProps extends NodeProps {
   isBatchMode: boolean;
@@ -39,6 +40,7 @@ export const NodeContent = ({
   hoverRef,
 }: NodeContentProps) => {
   const { tooltipContent, forceShowTooltip, hasDescription } = useNodeTooltip(node);
+  const searchQuery = useAppStore((state) => state.ui.explorer.search.query);
 
   // Info icon indicator when description exists
   const nameAddon = hasDescription ? (
@@ -70,6 +72,7 @@ export const NodeContent = ({
       nameAddon={nameAddon}
       tooltipContent={tooltipContent}
       forceShowTooltip={forceShowTooltip}
+      searchQuery={searchQuery}
     />
   );
 };

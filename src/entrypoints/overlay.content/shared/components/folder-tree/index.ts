@@ -4,6 +4,8 @@ export type { FolderTreeProps } from './FolderTree';
 export { FolderTreeNodeContent } from './FolderTreeNodeContent';
 export type { FolderTreeNodeContentProps } from './FolderTreeNodeContent';
 
+export { HighlightedText } from './HighlightedText';
+
 export { FolderTintRow } from './FolderTintRow';
 export { RenameForm } from './RenameForm';
 export { BatchSelectionCheckbox } from './BatchSelectionCheckbox';

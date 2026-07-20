@@ -291,6 +291,8 @@ export const GemNode = ({
     isMenuActive && 'node-menu-active',
   );
 
+  const searchQuery = useAppStore((state) => state.ui.gems.search.query);
+
   return (
     <ExclusiveContextMenu onOpenChange={setIsContextMenuOpen}>
       <ContextMenuTrigger asChild>
@@ -319,6 +321,7 @@ export const GemNode = ({
               isPinned={isGem && !!node.data.data?.is_pinned}
               tooltipContent={tooltipContent}
               forceShowTooltip={forceShowTooltip}
+              searchQuery={searchQuery}
             />
 
             {/* Action bar with three-dot menu */}

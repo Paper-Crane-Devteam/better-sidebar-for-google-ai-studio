@@ -207,6 +207,8 @@ export const SnippetNode = ({
     });
   }
 
+  const searchQuery = ui.snippets.search.query;
+
   const innerContent = (
     <>
       <FolderTreeNodeContent
@@ -223,6 +225,7 @@ export const SnippetNode = ({
         } : undefined}
         newName={newName}
         setNewName={setNewName}
+        searchQuery={searchQuery}
       />
       {/* Action bar with three-dot menu – hidden while renaming */}
       {!isBatchMode && !node.isEditing && (

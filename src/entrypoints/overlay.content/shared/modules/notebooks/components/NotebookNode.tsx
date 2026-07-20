@@ -286,6 +286,8 @@ export const NotebookNode = ({
     isMenuActive && 'node-menu-active',
   );
 
+  const searchQuery = useAppStore((state) => state.ui.notebooks.search.query);
+
   return (
     <ExclusiveContextMenu onOpenChange={setIsContextMenuOpen}>
       <ContextMenuTrigger asChild>
@@ -314,6 +316,7 @@ export const NotebookNode = ({
               isPinned={isNotebook && !!node.data.data?.is_pinned}
               tooltipContent={tooltipContent}
               forceShowTooltip={forceShowTooltip}
+              searchQuery={searchQuery}
             />
 
             {hasHoverActions && (

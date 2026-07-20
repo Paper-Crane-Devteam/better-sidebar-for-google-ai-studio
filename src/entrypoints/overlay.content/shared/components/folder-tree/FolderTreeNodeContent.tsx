@@ -5,6 +5,7 @@ import { cn } from '@/shared/lib/utils/utils';
 import { FolderTreeNodeData } from './types';
 import { RenameForm } from './RenameForm';
 import { BatchSelectionCheckbox } from './BatchSelectionCheckbox';
+import { HighlightedText } from './HighlightedText';
 
 export interface FolderTreeNodeContentProps {
   node: NodeApi<FolderTreeNodeData>;
@@ -50,6 +51,9 @@ export interface FolderTreeNodeContentProps {
 
   /** Whether this item is pinned (kept for API compatibility, no longer rendered) */
   isPinned?: boolean;
+
+  /** Search query to highlight matching text */
+  searchQuery?: string;
 }
 
 export const FolderTreeNodeContent = ({
@@ -67,6 +71,7 @@ export const FolderTreeNodeContent = ({
   hoverRef,
   tooltipContent,
   forceShowTooltip,
+  searchQuery,
 }: FolderTreeNodeContentProps) => {
   const isFile = node.data.type === 'file';
   const isTimeGroup = node.data.data?.isTimeGroup;
@@ -129,7 +134,7 @@ export const FolderTreeNodeContent = ({
               forceShow={forceShowTooltip}
               positionRef={hoverRef}
             >
-              {node.data.name}
+              <HighlightedText text={node.data.name} query={searchQuery} />
             </OverflowTooltip>
           ) : (
             <OverflowTooltip
@@ -142,7 +147,7 @@ export const FolderTreeNodeContent = ({
               forceShow={forceShowTooltip}
               positionRef={hoverRef}
             >
-              {node.data.name}
+              <HighlightedText text={node.data.name} query={searchQuery} />
             </OverflowTooltip>
           )}
         </div>

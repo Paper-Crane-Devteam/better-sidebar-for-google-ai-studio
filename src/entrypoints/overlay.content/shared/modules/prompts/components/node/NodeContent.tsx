@@ -2,6 +2,7 @@ import React from 'react';
 import { NodeProps } from './types';
 import { FolderTreeNodeContent } from '../../../../components/folder-tree';
 import { PromptIconDisplay } from '../../lib/prompt-icons';
+import { useAppStore } from '@/shared/lib/store';
 
 interface NodeContentProps extends NodeProps {
   isBatchMode: boolean;
@@ -34,6 +35,7 @@ export const NodeContent = ({
   setNewName,
 }: NodeContentProps) => {
   const isFile = node.data.type === 'file';
+  const searchQuery = useAppStore((state) => state.ui.prompts.search.query);
 
   let displayFileIcon = fileIcon;
   if (isFile && node.data.data?.icon) {
@@ -66,6 +68,7 @@ export const NodeContent = ({
       setNewName={setNewName}
       namePrefix={undefined}
       isPinned={!isFile && !!node.data.data?.is_pinned}
+      searchQuery={searchQuery}
     />
   );
 };

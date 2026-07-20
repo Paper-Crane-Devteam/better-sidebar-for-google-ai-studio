@@ -76,7 +76,7 @@ export const MarkdownRenderer = memo(({ children, className, highlight, highligh
       i % 2 === 1 ? (
         <span
           key={i}
-          className="bg-yellow-500/30 text-foreground font-medium rounded-[2px]"
+          className="bg-highlight/65 text-foreground rounded-[2px]"
         >
           {part}
         </span>
