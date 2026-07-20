@@ -292,6 +292,7 @@ export const Node = ({
     !((node.isSelected && !isFile) || isBatchSelected) && 'hover:bg-accent/50',
     ((node.isSelected && !isFile) || isBatchSelected) && 'node-item-selected',
     !isFile && node.data.data?.is_pinned && 'node-item-pinned',
+    isFile && isFavorite && 'node-item-favorited',
     node.willReceiveDrop && 'bg-accent/50 border border-primary/40',
     isMenuActive && 'bg-accent/50',
     isMenuActive && 'node-menu-active',
