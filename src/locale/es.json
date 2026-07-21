@@ -214,7 +214,7 @@
   "sponsor": {
     "title": "Compartir",
     "enjoying": "¿Te gusta Better Sidebar?",
-    "shareDescription": "Compártelo con amigos y ayuda a más personas a descubrir esta herramienta gratuita y de código abierto ❤️",
+    "shareDescription": "Compártelo con amigos y ayuda a más personas a descubrir esta herramienta gratuita y de código abierto",
     "sponsorOnGithub": "Dar estrella en GitHub",
     "copyLink": "Copiar Enlace y Texto",
     "copied": "Copiado",
@@ -758,8 +758,6 @@
     "zenMode": "Modo Zen",
     "zenModeDesc": "Ocultar interfaz extra para concentrarse",
     "exitZenMode": "Salir del Modo Zen",
-    "quickResend": "Reenvío Rápido",
-    "quickResendDesc": "Reenviar mensajes sin editar",
     "defaultModel": "Modelo Predeterminado:",
     "defaultModelSelect": "Seleccionar",
     "defaultModelNone": "Ninguno",

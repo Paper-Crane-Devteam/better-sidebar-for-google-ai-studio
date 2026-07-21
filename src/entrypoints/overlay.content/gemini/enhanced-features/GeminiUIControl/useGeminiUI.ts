@@ -290,8 +290,6 @@ export const useGeminiUI = () => {
       setGeminiFeature('showSmartScrollbar', v),
     setRemoveWatermark: (v: boolean) =>
       setPegasusGeminiFeature('removeWatermark', v),
-    quickResend: geminiSettings.quickResend,
-    setQuickResend: (v: boolean) => setGeminiFeature('quickResend', v),
     autoHideInput: geminiSettings.autoHideInput,
     setAutoHideInput: (v: boolean) => setGeminiFeature('autoHideInput', v),
     slashCommand: geminiSettings.slashCommand,

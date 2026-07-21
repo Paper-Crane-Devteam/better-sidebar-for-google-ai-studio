@@ -19,7 +19,6 @@ interface GeminiEnhancedFeatures {
   showTopBarTag: boolean;
   zenMode: boolean;
   showSmartScrollbar: boolean;
-  quickResend: boolean;
   autoHideInput: boolean;
   showHotkeyHelper: boolean;
   slashCommand: boolean;
@@ -204,7 +203,6 @@ export const useSettingsStore = create<SettingsState>()(
           showTopBarTag: true,
           zenMode: false,
           showSmartScrollbar: true,
-          quickResend: false,
           autoHideInput: false,
           showHotkeyHelper: true,
           slashCommand: true,

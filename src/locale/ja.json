@@ -214,7 +214,7 @@
   "sponsor": {
     "title": "友達にシェア",
     "enjoying": "Better Sidebar を気に入っていただけましたか？",
-    "shareDescription": "友達にシェアして、このオープンソースツールをもっと多くの人に届けましょう ❤️",
+    "shareDescription": "友達にシェアして、このオープンソースツールをもっと多くの人に届けましょう",
     "sponsorOnGithub": "GitHub でスターを付ける",
     "copyLink": "リンクとテキストをコピー",
     "copied": "コピーしました",
@@ -759,8 +759,6 @@
     "zenMode": "Zen モード",
     "zenModeDesc": "集中的に作業するために余分な UI を非表示にします",
     "exitZenMode": "Zen モードを終了",
-    "quickResend": "クイック再送信",
-    "quickResendDesc": "編集なしでメッセージを再送信",
     "defaultModel": "デフォルトモデル：",
     "defaultModelSelect": "選択",
     "defaultModelNone": "なし",

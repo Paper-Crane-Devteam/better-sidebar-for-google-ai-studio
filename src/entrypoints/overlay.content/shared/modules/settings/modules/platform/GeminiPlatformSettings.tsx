@@ -34,7 +34,6 @@ export const GeminiPlatformSettings = () => {
     showTopBarTag,
     zenMode,
     showSmartScrollbar,
-    quickResend,
     autoHideInput,
   } = geminiSettings;
 
@@ -268,22 +267,6 @@ export const GeminiPlatformSettings = () => {
             <Switch
               checked={zenMode}
               onCheckedChange={(c) => setGeminiFeature('zenMode', c)}
-            />
-          </div>
-
-          {/* Quick Resend */}
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-sm font-medium">
-                {t('geminiUI.quickResend')}
-              </Label>
-              <p className="text-xs text-muted-foreground">
-                {t('geminiUI.quickResendDesc')}
-              </p>
-            </div>
-            <Switch
-              checked={quickResend}
-              onCheckedChange={(c) => setGeminiFeature('quickResend', c)}
             />
           </div>
 

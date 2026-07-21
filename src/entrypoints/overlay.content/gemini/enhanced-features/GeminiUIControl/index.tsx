@@ -36,8 +36,6 @@ export const GeminiUIControl = () => {
     setRemoveWatermark,
     showSmartScrollbar,
     setShowSmartScrollbar,
-    quickResend,
-    setQuickResend,
     autoHideInput,
     setAutoHideInput,
     slashCommand,
@@ -258,25 +256,6 @@ export const GeminiUIControl = () => {
                   <Switch
                     checked={zenMode}
                     onCheckedChange={(c) => setZenMode(c)}
-                  />
-                </div>
-
-                {/* Quick Resend */}
-                <div className="flex items-center justify-between group">
-                  <div className="space-y-0.5">
-                    <Label
-                      className="text-xs font-semibold cursor-pointer"
-                      onClick={() => setQuickResend(!quickResend)}
-                    >
-                      {t('geminiUI.quickResend')}
-                    </Label>
-                    <p className="text-[10px] text-muted-foreground">
-                      {t('geminiUI.quickResendDesc')}
-                    </p>
-                  </div>
-                  <Switch
-                    checked={quickResend}
-                    onCheckedChange={(c) => setQuickResend(c)}
                   />
                 </div>
 

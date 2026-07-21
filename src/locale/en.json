@@ -214,7 +214,7 @@
   "sponsor": {
     "title": "Share with Friends",
     "enjoying": "Enjoying Better Sidebar?",
-    "shareDescription": "Share it with friends and help more people discover this free, open-source productivity tool ❤️",
+    "shareDescription": "Share it with friends and help more people discover this free, open-source productivity tool",
     "sponsorOnGithub": "Star on GitHub",
     "copyLink": "Copy Link & Text",
     "copied": "Copied",
@@ -738,8 +738,6 @@
     "zenMode": "Zen Mode",
     "zenModeDesc": "Hide extra UI for focus",
     "exitZenMode": "Exit Zen Mode",
-    "quickResend": "Quick Resend",
-    "quickResendDesc": "Resend messages without editing",
     "defaultModel": "Default Model:",
     "defaultModelSelect": "Select",
     "defaultModelNone": "None",

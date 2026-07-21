@@ -214,7 +214,7 @@
   "sponsor": {
     "title": "分享给朋友",
     "enjoying": "喜欢 Better Sidebar 吗？",
-    "shareDescription": "帮我们分享一下，让更多人发现这个免费开源的效率工具 ❤️",
+    "shareDescription": "帮我们分享一下，让更多人发现这个免费开源的效率工具",
     "sponsorOnGithub": "去 GitHub 点颗星",
     "copyLink": "复制链接和文案",
     "copied": "已复制",
@@ -757,8 +757,6 @@
     "zenMode": "专注模式",
     "zenModeDesc": "隐藏多余 UI 以专注",
     "exitZenMode": "退出专注模式",
-    "quickResend": "快速重发",
-    "quickResendDesc": "无需修改内容即可重新发送消息",
     "defaultModel": "默认模型：",
     "defaultModelSelect": "选择",
     "defaultModelNone": "无",
