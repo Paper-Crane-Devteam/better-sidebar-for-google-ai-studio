@@ -46,7 +46,7 @@
     --input: 242 242 242; /* --border-light: #0d0d0d0d blended with white = #f2f2f2 */
     --ring: 100 150 255; /* Approximated blue-400 for focus ring */
 
-    --highlight: 234 179 8; /* #eab308 - amber accent for badges, indicators */
+    --highlight: 16 163 127; /* #10a37f - ChatGPT primary accent */
     --highlight-foreground: 255 255 255;
 
     --radius: 12px;
@@ -96,8 +96,8 @@
     --input: 53 53 53; /* --border-light: #ffffff0d blended with #212121 = #353535 */
     --ring: 168 199 250; /* Approximated blue-100 for focus ring */
 
-    --highlight: 251 191 36; /* #fbbf24 - amber for dark mode */
-    --highlight-foreground: 0 0 0;
+    --highlight: 16 163 127; /* #10a37f - ChatGPT primary accent for dark mode */
+    --highlight-foreground: 255 255 255;
   }
 
 }

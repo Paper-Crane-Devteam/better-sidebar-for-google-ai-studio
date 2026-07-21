@@ -1,103 +1,105 @@
 /**
- * CustomUserMessage — Renders user conversation turn in custom overlay.
- * Also handles tool result turns sent back to AI during Agent executions.
+ * CustomUserMessage — Renders user conversation turn.
+ *
+ * Layout rules:
+ * - Regular user text: gray bubble, right-aligned
+ * - System prompt (e.g. "Auto-Classify Conversations"): gray bubble with
+ *   a subtle system indicator (icon), clickable → modal to see full prompt
+ * - Tool results: gray bubble with each result as a compact entry inside,
+ *   clickable → modal to see full result content
+ * - All bubbles are gray to distinguish from AI responses (which are full-width markdown)
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import type { DisplayMessageTurn } from '../useConversationMessages';
-import { User, Sparkles, Copy, Check, Wrench } from 'lucide-react';
-import { cn } from '@/shared/lib/utils';
+import { Sparkles, Terminal } from 'lucide-react';
+import { showCapsuleDetailModal } from '@/entrypoints/overlay.content/shared/lib/capsule-modal';
 
 interface CustomUserMessageProps {
   message: DisplayMessageTurn;
 }
 
 export const CustomUserMessage: React.FC<CustomUserMessageProps> = ({ message }) => {
-  const [copied, setCopied] = useState(false);
+  const hasToolResults = message.toolResults.length > 0;
+  const hasPrompt = Boolean(message.promptId);
+  const hasUserText = Boolean(message.displayText?.trim());
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(message.displayText || message.rawText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-
-  if (message.isToolResult) {
+  // ─── Tool Result Message ─────────────────────────────────────────────
+  // Gray bubble containing each result as a clickable entry
+  if (hasToolResults) {
     return (
-      <div className="group relative my-3 flex gap-3 px-2">
-        {/* Tool Icon */}
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400">
-          <Wrench className="h-3.5 w-3.5" />
-        </div>
+      <div className="my-6 flex justify-end">
+        <div className="max-w-[80%] rounded-2xl rounded-tr-md bg-[rgb(var(--muted))] px-4 py-2">
+          {/* Optional user text above results */}
+          {hasUserText && (
+            <p className="text-[rgb(var(--foreground))] mb-2 whitespace-pre-wrap break-words">
+              {message.displayText}
+            </p>
+          )}
 
-        {/* Content Container */}
-        <div className="flex-1 overflow-hidden">
-          {/* Header */}
-          <div className="mb-1 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
-                Tool Result
-              </span>
-              {message.resultToolName && (
-                <span className="rounded bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] text-amber-700 dark:text-amber-300">
-                  {message.resultToolName}
-                </span>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-muted-foreground hover:text-foreground rounded cursor-pointer"
-              title="复制工具返回内容"
-            >
-              {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-            </button>
-          </div>
-
-          {/* Result Content Body */}
-          <div className="rounded-lg bg-amber-500/5 p-3 font-mono text-xs text-muted-foreground whitespace-pre-wrap max-h-[250px] overflow-y-auto border border-amber-500/20">
-            {message.displayText}
+          {/* Each tool result as a clickable row */}
+          <div className="flex flex-col gap-1">
+            {message.toolResults.map((result, i) => (
+              <div
+                key={`result-${i}`}
+                className="flex items-center gap-1 text-xs text-[rgb(var(--muted-foreground))] cursor-pointer hover:text-[rgb(var(--foreground))] transition-colors py-1 px-2 rounded-md hover:bg-[rgb(var(--background)/0.5)]"
+                onClick={() =>
+                  showCapsuleDetailModal(
+                    result.description,
+                    result.content,
+                  )
+                }
+                title="点击查看完整返回结果"
+              >
+                <Terminal className="h-3 w-3 shrink-0 text-emerald-500" />
+                <span className="truncate">{result.description}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="group relative my-4 flex gap-3 px-2">
-      {/* Avatar */}
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <User className="h-4 w-4" />
-      </div>
-
-      {/* Content Container */}
-      <div className="flex-1 overflow-hidden">
-        {/* Header line */}
-        <div className="mb-1 flex items-center justify-between gap-2">
+  // ─── System Prompt Message ───────────────────────────────────────────
+  // Gray bubble with sparkle icon, clickable to see full prompt content
+  if (hasPrompt) {
+    return (
+      <div className="my-6 flex justify-end">
+        <div
+          className="max-w-[80%] rounded-2xl rounded-tr-md bg-[rgb(var(--muted))] px-4 py-2 cursor-pointer hover:bg-[rgb(var(--muted)/0.8)] transition-colors"
+          onClick={() =>
+            showCapsuleDetailModal(
+              message.promptTitle || 'System Prompt',
+              message.promptContent || message.rawText,
+            )
+          }
+          title="点击查看完整 Prompt"
+        >
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-foreground">User</span>
-            {message.promptTitle && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-300 border border-emerald-500/20">
-                <Sparkles className="h-3 w-3" />
-                {message.promptTitle}
-              </span>
-            )}
+            <Sparkles className="h-3.5 w-3.5 shrink-0 text-[rgb(var(--highlight))]" />
+            <span className="font-medium text-[rgb(var(--foreground))]">
+              {message.promptTitle}
+            </span>
           </div>
-
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-muted-foreground hover:text-foreground rounded cursor-pointer"
-            title="复制消息内容"
-          >
-            {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-          </button>
+          {hasUserText && (
+            <p className="mt-1 text-[rgb(var(--muted-foreground))] whitespace-pre-wrap break-words line-clamp-3">
+              {message.displayText}
+            </p>
+          )}
         </div>
+      </div>
+    );
+  }
 
-        {/* Message body */}
-        <div className="rounded-xl bg-muted/40 p-3.5 text-sm leading-relaxed text-foreground whitespace-pre-wrap border border-border/40">
-          {message.displayText}
-        </div>
+  // ─── Regular User Message ────────────────────────────────────────────
+  // Plain gray bubble, not clickable
+  if (!hasUserText) return null;
+
+  return (
+    <div className="my-6 flex justify-end">
+      <div className="max-w-[80%] rounded-2xl rounded-tr-md bg-[rgb(var(--muted))] px-4 py-2 leading-relaxed text-[rgb(var(--foreground))]">
+        <span className="whitespace-pre-wrap break-words">{message.displayText}</span>
       </div>
     </div>
   );

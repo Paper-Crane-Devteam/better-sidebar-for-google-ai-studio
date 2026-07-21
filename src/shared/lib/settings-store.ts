@@ -111,7 +111,9 @@ interface SettingsState {
   ) => void;
   setLastSelectedGemId: (id: string | null) => void;
   setLastSelectedNotebookId: (id: string | null) => void;
-  setNotionConfig: (config: Partial<SettingsState['integrations']['notion']>) => void;
+  setNotionConfig: (
+    config: Partial<SettingsState['integrations']['notion']>,
+  ) => void;
   setOutlineHeight: (height: number) => void;
   setThemeGridPage: (page: number) => void;
 }

@@ -1,11 +1,12 @@
 /**
- * CustomModelResponse — Renders model AI turn in custom overlay,
- * embedding Markdown content and interactive ToolCallWidgets.
+ * CustomModelResponse — Renders model AI turn as full-width markdown content.
+ * No bubble — flat layout similar to Gemini's native style.
+ * Embeds ToolCallWidgets inline within markdown content.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import type { DisplayMessageTurn } from '../useConversationMessages';
-import { Bot, Copy, Check, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { ToolCallWidget } from './ToolCallWidget';
 
@@ -14,19 +15,11 @@ interface CustomModelResponseProps {
 }
 
 export const CustomModelResponse: React.FC<CustomModelResponseProps> = ({ message }) => {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(message.rawText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-
   // Split raw text by tool calls to interleave markdown text and ToolCallWidget components
   const renderContentWithTools = () => {
     if (!message.toolCalls || message.toolCalls.length === 0) {
       return (
-        <MarkdownRenderer className="text-sm leading-relaxed">
+        <MarkdownRenderer className="leading-relaxed">
           {message.displayText}
         </MarkdownRenderer>
       );
@@ -40,7 +33,7 @@ export const CustomModelResponse: React.FC<CustomModelResponseProps> = ({ messag
       const textBefore = message.rawText.slice(lastIndex, tc.startIndex);
       if (textBefore.trim()) {
         elements.push(
-          <MarkdownRenderer key={`text-${idx}`} className="text-sm leading-relaxed mb-2">
+          <MarkdownRenderer key={`text-${idx}`} className="leading-relaxed mb-2">
             {textBefore}
           </MarkdownRenderer>,
         );
@@ -64,7 +57,7 @@ export const CustomModelResponse: React.FC<CustomModelResponseProps> = ({ messag
     const textAfter = message.rawText.slice(lastIndex);
     if (textAfter.trim()) {
       elements.push(
-        <MarkdownRenderer key="text-last" className="text-sm leading-relaxed mt-2">
+        <MarkdownRenderer key="text-last" className="leading-relaxed mt-2">
           {textAfter}
         </MarkdownRenderer>,
       );
@@ -74,40 +67,20 @@ export const CustomModelResponse: React.FC<CustomModelResponseProps> = ({ messag
   };
 
   return (
-    <div className="group relative my-4 flex gap-3 px-2">
-      {/* Avatar */}
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-        <Bot className="h-4 w-4" />
-      </div>
-
-      {/* Content Container */}
-      <div className="flex-1 overflow-hidden">
-        {/* Header line */}
-        <div className="mb-1 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-foreground">Gemini AI</span>
-            {message.isStreaming && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium text-amber-600 dark:text-amber-300">
-                <Loader2 className="h-3 w-3 animate-spin" />
-                生成中...
-              </span>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-muted-foreground hover:text-foreground rounded cursor-pointer"
-            title="复制回答内容"
-          >
-            {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-          </button>
+    <div className="my-6 w-full">
+      {/* Streaming indicator */}
+      {message.isStreaming && (
+        <div className="mb-2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[rgb(var(--highlight)/0.12)] px-2 py-0.5 text-xs font-medium text-[rgb(var(--highlight))]">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            生成中...
+          </span>
         </div>
+      )}
 
-        {/* Message body */}
-        <div className="rounded-xl bg-background/80 p-4 text-sm text-foreground border border-border/50 shadow-xs">
-          {renderContentWithTools()}
-        </div>
+      {/* Content — full-width, no bubble */}
+      <div className="text-[rgb(var(--foreground))]">
+        {renderContentWithTools()}
       </div>
     </div>
   );

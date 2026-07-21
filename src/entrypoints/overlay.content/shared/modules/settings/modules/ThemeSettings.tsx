@@ -496,7 +496,7 @@ function PaginatedThemeGrid({
       key: '__default__',
       name: t('themeSettings.default'),
       description: t('themeSettings.defaultDescription'),
-      colors: { bg: '#faf9f9', fg: '#1f1f1f', accent: '#0b57d0', secondary: '#f0f4f9' },
+      colors: { bg: '#ffffff', fg: '#1f1f1f', accent: '#0b57d0', secondary: '#d97706' },
       isActive: isDefaultTheme,
       onClick: handleDefaultClick,
     });
@@ -507,7 +507,7 @@ function PaginatedThemeGrid({
         key: '__classic__',
         name: t('themeSettings.classic'),
         description: t('themeSettings.classicDescription'),
-        colors: { bg: '#e9eef6', fg: '#1f1f1f', accent: '#0b57d0', secondary: '#dde3ea' },
+        colors: { bg: '#e9eef6', fg: '#1f1f1f', accent: '#0b57d0', secondary: '#d97706' },
         isActive: isClassicTheme,
         onClick: handleClassicClick,
       });

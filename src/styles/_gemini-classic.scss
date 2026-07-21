@@ -38,7 +38,7 @@
     --input: 220 220 220; /* #dcdcdc */
     --ring: 11 87 208;
 
-    --highlight: 234 179 8; /* #eab308 - amber accent for badges, indicators */
+    --highlight: 217 119 6; /* #d97706 - Amber Gold complementary accent */
     --highlight-foreground: 255 255 255;
 
     --radius: 16px;
@@ -49,7 +49,8 @@
 
     /* Gemini Font */
     --font-sans:
-      'Google Sans Flex', 'Google Sans', 'Helvetica Neue', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+      'Google Sans Flex', 'Google Sans', 'Helvetica Neue', 'Microsoft YaHei',
+      'PingFang SC', sans-serif;
   }
 
   .theme-gemini-classic.dark,
@@ -85,14 +86,13 @@
     --input: 142 145 143; /* #8e918f */
     --ring: 168 199 250;
 
-    --highlight: 251 191 36; /* #fbbf24 - amber for dark mode */
-    --highlight-foreground: 0 0 0;
+    --highlight: 251 191 36; /* #fbbf24 - Amber Gold for dark mode */
+    --highlight-foreground: 15 23 42;
 
     /* Custom Gemini Colors */
     --gem-sys-color--primary-container: #1f3760;
     --gem-sys-color--on-primary-container: #d3e3fd;
   }
-
 }
 
 /* Gemini Classic Scrollbar */
@@ -141,12 +141,16 @@
       color-mix(in srgb, rgb(var(--foreground)) 4%, rgb(var(--background))) 50%,
       rgb(var(--background)) 100%
     );
-    border-right: 1px solid color-mix(in srgb, rgb(var(--foreground)) 6%, transparent);
+    border-right: 1px solid
+      color-mix(in srgb, rgb(var(--foreground)) 6%, transparent);
   }
 
   /* Active sidebar icon - Classic */
   .theme-gemini-classic .sidebar-nav .sidebar-btn.bg-secondary .sidebar-icon,
-  :host(.theme-gemini-classic) .sidebar-nav .sidebar-btn.bg-secondary .sidebar-icon {
+  :host(.theme-gemini-classic)
+    .sidebar-nav
+    .sidebar-btn.bg-secondary
+    .sidebar-icon {
     color: rgb(var(--primary));
   }
 
@@ -161,7 +165,11 @@
   /* Current Conversation Indicator - Classic */
   .theme-gemini-classic .node-item-current,
   :host(.theme-gemini-classic) .node-item-current {
-    background-color: color-mix(in srgb, var(--gem-sys-color--primary-container) 60%, transparent);
+    background-color: color-mix(
+      in srgb,
+      var(--gem-sys-color--primary-container) 60%,
+      transparent
+    );
   }
 
   /* Node action bar - Classic (transparent, text uses mask fade) */
@@ -188,7 +196,9 @@
       background: rgb(var(--primary));
       cursor: pointer;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
     }
 
     &::-webkit-slider-thumb:hover {

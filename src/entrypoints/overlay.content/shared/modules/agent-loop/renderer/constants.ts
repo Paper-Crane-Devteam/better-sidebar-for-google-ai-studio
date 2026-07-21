@@ -20,13 +20,10 @@ export function buildPromptMarker(promptId: string): string {
   return `${PROMPT_MARKER_PREFIX}${promptId}${PROMPT_MARKER_SUFFIX}`;
 }
 
-/** Extract prompt ID from a marker line, or null if not a valid marker */
+/** Extract prompt ID from text, or null if not a valid marker */
 export function extractPromptId(text: string): string | null {
-  const trimmed = text.trim();
-  if (trimmed.startsWith(PROMPT_MARKER_PREFIX) && trimmed.endsWith(PROMPT_MARKER_SUFFIX)) {
-    return trimmed.slice(PROMPT_MARKER_PREFIX.length, -PROMPT_MARKER_SUFFIX.length);
-  }
-  return null;
+  const match = text.match(/\[#bs-agent:([a-zA-Z0-9_-]+)#\]/);
+  return match ? match[1] : null;
 }
 
 /**
