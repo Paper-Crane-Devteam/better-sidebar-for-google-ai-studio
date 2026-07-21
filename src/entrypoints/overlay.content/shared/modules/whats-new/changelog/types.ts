@@ -1,4 +1,42 @@
-export const CURRENT_VERSION = '2.8.0';
+import packageJson from '../../../../../../../package.json';
+
+export const CURRENT_VERSION = packageJson.version;
+
+/**
+ * Check if a version is a "major" release (first two segments: X.Y).
+ * A patch version like 2.4.1 is considered minor; 2.4.0 is major.
+ */
+export function isMajorVersion(version: string): boolean {
+  const parts = version.split('.');
+  const patch = parseInt(parts[2] ?? '0', 10);
+  return patch === 0;
+}
+
+/**
+ * Get the major version string for a given version.
+ * e.g., "2.8.1" -> "2.8.0", "3.1.4" -> "3.1.0"
+ */
+export function getMajorVersion(version: string): string {
+  const parts = version.split('.');
+  return `${parts[0] ?? '0'}.${parts[1] ?? '0'}.0`;
+}
+
+/**
+ * Check if the last seen version covers the major release of the current version.
+ * e.g., if current is "2.8.1" (major "2.8.0"), and lastSeen is "2.8.0", returns true.
+ * If lastSeen is "2.7.5" or undefined, returns false.
+ */
+export function hasSeenMajorVersion(
+  lastSeenVersion: string | undefined,
+  currentVersion: string,
+): boolean {
+  if (!lastSeenVersion) return false;
+  const currentMajor = getMajorVersion(currentVersion);
+  return (
+    lastSeenVersion.localeCompare(currentMajor, undefined, { numeric: true }) >=
+    0
+  );
+}
 
 /**
  * Legacy structured changelog item (used for versions < 2.8.0).
@@ -32,7 +70,9 @@ export type ChangeLogEntry = ChangeLogMarkdownEntry | ChangeLogItem;
 /**
  * Type guard: check if an entry is markdown-based.
  */
-export function isMarkdownEntry(entry: ChangeLogEntry): entry is ChangeLogMarkdownEntry {
+export function isMarkdownEntry(
+  entry: ChangeLogEntry,
+): entry is ChangeLogMarkdownEntry {
   return 'markdown' in entry;
 }
 

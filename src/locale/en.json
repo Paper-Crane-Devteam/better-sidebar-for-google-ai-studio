@@ -351,10 +351,6 @@
     "chats": "Chats",
     "moreFilters": "More filters"
   },
-  "outline": {
-    "title": "Outline",
-    "placeholder": "No outline available"
-  },
   "node": {
     "newFolder": "Create Subfolder",
     "newFolderName": "New Folder",
@@ -858,7 +854,9 @@
     "buyMeACoffee": "Coffee ☕",
     "showAllVersions": "Show all versions",
     "hidePatchVersions": "Major only",
-    "patch": "Patch"
+    "patch": "Patch",
+    "toastTitle": "Updated to v{{version}}",
+    "viewDetails": "View Details"
   },
   "smartScrollbar": {
     "conversationOutline": "Conversation Outline",

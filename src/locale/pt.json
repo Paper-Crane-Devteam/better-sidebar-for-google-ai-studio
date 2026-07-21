@@ -874,7 +874,9 @@
     "buyMeACoffee": "Café ☕",
     "showAllVersions": "Mostrar todas as versões",
     "hidePatchVersions": "Apenas principais",
-    "patch": "Correção"
+    "patch": "Correção",
+    "toastTitle": "Atualizado para v{{version}}",
+    "viewDetails": "Ver detalhes"
   },
   "smartScrollbar": {
     "conversationOutline": "Esboço da Conversa",
@@ -968,7 +970,6 @@
     "ppFeatureWrite": "Espaço de trabalho sem intervenção — peça à IA para renomear, mover, mesclar ou limpar para você",
     "ppFeatureHistory": "Linha do tempo completa — a IA analisa e age sobre todo o seu histórico, não apenas os últimos 7 dias",
     "ppFeatureExport": "Exporte conversas e snippets para Obsidian e Notion",
-    "comingSoon": "Em breve",
     "comingSoon": "Em breve",
     "getPowerPack": "Obter Power Pack",
     "popular": "POPULAR",

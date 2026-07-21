@@ -8,7 +8,7 @@ import { changelog as ru } from './ru';
 import { changelog as es } from './es';
 import { changelog as pt } from './pt';
 
-export { CURRENT_VERSION, changelogItemToMarkdown, getEntryMarkdown, isMarkdownEntry } from './types';
+export { CURRENT_VERSION, changelogItemToMarkdown, getEntryMarkdown, isMarkdownEntry, isMajorVersion, getMajorVersion, hasSeenMajorVersion } from './types';
 export type { ChangeLogItem, ChangeLogEntry, ChangeLogMarkdownEntry } from './types';
 
 // --- Markdown-based changelog (>= 2.8.0) ---

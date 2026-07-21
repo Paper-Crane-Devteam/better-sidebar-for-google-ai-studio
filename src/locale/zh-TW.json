@@ -874,7 +874,9 @@
     "buyMeACoffee": "咖啡 ☕",
     "showAllVersions": "顯示所有版本",
     "hidePatchVersions": "僅大版本",
-    "patch": "修補"
+    "patch": "修補",
+    "toastTitle": "已更新至 v{{version}}",
+    "viewDetails": "查看詳情"
   },
   "smartScrollbar": {
     "conversationOutline": "對話大綱",

@@ -874,7 +874,9 @@
     "buyMeACoffee": "Кофе ☕",
     "showAllVersions": "Показать все версии",
     "hidePatchVersions": "Только основные",
-    "patch": "Патч"
+    "patch": "Патч",
+    "toastTitle": "Обновлено до v{{version}}",
+    "viewDetails": "Подробнее"
   },
   "smartScrollbar": {
     "conversationOutline": "Структура диалога",
@@ -968,7 +970,6 @@
     "ppFeatureWrite": "Рабочее пространство без рук — попросите ИИ переименовать, переместить, объединить или навести порядок за вас",
     "ppFeatureHistory": "Полная хронология — ИИ анализирует и работает со всей историей, а не только за последние 7 дней",
     "ppFeatureExport": "Экспорт бесед и сниппетов в Obsidian и Notion",
-    "comingSoon": "Скоро",
     "comingSoon": "Скоро",
     "getPowerPack": "Получить Power Pack",
     "popular": "ПОПУЛЯРНЫЙ",

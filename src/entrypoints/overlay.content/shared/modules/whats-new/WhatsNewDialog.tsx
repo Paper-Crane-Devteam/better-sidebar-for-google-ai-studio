@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWhatsNew } from './useWhatsNew';
-import { getChangelog, CURRENT_VERSION, getEntryMarkdown } from './changelog';
+import { getChangelog, CURRENT_VERSION, getEntryMarkdown, isMajorVersion } from './changelog';
 import type { ChangeLogEntry } from './changelog';
 import { X, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '../../components/ui/button';
@@ -9,23 +9,13 @@ import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { useI18n } from '@/shared/hooks/useI18n';
 import snippetDemoGif from '@/assets/images/snippet-demo.gif';
 import { Z_INDEX } from '@/shared/lib/z-index';
-
-/**
- * Check if a version is a "major" release (first two segments: X.Y).
- * A patch version like 2.4.1 is considered minor; 2.4.0 is major.
- */
-function isMajorVersion(version: string): boolean {
-  const parts = version.split('.');
-  const patch = parseInt(parts[2] ?? '0', 10);
-  return patch === 0;
-}
+import { WhatsNewToast } from './WhatsNewToast';
 
 export const WhatsNewDialog = () => {
   const { t } = useTranslation();
   const { currentLanguage } = useI18n();
-  const { isOpen, closeWhatsNew } = useWhatsNew();
+  const { isOpen, closeWhatsNew, showAll, setShowAll } = useWhatsNew();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [showAll, setShowAll] = useState(false);
 
   // Close on Escape key
   useEffect(() => {
@@ -46,8 +36,6 @@ export const WhatsNewDialog = () => {
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const changelog = getChangelog();
   const filteredChangelog = showAll
     ? changelog
@@ -55,6 +43,9 @@ export const WhatsNewDialog = () => {
   const hasPatchVersions = changelog.some((item) => !isMajorVersion(item.version));
 
   return (
+    <>
+      <WhatsNewToast />
+      {isOpen && (
     // The entire overlay is scrollable — like browsing a web page
     <div
       ref={scrollRef}
@@ -225,5 +216,7 @@ export const WhatsNewDialog = () => {
         </div>
       </div>
     </div>
+      )}
+    </>
   );
 };

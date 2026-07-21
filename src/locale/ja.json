@@ -875,7 +875,9 @@
     "buyMeACoffee": "コーヒー ☕",
     "showAllVersions": "すべてのバージョンを表示",
     "hidePatchVersions": "メジャーのみ",
-    "patch": "パッチ"
+    "patch": "パッチ",
+    "toastTitle": "v{{version}} に更新されました",
+    "viewDetails": "詳細を見る"
   },
   "smartScrollbar": {
     "conversationOutline": "会話アウトライン",
@@ -969,7 +971,6 @@
     "ppFeatureWrite": "ハンズフリー管理 — リネーム、移動、統合、クリーンアップを AI にお任せ",
     "ppFeatureHistory": "完全なタイムライン — 直近7日間だけでなく、全履歴を AI が分析・操作",
     "ppFeatureExport": "会話とスニペットを Obsidian・Notion にエクスポート",
-    "comingSoon": "近日公開",
     "comingSoon": "近日公開",
     "getPowerPack": "Power Pack を入手",
     "popular": "人気",
