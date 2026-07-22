@@ -69,14 +69,14 @@ export const SplitNewChatButton = ({
       {/* Button row */}
       <div
         className={cn(
-          'flex items-stretch rounded bg-highlight/15 text-highlight transition-all hover:bg-highlight/25',
-          open && 'rounded-b-none bg-highlight/25',
+          'flex items-stretch rounded bg-primary/10 text-primary transition-all hover:bg-primary/20',
+          open && 'rounded-b-none bg-primary/20',
         )}
       >
         {/* Main button */}
         <SimpleTooltip content={tooltip}>
           <button
-            className="flex-1 flex items-center gap-2 px-3 py-1.5 text-density font-medium text-highlight hover:text-highlight rounded-l transition-colors cursor-pointer border-none bg-transparent text-left"
+            className="flex-1 flex items-center gap-2 px-3 py-1.5 text-density font-medium text-primary hover:text-primary rounded-l transition-colors cursor-pointer border-none bg-transparent text-left"
             onClick={onClick}
             onContextMenu={(e) => {
               if (onContextMenu) {
@@ -93,12 +93,12 @@ export const SplitNewChatButton = ({
         {/* Dropdown arrow */}
         {hasDropdown && (
           <>
-            <div className="w-[1px] my-1 bg-highlight/30" />
+            <div className="w-[1px] my-1 bg-primary/25" />
             <SimpleTooltip content={dropdownTooltip}>
               <button
                 className={cn(
-                  'flex items-center justify-center w-7 text-highlight/80 hover:text-highlight hover:bg-highlight/20 rounded-r transition-colors cursor-pointer border-none bg-transparent',
-                  open && 'text-highlight bg-highlight/20',
+                  'flex items-center justify-center w-7 text-primary/80 hover:text-primary hover:bg-primary/15 rounded-r transition-colors cursor-pointer border-none bg-transparent',
+                  open && 'text-primary bg-primary/15',
                 )}
                 onClick={() => setOpen(!open)}
                 aria-expanded={open}
@@ -113,12 +113,12 @@ export const SplitNewChatButton = ({
 
       {/* Dropdown panel — flush below, same width */}
       {open && hasDropdown && (
-        <div className="absolute left-0 right-0 top-full z-50 rounded-b bg-popover shadow-md border border-t-0 border-border overflow-hidden animate-in fade-in slide-in-from-top-1 duration-100">
+        <div className="absolute left-0 right-0 top-full z-50 rounded-b bg-popover shadow-md overflow-hidden animate-in fade-in slide-in-from-top-1 duration-100">
           {dropdownItems.map((item, i) => (
             <SimpleTooltip key={i} content={item.tooltip} side="left">
               <button
                 className={cn(
-                  'w-full flex items-center gap-2 px-3 py-1.5 text-density font-medium text-foreground/80 hover:text-highlight hover:bg-highlight/15 transition-colors cursor-pointer border-none bg-transparent text-left',
+                  'w-full flex items-center gap-2 px-3 py-1.5 text-density font-medium text-foreground/80 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer border-none bg-transparent text-left',
                   i < dropdownItems.length - 1 && 'border-b border-border/30',
                 )}
                 onClick={(e) => {
