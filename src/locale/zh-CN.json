@@ -162,6 +162,7 @@
     "editSnippet": "编辑片段",
     "viewSnippet": "查看片段",
     "noSnippets": "暂无片段。将重要的 AI 回复保存在这里，方便日后查阅。",
+    "noFolders": "暂无文件夹",
     "title": "标题",
     "titlePlaceholder": "片段标题",
     "content": "内容",

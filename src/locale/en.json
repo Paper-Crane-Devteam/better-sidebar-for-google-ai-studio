@@ -162,6 +162,7 @@
     "editSnippet": "Edit Snippet",
     "viewSnippet": "View Snippet",
     "noSnippets": "No snippets yet. Save important AI responses here for future reference.",
+    "noFolders": "No folders",
     "title": "Title",
     "titlePlaceholder": "Snippet title",
     "content": "Content",

@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Button } from '../../../components/ui/button';
 import { Separator } from '../../../components/ui/separator';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
@@ -12,6 +12,7 @@ import { detectPlatform, Platform } from '@/shared/types/platform';
 import { useModalStore } from '@/shared/lib/modal';
 import { useAppStore } from '@/shared/lib/store';
 import { toast } from '@/shared/lib/toast';
+import { startViewTransition } from '@/shared/lib/view-transition';
 import {
   themeRegistry,
   themePresetIds,
@@ -212,44 +213,46 @@ export const ThemeSettings = () => {
     setGeminiStyle('default');
   }, [endPreview, setCustomTheme, setGeminiStyle]);
 
-  const handleThemeClick = (themeId: ThemePresetId) => {
+  const handleThemeClick = (themeId: ThemePresetId, event: React.MouseEvent) => {
     const preset = themeRegistry[themeId];
 
-    if (preset.isPremium && !hasLicense) {
-      // Apply theme normally via store (triggers platform subscriber)
-      setCustomTheme(themeId);
-      setGeminiStyle('default');
-      // Start preview tracking
-      startPreview(themeId);
-      // Set auto-revert timer (module-level, survives unmount)
-      startModulePreviewTimer(handlePreviewExpired);
-    } else {
-      // Normal apply — clear any active preview
+    startViewTransition(event, () => {
+      if (preset.isPremium && !hasLicense) {
+        setCustomTheme(themeId);
+        setGeminiStyle('default');
+        startPreview(themeId);
+        startModulePreviewTimer(handlePreviewExpired);
+      } else {
+        if (isPreviewActive) {
+          clearModulePreviewTimer();
+          endPreview();
+        }
+        setCustomTheme(themeId);
+        setGeminiStyle('default');
+      }
+    }, themeId, theme);
+  };
+
+  const handleDefaultClick = (event: React.MouseEvent) => {
+    startViewTransition(event, () => {
       if (isPreviewActive) {
         clearModulePreviewTimer();
         endPreview();
       }
-      setCustomTheme(themeId);
+      setCustomTheme(null);
       setGeminiStyle('default');
-    }
+    }, null, theme);
   };
 
-  const handleDefaultClick = () => {
-    if (isPreviewActive) {
-      clearModulePreviewTimer();
-      endPreview();
-    }
-    setCustomTheme(null);
-    setGeminiStyle('default');
-  };
-
-  const handleClassicClick = () => {
-    if (isPreviewActive) {
-      clearModulePreviewTimer();
-      endPreview();
-    }
-    setCustomTheme(null);
-    setGeminiStyle('classic');
+  const handleClassicClick = (event: React.MouseEvent) => {
+    startViewTransition(event, () => {
+      if (isPreviewActive) {
+        clearModulePreviewTimer();
+        endPreview();
+      }
+      setCustomTheme(null);
+      setGeminiStyle('classic');
+    }, null, theme);
   };
 
   /** Create the AI theme generator prompt in Prompt Manager */
@@ -331,7 +334,7 @@ export const ThemeSettings = () => {
                   variant={theme === 'light' ? 'secondary' : 'ghost'}
                   size="sm"
                   className="h-7 px-2"
-                  onClick={() => setTheme('light')}
+                  onClick={(e) => startViewTransition(e, () => setTheme('light'), null, 'light')}
                 >
                   <Sun className="h-4 w-4" />
                 </Button>
@@ -341,7 +344,7 @@ export const ThemeSettings = () => {
                   variant={theme === 'system' ? 'secondary' : 'ghost'}
                   size="sm"
                   className="h-7 px-2"
-                  onClick={() => setTheme('system')}
+                  onClick={(e) => startViewTransition(e, () => setTheme('system'), null, 'system')}
                 >
                   <Monitor className="h-4 w-4" />
                 </Button>
@@ -351,7 +354,7 @@ export const ThemeSettings = () => {
                   variant={theme === 'dark' ? 'secondary' : 'ghost'}
                   size="sm"
                   className="h-7 px-2"
-                  onClick={() => setTheme('dark')}
+                  onClick={(e) => startViewTransition(e, () => setTheme('dark'), null, 'dark')}
                 >
                   <Moon className="h-4 w-4" />
                 </Button>
@@ -468,9 +471,9 @@ function PaginatedThemeGrid({
   previewThemeId: string | null;
   hasLicense: boolean;
   userThemes: Array<{ id: string; name: string; description: string; variables: Array<{ property: string; value: string }> }>;
-  handleDefaultClick: () => void;
-  handleClassicClick: () => void;
-  handleThemeClick: (id: string) => void;
+  handleDefaultClick: (event: React.MouseEvent) => void;
+  handleClassicClick: (event: React.MouseEvent) => void;
+  handleThemeClick: (id: string, event: React.MouseEvent) => void;
   handleDeleteUserTheme: (id: string) => void;
 }) {
   const currentPage = useSettingsStore((s) => s.themeGridPage);
@@ -487,7 +490,7 @@ function PaginatedThemeGrid({
       isPremium?: boolean;
       isPreviewing?: boolean;
       isUserTheme?: boolean;
-      onClick: () => void;
+      onClick: (event: React.MouseEvent) => void;
       onDelete?: () => void;
     }> = [];
 
@@ -498,7 +501,7 @@ function PaginatedThemeGrid({
       description: t('themeSettings.defaultDescription'),
       colors: { bg: '#ffffff', fg: '#1f1f1f', accent: '#0b57d0', secondary: '#d97706' },
       isActive: isDefaultTheme,
-      onClick: handleDefaultClick,
+      onClick: (e) => handleDefaultClick(e),
     });
 
     // Classic (Gemini only)
@@ -509,7 +512,7 @@ function PaginatedThemeGrid({
         description: t('themeSettings.classicDescription'),
         colors: { bg: '#e9eef6', fg: '#1f1f1f', accent: '#0b57d0', secondary: '#d97706' },
         isActive: isClassicTheme,
-        onClick: handleClassicClick,
+        onClick: (e) => handleClassicClick(e),
       });
     }
 
@@ -526,7 +529,7 @@ function PaginatedThemeGrid({
         isActive: customTheme === id,
         isPremium: preset.isPremium,
         isPreviewing: isPreviewActive && previewThemeId === id,
-        onClick: () => handleThemeClick(id),
+        onClick: (e) => handleThemeClick(id, e),
       });
     }
 
@@ -547,7 +550,7 @@ function PaginatedThemeGrid({
         colors,
         isActive: customTheme === ut.id,
         isUserTheme: true,
-        onClick: () => handleThemeClick(ut.id),
+        onClick: (e) => handleThemeClick(ut.id, e),
         onDelete: () => handleDeleteUserTheme(ut.id),
       });
     }
@@ -646,7 +649,7 @@ function ThemeCard({
   hasLicense?: boolean;
   isPreviewing?: boolean;
   isUserTheme?: boolean;
-  onClick: () => void;
+  onClick: (event: React.MouseEvent) => void;
   onDelete?: () => void;
 }) {
   return (

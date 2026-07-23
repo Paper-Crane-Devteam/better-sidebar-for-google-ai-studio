@@ -162,6 +162,7 @@
     "editSnippet": "スニペットを編集",
     "viewSnippet": "スニペットを表示",
     "noSnippets": "スニペットはまだありません。重要なAIの回答をここに保存して、後で参照できます。",
+    "noFolders": "フォルダーなし",
     "title": "タイトル",
     "titlePlaceholder": "スニペットのタイトル",
     "content": "内容",

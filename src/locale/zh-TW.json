@@ -162,6 +162,7 @@
     "editSnippet": "編輯片段",
     "viewSnippet": "檢視片段",
     "noSnippets": "尚無片段。將重要的 AI 回覆儲存在這裡，方便日後查閱。",
+    "noFolders": "沒有資料夾",
     "title": "標題",
     "titlePlaceholder": "片段標題",
     "content": "內容",
