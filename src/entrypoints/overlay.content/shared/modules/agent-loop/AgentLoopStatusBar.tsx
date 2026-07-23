@@ -4,6 +4,9 @@
  * Persists after loop ends so user can review the session history via the panel.
  *
  * Uses forwardRef so it can serve as Radix Popover.Trigger via `asChild`.
+ *
+ * @deprecated This component is superseded by the Agent Tab (agent-tab/AgentStatusPanel).
+ * Kept for backward compatibility during the migration period. Will be removed in a future version.
  */
 
 import React, { forwardRef, useMemo } from 'react';

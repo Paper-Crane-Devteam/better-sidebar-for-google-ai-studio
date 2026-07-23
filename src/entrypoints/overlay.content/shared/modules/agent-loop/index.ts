@@ -33,7 +33,11 @@ export { executeSql } from './tools/execute-sql';
 export { completeTask, COMPLETE_TASK_SIGNAL } from './tools/complete-task';
 
 // Prompts
+export { assembleFinalPrompt, assembleSkillActivation } from './prompts/prompt-assembler';
+export { getSoulPrompt } from './prompts/soul';
+/** @deprecated Use assembleFinalPrompt instead */
 export { getBasePrompt } from './prompts/base-prompt';
+/** @deprecated Use getSkillsForPopup from skills layer instead */
 export { getBuiltInPrompts, getBuiltInPromptById } from './prompts/built-in-registry';
 
 // Hooks
@@ -54,15 +58,28 @@ export type { PlatformId, PlatformInfo } from './adapters/adapter-factory';
 
 // UI Components
 export { AgentCommandPopup } from './AgentCommandPopup';
-export { AgentLoopStatusBar } from './AgentLoopStatusBar';
-/** @deprecated Use AgentLoopControlPanel instead */
-export { AgentLoopConfirmDialog } from './AgentLoopConfirmDialog';
-export { AgentLoopControlPanel } from './control-panel';
 
-// Control Panel Store
+// Control Panel Store (still used by execute-sql confirmation logic)
 export { useControlPanelStore } from './control-panel-store';
 export type { ControlPanelState } from './control-panel-store';
 
 // Renderer
 export { ConversationOverlay, ConversationViewSwitcher, injectRendererStyles, buildPromptMarker } from './renderer';
 export { TOOL_TAG } from './engine/ToolCallParser';
+
+// ─── New Architecture: Soul + Skill + MCP ────────────────────────────────────
+
+// MCP Layer
+export { mcpRegistry, BUILTIN_MCP, generateToolSchemaPrompt } from './mcp';
+export type { MCPServer, ToolSchema, ToolDefinition } from './mcp';
+
+// Skills Layer
+export { getEnabledSkills, getSkillsForPopup, getSkillById, getAllSkills, BUILTIN_SKILLS } from './skills';
+export type { Skill } from './skills';
+
+// Agent Config Store
+export { useAgentConfigStore } from './agent-config-store';
+export type { AgentConfigStoreState } from './agent-config-store';
+
+// MCP Setup
+export { initMCPRegistry, syncMCPEnabledState } from './mcp/setup';

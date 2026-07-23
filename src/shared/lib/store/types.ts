@@ -52,7 +52,8 @@ export interface UIState {
       | 'prompts'
       | 'gems'
       | 'notebooks'
-      | 'snippets';
+      | 'snippets'
+      | 'agent';
     isSettingsOpen: boolean;
     isScanning: boolean;
     showSqlInterface: boolean;
@@ -208,7 +209,8 @@ export interface AppState {
       | 'prompts'
       | 'gems'
       | 'notebooks'
-      | 'snippets',
+      | 'snippets'
+      | 'agent',
   ) => void;
   setIsScanning: (isScanning: boolean) => void;
   setShowSqlInterface: (show: boolean) => void;

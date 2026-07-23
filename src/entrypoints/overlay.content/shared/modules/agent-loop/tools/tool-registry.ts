@@ -1,42 +1,46 @@
 /**
  * Tool Registry.
- * Routes parsed tool calls to their respective executor functions.
+ * Routes parsed tool calls to MCP registry or handles meta-tools (activate_skill).
+ * Replaces the old switch-case pattern with MCP provider delegation.
  */
 
 import type { ParsedToolCall } from '../types';
-import { useControlPanelStore } from '../control-panel-store';
-import { executeSql } from './execute-sql';
-import { syncMessages } from './sync-messages';
-import { exportConversations } from './export-tool';
-import { completeTask } from './complete-task';
+import { mcpRegistry } from '../mcp/registry';
+import { getSkillById, getEnabledSkills } from '../skills/skill-registry';
+import { useAgentLoopStore } from '../agent-loop-store';
+import { assembleSkillActivation } from '../prompts/prompt-assembler';
 
 /**
  * Execute a parsed tool call and return the result string.
  */
 export async function executeToolCall(toolCall: ParsedToolCall): Promise<string> {
-  // ── Blacklist check ──────────────────────────────────────────────────
-  const { disabledTools } = useControlPanelStore.getState();
-  if (disabledTools.includes(toolCall.name)) {
-    return `CANCELLED: 工具 ${toolCall.name} 已被用户禁用，请使用其他方式完成任务`;
+  // ── 1. Meta-tool: activate_skill ─────────────────────────────────────
+  if (toolCall.name === 'activate_skill') {
+    const skillId = toolCall.params.skill_id;
+    if (!skillId) {
+      return 'ERROR: activate_skill requires a "skill_id" parameter.';
+    }
+
+    const skill = getSkillById(skillId);
+    if (!skill) {
+      const available = getEnabledSkills()
+        .map((s) => s.id)
+        .join(', ');
+      return `ERROR: Skill "${skillId}" not found. Available skills: ${available}`;
+    }
+
+    // Record activated skill in store
+    useAgentLoopStore.getState().setActiveSkillId(skillId);
+
+    // Return skill prompt content
+    return assembleSkillActivation(skill);
   }
 
-  switch (toolCall.name) {
-    case 'execute_sql':
-      return executeSql({ query: toolCall.params.query });
-
-    case 'sync_conversation_messages':
-      return syncMessages({ conversation_ids: toolCall.params.conversation_ids });
-
-    case 'export':
-      return exportConversations({
-        ids: toolCall.params.ids,
-        format: toolCall.params.format,
-      });
-
-    case 'complete_task':
-      return completeTask({ summary: toolCall.params.summary });
-
-    default:
-      return `ERROR: Unknown tool "${toolCall.name}". Available tools: execute_sql, sync_conversation_messages, export, complete_task.`;
+  // ── 2. Check if tool's MCP server is enabled ─────────────────────────
+  if (!mcpRegistry.isToolEnabled(toolCall.name)) {
+    return `CANCELLED: 工具 ${toolCall.name} 不可用（其所属 MCP 已被禁用）`;
   }
+
+  // ── 3. Delegate to MCP registry ──────────────────────────────────────
+  return mcpRegistry.execute(toolCall.name, toolCall.params);
 }

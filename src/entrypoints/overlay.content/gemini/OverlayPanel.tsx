@@ -19,6 +19,7 @@ import {
   Library,
   SquarePen,
   ScrollText,
+  Bot,
 } from 'lucide-react';
 import { UIcon } from '@/shared/components/ui/icon';
 import { SqlExecutor } from '../shared/components/menu/SqlExecutor';
@@ -31,6 +32,8 @@ import { FeedbackTab } from '../shared/modules/feedback/FeedbackTab';
 import { GemsTab } from '../shared/modules/gems/GemsTab';
 import { NotebooksTab } from '../shared/modules/notebooks/NotebooksTab';
 import { SnippetsTab } from '../shared/modules/snippets/SnippetsTab';
+import { AgentTab } from '../shared/modules/agent-tab';
+import { useAgentLoopStore } from '../shared/modules/agent-loop/agent-loop-store';
 import { FirstInstallPrompt } from '../shared/modules/whats-new/FirstInstallPrompt';
 import '@/index.scss';
 import { useAppInit } from '../shared/hooks/useAppInit';
@@ -58,6 +61,9 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
 
   const shortcuts = useSettingsStore((state) => state.shortcuts);
   const hasSettingsBadge = useBadgeStore((s) => s.isGroupVisible('settings.'));
+  const agentNeedsAttention = useAgentLoopStore(
+    (s) => s.pendingConfirmation !== null || s.status === 'error',
+  );
 
   const {
     fetchData,
@@ -156,7 +162,8 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       | 'prompts'
       | 'gems'
       | 'notebooks'
-      | 'snippets',
+      | 'snippets'
+      | 'agent',
   ) => {
     if (tab === 'settings') {
       setIsSettingsOpen(true);
@@ -274,6 +281,18 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
               data-tour-id="tour-prompts"
             >
               <UIcon icon="tabler:blockquote" className="sidebar-icon" />
+            </Button>
+          </SimpleTooltip>
+          <SimpleTooltip content="Agent">
+            <Button
+              variant={activeTab === 'agent' ? 'secondary' : 'ghost'}
+              size="icon"
+              onClick={() => handleTabChange('agent')}
+              className="sidebar-btn transition-all relative"
+              data-tour-id="tour-agent"
+            >
+              <Bot className="sidebar-icon" />
+              <BadgeDot visible={agentNeedsAttention} className="absolute top-1.5 right-1.5" />
             </Button>
           </SimpleTooltip>
           <SimpleTooltip content={t('tabs.tags')}>
@@ -443,6 +462,8 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           <NotebooksTab menuActions={moduleConfig.general.menuActions} />
         ) : activeTab === 'snippets' ? (
           <SnippetsTab menuActions={moduleConfig.general.menuActions} />
+        ) : activeTab === 'agent' ? (
+          <AgentTab />
         ) : activeTab === 'feedback' ? (
           <FeedbackTab />
         ) : (

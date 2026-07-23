@@ -44,8 +44,12 @@ export interface AgentLoopStoreState {
   /** View rendering mode: 'custom' (our overlay) or 'original' (native DOM) */
   viewMode: 'custom' | 'original';
 
+  /** Currently activated skill ID in this loop session */
+  activeSkillId: string | null;
+
   // Actions
   setViewMode: (mode: 'custom' | 'original') => void;
+  setActiveSkillId: (id: string | null) => void;
   start: (maxRounds: number) => void;
   nextRound: () => void;
   setStatus: (status: AgentLoopStatus) => void;
@@ -87,8 +91,10 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
   pendingInstruction: null,
   panelOpen: false,
   viewMode: 'custom',
+  activeSkillId: null,
 
   setViewMode: (mode) => set({ viewMode: mode }),
+  setActiveSkillId: (id) => set({ activeSkillId: id }),
 
   start: (maxRounds) =>
     set({
@@ -102,6 +108,7 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
       tokenEstimation: 0,
       speedMode: false,
       pendingInstruction: null,
+      activeSkillId: null,
     }),
 
   nextRound: () =>
@@ -143,6 +150,7 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
       status: 'idle',
       currentTool: null,
       speedMode: false,
+      activeSkillId: null,
       // Preserve history for viewing
       history:
         state.currentResults.length > 0

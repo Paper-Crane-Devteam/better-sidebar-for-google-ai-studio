@@ -70,6 +70,6 @@ export interface AgentTriggerState {
   isOpen: boolean;
   query: string;
   triggerPosition: number;
-  matches: BuiltInPrompt[];
+  matches: import('./skills/types').Skill[];
   selectedIndex: number;
 }

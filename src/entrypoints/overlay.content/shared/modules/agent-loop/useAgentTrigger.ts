@@ -1,10 +1,12 @@
 /**
  * useAgentTrigger — Agent trigger popup for `>` prefix.
  * Thin wrapper around shared useTriggerPopup.
+ * Data source: skill-registry (Soul+Skill+MCP architecture).
  */
 
-import type { AgentTriggerState, BuiltInPrompt } from './types';
-import { getBuiltInPrompts } from './prompts/built-in-registry';
+import type { AgentTriggerState } from './types';
+import type { Skill } from './skills/types';
+import { getSkillsForPopup } from './skills/skill-registry';
 import { useTriggerPopup } from '../../features/trigger-popup';
 import type { TriggerPopupMatch } from '../../features/trigger-popup';
 
@@ -13,28 +15,42 @@ import type { TriggerPopupMatch } from '../../features/trigger-popup';
  */
 export function useAgentTrigger(isSlashCommandActive: boolean) {
   /**
-   * Filter built-in prompts by query (multi-word AND on title + description).
+   * Filter skills by query (multi-word AND on title + description).
    */
   function search(query: string): TriggerPopupMatch[] {
-    const allPrompts = getBuiltInPrompts();
+    const allSkills = getSkillsForPopup();
 
     if (!query.trim()) {
-      return allPrompts.slice(0, 8).map((p) => ({
-        item: { id: p.id, title: p.title, description: p.description, icon: p.icon, content: p.getPromptContent(), meta: p },
+      return allSkills.slice(0, 8).map((s) => ({
+        item: {
+          id: s.id,
+          title: s.title,
+          description: s.description,
+          icon: s.icon,
+          content: s.promptContent,
+          meta: s,
+        },
       }));
     }
 
     const words = query.toLowerCase().split(/\s+/).filter(Boolean);
 
-    return allPrompts
-      .filter((p) => {
-        const title = p.title.toLowerCase();
-        const desc = p.description.toLowerCase();
+    return allSkills
+      .filter((s) => {
+        const title = s.title.toLowerCase();
+        const desc = s.description.toLowerCase();
         return words.every((w) => title.includes(w) || desc.includes(w));
       })
       .slice(0, 8)
-      .map((p) => ({
-        item: { id: p.id, title: p.title, description: p.description, icon: p.icon, content: p.getPromptContent(), meta: p },
+      .map((s) => ({
+        item: {
+          id: s.id,
+          title: s.title,
+          description: s.description,
+          icon: s.icon,
+          content: s.promptContent,
+          meta: s,
+        },
       }));
   }
 
@@ -44,19 +60,19 @@ export function useAgentTrigger(isSlashCommandActive: boolean) {
     suppressed: isSlashCommandActive,
   });
 
-  // ─── Adapt to legacy AgentTriggerState for backward compat ─────────
+  // ─── Adapt to AgentTriggerState ────────────────────────────────────
 
   const state: AgentTriggerState = {
     isOpen: popup.state.isOpen,
     query: popup.state.query,
     triggerPosition: popup.state.triggerPosition,
-    matches: popup.state.matches.map((m) => m.item.meta as BuiltInPrompt),
+    matches: popup.state.matches.map((m) => m.item.meta as Skill),
     selectedIndex: popup.state.selectedIndex,
   };
 
-  function getSelectedPrompt(): BuiltInPrompt | null {
+  function getSelectedSkill(): Skill | null {
     const item = popup.getSelectedItem();
-    return item ? (item.meta as BuiltInPrompt) : null;
+    return item ? (item.meta as Skill) : null;
   }
 
   return {
@@ -66,6 +82,8 @@ export function useAgentTrigger(isSlashCommandActive: boolean) {
     selectNext: popup.selectNext,
     setHighlight: popup.setHighlight,
     close: popup.close,
-    getSelectedPrompt,
+    getSelectedSkill,
+    /** @deprecated Use getSelectedSkill instead */
+    getSelectedPrompt: getSelectedSkill,
   };
 }

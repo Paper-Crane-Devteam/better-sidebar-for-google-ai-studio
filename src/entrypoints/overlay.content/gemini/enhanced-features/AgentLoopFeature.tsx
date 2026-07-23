@@ -11,15 +11,12 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
-import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
 import { showCapsuleDetailModal } from '@/entrypoints/overlay.content/shared/lib/capsule-modal';
 import {
   AgentCommandPopup,
-  AgentLoopControlPanel,
   AgentLoopEngine,
   useAgentTrigger,
   useAgentLoopStore,
-  getBasePrompt,
   ConversationOverlay,
   ConversationViewSwitcher,
   injectRendererStyles,
@@ -29,6 +26,11 @@ import {
   createAdapterForCurrentPlatform,
   getCurrentPlatformId,
 } from '@/entrypoints/overlay.content/shared/modules/agent-loop/adapters/adapter-factory';
+import { assembleFinalPrompt } from '@/entrypoints/overlay.content/shared/modules/agent-loop/prompts/prompt-assembler';
+import { getEnabledSkills, getSkillById } from '@/entrypoints/overlay.content/shared/modules/agent-loop/skills/skill-registry';
+import { initMCPRegistry } from '@/entrypoints/overlay.content/shared/modules/agent-loop/mcp/setup';
+import { useAgentActivationTrigger } from '@/entrypoints/overlay.content/shared/modules/agent-loop/useAgentActivationTrigger';
+import { AgentActivationPopup } from '@/entrypoints/overlay.content/shared/modules/agent-loop/AgentActivationPopup';
 import type { AgentPlatformAdapter } from '@/entrypoints/overlay.content/shared/modules/agent-loop';
 import {
   useEditorIntegration,
@@ -62,8 +64,20 @@ export const AgentLoopFeature: React.FC = () => {
     selectNext,
     setHighlight,
     close,
-    getSelectedPrompt,
+    getSelectedSkill,
   } = useAgentTrigger(isSlashCommandActive);
+
+  // ─── Agent Activation Trigger (`!`) ────────────────────────────────
+
+  const {
+    state: agentTriggerState,
+    handleInput: agentHandleInput,
+    selectPrevious: agentSelectPrevious,
+    selectNext: agentSelectNext,
+    setHighlight: agentSetHighlight,
+    close: agentClose,
+    getSelectedAgent,
+  } = useAgentActivationTrigger(isSlashCommandActive);
 
 
   const handleCapsuleClick = useCallback((info: CapsuleClickInfo) => {
@@ -72,12 +86,18 @@ export const AgentLoopFeature: React.FC = () => {
 
   const triggerStateRef = useRef(triggerState);
   triggerStateRef.current = triggerState;
-  const getSelectedPromptRef = useRef(getSelectedPrompt);
-  getSelectedPromptRef.current = getSelectedPrompt;
+  const getSelectedSkillRef = useRef(getSelectedSkill);
+  getSelectedSkillRef.current = getSelectedSkill;
+
+  const agentTriggerStateRef = useRef(agentTriggerState);
+  agentTriggerStateRef.current = agentTriggerState;
+  const getSelectedAgentRef = useRef(getSelectedAgent);
+  getSelectedAgentRef.current = getSelectedAgent;
 
   // ─── Initialize renderer styles & editor interceptors ──────────────
 
   useEffect(() => {
+    initMCPRegistry();
     injectRendererStyles();
     installSendButtonInterceptor();
   }, []);
@@ -113,19 +133,11 @@ export const AgentLoopFeature: React.FC = () => {
     setTimeout(() => engine.start(20), 300);
   }, [getAdapter]);
 
-  const handleStop = useCallback(() => {
-    engineRef.current?.stop();
-  }, []);
-
-  const handleRetry = useCallback(() => {
-    engineRef.current?.resume();
-  }, []);
-
   // ─── Capsule insertion ──────────────────────────────────────────────
 
   function handleConfirmSelection() {
-    const prompt = getSelectedPromptRef.current();
-    if (!prompt) return;
+    const skill = getSelectedSkillRef.current();
+    if (!skill) return;
 
     const adapter = getAdapter();
     const editor = adapter?.getEditor();
@@ -135,11 +147,11 @@ export const AgentLoopFeature: React.FC = () => {
     const cursorPos = adapter.getCursorPosition();
 
     const item: TriggerPopupItem = {
-      id: prompt.id,
-      title: prompt.title,
-      description: prompt.description,
-      icon: prompt.icon,
-      content: prompt.getPromptContent(),
+      id: skill.id,
+      title: skill.title,
+      description: skill.description,
+      icon: skill.icon,
+      content: skill.promptContent,
     };
 
     close();
@@ -149,6 +161,96 @@ export const AgentLoopFeature: React.FC = () => {
 
   const handleConfirmSelectionRef = useRef(handleConfirmSelection);
   handleConfirmSelectionRef.current = handleConfirmSelection;
+
+  // ─── Agent Activation capsule insertion (`!`) ───────────────────────
+
+  function handleAgentConfirmSelection() {
+    const agent = getSelectedAgentRef.current();
+    if (!agent) return;
+
+    const adapter = getAdapter();
+    const editor = adapter?.getEditor();
+    if (!adapter || !editor) return;
+
+    const triggerPos = agentTriggerStateRef.current.triggerPosition;
+    const cursorPos = adapter.getCursorPosition();
+
+    // For agent activation, capsule content = full assembled prompt (soul + skills + tools)
+    const platform = getCurrentPlatformId();
+    const allSkills = getEnabledSkills();
+    const fullPrompt = assembleFinalPrompt({
+      selectedSkill: undefined, // No specific skill pre-selected
+      allSkills,
+      platform,
+    });
+
+    const item: TriggerPopupItem = {
+      id: agent.id,
+      title: agent.name,
+      description: agent.description,
+      icon: agent.icon,
+      content: fullPrompt,
+    };
+
+    agentClose();
+    insertCapsule(editor, triggerPos, cursorPos, item, '!');
+    editor.focus();
+  }
+
+  const handleAgentConfirmSelectionRef = useRef(handleAgentConfirmSelection);
+  handleAgentConfirmSelectionRef.current = handleAgentConfirmSelection;
+
+  // ─── Editor integration for `!` trigger ─────────────────────────────
+
+  const { popupPosition: agentPopupPosition, suppressInput: agentSuppressInput } =
+    useEditorIntegration({
+      getEditor: () => getAdapter()?.getEditor() || null,
+      enabled: slashCommandEnabled,
+      triggerChar: '!',
+      onInput: (text, cursorPos) => {
+        if (useAgentLoopStore.getState().status !== 'idle') return;
+        agentHandleInput(text, cursorPos);
+      },
+      getPopupState: () => agentTriggerStateRef.current as any,
+      selectPrevious: agentSelectPrevious,
+      selectNext: agentSelectNext,
+      close: agentClose,
+      onConfirmSelection: () => handleAgentConfirmSelectionRef.current(),
+      onCapsuleClick: handleCapsuleClick,
+      onBeforeSend: (editor) => {
+        // Look for agent activation capsule (data-trigger="!")
+        const capsule = editor.querySelector(`.${CAPSULE_CLASS}[data-trigger="!"]`);
+        if (!capsule) return false;
+
+        const promptContent = capsule.getAttribute('data-prompt-content') || '';
+        if (!promptContent) return false;
+
+        const adapter = getAdapter();
+        if (!adapter) return false;
+
+        expandAllCapsules(editor);
+
+        const editorText = editor.textContent || '';
+        const userInput = editorText.replace(promptContent, '').trim();
+
+        const agentId = capsule.getAttribute('data-prompt-id') || 'bettersidebar';
+        const marker = buildPromptMarker(agentId);
+
+        let fullMessage = `${marker}\n${promptContent}`;
+        if (userInput) {
+          fullMessage += `\n\n## User Request\n\n${userInput}`;
+        }
+        if (fullMessage.length > 30000) {
+          fullMessage = fullMessage.substring(0, 30000);
+          console.warn('[AgentLoop] Message truncated to 30000 chars');
+        }
+
+        adapter.insertText(fullMessage);
+        adapter.triggerSend().then(() => startAgentEngine());
+
+        return true;
+      },
+    });
 
   // ─── Editor integration ─────────────────────────────────────────────
 
@@ -186,12 +288,19 @@ export const AgentLoopFeature: React.FC = () => {
       const editorText = editor.textContent || '';
       const userInput = editorText.replace(promptContent, '').trim();
 
-      // Compose full message
+      // Compose full message using Soul + Skill + MCP architecture
       const marker = buildPromptMarker(promptId);
       const platform = getCurrentPlatformId();
-      const basePrompt = getBasePrompt({ platform });
+      const selectedSkill = getSkillById(promptId) || undefined;
+      const allSkills = getEnabledSkills();
 
-      let fullMessage = `${marker}\n${basePrompt}\n\n${promptContent}`;
+      const basePrompt = assembleFinalPrompt({
+        selectedSkill,
+        allSkills,
+        platform,
+      });
+
+      let fullMessage = `${marker}\n${basePrompt}`;
       if (userInput) {
         fullMessage += `\n\n## User Request\n\n${userInput}`;
       }
@@ -226,6 +335,7 @@ export const AgentLoopFeature: React.FC = () => {
       <ConversationViewSwitcher />
       <ConversationOverlay />
 
+      {/* Skill selection popup (>) */}
       {triggerState.isOpen && (
         <AgentCommandPopup
           matches={triggerState.matches}
@@ -244,9 +354,24 @@ export const AgentLoopFeature: React.FC = () => {
         />
       )}
 
-
-
-      <AgentLoopControlPanel onStop={handleStop} onRetry={handleRetry} />
+      {/* Agent activation popup (!) */}
+      {agentTriggerState.isOpen && (
+        <AgentActivationPopup
+          matches={agentTriggerState.matches}
+          selectedIndex={agentTriggerState.selectedIndex}
+          onHighlight={agentSetHighlight}
+          onConfirm={(index) => {
+            const matches = agentTriggerStateRef.current.matches;
+            if (matches[index]) {
+              agentSuppressInput();
+              agentSetHighlight(index);
+              handleAgentConfirmSelectionRef.current();
+            }
+          }}
+          position={agentPopupPosition}
+          query={agentTriggerState.query}
+        />
+      )}
     </>
   );
 };
