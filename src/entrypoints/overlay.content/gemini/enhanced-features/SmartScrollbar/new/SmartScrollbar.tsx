@@ -48,8 +48,9 @@ export const SmartScrollbar: React.FC = () => {
     }
   }, [activeNodeId]);
 
-  // Don't render at all if not on a conversation page
-  if (!isOnConversationPage) return null;
+  // Hide when fewer than 3 model responses (1-2 rounds isn't worth navigating)
+  const modelNodeCount = nodes.filter((n) => n.role === 'model').length;
+  if (!isOnConversationPage || modelNodeCount < 3) return null;
 
   return (
     <div
