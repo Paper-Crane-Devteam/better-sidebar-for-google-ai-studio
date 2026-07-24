@@ -108,10 +108,23 @@ export async function scanLibrary() {
   const items = apiScanner.getItems();
   console.log(`Gemini Scan: Collected ${items.length} raw items.`);
   
-  const uniqueItems = new Map();
+  const uniqueItems = new Map<string, any>();
   for (const item of items) {
       if (item && item.id) {
-          uniqueItems.set(item.id, item);
+          const existing = uniqueItems.get(item.id);
+          if (existing) {
+              uniqueItems.set(item.id, {
+                  ...existing,
+                  ...item,
+                  gem_id: item.gem_id || existing.gem_id,
+                  notebook_id: item.notebook_id || existing.notebook_id,
+                  type: (item.notebook_id ? 'notebook' : item.gem_id ? 'gem' : null)
+                      || (existing.notebook_id ? 'notebook' : existing.gem_id ? 'gem' : null)
+                      || item.type || existing.type || 'conversation',
+              });
+          } else {
+              uniqueItems.set(item.id, item);
+          }
       }
   }
 

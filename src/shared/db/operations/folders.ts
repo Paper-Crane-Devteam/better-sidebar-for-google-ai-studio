@@ -11,7 +11,7 @@ export const folderRepo = {
   }): Promise<void> => {
     const platform = folder.platform ?? 'aistudio';
     await runCommand(
-      'INSERT INTO folders (id, name, parent_id, platform) VALUES (?, ?, ?, ?)',
+      'INSERT OR IGNORE INTO folders (id, name, parent_id, platform) VALUES (?, ?, ?, ?)',
       [folder.id, folder.name, folder.parentId || null, platform],
     );
   },

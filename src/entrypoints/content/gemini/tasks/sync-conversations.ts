@@ -73,13 +73,30 @@ async function processAndSendItems() {
     const items = apiScanner.getItems();
     if (items.length === 0) return 0;
 
-    console.log(`Gemini Sync: Processing ${items.length} new raw items.`);
+    const notebookItems = items.filter((i) => i.notebook_id);
+    console.log(`Gemini Sync: Processing ${items.length} raw items (${notebookItems.length} notebook conversations).`);
     
-    // Deduplicate items based on ID
-    const uniqueItems = new Map();
+    // Deduplicate items based on ID, merging fields so later data doesn't
+    // clobber already-known metadata (e.g. notebook_id, gem_id, type).
+    const uniqueItems = new Map<string, any>();
     for (const item of items) {
         if (item && item.id) {
-            uniqueItems.set(item.id, item);
+            const existing = uniqueItems.get(item.id);
+            if (existing) {
+                // Merge: prefer non-null/non-default values from either copy
+                uniqueItems.set(item.id, {
+                    ...existing,
+                    ...item,
+                    // Preserve richer metadata that may come from a different response
+                    gem_id: item.gem_id || existing.gem_id,
+                    notebook_id: item.notebook_id || existing.notebook_id,
+                    type: (item.notebook_id ? 'notebook' : item.gem_id ? 'gem' : null)
+                        || (existing.notebook_id ? 'notebook' : existing.gem_id ? 'gem' : null)
+                        || item.type || existing.type || 'conversation',
+                });
+            } else {
+                uniqueItems.set(item.id, item);
+            }
         }
     }
 
@@ -229,6 +246,24 @@ export async function syncConversations(options: SyncConversationsOptions = {}) 
   // Stop scanner
   // apiScanner.stop();
   // apiScanner.clear();
+
+  // Register a debounced auto-flush for late-arriving items (e.g. notebook chats
+  // whose list-chat response arrives after the main sync loop finishes).
+  let flushTimer: ReturnType<typeof setTimeout> | null = null;
+  let lastSentCount = apiScanner.getItems().length;
+  apiScanner.setOnNewItems(() => {
+    // Only flush if there are genuinely new items since last send
+    if (apiScanner.getItems().length <= lastSentCount) return;
+    if (flushTimer) clearTimeout(flushTimer);
+    flushTimer = setTimeout(async () => {
+      console.log('Gemini Sync: Auto-flushing late-arriving items...');
+      const sent = await processAndSendItems();
+      if (sent > 0) {
+        lastSentCount = apiScanner.getItems().length;
+        console.log(`Gemini Sync: Auto-flush sent ${sent} items.`);
+      }
+    }, 1500);
+  });
 
   return totalSynced;
 }
