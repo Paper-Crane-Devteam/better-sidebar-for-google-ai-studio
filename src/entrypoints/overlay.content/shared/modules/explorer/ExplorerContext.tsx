@@ -11,6 +11,10 @@ interface ExplorerContextValue {
   // --- New pending entry system ---
   /** The current pending new chat entry (singleton) */
   pendingEntry?: PendingNewChatEntry | null;
+  /** Create a pending entry in the resolved target folder */
+  createPendingEntry?: (folderId: string | null) => void;
+  /** Create a pending entry, expand the folder, and scroll to it */
+  createPendingAndFocus?: (folderId: string | null) => void;
   /** Update the title of the pending entry */
   updatePendingTitle?: (title: string) => void;
   /** Commit editing (blur) — transition to idle */

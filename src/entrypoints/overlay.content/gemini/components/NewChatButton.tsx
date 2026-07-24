@@ -8,6 +8,9 @@ import { navigateToGem, navigateToNotebook, navigateToNewChat } from '@/shared/l
 import { GemPickerContent } from '../../shared/modules/gems/components/GemPickerContent';
 import { NotebookPickerContent } from '../../shared/modules/notebooks/components/NotebookPickerContent';
 import { SplitNewChatButton } from '@/shared/components/ui/split-new-chat-button';
+import { useExplorerContext } from '../../shared/modules/explorer/ExplorerContext';
+import { INBOX_FOLDER_ID } from '@/shared/constants/inbox';
+import type { Gem, Notebook } from '@/shared/types/db';
 
 interface NewChatButtonProps {
   onPrivateChat?: () => void;
@@ -15,6 +18,7 @@ interface NewChatButtonProps {
 
 export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
   const { t } = useI18n();
+  const { createPendingAndFocus, onNewChat: explorerNewChat } = useExplorerContext();
 
   const lastSelectedGemId = useSettingsStore((s) => s.lastSelectedGemId);
   const lastSelectedNotebookId = useSettingsStore((s) => s.lastSelectedNotebookId);
@@ -30,30 +34,62 @@ export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
     [notebooks, lastSelectedNotebookId],
   );
 
+  /** Resolve the target folder for a new chat based on context (gem/notebook default or inbox) */
+  const resolveTargetFolder = (gemId?: string | null, notebookId?: string | null): string => {
+    const platform = useAppStore.getState().ui.overlay.currentPlatform;
+    const { gems: allGems, notebooks: allNotebooks } = useAppStore.getState();
+
+    if (gemId) {
+      const gem = allGems.find((g) => g.id === gemId);
+      if (gem?.default_folder_id) return gem.default_folder_id;
+    }
+    if (notebookId) {
+      const notebook = allNotebooks.find((n) => n.id === notebookId);
+      if (notebook?.default_folder_id) return notebook.default_folder_id;
+    }
+    return INBOX_FOLDER_ID(platform);
+  };
+
   const handleNewChat = () => {
     if (newChatBehavior === 'new-tab') {
       window.open('https://gemini.google.com/app', '_blank');
     } else {
-      navigateToNewChat();
+      // Use explorer's unified handler which creates pending entry,
+      // expands the target folder, and navigates
+      if (explorerNewChat) {
+        explorerNewChat();
+      } else {
+        navigateToNewChat();
+      }
     }
   };
 
-  const handleNewGemChat = (e: React.MouseEvent) => {
+  const handleNewGemChat = async (e: React.MouseEvent) => {
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    usePopoverPickerStore.getState().open({
+    const gem = await usePopoverPickerStore.getState().open<Gem>({
       anchorRect: rect,
       content: <GemPickerContent lastSelectedGemId={lastSelectedGemId} />,
       width: 280,
     });
+    if (gem) {
+      const targetFolder = resolveTargetFolder(gem.id, null);
+      createPendingAndFocus?.(targetFolder);
+      navigateToGem(gem.id);
+    }
   };
 
-  const handleNewNotebookChat = (e: React.MouseEvent) => {
+  const handleNewNotebookChat = async (e: React.MouseEvent) => {
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    usePopoverPickerStore.getState().open({
+    const notebook = await usePopoverPickerStore.getState().open<Notebook>({
       anchorRect: rect,
       content: <NotebookPickerContent lastSelectedNotebookId={lastSelectedNotebookId} />,
       width: 280,
     });
+    if (notebook) {
+      const targetFolder = resolveTargetFolder(null, notebook.id);
+      createPendingAndFocus?.(targetFolder);
+      navigateToNotebook(notebook.id);
+    }
   };
 
   // Gem tooltip: explains left/right click behavior
@@ -84,6 +120,8 @@ export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
             onClick: (e) => {
               e.preventDefault();
               if (lastGem) {
+                const targetFolder = resolveTargetFolder(lastGem.id, null);
+                createPendingAndFocus?.(targetFolder);
                 navigateToGem(lastGem.id);
               } else {
                 handleNewGemChat(e);
@@ -103,6 +141,8 @@ export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
             onClick: (e) => {
               e.preventDefault();
               if (lastNotebook) {
+                const targetFolder = resolveTargetFolder(null, lastNotebook.id);
+                createPendingAndFocus?.(targetFolder);
                 navigateToNotebook(lastNotebook.id);
               } else {
                 handleNewNotebookChat(e);

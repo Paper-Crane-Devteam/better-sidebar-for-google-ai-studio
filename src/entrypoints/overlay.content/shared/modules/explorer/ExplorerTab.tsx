@@ -18,8 +18,9 @@ import { OutlineSection } from './components/OutlineSection';
 
 import type { ExplorerTypeFilter } from '../../types/filter';
 import { ExplorerContext } from './ExplorerContext';
-import { usePendingNewChat } from './hooks/usePendingNewChat';
+import { usePendingNewChat, PENDING_NODE_ID } from './hooks/usePendingNewChat';
 import { INBOX_FOLDER_ID } from '@/shared/constants/inbox';
+import { detectGeminiContext } from '@/shared/lib/gemini-context';
 
 interface ExplorerTabProps {
   onNewChat: () => void;
@@ -134,14 +135,34 @@ export const ExplorerTab = ({
       // Expand the folder so the pending entry is visible
       treeRef.current?.open(selectedNode.data.id);
     } else {
-      // Default to inbox folder when no folder is selected
+      // No folder selected — resolve from current page context
       const platform = useAppStore.getState().ui.overlay.currentPlatform;
-      targetFolderId = INBOX_FOLDER_ID(platform);
+      const { gems, notebooks } = useAppStore.getState();
+      const ctx = detectGeminiContext(window.location.pathname);
+
+      if (ctx.type === 'gem' && ctx.gemId) {
+        const gem = gems.find((g) => g.id === ctx.gemId);
+        if (gem?.default_folder_id) {
+          targetFolderId = gem.default_folder_id;
+        }
+      } else if (ctx.type === 'notebook' && ctx.notebookId) {
+        const notebook = notebooks.find((n) => n.id === ctx.notebookId);
+        if (notebook?.default_folder_id) {
+          targetFolderId = notebook.default_folder_id;
+        }
+      }
+
+      if (!targetFolderId) {
+        targetFolderId = INBOX_FOLDER_ID(platform);
+      }
+
       pendingFolderRef.current = targetFolderId;
       treeRef.current?.open(targetFolderId);
     }
     // Create the singleton pending entry (replaces any existing one)
     createPendingEntry(targetFolderId);
+    // Focus/scroll to the pending entry in the tree
+    setTimeout(() => treeRef.current?.select(PENDING_NODE_ID), 50);
     // Still trigger the native new chat navigation
     onNewChat();
   }, [selectedNode, createPendingEntry, onNewChat]);
@@ -152,9 +173,21 @@ export const ExplorerTab = ({
     treeRef.current?.open(folderId);
     // Create the singleton pending entry in this folder
     createPendingEntry(folderId);
+    // Focus/scroll to the pending entry in the tree
+    setTimeout(() => treeRef.current?.select(PENDING_NODE_ID), 50);
     // Still trigger the native new chat navigation
     onNewChat();
   }, [createPendingEntry, onNewChat]);
+
+  // Utility: create a pending entry in a folder, expand it, and scroll to the entry.
+  // Used by NewChatButton dropdown items (gem/notebook) that navigate independently.
+  const createPendingAndFocus = useCallback((folderId: string | null) => {
+    if (folderId) {
+      treeRef.current?.open(folderId);
+    }
+    createPendingEntry(folderId);
+    setTimeout(() => treeRef.current?.select(PENDING_NODE_ID), 50);
+  }, [createPendingEntry]);
 
   // Listen for generate request start → decide which path to take
   useEffect(() => {
@@ -241,27 +274,16 @@ export const ExplorerTab = ({
         }
       }
 
-      // If no folder was explicitly chosen, check gem/notebook default folder, then fallback to inbox
+      // If no folder was explicitly chosen by the user (via pendingEntry or selectedNode),
+      // skip the MOVE — background's SAVE_CONVERSATION already resolved the correct folder
+      // (gem/notebook default_folder → inbox fallback). Only issue MOVE when the user
+      // explicitly picked a target folder from the UI.
       if (!targetFolderId) {
-        const { gems, notebooks, ui } = useAppStore.getState();
-        const platform = ui.overlay.currentPlatform;
-        const { gem_id, notebook_id } = event.detail || {};
-
-        if (gem_id) {
-          const gem = gems.find((g) => g.id === gem_id);
-          if (gem?.default_folder_id) {
-            targetFolderId = gem.default_folder_id;
-          }
-        }
-        if (!targetFolderId && notebook_id) {
-          const notebook = notebooks.find((n) => n.id === notebook_id);
-          if (notebook?.default_folder_id) {
-            targetFolderId = notebook.default_folder_id;
-          }
-        }
-        if (!targetFolderId) {
-          targetFolderId = INBOX_FOLDER_ID(platform);
-        }
+        // Small delay to ensure PromptCreateScanner's SAVE_CONVERSATION has completed
+        // in the background before we refresh the tree.
+        await new Promise((r) => setTimeout(r, 300));
+        fetchData(true);
+        return;
       }
 
       try {
@@ -436,6 +458,8 @@ export const ExplorerTab = ({
       onNewChatInFolder: handleNewChatInFolder,
       pendingNewChatFolderId,
       pendingEntry,
+      createPendingEntry,
+      createPendingAndFocus,
       updatePendingTitle,
       commitPendingEditing,
       startPendingEditing,

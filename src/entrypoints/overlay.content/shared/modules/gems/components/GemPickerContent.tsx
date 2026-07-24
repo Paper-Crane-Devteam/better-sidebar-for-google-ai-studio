@@ -4,7 +4,7 @@ import { UIcon } from '@/shared/components/ui/icon';
 import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
-import { navigateToGem, navigate } from '@/shared/lib/navigation';
+import { navigate } from '@/shared/lib/navigation';
 import { useModalStore } from '@/shared/lib/modal';
 import { usePopoverPickerStore } from '@/shared/lib/popover-picker';
 import { useSettingsStore } from '@/shared/lib/settings-store';
@@ -49,10 +49,9 @@ export const GemPickerContent = ({ lastSelectedGemId }: GemPickerContentProps) =
     (gem: Gem) => {
       useSettingsStore.getState().setLastSelectedGemId(gem.id);
       close();
-      closePopover();
-      navigateToGem(gem.id);
+      usePopoverPickerStore.getState().resolve(gem);
     },
-    [close, closePopover],
+    [close],
   );
 
   const handleCreateGem = useCallback(() => {

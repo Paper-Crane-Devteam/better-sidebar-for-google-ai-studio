@@ -29,6 +29,24 @@ export async function handleConversations(
     case 'SAVE_CONVERSATION': {
       const { messages, replaceAfterMessageId, ...convoData } = message.payload;
       const platform = convoData.platform ?? message.platform ?? 'aistudio';
+
+      // Resolve folder_id when not provided — ensures conversations never land at root.
+      // This covers gem/notebook chats dispatched from PromptCreateScanner (folder_id=null).
+      // If the UI layer later issues a MOVE_CONVERSATION (e.g. user explicitly picked a
+      // folder via pendingEntry), that will override this value.
+      if (!convoData.folder_id) {
+        const existing = await conversationRepo.getById(convoData.id);
+        if (!existing) {
+          // New conversation: resolve gem/notebook default folder → inbox fallback
+          convoData.folder_id = await resolveGemNotebookFolderId(
+            platform,
+            convoData.gem_id,
+            convoData.notebook_id,
+          );
+        }
+        // Existing conversation: leave folder_id null so COALESCE preserves current value
+      }
+
       await conversationRepo.save({ ...convoData, platform });
       if (messages?.length) {
         if (replaceAfterMessageId) {

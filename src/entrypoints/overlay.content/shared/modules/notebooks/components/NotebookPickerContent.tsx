@@ -4,7 +4,7 @@ import { UIcon } from '@/shared/components/ui/icon';
 import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
-import { navigateToNotebook, navigate } from '@/shared/lib/navigation';
+import { navigate } from '@/shared/lib/navigation';
 import { useModalStore } from '@/shared/lib/modal';
 import { usePopoverPickerStore } from '@/shared/lib/popover-picker';
 import { useSettingsStore } from '@/shared/lib/settings-store';
@@ -46,10 +46,9 @@ export const NotebookPickerContent = ({ lastSelectedNotebookId }: NotebookPicker
     (notebook: Notebook) => {
       useSettingsStore.getState().setLastSelectedNotebookId(notebook.id);
       close();
-      closePopover();
-      navigateToNotebook(notebook.id);
+      usePopoverPickerStore.getState().resolve(notebook);
     },
-    [close, closePopover],
+    [close],
   );
 
   const handleCreateNotebook = useCallback(() => {

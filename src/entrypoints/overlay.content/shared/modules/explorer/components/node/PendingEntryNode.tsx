@@ -65,7 +65,7 @@ export const PendingEntryNode = ({ style, phase, title, dragHandle }: PendingEnt
       <div
         ref={dragHandle}
         className={cn(
-          'flex items-center h-full px-1 pr-2 gap-1.5 rounded-sm',
+          'flex items-center h-full px-1 pr-2 gap-1.5',
           phase === 'editing' && '',
           phase === 'idle' && 'group relative cursor-grab bg-accent/40',
           phase === 'intercepted' && 'bg-accent/20',
@@ -114,7 +114,7 @@ export const PendingEntryNode = ({ style, phase, title, dragHandle }: PendingEnt
         {phase === 'idle' && (
           <span className={cn(
             'flex-1 min-w-0 text-sm truncate select-none',
-            title ? 'text-foreground/80' : 'text-muted-foreground italic',
+            title ? 'text-foreground/80' : 'text-muted-foreground',
           )}>
             {title || t('pendingEntry.waitingForChat')}
           </span>

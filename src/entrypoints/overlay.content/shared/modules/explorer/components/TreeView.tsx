@@ -271,7 +271,11 @@ export const TreeView = forwardRef<ArboristTreeHandle, TreeViewProps>(
             }
             return false;
           };
-          injectPending(rootNodes);
+          // If target folder doesn't exist in tree (e.g. inbox not yet created),
+          // fall back to inserting at root so the pending entry is always visible.
+          if (!injectPending(rootNodes)) {
+            rootNodes.unshift(pendingNode);
+          }
         } else {
           rootNodes.unshift(pendingNode);
         }

@@ -60,7 +60,7 @@ export const usePendingNewChat = (): UsePendingNewChatReturn => {
       nodeId: PENDING_NODE_ID,
       folderId,
       title: '',
-      phase: 'editing',
+      phase: 'idle',
     });
   }, []);
 
