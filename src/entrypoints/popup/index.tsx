@@ -5,50 +5,70 @@ import '@/index.scss';
 import '@/locale/i18n';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { Switch } from '@/shared/components/ui/switch';
-import { Platform, PLATFORM_CONFIG } from '@/shared/types/platform';
+import { Label } from '@/shared/components/ui/label';
+import { Platform, PLATFORM_CONFIG, detectPlatform } from '@/shared/types/platform';
 import {
   getPlatformEnabledState,
   setPlatformEnabled,
   PlatformEnabledState,
 } from '@/shared/lib/platform-enabled-store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
+import { usePopupGeminiSettings } from './usePopupGeminiSettings';
+import { usePopupAIStudioSettings } from './usePopupAIStudioSettings';
 import { cn } from '@/shared/lib/utils/utils';
+import { SlidersHorizontal, Settings2, Globe2, Bot } from 'lucide-react';
+import { browser } from 'wxt/browser';
+
+type Tab = 'platforms' | 'gemini' | 'aistudio';
 
 const Options = () => {
   const { t } = useI18n();
-  const [enabledState, setEnabledState] = useState<PlatformEnabledState | null>(
-    null,
-  );
+  const [enabledState, setEnabledState] = useState<PlatformEnabledState | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>('platforms');
+  const [detectedPlatform, setDetectedPlatform] = useState<Platform>(Platform.UNKNOWN);
 
-  // To handle theme correctly in standalone pages, we subscribe to settings store
   const theme = useSettingsStore((state) => state.theme);
+  
+  const { enhancedFeatures: pegasusEnhancedFeatures, setGeminiEnhancedFeature: setPegasusGeminiFeature } = usePegasusStore();
+  const removeWatermark = pegasusEnhancedFeatures.gemini.removeWatermark;
+
+  const { settings: geminiSettings, updateSetting: updateGeminiSetting } = usePopupGeminiSettings();
+  const { settings: aistudioSettings, updateSetting: updateAIStudioSetting } = usePopupAIStudioSettings();
 
   useEffect(() => {
-    // Apply theme
     const isDark =
       theme === 'dark' ||
-      (theme === 'system' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+      (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (isDark) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
   }, [theme]);
 
-  // Read initial configuration
   useEffect(() => {
     getPlatformEnabledState().then(setEnabledState);
   }, []);
 
+  useEffect(() => {
+    browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
+      const url = tabs[0]?.url;
+      if (url) {
+        try {
+          const hostname = new URL(url).hostname;
+          const detected = detectPlatform(hostname);
+          setDetectedPlatform(detected);
+          if (detected === Platform.GEMINI) {
+            setActiveTab('gemini');
+          } else if (detected === Platform.AI_STUDIO) {
+            setActiveTab('aistudio');
+          }
+        } catch (e) {}
+      }
+    });
+  }, []);
+
   const togglePlatform = async (platform: Platform, enabled: boolean) => {
     if (!enabledState) return;
-
-    // Optimistic UI update
     setEnabledState((prev) => (prev ? { ...prev, [platform]: enabled } : null));
-
-    // Persist to storage
     await setPlatformEnabled(platform, enabled);
   };
 
@@ -60,174 +80,311 @@ const Options = () => {
     );
   }
 
-  // The extensions officially supports these platforms currently
-  const platformsToConfigure = [
-    Platform.AI_STUDIO,
-    Platform.GEMINI,
-    // Platform.CHATGPT,
-    // Platform.CLAUDE,
-  ];
+  const platformsToConfigure = [Platform.AI_STUDIO, Platform.GEMINI];
 
   return (
-    <div className="w-[400px] min-h-[500px] bg-background text-foreground flex flex-col items-center py-6 px-4 relative overflow-hidden font-sans selection:bg-purple-500/30">
-      {/* Decorative gradient background */}
+    <div className="w-[420px] h-[600px] flex flex-col bg-background text-foreground overflow-hidden font-sans selection:bg-primary/30">
       <div className="absolute top-0 left-0 w-full h-[400px] pointer-events-none overflow-hidden z-0 select-none">
-        <div className="absolute -top-[100px] -left-[80px] w-[300px] h-[300px] rounded-full bg-cyan-400/10 dark:bg-cyan-500/10 blur-[80px]" />
-        <div className="absolute top-[20px] -right-[100px] w-[350px] h-[350px] rounded-full bg-purple-500/10 dark:bg-purple-600/10 blur-[90px]" />
+        <div className="absolute -top-[100px] -left-[80px] w-[300px] h-[300px] rounded-full bg-primary/5 blur-[80px]" />
+        <div className="absolute top-[20px] -right-[100px] w-[350px] h-[350px] rounded-full bg-primary/5 blur-[90px]" />
       </div>
 
-      <div className="relative z-10 w-full flex flex-col items-center space-y-6 mt-2">
-        {/* Header section */}
-        <div className="flex flex-col items-center text-center space-y-4">
-          <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-400 to-indigo-600 shadow-xl shadow-indigo-500/20 flex items-center justify-center overflow-hidden transition-transform duration-500 hover:scale-[1.02]">
-            <div className="absolute inset-0 bg-white/10 backdrop-blur-sm" />
-            <img
-              src="/icons/icon128.png"
-              className="w-12 h-12 relative z-10 drop-shadow-lg"
-              alt="Logo"
-            />
+      <div className="relative z-10 w-full flex-shrink-0 flex flex-col items-center pt-6 pb-4 space-y-4 border-b border-border/40 bg-background/50 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/80 to-primary shadow-md flex items-center justify-center">
+            <img src="/icons/icon128.png" className="w-6 h-6 drop-shadow-sm" alt="Logo" />
           </div>
-
-          <div className="space-y-1.5 px-2">
-            <h1 className="text-2xl font-black tracking-tight text-foreground">
+          <div className="flex flex-col">
+            <h1 className="text-base font-bold tracking-tight text-foreground leading-tight">
               {t('popup.title')}
             </h1>
-            <p className="text-muted-foreground text-[13px] leading-relaxed">
+            <p className="text-xs text-muted-foreground">
               {t('popup.description')}
             </p>
           </div>
         </div>
 
-        {/* Main Content Card */}
-        <div className="w-full bg-card/60 dark:bg-card/40 backdrop-blur-xl border border-border/60 rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col">
-          <div className="px-4 py-3 border-b border-border/50 bg-muted/30">
-            <h2 className="text-[14px] font-bold tracking-tight text-foreground/90">
-              {t('popup.platforms')}
-            </h2>
-          </div>
+        <div className="flex bg-muted/50 p-1 rounded-lg w-[85%]">
+          <button
+            onClick={() => setActiveTab('platforms')}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-md transition-all duration-200",
+              activeTab === 'platforms' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
+          >
+            <Globe2 className="w-4 h-4" />
+            {t('popup.platforms')}
+          </button>
+          
+          {(detectedPlatform === Platform.GEMINI || activeTab === 'gemini') && (
+            <button
+              onClick={() => setActiveTab('gemini')}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-md transition-all duration-200",
+                activeTab === 'gemini' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              )}
+            >
+              <Settings2 className="w-4 h-4" />
+              {t('geminiUI.title')}
+            </button>
+          )}
 
-          <div className="flex flex-col divide-y divide-border/40">
-            {platformsToConfigure.map((platform) => {
-              const config = PLATFORM_CONFIG[platform];
-              if (!config) return null;
+          {(detectedPlatform === Platform.AI_STUDIO || activeTab === 'aistudio') && (
+            <button
+              onClick={() => setActiveTab('aistudio')}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold rounded-md transition-all duration-200",
+                activeTab === 'aistudio' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              )}
+            >
+              <Bot className="w-4 h-4" />
+              AI Studio
+            </button>
+          )}
+        </div>
+      </div>
 
-              const isSupported = config.supported !== false;
-              const isEnabled =
-                enabledState[platform as keyof PlatformEnabledState] ?? true;
+      <div className="relative z-10 flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
+        {activeTab === 'platforms' && (
+          <div className="w-full bg-card/60 backdrop-blur-xl border border-border/60 rounded-xl shadow-sm overflow-hidden flex flex-col">
+            <div className="flex flex-col divide-y divide-border/40">
+              {platformsToConfigure.map((platform) => {
+                const config = PLATFORM_CONFIG[platform];
+                if (!config) return null;
+                const isSupported = config.supported !== false;
+                const isEnabled = enabledState[platform as keyof PlatformEnabledState] ?? true;
+                const platformColorStr = config.color;
 
-              const platformColorStr = config.color;
-
-              return (
-                <div
-                  key={platform}
-                  className={cn(
-                    'group flex items-center justify-between px-4 py-3 transition-all duration-300 relative',
-                    !isSupported
-                      ? 'bg-muted/10 opacity-60 grayscale'
-                      : isEnabled
-                        ? 'bg-transparent hover:bg-muted/10'
-                        : 'bg-muted/5 opacity-75 grayscale-[20%]',
-                  )}
-                >
-                  <a
-                    href={isSupported ? config.urlPattern : undefined}
-                    target="_blank"
-                    rel="noreferrer"
+                return (
+                  <div
+                    key={platform}
                     className={cn(
-                      'flex items-center gap-3 flex-1 min-w-0 pr-4 group/link transition-opacity',
-                      isSupported
-                        ? 'cursor-pointer hover:opacity-80'
-                        : 'cursor-default pointer-events-none',
+                      'group flex items-center justify-between p-4 transition-all duration-300 relative',
+                      !isSupported ? 'bg-muted/10 opacity-60 grayscale' : isEnabled ? 'bg-transparent hover:bg-muted/10' : 'bg-muted/5 opacity-75 grayscale-[20%]'
                     )}
-                    onClick={(e) => !isSupported && e.preventDefault()}
                   >
-                    <div
+                    <a
+                      href={isSupported ? config.urlPattern : undefined}
+                      target="_blank"
+                      rel="noreferrer"
                       className={cn(
-                        'w-10 h-10 rounded-xl flex items-center justify-center shadow-sm border border-border/50 transition-all duration-300 relative overflow-hidden shrink-0',
-                        isSupported && isEnabled
-                          ? 'bg-background scale-100'
-                          : 'bg-muted/50 scale-[0.98]',
+                        'flex items-center gap-3 flex-1 min-w-0 pr-4 transition-opacity',
+                        isSupported ? 'cursor-pointer hover:opacity-80' : 'cursor-default pointer-events-none'
                       )}
+                      onClick={(e) => !isSupported && e.preventDefault()}
                     >
-                      {/* Subdued platform color background glow if enabled */}
-                      {isSupported && isEnabled && (
-                        <div
-                          className="absolute inset-0 opacity-15 dark:opacity-20 transition-opacity group-hover/link:opacity-25"
-                          style={{
-                            backgroundColor:
-                              platformColorStr === 'blue'
-                                ? '#06b6d4' // Cyan to match icon
-                                : platformColorStr === 'purple'
-                                  ? '#8b5cf6'
-                                  : platformColorStr === 'green'
-                                    ? '#10b981'
-                                    : platformColorStr === 'orange'
-                                      ? '#f97316'
-                                      : '#888',
-                          }}
-                        />
-                      )}
-                      <img
-                        src={config.icon}
-                        alt={config.name}
-                        className={cn(
-                          'w-5 h-5 object-contain relative z-10 transition-transform duration-300',
-                          isSupported && isEnabled
-                            ? 'scale-100'
-                            : 'scale-90 opacity-80',
+                      <div className={cn(
+                        'w-10 h-10 rounded-xl flex items-center justify-center border border-border/50 relative overflow-hidden shrink-0',
+                        isSupported && isEnabled ? 'bg-background shadow-sm scale-100' : 'bg-muted/50 scale-[0.98]'
+                      )}>
+                        {isSupported && isEnabled && (
+                          <div className="absolute inset-0 opacity-15 dark:opacity-20" style={{ backgroundColor: platformColorStr }} />
                         )}
-                      />
-                    </div>
-
-                    <div className="flex flex-col min-w-0 pr-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[14px] font-semibold leading-tight text-foreground truncate group-hover/link:underline decoration-foreground/30 underline-offset-2">
-                          {config.name}
-                        </span>
-                        {!isSupported && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/50 tracking-tighter uppercase whitespace-nowrap">
-                            {t('onboarding.comingSoon')}
-                          </span>
-                        )}
+                        <img src={config.icon} alt={config.name} className="w-5 h-5 relative z-10" />
                       </div>
-                      <span className="text-[11px] text-muted-foreground truncate max-w-[160px]">
-                        {config.hostname}
-                      </span>
-                    </div>
-                  </a>
-
-                  <Switch
-                    checked={isSupported ? isEnabled : false}
-                    disabled={!isSupported}
-                    onCheckedChange={(checked) =>
-                      isSupported && togglePlatform(platform, checked)
-                    }
-                    aria-label={t('popup.enablePlatform').replace(
-                      '{{platform}}',
-                      config.name,
-                    )}
-                    className={cn(
-                      'shrink-0 shadow-md relative',
-                      // Custom switch styling for checked state to match branding
-                      // Use solid color instead of gradient to fix subpixel edge bleeding bug
-                      'data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500',
-                      'dark:data-[state=checked]:bg-indigo-500 dark:data-[state=checked]:border-indigo-500',
-                      // The thumb shadow adjustment
-                      '[&>span]:shadow-sm',
-                    )}
-                  />
-                </div>
-              );
-            })}
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-foreground truncate group-hover:underline underline-offset-2 decoration-foreground/30">{config.name}</span>
+                          {!isSupported && <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-muted text-muted-foreground border border-border/50 uppercase leading-none">{t('onboarding.comingSoon')}</span>}
+                        </div>
+                        <span className="text-xs text-muted-foreground truncate mt-1">{config.hostname}</span>
+                      </div>
+                    </a>
+                    <Switch
+                      checked={isSupported ? isEnabled : false}
+                      disabled={!isSupported}
+                      onCheckedChange={(c) => isSupported && togglePlatform(platform, c)}
+                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary shrink-0"
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Footer info */}
-        <div className="text-center pt-2 pb-2">
-          <p className="text-[11px] text-muted-foreground/60 font-medium tracking-wide">
-            {t('footer.madeWith')}
-          </p>
-        </div>
+        {activeTab === 'gemini' && (
+          <div className="space-y-6 pb-4">
+            {!geminiSettings ? (
+              <div className="text-sm text-muted-foreground text-center py-8">{t('common.loading')}</div>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-4 h-4 text-primary" />
+                    <h3 className="text-xs font-bold text-primary uppercase tracking-wider">{t('geminiUI.layoutDimensions')}</h3>
+                  </div>
+                  <div className="bg-card/40 border border-border/50 rounded-xl p-4 space-y-5">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-semibold">{t('geminiUI.sidebarWidth')}</Label>
+                        <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-2 py-1 rounded leading-none">{geminiSettings.sidebarWidth}px</span>
+                      </div>
+                      <input type="range" min={300} max={550} step={1} value={geminiSettings.sidebarWidth} onChange={(e) => updateGeminiSetting('sidebarWidth', Number(e.target.value))} className="ui-slider" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-semibold">{t('geminiUI.chatContentWidth')}</Label>
+                        <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-2 py-1 rounded leading-none">{geminiSettings.chatWidth}%</span>
+                      </div>
+                      <input type="range" min={40} max={100} step={1} value={geminiSettings.chatWidth} onChange={(e) => updateGeminiSetting('chatWidth', Number(e.target.value))} className="ui-slider" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-semibold">{t('geminiUI.inputBoxWidth')}</Label>
+                        <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-2 py-1 rounded leading-none">{geminiSettings.inputWidth}%</span>
+                      </div>
+                      <input type="range" min={40} max={100} step={1} value={geminiSettings.inputWidth} onChange={(e) => updateGeminiSetting('inputWidth', Number(e.target.value))} className="ui-slider" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Globe2 className="w-4 h-4 text-primary" />
+                    <h3 className="text-xs font-bold text-primary uppercase tracking-wider">{t('geminiUI.elementVisibility')}</h3>
+                  </div>
+                  <div className="bg-card/40 border border-border/50 rounded-xl divide-y divide-border/40">
+                    <div className="flex items-center justify-between p-4">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-semibold">{t('geminiUI.aiDisclaimer')}</Label>
+                        <p className="text-xs text-muted-foreground">{t('geminiUI.aiDisclaimerDesc')}</p>
+                      </div>
+                      <Switch checked={!geminiSettings.hideDisclaimer} onCheckedChange={(c) => updateGeminiSetting('hideDisclaimer', !c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                    </div>
+                    <div className="flex items-center justify-between p-4">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-semibold">{t('geminiUI.upgradeButton')}</Label>
+                        <p className="text-xs text-muted-foreground">{t('geminiUI.upgradeButtonDesc')}</p>
+                      </div>
+                      <Switch checked={!geminiSettings.hideUpgrade} onCheckedChange={(c) => updateGeminiSetting('hideUpgrade', !c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Settings2 className="w-4 h-4 text-primary" />
+                    <h3 className="text-xs font-bold text-primary uppercase tracking-wider">{t('geminiUI.additionalFeatures')}</h3>
+                  </div>
+                  <div className="bg-card/40 border border-border/50 rounded-xl divide-y divide-border/40">
+                    <div className="flex items-center justify-between p-4">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-semibold">{t('geminiUI.zenMode')}</Label>
+                        <p className="text-xs text-muted-foreground">{t('geminiUI.zenModeDesc')}</p>
+                      </div>
+                      <Switch checked={geminiSettings.zenMode} onCheckedChange={(c) => updateGeminiSetting('zenMode', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                    </div>
+                    <div className="flex items-center justify-between p-4">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-semibold">{t('geminiUI.removeAutoWatermark')}</Label>
+                        <p className="text-xs text-muted-foreground">{t('geminiUI.removeAutoWatermarkDesc')}</p>
+                      </div>
+                      <Switch checked={removeWatermark} onCheckedChange={(c) => setPegasusGeminiFeature('removeWatermark', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                    </div>
+                    <div className="flex items-center justify-between p-4">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-semibold">{t('geminiUI.smartScrollbar')}</Label>
+                        <p className="text-xs text-muted-foreground">{t('geminiUI.smartScrollbarDesc')}</p>
+                      </div>
+                      <Switch checked={geminiSettings.showSmartScrollbar} onCheckedChange={(c) => updateGeminiSetting('showSmartScrollbar', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                    </div>
+                    <div className="flex items-center justify-between p-4">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-semibold">{t('geminiUI.autoHideInput')}</Label>
+                        <p className="text-xs text-muted-foreground">{t('geminiUI.autoHideInputDesc')}</p>
+                      </div>
+                      <Switch checked={geminiSettings.autoHideInput} onCheckedChange={(c) => updateGeminiSetting('autoHideInput', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                    </div>
+                    <div className="flex items-center justify-between p-4">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-semibold">{t('geminiUI.slashCommand')}</Label>
+                        <p className="text-xs text-muted-foreground">{t('geminiUI.slashCommandDesc')}</p>
+                      </div>
+                      <Switch checked={geminiSettings.slashCommand} onCheckedChange={(c) => updateGeminiSetting('slashCommand', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                    </div>
+                    <div className="flex items-center justify-between p-4">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-semibold">{t('geminiUI.hotkeyHelper')}</Label>
+                        <p className="text-xs text-muted-foreground">{t('geminiUI.hotkeyHelperDesc')}</p>
+                      </div>
+                      <Switch checked={geminiSettings.showHotkeyHelper} onCheckedChange={(c) => updateGeminiSetting('showHotkeyHelper', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'aistudio' && (
+          <div className="space-y-6 pb-4">
+            {!aistudioSettings ? (
+              <div className="text-sm text-muted-foreground text-center py-8">{t('common.loading')}</div>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-4 h-4 text-primary" />
+                    <h3 className="text-xs font-bold text-primary uppercase tracking-wider">{t('aistudioUI.layoutDimensions')}</h3>
+                  </div>
+                  <div className="bg-card/40 border border-border/50 rounded-xl p-4 space-y-5">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-semibold">{t('aistudioUI.sidebarWidth')}</Label>
+                        <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-2 py-1 rounded leading-none">{aistudioSettings.sidebarWidth}px</span>
+                      </div>
+                      <input type="range" min={280} max={500} step={1} value={aistudioSettings.sidebarWidth} onChange={(e) => updateAIStudioSetting('sidebarWidth', Number(e.target.value))} className="ui-slider" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Settings2 className="w-4 h-4 text-primary" />
+                    <h3 className="text-xs font-bold text-primary uppercase tracking-wider">{t('aistudioUI.additionalFeatures')}</h3>
+                  </div>
+                  <div className="bg-card/40 border border-border/50 rounded-xl divide-y divide-border/40">
+                    <div className="flex items-center justify-between p-4">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-semibold">{t('aistudioUI.autoHideInput')}</Label>
+                        <p className="text-xs text-muted-foreground">{t('aistudioUI.autoHideInputDesc')}</p>
+                      </div>
+                      <Switch checked={aistudioSettings.autoHideInput} onCheckedChange={(c) => updateAIStudioSetting('autoHideInput', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                    </div>
+                    <div className="flex items-center justify-between p-4">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-semibold">{t('aistudioUI.autoHideRunSettings')}</Label>
+                        <p className="text-xs text-muted-foreground">{t('aistudioUI.autoHideRunSettingsDesc')}</p>
+                      </div>
+                      <Switch checked={aistudioSettings.autoHideRunSettings} onCheckedChange={(c) => updateAIStudioSetting('autoHideRunSettings', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                    </div>
+                    <div className="flex items-center justify-between p-4">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-semibold">{t('aistudioUI.slashCommand')}</Label>
+                        <p className="text-xs text-muted-foreground">{t('aistudioUI.slashCommandDesc')}</p>
+                      </div>
+                      <Switch checked={aistudioSettings.slashCommand} onCheckedChange={(c) => updateAIStudioSetting('slashCommand', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                    </div>
+                    <div className="flex items-center justify-between p-4">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-semibold">{t('aistudioUI.hotkeyHelper')}</Label>
+                        <p className="text-xs text-muted-foreground">{t('aistudioUI.hotkeyHelperDesc')}</p>
+                      </div>
+                      <Switch checked={aistudioSettings.showHotkeyHelper} onCheckedChange={(c) => updateAIStudioSetting('showHotkeyHelper', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="relative z-10 flex-shrink-0 text-center py-2 bg-background/80 backdrop-blur-sm border-t border-border/40">
+        <p className="text-[10px] text-muted-foreground font-medium tracking-wide">
+          {t('footer.madeWith')}
+        </p>
       </div>
     </div>
   );

@@ -1,7 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
-import { usePegasusStore } from '@/shared/lib/pegasus-store';
-import { debounce } from 'lodash';
 import { useAppStore } from '@/shared/lib/store';
 import { waitForElement } from '@/shared/lib/utils';
 import { useUrl } from '@/shared/hooks/useUrl';
@@ -10,12 +8,7 @@ export const useGeminiUI = () => {
   const geminiSettings = useSettingsStore((s) => s.enhancedFeatures.gemini);
   const setGeminiFeature = useSettingsStore((s) => s.setGeminiFeature);
 
-  const pegasusGeminiFeatures = usePegasusStore(
-    (s) => s.enhancedFeatures.gemini,
-  );
-  const setPegasusGeminiFeature = usePegasusStore(
-    (s) => s.setGeminiEnhancedFeature,
-  );
+  const setGeminiFeature = useSettingsStore((s) => s.setGeminiFeature);
 
   const {
     sidebarWidth: storeSidebarWidth,
@@ -34,11 +27,6 @@ export const useGeminiUI = () => {
   const isSidebarExpanded = useAppStore((s) => s.ui.overlay.isSidebarExpanded);
 
   const [showUpgradeOption, setShowUpgradeOption] = useState(false);
-
-  // Local state for immediate feedback on sliders
-  const [localSidebarWidth, setLocalSidebarWidth] = useState(storeSidebarWidth);
-  const [localChatWidth, setLocalChatWidth] = useState(storeChatWidth);
-  const [localInputWidth, setLocalInputWidth] = useState(storeInputWidth);
 
 
   // Check for upgrade option
@@ -75,7 +63,6 @@ export const useGeminiUI = () => {
             (chatContent.getBoundingClientRect().width / containerW) * 100,
           );
           setGeminiFeature('chatWidth', percent);
-          setLocalChatWidth(percent);
         }
       }
 
@@ -91,7 +78,6 @@ export const useGeminiUI = () => {
             (inputField.getBoundingClientRect().width / containerW) * 100,
           );
           setGeminiFeature('inputWidth', percent);
-          setLocalInputWidth(percent);
         }
       }
     };
@@ -102,34 +88,6 @@ export const useGeminiUI = () => {
     return () => clearTimeout(timer);
   }, [storeChatWidth, storeInputWidth, setGeminiFeature, isGemsCreatePage]);
 
-  // Sync local state when store changes (e.g., from another instance or initial load)
-  useEffect(() => {
-    setLocalSidebarWidth(storeSidebarWidth);
-  }, [storeSidebarWidth]);
-
-  useEffect(() => {
-    setLocalChatWidth(storeChatWidth);
-  }, [storeChatWidth]);
-
-  useEffect(() => {
-    setLocalInputWidth(storeInputWidth);
-  }, [storeInputWidth]);
-
-  // Debounced update to the store
-  const debouncedSetSidebarWidth = useMemo(
-    () => debounce((v: number) => setGeminiFeature('sidebarWidth', v), 300),
-    [setGeminiFeature],
-  );
-
-  const debouncedSetChatWidth = useMemo(
-    () => debounce((v: number) => setGeminiFeature('chatWidth', v), 300),
-    [setGeminiFeature],
-  );
-
-  const debouncedSetInputWidth = useMemo(
-    () => debounce((v: number) => setGeminiFeature('inputWidth', v), 300),
-    [setGeminiFeature],
-  );
   // Apply CSS for all UI tweaks
   useEffect(() => {
     const styleId = 'better-sidebar-gemini-ui-tweaks';
@@ -236,63 +194,4 @@ export const useGeminiUI = () => {
       }
     });
   }, [isSidebarExpanded, storeSidebarWidth]);
-
-  // [DEPRECATED] Bard mode switcher (Gemini Logo/Brand) - element no longer exists in new Gemini UI
-  // useEffect(() => {
-  //   const updateBardModeSwitcher = (el?: HTMLElement) => {
-  //     const bardModeSwitcher = el;
-  //     if (bardModeSwitcher) {
-  //       const density = useSettingsStore.getState().layoutDensity;
-  //       const closedWidth = density === 'compact' ? 56 : 64;
-  //       const diffWidth = storeSidebarWidth - closedWidth;
-  //       bardModeSwitcher.style.setProperty(
-  //         '--bard-sidenav-open-closed-width-diff',
-  //         `${diffWidth}px`,
-  //       );
-  //     }
-  //   };
-  //
-  //   waitForElement('main>div>bard-mode-switcher').then((el) => {
-  //     updateBardModeSwitcher(el as HTMLElement);
-  //   });
-  // }, [storeSidebarWidth]);
-
-  return {
-    sidebarWidth: localSidebarWidth,
-    chatWidth: localChatWidth,
-    inputWidth: localInputWidth,
-    hideBrand,
-    hideDisclaimer,
-    hideUpgrade,
-    showUpgradeOption,
-    showTopBarTag: geminiSettings.showTopBarTag,
-    zenMode,
-    removeWatermark: pegasusGeminiFeatures.removeWatermark,
-    setSidebarWidth: (v: number) => {
-      setLocalSidebarWidth(v);
-      debouncedSetSidebarWidth(v);
-    },
-    setChatWidth: (v: number) => {
-      setLocalChatWidth(v);
-      debouncedSetChatWidth(v);
-    },
-    setInputWidth: (v: number) => {
-      setLocalInputWidth(v);
-      debouncedSetInputWidth(v);
-    },
-    setHideBrand: (v: boolean) => setGeminiFeature('hideBrand', v),
-    setHideDisclaimer: (v: boolean) => setGeminiFeature('hideDisclaimer', v),
-    setHideUpgrade: (v: boolean) => setGeminiFeature('hideUpgrade', v),
-    setShowTopBarTag: (v: boolean) => setGeminiFeature('showTopBarTag', v),
-    setZenMode: (v: boolean) => setGeminiFeature('zenMode', v),
-    showSmartScrollbar,
-    setShowSmartScrollbar: (v: boolean) =>
-      setGeminiFeature('showSmartScrollbar', v),
-    setRemoveWatermark: (v: boolean) =>
-      setPegasusGeminiFeature('removeWatermark', v),
-    autoHideInput: geminiSettings.autoHideInput,
-    setAutoHideInput: (v: boolean) => setGeminiFeature('autoHideInput', v),
-    slashCommand: geminiSettings.slashCommand,
-    setSlashCommand: (v: boolean) => setGeminiFeature('slashCommand', v),
-  };
 };

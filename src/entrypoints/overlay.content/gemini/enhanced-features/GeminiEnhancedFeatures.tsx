@@ -50,8 +50,6 @@ export const GeminiEnhancedFeatures = () => {
       {/* <DefaultModelFeature /> */}
       {/* [DEPRECATED] TopBarTagFeature - removed due to Gemini UI redesign */}
       {/* <TopBarTagFeature /> */}
-      {/* [HIDDEN] GeminiUIControl - temporarily hidden */}
-      {/* <GeminiUIControl /> */}
       <ZenModeFeature />
       <SmartScrollbarFeature />
       <AutoHideInputFeature />

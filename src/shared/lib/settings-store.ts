@@ -369,3 +369,13 @@ export const useSettingsStore = create<SettingsState>()(
     },
   ),
 );
+
+// Listen to storage changes to sync state across contexts (e.g. from popup)
+if (typeof browser !== 'undefined' && browser.storage && browser.storage.onChanged) {
+  browser.storage.onChanged.addListener((changes) => {
+    const storageName = getStorageName();
+    if (changes[storageName]) {
+      useSettingsStore.persist.rehydrate();
+    }
+  });
+}
