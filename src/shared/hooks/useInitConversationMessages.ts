@@ -131,12 +131,17 @@ export function useInitConversationMessages() {
     const parsed = adapter.parseInterceptorEvent(detail);
     if (!parsed) return;
 
-    const { conversationId: eventConvoId, messages: parsedMessages } = parsed;
+    const { conversationId: eventConvoId, messages: parsedMessages, replaceAfterMessageId } = parsed;
     const urlConvoId = adapter.extractExternalId(pathRef.current);
     if (!urlConvoId || eventConvoId !== urlConvoId) return;
 
     // Mark as on-conversation in case this fires before the DB fetch path runs
     useConversationMessagesStore.getState().setIsOnConversation(true);
+
+    // On regeneration, remove stale messages after the anchor before merging new ones
+    if (replaceAfterMessageId) {
+      useConversationMessagesStore.getState().removeMessagesAfter(replaceAfterMessageId);
+    }
 
     mergeMessages(parsedMessages);
 

@@ -63,7 +63,7 @@ export function parseBatchExecuteRequest(requestBody: string): any | null {
     } else {
         return null;
     }
-
+    console.log('Better Sidebar (Gemini): Parsed request body', jsonBody)
     return jsonBody;
   } catch (e) {
     console.error('Better Sidebar (Gemini): Error parsing request body', e);

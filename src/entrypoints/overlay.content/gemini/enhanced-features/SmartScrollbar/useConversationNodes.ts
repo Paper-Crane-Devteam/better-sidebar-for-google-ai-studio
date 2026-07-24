@@ -52,11 +52,16 @@ export function useConversationNodes() {
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
   const nodesRef = useRef(nodes);
   const activeRef = useRef<string | null>(null);
+  // Lock to prevent auto-detection from overriding user-initiated scrollToNode
+  const lockUntilRef = useRef<number>(0);
 
   useEffect(() => { nodesRef.current = nodes; }, [nodes]);
   useEffect(() => { activeRef.current = activeNodeId; }, [activeNodeId]);
 
   const detectActiveNode = useCallback(() => {
+    // Skip if locked (user recently clicked a node)
+    if (Date.now() < lockUntilRef.current) return;
+
     const current = nodesRef.current;
     if (!current.length) return;
 
@@ -117,6 +122,9 @@ export function useConversationNodes() {
     const container = el.closest('.conversation-container') || el;
     container.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setActiveNodeId(nodeId);
+    // Lock auto-detection for 1.5s to prevent scroll-triggered re-detection
+    // from overriding the user's explicit selection during smooth scroll
+    lockUntilRef.current = Date.now() + 1500;
   }, []);
 
   return { nodes, activeNodeId, scrollToNode };

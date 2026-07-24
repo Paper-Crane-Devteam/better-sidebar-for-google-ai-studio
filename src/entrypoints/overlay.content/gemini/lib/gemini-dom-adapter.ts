@@ -51,6 +51,10 @@ export const geminiDomAdapter: PlatformDomAdapter = {
         inDom: !!findMessageElement(msg.id),
       }));
 
-    return { conversationId, messages: parsed };
+    return {
+      conversationId,
+      messages: parsed,
+      replaceAfterMessageId: detail?.replaceAfterMessageId,
+    };
   },
 };

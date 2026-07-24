@@ -6,7 +6,7 @@ export class ChatContentScanner {
         this.listener = (event: Event) => {
             const customEvent = event as CustomEvent;
             if (customEvent.detail && customEvent.detail.messages && customEvent.detail.messages.length > 0) {
-                const { conversationId, messages, title } = customEvent.detail;
+                const { conversationId, messages, title, replaceAfterMessageId } = customEvent.detail;
                 console.log('Gemini ChatContentScanner: Received chat content', messages.length, 'messages');
                 
                 // Send to background to upsert
@@ -15,7 +15,8 @@ export class ChatContentScanner {
                     payload: {
                         conversationId,
                         messages,
-                        title
+                        title,
+                        replaceAfterMessageId,
                     },
                     platform: 'gemini'
                 }).then(response => {

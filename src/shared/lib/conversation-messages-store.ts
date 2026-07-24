@@ -56,6 +56,8 @@ interface ConversationMessagesState {
   mergeMessages: (incoming: ConversationMessage[]) => void;
   /** Clear all state (used on URL change) */
   reset: () => void;
+  /** Remove all messages that come after the given anchor message ID (for regeneration) */
+  removeMessagesAfter: (anchorMessageId: string) => void;
   /** Refresh inDom flags by checking DOM presence */
   refreshDomPresence: () => void;
   /** Set loading state */
@@ -173,6 +175,16 @@ export const useConversationMessagesStore = create<ConversationMessagesState>((s
   },
 
   reset: () => set({ messages: [], isLoading: false, fetchedForUrl: null }),
+
+  removeMessagesAfter: (anchorMessageId: string) => {
+    const prev = get().messages;
+    const anchorIndex = prev.findIndex((m) => m.id === anchorMessageId);
+    if (anchorIndex === -1) return; // anchor not found, nothing to do
+    const trimmed = prev.slice(0, anchorIndex + 1);
+    if (trimmed.length !== prev.length) {
+      set({ messages: trimmed });
+    }
+  },
 
   refreshDomPresence: () => {
     const adapter = getPlatformDomAdapter();

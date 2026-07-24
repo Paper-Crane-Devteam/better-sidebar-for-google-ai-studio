@@ -9,6 +9,11 @@ export function handleGenerateResponse(response: any, url: string) {
   if (response.status === 200) {
     let prompt: string | null = null;
     let requestNotebookId: string | null = null;
+    // IDs from the request payload indicating the context position.
+    // previousModelResponseId (rc_) marks the anchor: everything after it
+    // in the DB will be deleted before inserting new messages. This handles
+    // both regeneration (old messages removed) and normal flow (no-op).
+    let previousModelResponseId: string | null = null;
     // Parse Request
     try {
       const requestBody = response.config?.body;
@@ -37,6 +42,18 @@ export function handleGenerateResponse(response: any, url: string) {
             if (typeof nbField === 'string' && nbField.startsWith('notebooks/')) {
               requestNotebookId = nbField.slice('notebooks/'.length);
             }
+
+            // Extract previous message context IDs from innerJson[2]:
+            // [c_conversationId, r_userMessageId, rc_modelResponseId, ...]
+            // These indicate the messages this request continues from.
+            // On regeneration, rc_ is the OLD model response to be replaced.
+            const contextArray = innerJson?.[2];
+            if (Array.isArray(contextArray)) {
+              const rcId = contextArray[2];
+              if (typeof rcId === 'string' && rcId.startsWith('rc_')) {
+                previousModelResponseId = rcId;
+              }
+            }
           }
         } catch (e) {
           // ignore
@@ -47,6 +64,9 @@ export function handleGenerateResponse(response: any, url: string) {
         }
         if (requestNotebookId) {
           console.log('Better Sidebar (Gemini): Detected notebook from request:', requestNotebookId);
+        }
+        if (previousModelResponseId) {
+          console.log('Better Sidebar (Gemini): Previous model response (regeneration context):', previousModelResponseId);
         }
       }
     } catch (e) {
@@ -166,6 +186,20 @@ export function handleGenerateResponse(response: any, url: string) {
                   modelMessageId,
                 );
 
+                // Always pass replaceAfterMessageId when we have a previous
+                // context rc_. This handles both normal messages (no-op delete
+                // since nothing exists after the last message) and regeneration
+                // (deletes the old messages that were after rc_).
+                const replaceAfterMessageId = previousModelResponseId ?? undefined;
+
+                if (replaceAfterMessageId) {
+                  console.log(
+                    'Better Sidebar (Gemini): Will delete messages after:',
+                    replaceAfterMessageId,
+                    'before inserting new ones',
+                  );
+                }
+
                 if (prompt) {
                   messages.push({
                     role: 'user',
@@ -205,6 +239,7 @@ export function handleGenerateResponse(response: any, url: string) {
                         type: ctx.type,
                         gem_id: ctx.gemId ?? undefined,
                         notebook_id: ctx.notebookId ?? undefined,
+                        replaceAfterMessageId,
                       },
                     }),
                   );
@@ -214,6 +249,7 @@ export function handleGenerateResponse(response: any, url: string) {
                       detail: {
                         conversationId,
                         messages,
+                        replaceAfterMessageId,
                       },
                     }),
                   );

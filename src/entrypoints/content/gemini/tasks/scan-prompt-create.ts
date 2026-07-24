@@ -26,6 +26,7 @@ export class PromptCreateScanner {
         messages,
         gem_id,
         notebook_id,
+        replaceAfterMessageId,
       } = (event as CustomEvent).detail;
 
       if (!id) return;
@@ -53,6 +54,7 @@ export class PromptCreateScanner {
             gem_id: gem_id || undefined,
             notebook_id: notebook_id || undefined,
             platform: 'gemini',
+            replaceAfterMessageId,
           },
         });
       } catch (e) {

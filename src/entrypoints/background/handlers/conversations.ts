@@ -27,12 +27,18 @@ export async function handleConversations(
       return { success: true, data: conversations };
     }
     case 'SAVE_CONVERSATION': {
-      const { messages, ...convoData } = message.payload;
+      const { messages, replaceAfterMessageId, ...convoData } = message.payload;
       const platform = convoData.platform ?? message.platform ?? 'aistudio';
       await conversationRepo.save({ ...convoData, platform });
       if (messages?.length) {
-        await messageRepo.deleteByConversationId(convoData.id);
-        await messageRepo.bulkInsert(convoData.id, messages);
+        if (replaceAfterMessageId) {
+          // Regeneration: delete all messages after the anchor message, then insert new ones
+          await messageRepo.deleteAfterMessage(convoData.id, replaceAfterMessageId);
+          await messageRepo.bulkInsert(convoData.id, messages);
+        } else {
+          await messageRepo.deleteByConversationId(convoData.id);
+          await messageRepo.bulkInsert(convoData.id, messages);
+        }
       }
       return { success: true };
     }

@@ -31,6 +31,8 @@ export interface PlatformDomAdapter {
   parseInterceptorEvent(detail: any): {
     conversationId: string;
     messages: ConversationMessage[];
+    /** When set, indicates a regeneration — delete all messages after this ID before merging */
+    replaceAfterMessageId?: string;
   } | null;
 }
 

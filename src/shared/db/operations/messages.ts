@@ -77,6 +77,29 @@ export const messageRepo = {
     ]);
   },
 
+  /**
+   * Delete all messages in a conversation that come after the given anchor message
+   * (by order_index). Used for regeneration: keeps everything up to and including
+   * the anchor, removes everything after it.
+   */
+  deleteAfterMessage: async (conversationId: string, afterMessageId: string): Promise<void> => {
+    const anchorRows = await runQuery(
+      'SELECT id, order_index FROM messages WHERE id = ? AND conversation_id = ?',
+      [afterMessageId, conversationId],
+    );
+    if (anchorRows.length === 0) {
+      return;
+    }
+    const anchorOrderIndex = anchorRows[0].order_index;
+
+    await runCommand(
+      `DELETE FROM messages 
+       WHERE conversation_id = ? 
+         AND order_index > ?`,
+      [conversationId, anchorOrderIndex],
+    );
+  },
+
   replace: async (
     conversationId: string,
     messages: Omit<

@@ -55,9 +55,15 @@ export async function handleMessages(
     }
     case 'UPSERT_MESSAGES': {
       try {
-        const { conversationId, messages } = message.payload;
+        const { conversationId, messages, replaceAfterMessageId } = message.payload;
 
-        await messageRepo.upsert(conversationId, messages);
+        if (replaceAfterMessageId) {
+          // Regeneration: delete all messages after the anchor, then insert new ones
+          await messageRepo.deleteAfterMessage(conversationId, replaceAfterMessageId);
+          await messageRepo.bulkInsert(conversationId, messages);
+        } else {
+          await messageRepo.upsert(conversationId, messages);
+        }
         return { success: true };
       } catch (e: unknown) {
         return { success: false, error: (e as Error).message };
