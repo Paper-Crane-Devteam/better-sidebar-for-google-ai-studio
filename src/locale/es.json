@@ -878,6 +878,7 @@
     "viewDetails": "Ver detalles"
   },
   "smartScrollbar": {
+    "topics": "Temas",
     "conversationOutline": "Esquema de Conversación",
     "messages": "{{count}} mensajes",
     "restoreOutline": "Restaurar esquema",

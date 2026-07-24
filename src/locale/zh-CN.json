@@ -877,6 +877,7 @@
     "viewDetails": "查看详情"
   },
   "smartScrollbar": {
+    "topics": "话题",
     "conversationOutline": "对话大纲",
     "messages": "{{count}} 条消息",
     "restoreOutline": "恢复大纲",

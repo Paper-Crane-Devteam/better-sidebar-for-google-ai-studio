@@ -878,6 +878,7 @@
     "viewDetails": "Подробнее"
   },
   "smartScrollbar": {
+    "topics": "Темы",
     "conversationOutline": "Структура диалога",
     "messages": "{{count}} сообщений",
     "restoreOutline": "Восстановить структуру",

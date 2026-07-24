@@ -879,6 +879,7 @@
     "viewDetails": "詳細を見る"
   },
   "smartScrollbar": {
+    "topics": "トピック",
     "conversationOutline": "会話アウトライン",
     "messages": "{{count}} 件のメッセージ",
     "restoreOutline": "アウトラインを復元",

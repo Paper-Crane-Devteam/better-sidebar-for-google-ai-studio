@@ -878,6 +878,7 @@
     "viewDetails": "查看詳情"
   },
   "smartScrollbar": {
+    "topics": "話題",
     "conversationOutline": "對話大綱",
     "messages": "{{count}} 則訊息",
     "restoreOutline": "還原大綱",

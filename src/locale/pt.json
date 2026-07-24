@@ -878,6 +878,7 @@
     "viewDetails": "Ver detalhes"
   },
   "smartScrollbar": {
+    "topics": "Tópicos",
     "conversationOutline": "Esboço da Conversa",
     "messages": "{{count}} mensagens",
     "restoreOutline": "Restaurar esboço",

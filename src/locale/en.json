@@ -858,6 +858,7 @@
     "viewDetails": "View Details"
   },
   "smartScrollbar": {
+    "topics": "Topics",
     "conversationOutline": "Conversation Outline",
     "messages": "{{count}} messages",
     "restoreOutline": "Restore outline",
