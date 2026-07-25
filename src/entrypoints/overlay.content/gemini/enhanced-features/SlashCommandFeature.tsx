@@ -1,5 +1,5 @@
 import React, { useRef, useCallback } from 'react';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { showCapsuleDetailModal } from '@/entrypoints/overlay.content/shared/lib/capsule-modal';
 import {
@@ -25,7 +25,7 @@ function getEditor(): HTMLElement | null {
 }
 
 export const SlashCommandFeature: React.FC = () => {
-  const slashCommandEnabled = useSettingsStore(
+  const slashCommandEnabled = usePegasusStore(
     (s) => s.enhancedFeatures.gemini.slashCommand,
   );
   const { t } = useI18n();

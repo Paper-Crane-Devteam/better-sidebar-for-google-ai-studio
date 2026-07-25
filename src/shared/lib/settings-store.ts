@@ -8,30 +8,6 @@ import {
 } from './utils/utils';
 import type { ThemePresetId } from '@/themes/types';
 
-interface GeminiEnhancedFeatures {
-  defaultModel: 'default' | 'flash-lite' | 'flash' | 'pro';
-  sidebarWidth: number;
-  chatWidth: number;
-  inputWidth: number;
-  hideBrand: boolean;
-  hideDisclaimer: boolean;
-  hideUpgrade: boolean;
-  showTopBarTag: boolean;
-  zenMode: boolean;
-  showSmartScrollbar: boolean;
-  autoHideInput: boolean;
-  showHotkeyHelper: boolean;
-  slashCommand: boolean;
-}
-
-interface AIStudioEnhancedFeatures {
-  sidebarWidth: number;
-  autoHideInput: boolean;
-  autoHideRunSettings: boolean;
-  showHotkeyHelper: boolean;
-  slashCommand: boolean;
-}
-
 interface SettingsState {
   theme: 'light' | 'dark' | 'system';
   /** Custom theme preset ID, or null for default Gemini theme */
@@ -61,10 +37,6 @@ interface SettingsState {
     gems: boolean;
     notebooks: boolean;
     originalUI: boolean;
-  };
-  enhancedFeatures: {
-    gemini: GeminiEnhancedFeatures;
-    aistudio: AIStudioEnhancedFeatures;
   };
   integrations: {
     notion: {
@@ -100,14 +72,6 @@ interface SettingsState {
   setShortcutVisible: (
     key: keyof SettingsState['shortcuts'],
     visible: boolean,
-  ) => void;
-  setGeminiFeature: <K extends keyof GeminiEnhancedFeatures>(
-    key: K,
-    value: GeminiEnhancedFeatures[K],
-  ) => void;
-  setAIStudioFeature: <K extends keyof AIStudioEnhancedFeatures>(
-    key: K,
-    value: AIStudioEnhancedFeatures[K],
   ) => void;
   setLastSelectedGemId: (id: string | null) => void;
   setLastSelectedNotebookId: (id: string | null) => void;
@@ -193,30 +157,6 @@ export const useSettingsStore = create<SettingsState>()(
         notebooks: true,
         originalUI: true,
       },
-      enhancedFeatures: {
-        gemini: {
-          defaultModel: 'default',
-          sidebarWidth: 360,
-          chatWidth: 46,
-          inputWidth: 42,
-          hideBrand: false,
-          hideDisclaimer: false,
-          hideUpgrade: false,
-          showTopBarTag: true,
-          zenMode: false,
-          showSmartScrollbar: true,
-          autoHideInput: false,
-          showHotkeyHelper: true,
-          slashCommand: true,
-        },
-        aistudio: {
-          sidebarWidth: 320,
-          autoHideInput: false,
-          autoHideRunSettings: false,
-          showHotkeyHelper: true,
-          slashCommand: true,
-        },
-      },
       integrations: {
         notion: {
           apiKey: '',
@@ -272,27 +212,6 @@ export const useSettingsStore = create<SettingsState>()(
         set((state) => ({
           shortcuts: { ...state.shortcuts, [key]: visible },
         })),
-      setGeminiFeature: (key, value) =>
-        set((state) => ({
-          enhancedFeatures: {
-            ...state.enhancedFeatures,
-            gemini: { ...state.enhancedFeatures.gemini, [key]: value },
-          },
-        })),
-      setAIStudioFeature: (key, value) =>
-        set((state) => ({
-          enhancedFeatures: {
-            ...state.enhancedFeatures,
-            aistudio: {
-              ...(state.enhancedFeatures.aistudio ?? {
-                sidebarWidth: 320,
-                autoHideInput: false,
-                autoHideRunSettings: false,
-              }),
-              [key]: value,
-            },
-          },
-        })),
       setLastSelectedGemId: (id) => set({ lastSelectedGemId: id }),
       setLastSelectedNotebookId: (id) => set({ lastSelectedNotebookId: id }),
       setNotionConfig: (config) =>
@@ -308,30 +227,13 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: getStorageName(),
       storage: createJSONStorage(() => storage),
-      version: 4,
+      version: 5,
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { themeGridPage, ...rest } = state;
         return rest;
       },
       migrate: (persistedState: any, version: number) => {
-        if (version === 0) {
-          const oldEnhanced = persistedState.enhancedFeatures || {};
-          persistedState.enhancedFeatures = {
-            gemini: {
-              defaultModel: oldEnhanced.defaultModel || 'default',
-              sidebarWidth: persistedState.customSidebarWidth || 360,
-              chatWidth: 46,
-              inputWidth: 42,
-              hideBrand: false,
-              hideDisclaimer: false,
-              hideUpgrade: false,
-              zenMode: false,
-            },
-          };
-          delete persistedState.enableResizableSidebar;
-          delete persistedState.customSidebarWidth;
-        }
         if (version < 2) {
           // Migrate old string position to {x, y} coordinates (bottom-left offset from bottom-left corner)
           const old = persistedState.overlayPosition;
@@ -342,27 +244,11 @@ export const useSettingsStore = create<SettingsState>()(
                 : { x: 16, y: 16 };
           }
         }
-        if (version < 3) {
-          // Add aistudio enhanced features defaults
-          if (!persistedState.enhancedFeatures) {
-            persistedState.enhancedFeatures = {};
-          }
-          if (!persistedState.enhancedFeatures.aistudio) {
-            persistedState.enhancedFeatures.aistudio = {
-              sidebarWidth: 320,
-              autoHideInput: false,
-              autoHideRunSettings: false,
-            };
-          }
-        }
-        if (version < 4) {
-          // Add slashCommand feature flag defaults
-          if (persistedState.enhancedFeatures?.gemini) {
-            persistedState.enhancedFeatures.gemini.slashCommand ??= true;
-          }
-          if (persistedState.enhancedFeatures?.aistudio) {
-            persistedState.enhancedFeatures.aistudio.slashCommand ??= true;
-          }
+        if (version < 5) {
+          // enhancedFeatures moved to pegasus-store; strip from persisted settings
+          delete persistedState.enhancedFeatures;
+          delete persistedState.enableResizableSidebar;
+          delete persistedState.customSidebarWidth;
         }
         return persistedState;
       },

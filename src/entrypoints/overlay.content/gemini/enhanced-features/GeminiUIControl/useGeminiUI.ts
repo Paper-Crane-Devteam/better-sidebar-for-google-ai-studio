@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useAppStore } from '@/shared/lib/store';
 import { waitForElement } from '@/shared/lib/utils';
 import { useUrl } from '@/shared/hooks/useUrl';
 
 export const useGeminiUI = () => {
-  const geminiSettings = useSettingsStore((s) => s.enhancedFeatures.gemini);
-  const setGeminiFeature = useSettingsStore((s) => s.setGeminiFeature);
-
-  const setGeminiFeature = useSettingsStore((s) => s.setGeminiFeature);
+  const geminiSettings = usePegasusStore((s) => s.enhancedFeatures.gemini);
+  const setGeminiFeature = usePegasusStore((s) => s.setGeminiEnhancedFeature);
 
   const {
     sidebarWidth: storeSidebarWidth,

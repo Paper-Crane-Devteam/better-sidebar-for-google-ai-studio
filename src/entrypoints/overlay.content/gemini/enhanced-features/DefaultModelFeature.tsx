@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useUrl } from '@/shared/hooks/useUrl';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import { waitForElement, applyShadowStyles } from '@/shared/lib/utils';
@@ -16,8 +17,8 @@ const MODEL_MAPPING: Record<string, string> = {
 
 const DefaultModelUI = ({ container }: { container: Element }) => {
   const { t } = useI18n();
-  const defaultModel = useSettingsStore(state => state.enhancedFeatures.gemini.defaultModel);
-  const setGeminiFeature = useSettingsStore(state => state.setGeminiFeature);
+  const defaultModel = usePegasusStore(state => state.enhancedFeatures.gemini.defaultModel);
+  const setGeminiFeature = usePegasusStore(state => state.setGeminiEnhancedFeature);
   
   // Stop propagation so clicking the dropdown doesn't close the Gemini menu
   const stopPropagation = (e: React.MouseEvent | React.TouchEvent | React.PointerEvent) => {
@@ -54,7 +55,7 @@ const DefaultModelUI = ({ container }: { container: Element }) => {
 
 export const DefaultModelFeature = () => {
   const { url } = useUrl();
-  const defaultModel = useSettingsStore(state => state.enhancedFeatures.gemini.defaultModel);
+  const defaultModel = usePegasusStore(state => state.enhancedFeatures.gemini.defaultModel);
   
   const [portalTarget, setPortalTarget] = useState<Element | null>(null);
   const hasAutoSwitchedRef = useRef(false);

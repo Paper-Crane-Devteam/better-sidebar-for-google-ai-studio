@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
 
 /**
@@ -16,7 +16,7 @@ import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/h
  * that forces fieldset to stay visible via CSS.
  */
 export const AutoHideInputFeature = () => {
-  const autoHideInput = useSettingsStore(
+  const autoHideInput = usePegasusStore(
     (s) => s.enhancedFeatures.gemini.autoHideInput,
   );
   const conversationId = useCurrentConversationId();

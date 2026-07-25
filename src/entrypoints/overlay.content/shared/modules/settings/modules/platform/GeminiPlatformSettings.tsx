@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Separator } from '../../../../components/ui/separator';
 import { Switch } from '@/shared/components/ui/switch';
 import { Label } from '@/shared/components/ui/label';
-import { useSettingsStore } from '@/shared/lib/settings-store';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { debounce } from 'lodash';
@@ -14,8 +13,8 @@ import { debounce } from 'lodash';
  */
 export const GeminiPlatformSettings = () => {
   const { t } = useI18n();
-  const geminiSettings = useSettingsStore((s) => s.enhancedFeatures.gemini);
-  const setGeminiFeature = useSettingsStore((s) => s.setGeminiFeature);
+  const geminiSettings = usePegasusStore((s) => s.enhancedFeatures.gemini);
+  const setGeminiFeature = usePegasusStore((s) => s.setGeminiEnhancedFeature);
 
   const pegasusGeminiFeatures = usePegasusStore(
     (s) => s.enhancedFeatures.gemini,

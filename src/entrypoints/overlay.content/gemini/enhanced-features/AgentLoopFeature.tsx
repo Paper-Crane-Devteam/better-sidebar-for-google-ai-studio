@@ -10,7 +10,7 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { showCapsuleDetailModal } from '@/entrypoints/overlay.content/shared/lib/capsule-modal';
 import {
   AgentCommandPopup,
@@ -42,7 +42,7 @@ import type { TriggerPopupItem, CapsuleClickInfo } from '@/entrypoints/overlay.c
 import { installSendButtonInterceptor } from '@/entrypoints/overlay.content/shared/lib/quill-editor';
 
 export const AgentLoopFeature: React.FC = () => {
-  const slashCommandEnabled = useSettingsStore(
+  const slashCommandEnabled = usePegasusStore(
     (s) => s.enhancedFeatures.gemini.slashCommand,
   );
 

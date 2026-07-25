@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { useUrl } from '@/shared/hooks/useUrl';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useAppStore } from '@/shared/lib/store';
 import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
@@ -244,7 +245,7 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
 };
 
 export const TopBarTagFeature = () => {
-  const showTopBarTag = useSettingsStore(
+  const showTopBarTag = usePegasusStore(
     (state) => state.enhancedFeatures.gemini.showTopBarTag,
   );
   const { url } = useUrl();

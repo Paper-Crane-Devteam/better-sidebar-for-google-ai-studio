@@ -39,3 +39,5 @@
 -40. locate current chat
 -41. move to for folders
 -42. in input mode disable drag
+43. create folder when selecting folder
+44. select text and reference or ask about it

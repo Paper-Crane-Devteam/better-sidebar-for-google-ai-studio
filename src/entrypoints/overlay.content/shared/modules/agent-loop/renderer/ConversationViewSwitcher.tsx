@@ -8,22 +8,22 @@ import { useAgentLoopStore } from '../agent-loop-store';
 import { useConversationMessages } from './useConversationMessages';
 import { Eye, Sparkles } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useAppStore } from '@/shared/lib/store';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
 
 /**
  * Hook to compute dynamic left offset for elements placed beside the sidebar.
- * Derived purely from Zustand stores (useSettingsStore & useAppStore).
+ * Derived purely from Zustand stores (usePegasusStore & useAppStore).
  */
 function useSidebarOffset(defaultOffset = 16) {
   const platform = detectPlatform();
 
-  const aistudioWidth = useSettingsStore(
+  const aistudioWidth = usePegasusStore(
     (s) => s.enhancedFeatures.aistudio?.sidebarWidth ?? 320,
   );
-  const geminiWidth = useSettingsStore(
+  const geminiWidth = usePegasusStore(
     (s) => s.enhancedFeatures.gemini?.sidebarWidth ?? 320,
   );
   const isSidebarExpanded = useAppStore(

@@ -14,8 +14,6 @@ import {
 } from '@/shared/lib/platform-enabled-store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
-import { usePopupGeminiSettings } from './usePopupGeminiSettings';
-import { usePopupAIStudioSettings } from './usePopupAIStudioSettings';
 import { cn } from '@/shared/lib/utils/utils';
 import { SlidersHorizontal, Settings2, Globe2, Bot } from 'lucide-react';
 import { browser } from 'wxt/browser';
@@ -30,11 +28,10 @@ const Options = () => {
 
   const theme = useSettingsStore((state) => state.theme);
   
-  const { enhancedFeatures: pegasusEnhancedFeatures, setGeminiEnhancedFeature: setPegasusGeminiFeature } = usePegasusStore();
-  const removeWatermark = pegasusEnhancedFeatures.gemini.removeWatermark;
-
-  const { settings: geminiSettings, updateSetting: updateGeminiSetting } = usePopupGeminiSettings();
-  const { settings: aistudioSettings, updateSetting: updateAIStudioSetting } = usePopupAIStudioSettings();
+  const geminiSettings = usePegasusStore((s) => s.enhancedFeatures.gemini);
+  const aistudioSettings = usePegasusStore((s) => s.enhancedFeatures.aistudio);
+  const setGeminiFeature = usePegasusStore((s) => s.setGeminiEnhancedFeature);
+  const setAIStudioFeature = usePegasusStore((s) => s.setAIStudioEnhancedFeature);
 
   useEffect(() => {
     const isDark =
@@ -220,21 +217,21 @@ const Options = () => {
                         <Label className="text-sm font-semibold">{t('geminiUI.sidebarWidth')}</Label>
                         <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-2 py-1 rounded leading-none">{geminiSettings.sidebarWidth}px</span>
                       </div>
-                      <input type="range" min={300} max={550} step={1} value={geminiSettings.sidebarWidth} onChange={(e) => updateGeminiSetting('sidebarWidth', Number(e.target.value))} className="ui-slider" />
+                      <input type="range" min={300} max={550} step={1} value={geminiSettings.sidebarWidth} onChange={(e) => setGeminiFeature('sidebarWidth', Number(e.target.value))} className="ui-slider" />
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm font-semibold">{t('geminiUI.chatContentWidth')}</Label>
                         <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-2 py-1 rounded leading-none">{geminiSettings.chatWidth}%</span>
                       </div>
-                      <input type="range" min={40} max={100} step={1} value={geminiSettings.chatWidth} onChange={(e) => updateGeminiSetting('chatWidth', Number(e.target.value))} className="ui-slider" />
+                      <input type="range" min={40} max={100} step={1} value={geminiSettings.chatWidth} onChange={(e) => setGeminiFeature('chatWidth', Number(e.target.value))} className="ui-slider" />
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm font-semibold">{t('geminiUI.inputBoxWidth')}</Label>
                         <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-2 py-1 rounded leading-none">{geminiSettings.inputWidth}%</span>
                       </div>
-                      <input type="range" min={40} max={100} step={1} value={geminiSettings.inputWidth} onChange={(e) => updateGeminiSetting('inputWidth', Number(e.target.value))} className="ui-slider" />
+                      <input type="range" min={40} max={100} step={1} value={geminiSettings.inputWidth} onChange={(e) => setGeminiFeature('inputWidth', Number(e.target.value))} className="ui-slider" />
                     </div>
                   </div>
                 </div>
@@ -250,14 +247,14 @@ const Options = () => {
                         <Label className="text-sm font-semibold">{t('geminiUI.aiDisclaimer')}</Label>
                         <p className="text-xs text-muted-foreground">{t('geminiUI.aiDisclaimerDesc')}</p>
                       </div>
-                      <Switch checked={!geminiSettings.hideDisclaimer} onCheckedChange={(c) => updateGeminiSetting('hideDisclaimer', !c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                      <Switch checked={!geminiSettings.hideDisclaimer} onCheckedChange={(c) => setGeminiFeature('hideDisclaimer', !c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
                     </div>
                     <div className="flex items-center justify-between p-4">
                       <div className="space-y-1">
                         <Label className="text-sm font-semibold">{t('geminiUI.upgradeButton')}</Label>
                         <p className="text-xs text-muted-foreground">{t('geminiUI.upgradeButtonDesc')}</p>
                       </div>
-                      <Switch checked={!geminiSettings.hideUpgrade} onCheckedChange={(c) => updateGeminiSetting('hideUpgrade', !c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                      <Switch checked={!geminiSettings.hideUpgrade} onCheckedChange={(c) => setGeminiFeature('hideUpgrade', !c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
                     </div>
                   </div>
                 </div>
@@ -273,42 +270,42 @@ const Options = () => {
                         <Label className="text-sm font-semibold">{t('geminiUI.zenMode')}</Label>
                         <p className="text-xs text-muted-foreground">{t('geminiUI.zenModeDesc')}</p>
                       </div>
-                      <Switch checked={geminiSettings.zenMode} onCheckedChange={(c) => updateGeminiSetting('zenMode', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                      <Switch checked={geminiSettings.zenMode} onCheckedChange={(c) => setGeminiFeature('zenMode', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
                     </div>
                     <div className="flex items-center justify-between p-4">
                       <div className="space-y-1">
                         <Label className="text-sm font-semibold">{t('geminiUI.removeAutoWatermark')}</Label>
                         <p className="text-xs text-muted-foreground">{t('geminiUI.removeAutoWatermarkDesc')}</p>
                       </div>
-                      <Switch checked={removeWatermark} onCheckedChange={(c) => setPegasusGeminiFeature('removeWatermark', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                      <Switch checked={geminiSettings.removeWatermark} onCheckedChange={(c) => setGeminiFeature('removeWatermark', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
                     </div>
                     <div className="flex items-center justify-between p-4">
                       <div className="space-y-1">
                         <Label className="text-sm font-semibold">{t('geminiUI.smartScrollbar')}</Label>
                         <p className="text-xs text-muted-foreground">{t('geminiUI.smartScrollbarDesc')}</p>
                       </div>
-                      <Switch checked={geminiSettings.showSmartScrollbar} onCheckedChange={(c) => updateGeminiSetting('showSmartScrollbar', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                      <Switch checked={geminiSettings.showSmartScrollbar} onCheckedChange={(c) => setGeminiFeature('showSmartScrollbar', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
                     </div>
                     <div className="flex items-center justify-between p-4">
                       <div className="space-y-1">
                         <Label className="text-sm font-semibold">{t('geminiUI.autoHideInput')}</Label>
                         <p className="text-xs text-muted-foreground">{t('geminiUI.autoHideInputDesc')}</p>
                       </div>
-                      <Switch checked={geminiSettings.autoHideInput} onCheckedChange={(c) => updateGeminiSetting('autoHideInput', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                      <Switch checked={geminiSettings.autoHideInput} onCheckedChange={(c) => setGeminiFeature('autoHideInput', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
                     </div>
                     <div className="flex items-center justify-between p-4">
                       <div className="space-y-1">
                         <Label className="text-sm font-semibold">{t('geminiUI.slashCommand')}</Label>
                         <p className="text-xs text-muted-foreground">{t('geminiUI.slashCommandDesc')}</p>
                       </div>
-                      <Switch checked={geminiSettings.slashCommand} onCheckedChange={(c) => updateGeminiSetting('slashCommand', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                      <Switch checked={geminiSettings.slashCommand} onCheckedChange={(c) => setGeminiFeature('slashCommand', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
                     </div>
                     <div className="flex items-center justify-between p-4">
                       <div className="space-y-1">
                         <Label className="text-sm font-semibold">{t('geminiUI.hotkeyHelper')}</Label>
                         <p className="text-xs text-muted-foreground">{t('geminiUI.hotkeyHelperDesc')}</p>
                       </div>
-                      <Switch checked={geminiSettings.showHotkeyHelper} onCheckedChange={(c) => updateGeminiSetting('showHotkeyHelper', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                      <Switch checked={geminiSettings.showHotkeyHelper} onCheckedChange={(c) => setGeminiFeature('showHotkeyHelper', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
                     </div>
                   </div>
                 </div>
@@ -334,7 +331,7 @@ const Options = () => {
                         <Label className="text-sm font-semibold">{t('aistudioUI.sidebarWidth')}</Label>
                         <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-2 py-1 rounded leading-none">{aistudioSettings.sidebarWidth}px</span>
                       </div>
-                      <input type="range" min={280} max={500} step={1} value={aistudioSettings.sidebarWidth} onChange={(e) => updateAIStudioSetting('sidebarWidth', Number(e.target.value))} className="ui-slider" />
+                      <input type="range" min={280} max={500} step={1} value={aistudioSettings.sidebarWidth} onChange={(e) => setAIStudioFeature('sidebarWidth', Number(e.target.value))} className="ui-slider" />
                     </div>
                   </div>
                 </div>
@@ -350,28 +347,28 @@ const Options = () => {
                         <Label className="text-sm font-semibold">{t('aistudioUI.autoHideInput')}</Label>
                         <p className="text-xs text-muted-foreground">{t('aistudioUI.autoHideInputDesc')}</p>
                       </div>
-                      <Switch checked={aistudioSettings.autoHideInput} onCheckedChange={(c) => updateAIStudioSetting('autoHideInput', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                      <Switch checked={aistudioSettings.autoHideInput} onCheckedChange={(c) => setAIStudioFeature('autoHideInput', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
                     </div>
                     <div className="flex items-center justify-between p-4">
                       <div className="space-y-1">
                         <Label className="text-sm font-semibold">{t('aistudioUI.autoHideRunSettings')}</Label>
                         <p className="text-xs text-muted-foreground">{t('aistudioUI.autoHideRunSettingsDesc')}</p>
                       </div>
-                      <Switch checked={aistudioSettings.autoHideRunSettings} onCheckedChange={(c) => updateAIStudioSetting('autoHideRunSettings', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                      <Switch checked={aistudioSettings.autoHideRunSettings} onCheckedChange={(c) => setAIStudioFeature('autoHideRunSettings', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
                     </div>
                     <div className="flex items-center justify-between p-4">
                       <div className="space-y-1">
                         <Label className="text-sm font-semibold">{t('aistudioUI.slashCommand')}</Label>
                         <p className="text-xs text-muted-foreground">{t('aistudioUI.slashCommandDesc')}</p>
                       </div>
-                      <Switch checked={aistudioSettings.slashCommand} onCheckedChange={(c) => updateAIStudioSetting('slashCommand', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                      <Switch checked={aistudioSettings.slashCommand} onCheckedChange={(c) => setAIStudioFeature('slashCommand', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
                     </div>
                     <div className="flex items-center justify-between p-4">
                       <div className="space-y-1">
                         <Label className="text-sm font-semibold">{t('aistudioUI.hotkeyHelper')}</Label>
                         <p className="text-xs text-muted-foreground">{t('aistudioUI.hotkeyHelperDesc')}</p>
                       </div>
-                      <Switch checked={aistudioSettings.showHotkeyHelper} onCheckedChange={(c) => updateAIStudioSetting('showHotkeyHelper', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                      <Switch checked={aistudioSettings.showHotkeyHelper} onCheckedChange={(c) => setAIStudioFeature('showHotkeyHelper', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
                     </div>
                   </div>
                 </div>

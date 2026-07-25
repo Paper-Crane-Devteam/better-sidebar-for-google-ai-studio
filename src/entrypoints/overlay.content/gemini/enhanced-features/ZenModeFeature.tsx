@@ -1,14 +1,14 @@
 import React from 'react';
 import { UIcon } from '@/shared/components/ui/icon';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { cn } from '@/shared/lib/utils/utils';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { useI18n } from '@/shared/hooks/useI18n';
 
 export const ZenModeFeature = () => {
   const { t } = useI18n();
-  const zenMode = useSettingsStore((s) => s.enhancedFeatures.gemini.zenMode);
-  const setGeminiFeature = useSettingsStore((s) => s.setGeminiFeature);
+  const zenMode = usePegasusStore((s) => s.enhancedFeatures.gemini.zenMode);
+  const setGeminiFeature = usePegasusStore((s) => s.setGeminiEnhancedFeature);
 
   if (!zenMode) return null;
 

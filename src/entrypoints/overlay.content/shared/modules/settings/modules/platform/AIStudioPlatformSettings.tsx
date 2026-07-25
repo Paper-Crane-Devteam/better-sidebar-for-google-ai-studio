@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Separator } from '../../../../components/ui/separator';
 import { Switch } from '@/shared/components/ui/switch';
 import { Label } from '@/shared/components/ui/label';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { debounce } from 'lodash';
 
@@ -13,12 +13,12 @@ import { debounce } from 'lodash';
  */
 export const AIStudioPlatformSettings = () => {
   const { t } = useI18n();
-  const aistudioSettings = useSettingsStore((s) => s.enhancedFeatures.aistudio) ?? {
+  const aistudioSettings = usePegasusStore((s) => s.enhancedFeatures.aistudio) ?? {
     sidebarWidth: 320,
     autoHideInput: false,
     autoHideRunSettings: false,
   };
-  const setAIStudioFeature = useSettingsStore((s) => s.setAIStudioFeature);
+  const setAIStudioFeature = usePegasusStore((s) => s.setAIStudioEnhancedFeature);
 
   const {
     sidebarWidth: storeSidebarWidth,

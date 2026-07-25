@@ -9,7 +9,7 @@ import { AIStudioEnhancedFeatures } from './enhanced-features/AIStudioEnhancedFe
 import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
 import { applyShadowStyles, querySelectorDeep, waitForElement } from '@/shared/lib/utils';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { initAiStudioThemeSync, bindAiStudioShadowRootToTheme } from '@/themes/platforms/aistudio';
 import { useExclusiveContextMenuStore } from '../shared/components/ui/exclusive-context-menu';
 import { registerPlatformDomAdapter } from '@/shared/lib/platform-dom-adapter';
@@ -110,12 +110,12 @@ export async function initAiStudioOverlay(mainStyles: string): Promise<void> {
   };
 
   // Initial width based on current store value
-  const initialWidth = useSettingsStore.getState().enhancedFeatures.aistudio?.sidebarWidth ?? 320;
+  const initialWidth = usePegasusStore.getState().enhancedFeatures.aistudio?.sidebarWidth ?? 320;
   updateSidebarWidth(initialWidth);
   document.head.appendChild(sidebarStyle);
 
   // Subscribe to sidebarWidth changes from the store
-  useSettingsStore.subscribe((state) => {
+  usePegasusStore.subscribe((state) => {
     const width = state.enhancedFeatures.aistudio?.sidebarWidth ?? 320;
     updateSidebarWidth(width);
   });

@@ -35,18 +35,46 @@ const getDefaultLanguage = ():
   return 'en';
 };
 
+export interface GeminiEnhancedFeatures {
+  defaultModel: 'default' | 'flash-lite' | 'flash' | 'pro';
+  sidebarWidth: number;
+  chatWidth: number;
+  inputWidth: number;
+  hideBrand: boolean;
+  hideDisclaimer: boolean;
+  hideUpgrade: boolean;
+  showTopBarTag: boolean;
+  zenMode: boolean;
+  showSmartScrollbar: boolean;
+  autoHideInput: boolean;
+  showHotkeyHelper: boolean;
+  slashCommand: boolean;
+  removeWatermark: boolean;
+}
+
+export interface AIStudioEnhancedFeatures {
+  sidebarWidth: number;
+  autoHideInput: boolean;
+  autoHideRunSettings: boolean;
+  showHotkeyHelper: boolean;
+  slashCommand: boolean;
+}
+
 interface PegasusState {
   language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru';
   gdriveAutoSync: boolean;
   gdriveSyncing: boolean;
   enhancedFeatures: {
-    gemini: {
-      removeWatermark: boolean;
-    };
+    gemini: GeminiEnhancedFeatures;
+    aistudio: AIStudioEnhancedFeatures;
   };
-  setGeminiEnhancedFeature: (
-    key: keyof PegasusState['enhancedFeatures']['gemini'],
-    value: boolean,
+  setGeminiEnhancedFeature: <K extends keyof GeminiEnhancedFeatures>(
+    key: K,
+    value: GeminiEnhancedFeatures[K],
+  ) => void;
+  setAIStudioEnhancedFeature: <K extends keyof AIStudioEnhancedFeatures>(
+    key: K,
+    value: AIStudioEnhancedFeatures[K],
   ) => void;
   setLanguage: (
     language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru',
@@ -61,7 +89,27 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
   gdriveSyncing: false,
   enhancedFeatures: {
     gemini: {
+      defaultModel: 'default',
+      sidebarWidth: 360,
+      chatWidth: 46,
+      inputWidth: 42,
+      hideBrand: false,
+      hideDisclaimer: false,
+      hideUpgrade: false,
+      showTopBarTag: true,
+      zenMode: false,
+      showSmartScrollbar: true,
+      autoHideInput: false,
+      showHotkeyHelper: true,
+      slashCommand: true,
       removeWatermark: true,
+    },
+    aistudio: {
+      sidebarWidth: 320,
+      autoHideInput: false,
+      autoHideRunSettings: false,
+      showHotkeyHelper: true,
+      slashCommand: true,
     },
   },
   setGeminiEnhancedFeature: (key, value) =>
@@ -71,6 +119,17 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
         ...state.enhancedFeatures,
         gemini: {
           ...state.enhancedFeatures.gemini,
+          [key]: value,
+        },
+      },
+    })),
+  setAIStudioEnhancedFeature: (key, value) =>
+    set((state) => ({
+      ...state,
+      enhancedFeatures: {
+        ...state.enhancedFeatures,
+        aistudio: {
+          ...state.enhancedFeatures.aistudio,
           [key]: value,
         },
       },

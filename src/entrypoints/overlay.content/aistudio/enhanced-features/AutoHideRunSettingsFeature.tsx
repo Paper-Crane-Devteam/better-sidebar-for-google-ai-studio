@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import {
   AISTUDIO_SELECTORS,
   closeAIStudioRunSettings,
@@ -20,7 +20,7 @@ import {
  * SPA navigation where ms-right-side-panel gets destroyed and recreated.
  */
 export const AutoHideRunSettingsFeature = () => {
-  const autoHideRunSettings = useSettingsStore(
+  const autoHideRunSettings = usePegasusStore(
     (s) => s.enhancedFeatures.aistudio?.autoHideRunSettings ?? false,
   );
 

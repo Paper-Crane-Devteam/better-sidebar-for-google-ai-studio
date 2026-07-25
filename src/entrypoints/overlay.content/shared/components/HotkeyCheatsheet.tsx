@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Keyboard, X, EyeOff } from 'lucide-react';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useI18n } from '@/shared/hooks/useI18n';
 import {
   HOTKEY_DEFINITIONS,
@@ -63,11 +63,11 @@ export const HotkeyCheatsheet = () => {
 
   const showHelper =
     platform === Platform.GEMINI
-      ? useSettingsStore((s) => s.enhancedFeatures.gemini.showHotkeyHelper)
-      : useSettingsStore((s) => s.enhancedFeatures.aistudio?.showHotkeyHelper ?? true);
+      ? usePegasusStore((s) => s.enhancedFeatures.gemini.showHotkeyHelper)
+      : usePegasusStore((s) => s.enhancedFeatures.aistudio?.showHotkeyHelper ?? true);
 
-  const setGeminiFeature = useSettingsStore((s) => s.setGeminiFeature);
-  const setAIStudioFeature = useSettingsStore((s) => s.setAIStudioFeature);
+  const setGeminiFeature = usePegasusStore((s) => s.setGeminiEnhancedFeature);
+  const setAIStudioFeature = usePegasusStore((s) => s.setAIStudioEnhancedFeature);
 
   if (!showHelper) return null;
 

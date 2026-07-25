@@ -5,7 +5,7 @@ import {
   keyEventToBindingString,
 } from '@/shared/lib/hotkey-store';
 import { useAppStore } from '@/shared/lib/store';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { navigateToNewChat } from '@/shared/lib/navigation';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 import {
@@ -92,9 +92,8 @@ const actionHandlers: Record<HotkeyActionId, () => void> = {
   toggleZenMode: () => {
     const platform = detectPlatform();
     if (platform !== Platform.GEMINI) return; // Gemini-only
-    const settings = useSettingsStore.getState();
-    const current = settings.enhancedFeatures.gemini.zenMode;
-    settings.setGeminiFeature('zenMode', !current);
+    const current = usePegasusStore.getState().enhancedFeatures.gemini.zenMode;
+    usePegasusStore.getState().setGeminiEnhancedFeature('zenMode', !current);
   },
 
   switchOriginalUI: () => {

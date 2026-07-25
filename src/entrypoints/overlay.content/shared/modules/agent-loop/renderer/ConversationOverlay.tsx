@@ -16,6 +16,7 @@ import { ArrowDown } from 'lucide-react';
 import mainStyles from '@/index.scss?inline';
 import { applyShadowStyles } from '@/shared/lib/utils';
 import { bindShadowRootToTheme, bindAiStudioShadowRootToTheme } from '@/themes';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 
@@ -26,7 +27,7 @@ export const ConversationOverlay: React.FC = () => {
   const viewMode = useAgentLoopStore((s) => s.viewMode);
   const status = useAgentLoopStore((s) => s.status);
   const messages = useConversationMessages();
-  const chatWidth = useSettingsStore((s) => s.enhancedFeatures.gemini?.chatWidth ?? 46);
+  const chatWidth = usePegasusStore((s) => s.enhancedFeatures.gemini?.chatWidth ?? 46);
 
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);

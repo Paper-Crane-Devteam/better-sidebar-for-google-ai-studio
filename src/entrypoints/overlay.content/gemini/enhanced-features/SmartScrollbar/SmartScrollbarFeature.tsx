@@ -1,4 +1,4 @@
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { SmartScrollbar } from './new';
 
 /**
@@ -6,7 +6,7 @@ import { SmartScrollbar } from './new';
  * and conditionally renders the SmartScrollbar component.
  */
 export const SmartScrollbarFeature = () => {
-  const showSmartScrollbar = useSettingsStore(
+  const showSmartScrollbar = usePegasusStore(
     (s) => s.enhancedFeatures.gemini.showSmartScrollbar,
   );
 

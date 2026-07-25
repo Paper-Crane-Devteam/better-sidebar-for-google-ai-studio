@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 
 /**
  * Auto-hide input feature for AI Studio conversation pages.
@@ -19,7 +19,7 @@ import { useSettingsStore } from '@/shared/lib/settings-store';
  *     footer              (the input area we want to auto-hide)
  */
 export const AutoHideInputFeature = () => {
-  const autoHideInput = useSettingsStore(
+  const autoHideInput = usePegasusStore(
     (s) => s.enhancedFeatures.aistudio?.autoHideInput ?? false,
   );
 
