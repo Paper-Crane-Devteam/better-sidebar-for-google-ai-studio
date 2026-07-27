@@ -1051,5 +1051,32 @@
   },
   "agentLoop": {
     "resultCapsulePrefix": "結果"
+  },
+  "backup": {
+    "title": "バックアップ",
+    "description": "データを保護する自動デイリースナップショット。問題が発生した場合に以前の状態を復元できます。",
+    "enabled": "自動バックアップ",
+    "enabledDesc": "データ変更後にスナップショットを毎日自動保存",
+    "maxSlots": "最大スロット数",
+    "maxSlotsDesc": "保持するバックアップスロット数（1〜20）",
+    "viewBackups": "表示",
+    "noBackups": "バックアップはまだありません。次回の同期またはデータ変更後に自動で作成されます。",
+    "createBackup": "今すぐバックアップ",
+    "creating": "バックアップを作成中...",
+    "created": "バックアップを作成しました",
+    "createFailed": "バックアップの作成に失敗しました",
+    "restore": "復元",
+    "restoreTitle": "バックアップの復元",
+    "restoreConfirm": "このバックアップを復元しますか？現在のローカルデータが上書きされます（メッセージは影響を受けません）。",
+    "restoreSuccess": "バックアップを復元しました",
+    "restoreFailed": "バックアップの復元に失敗しました",
+    "delete": "削除",
+    "deleteTitle": "バックアップの削除",
+    "deleteConfirm": "このバックアップを削除しますか？",
+    "deleteSuccess": "バックアップを削除しました",
+    "deleteFailed": "バックアップの削除に失敗しました",
+    "loading": "バックアップを読み込み中...",
+    "size": "サイズ",
+    "slots": "スロット"
   }
 }

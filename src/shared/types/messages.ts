@@ -410,6 +410,11 @@ export type ExtensionMessage = (
   | { type: 'GDRIVE_SYNC_DOWN' }
   | { type: 'GDRIVE_MERGE' }
   | { type: 'GDRIVE_CHECK_SUPPORT' }
+  // Backup (save slots)
+  | { type: 'BACKUP_LIST'; payload: { dbName: string } }
+  | { type: 'BACKUP_CREATE'; payload: { dbName: string } }
+  | { type: 'BACKUP_DELETE'; payload: { dbName: string; backupId: string } }
+  | { type: 'BACKUP_RESTORE'; payload: { dbName: string; backupId: string } }
   // Snippets
   | { type: 'GET_SNIPPET_FOLDERS' }
   | {

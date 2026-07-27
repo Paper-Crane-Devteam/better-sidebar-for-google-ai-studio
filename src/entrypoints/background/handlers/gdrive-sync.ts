@@ -23,6 +23,7 @@ import {
   scheduleDebouncedSync,
   isAutoSyncing,
   triggerSyncOnPageLoad,
+  maybeCreateAutoBackup,
 } from '@/shared/lib/gdrive';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import i18n from '@/locale/i18n';
@@ -54,11 +55,25 @@ async function saveSyncMeta(direction: 'up' | 'down' | 'merge'): Promise<number>
 /**
  * Trigger a debounced auto-sync after local data changes.
  * Respects the gdriveAutoSync setting from pegasus store.
+ * Also triggers auto-backup check (independent of GDrive).
  */
 export function triggerAutoSync(): void {
   const { gdriveAutoSync } = usePegasusStore.getState();
-  if (!gdriveAutoSync) return;
-  scheduleDebouncedSync(getCurrentDbName());
+  if (gdriveAutoSync) {
+    scheduleDebouncedSync(getCurrentDbName());
+  }
+  // Auto-backup is independent of GDrive — always check
+  triggerAutoBackupIfDue();
+}
+
+/**
+ * After a successful sync, check if an auto-backup is due.
+ * Respects the backupEnabled setting from pegasus store.
+ */
+async function triggerAutoBackupIfDue(): Promise<void> {
+  const { backupEnabled, backupMaxSlots } = usePegasusStore.getState();
+  if (!backupEnabled) return;
+  await maybeCreateAutoBackup(getCurrentDbName(), backupMaxSlots);
 }
 
 /**
@@ -71,7 +86,10 @@ export function triggerPageLoadSync(): void {
   triggerSyncOnPageLoad(
     getCurrentDbName(),
     ensureDbForActiveTab,
-    () => notifyDataUpdated(),
+    () => {
+      notifyDataUpdated();
+      triggerAutoBackupIfDue();
+    },
   );
 }
 
@@ -130,6 +148,10 @@ export async function handleGdriveSync(
         await uploadFile(token, syncFileName, syncData, existing?.id);
 
         const now = await saveSyncMeta('up');
+
+        // Trigger auto-backup after successful upload
+        triggerAutoBackupIfDue();
+
         return { success: true, data: { lastSyncTime: now } };
       } catch (e: unknown) {
         return { success: false, error: (e as Error).message };
@@ -182,6 +204,10 @@ export async function handleGdriveSync(
         await saveSyncMeta('merge');
         const metaKey = getSyncMetaKey();
         const meta = await browser.storage.local.get(metaKey);
+
+        // Trigger auto-backup after successful merge
+        triggerAutoBackupIfDue();
+
         return {
           success: true,
           data: { lastSyncTime: meta[metaKey] || null },

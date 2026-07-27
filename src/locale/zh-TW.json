@@ -1051,5 +1051,32 @@
   },
   "agentLoop": {
     "resultCapsulePrefix": "結果"
+  },
+  "backup": {
+    "title": "備份",
+    "description": "自動每日快照，保護你的資料安全。出現問題時可還原到任意歷史狀態。",
+    "enabled": "自動備份",
+    "enabledDesc": "資料變更後自動儲存每日快照",
+    "maxSlots": "最大槽位",
+    "maxSlotsDesc": "保留的備份槽位數量（1–20）",
+    "viewBackups": "檢視",
+    "noBackups": "尚無備份。下次同步或資料變更後將自動建立快照。",
+    "createBackup": "立即建立備份",
+    "creating": "正在建立備份...",
+    "created": "備份建立成功",
+    "createFailed": "建立備份失敗",
+    "restore": "還原",
+    "restoreTitle": "還原備份",
+    "restoreConfirm": "確定要還原此備份嗎？這將覆蓋目前的本機資料（訊息不受影響）。",
+    "restoreSuccess": "備份還原成功",
+    "restoreFailed": "還原備份失敗",
+    "delete": "刪除",
+    "deleteTitle": "刪除備份",
+    "deleteConfirm": "確定要刪除此備份嗎？",
+    "deleteSuccess": "備份已刪除",
+    "deleteFailed": "刪除備份失敗",
+    "loading": "正在載入備份...",
+    "size": "大小",
+    "slots": "個"
   }
 }

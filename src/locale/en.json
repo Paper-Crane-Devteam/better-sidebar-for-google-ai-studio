@@ -1049,5 +1049,32 @@
   },
   "agentLoop": {
     "resultCapsulePrefix": "Result"
+  },
+  "backup": {
+    "title": "Backups",
+    "description": "Automatic daily snapshots to protect your data. Restore any previous state if something goes wrong.",
+    "enabled": "Auto Backup",
+    "enabledDesc": "Automatically save a daily snapshot after data changes",
+    "maxSlots": "Max Slots",
+    "maxSlotsDesc": "Number of backup slots to keep (1–20)",
+    "viewBackups": "View",
+    "noBackups": "No backups yet. A snapshot will be created automatically after your next sync or data change.",
+    "createBackup": "Create Backup Now",
+    "creating": "Creating backup...",
+    "created": "Backup created successfully",
+    "createFailed": "Failed to create backup",
+    "restore": "Restore",
+    "restoreTitle": "Restore Backup",
+    "restoreConfirm": "Are you sure you want to restore this backup? This will overwrite your current local data (messages are not affected).",
+    "restoreSuccess": "Backup restored successfully",
+    "restoreFailed": "Failed to restore backup",
+    "delete": "Delete",
+    "deleteTitle": "Delete Backup",
+    "deleteConfirm": "Are you sure you want to delete this backup?",
+    "deleteSuccess": "Backup deleted",
+    "deleteFailed": "Failed to delete backup",
+    "loading": "Loading backups...",
+    "size": "Size",
+    "slots": "slots"
   }
 }

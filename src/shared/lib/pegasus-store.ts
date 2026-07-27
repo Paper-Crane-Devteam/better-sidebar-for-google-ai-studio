@@ -64,6 +64,8 @@ interface PegasusState {
   language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru';
   gdriveAutoSync: boolean;
   gdriveSyncing: boolean;
+  backupEnabled: boolean;
+  backupMaxSlots: number;
   enhancedFeatures: {
     gemini: GeminiEnhancedFeatures;
     aistudio: AIStudioEnhancedFeatures;
@@ -81,12 +83,16 @@ interface PegasusState {
   ) => void;
   setGdriveAutoSync: (enabled: boolean) => void;
   setGdriveSyncing: (syncing: boolean) => void;
+  setBackupEnabled: (enabled: boolean) => void;
+  setBackupMaxSlots: (slots: number) => void;
 }
 
 export const usePegasusStore = create<PegasusState>()((set) => ({
   language: getDefaultLanguage(),
   gdriveAutoSync: true,
   gdriveSyncing: false,
+  backupEnabled: true,
+  backupMaxSlots: 5,
   enhancedFeatures: {
     gemini: {
       defaultModel: 'default',
@@ -137,6 +143,9 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
   setLanguage: (language) => set({ language }),
   setGdriveAutoSync: (gdriveAutoSync) => set({ gdriveAutoSync }),
   setGdriveSyncing: (gdriveSyncing) => set({ gdriveSyncing }),
+  setBackupEnabled: (backupEnabled) => set({ backupEnabled }),
+  setBackupMaxSlots: (backupMaxSlots) =>
+    set({ backupMaxSlots: Math.min(Math.max(backupMaxSlots, 1), 20) }),
 }));
 
 export const STORE_NAME = 'pegasusGlobalStore';

@@ -1050,5 +1050,32 @@
   },
   "agentLoop": {
     "resultCapsulePrefix": "Resultado"
+  },
+  "backup": {
+    "title": "Backups",
+    "description": "Snapshots diários automáticos para proteger seus dados. Restaure qualquer estado anterior se algo der errado.",
+    "enabled": "Backup automático",
+    "enabledDesc": "Salvar automaticamente um snapshot diário após alterações nos dados",
+    "maxSlots": "Máx. slots",
+    "maxSlotsDesc": "Número de slots de backup a manter (1–20)",
+    "viewBackups": "Ver",
+    "noBackups": "Ainda não há backups. Um snapshot será criado automaticamente após sua próxima sincronização ou alteração de dados.",
+    "createBackup": "Criar backup agora",
+    "creating": "Criando backup...",
+    "created": "Backup criado com sucesso",
+    "createFailed": "Falha ao criar backup",
+    "restore": "Restaurar",
+    "restoreTitle": "Restaurar backup",
+    "restoreConfirm": "Tem certeza de que deseja restaurar este backup? Isso substituirá seus dados locais atuais (as mensagens não são afetadas).",
+    "restoreSuccess": "Backup restaurado com sucesso",
+    "restoreFailed": "Falha ao restaurar backup",
+    "delete": "Excluir",
+    "deleteTitle": "Excluir backup",
+    "deleteConfirm": "Tem certeza de que deseja excluir este backup?",
+    "deleteSuccess": "Backup excluído",
+    "deleteFailed": "Falha ao excluir backup",
+    "loading": "Carregando backups...",
+    "size": "Tamanho",
+    "slots": "slots"
   }
 }

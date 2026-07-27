@@ -22,6 +22,7 @@ import {
   handleNotebooks,
   handleSnippets,
   handleNotionProxy,
+  handleBackup,
 } from './handlers';
 
 const handlers = [
@@ -39,6 +40,7 @@ const handlers = [
   handleSnippets,
   handleNotionProxy,
   handleGdriveSync,
+  handleBackup,
 ];
 
 // Clean up tab→db mapping when tabs are closed

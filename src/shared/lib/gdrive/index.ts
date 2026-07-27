@@ -25,7 +25,17 @@ export {
   triggerSyncOnPageLoad,
   onSyncingChange,
 } from './auto-sync';
+export {
+  listBackups,
+  createBackup,
+  deleteBackup,
+  restoreBackup,
+  pruneBackups,
+  isBackupDue,
+  maybeCreateAutoBackup,
+} from './backup';
 export type { SyncPayload } from './sync-data';
 export type { MergeResult } from './sync-merge';
 export type { AuthStatus } from './google-auth';
 export type { AutoSyncOptions } from './auto-sync';
+export type { BackupSlot } from './backup';
