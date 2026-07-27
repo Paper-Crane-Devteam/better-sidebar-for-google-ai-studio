@@ -528,7 +528,8 @@
     "selectColor": "选择颜色"
   },
   "moveItemsDialog": {
-    "rootLevel": "根目录（顶层）"
+    "rootLevel": "根目录（顶层）",
+    "createFolder": "新建文件夹"
   },
   "defaultFolder": {
     "currentLabel": "当前：",

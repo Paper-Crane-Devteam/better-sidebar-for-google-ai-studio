@@ -528,7 +528,8 @@
     "selectColor": "Выбрать цвет"
   },
   "moveItemsDialog": {
-    "rootLevel": "Корень (верхний уровень)"
+    "rootLevel": "Корень (верхний уровень)",
+    "createFolder": "Новая папка"
   },
   "defaultFolder": {
     "currentLabel": "Текущая: ",

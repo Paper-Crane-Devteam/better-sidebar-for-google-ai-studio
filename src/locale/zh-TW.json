@@ -528,7 +528,8 @@
     "selectColor": "選擇顏色"
   },
   "moveItemsDialog": {
-    "rootLevel": "根目錄（頂層）"
+    "rootLevel": "根目錄（頂層）",
+    "createFolder": "新建資料夾"
   },
   "defaultFolder": {
     "currentLabel": "目前：",

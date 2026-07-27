@@ -528,7 +528,8 @@
     "selectColor": "Selecionar Cor"
   },
   "moveItemsDialog": {
-    "rootLevel": "Raiz (Nível Superior)"
+    "rootLevel": "Raiz (Nível Superior)",
+    "createFolder": "Nova Pasta"
   },
   "defaultFolder": {
     "currentLabel": "Atual: ",

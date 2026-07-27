@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useAppStore } from '@/shared/lib/store';
 import { FolderPicker } from '@/shared/components/FolderPicker';
 import { Folder } from 'lucide-react';
@@ -12,7 +12,13 @@ interface MoveItemsDialogProps {
 
 export const MoveItemsDialog = ({ onSelect, selectedIds, initialSelectedId }: MoveItemsDialogProps) => {
   const folders = useAppStore((state) => state.folders);
+  const createFolder = useAppStore((state) => state.createFolder);
   const { t } = useI18n();
+
+  const handleCreateFolder = useCallback(
+    (name: string, parentId: string | null) => createFolder(name, parentId),
+    [createFolder],
+  );
 
   // Build the full path for the currently selected folder
   // Only relevant when initialSelectedId is a non-null string (i.e. previously configured)
@@ -56,6 +62,7 @@ export const MoveItemsDialog = ({ onSelect, selectedIds, initialSelectedId }: Mo
         onSelect={onSelect}
         selectedIds={selectedIds}
         initialSelectedId={showDeletedHint ? null : initialSelectedId}
+        onCreateFolder={handleCreateFolder}
       />
     </div>
   );

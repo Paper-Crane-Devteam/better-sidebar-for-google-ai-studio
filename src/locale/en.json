@@ -509,7 +509,8 @@
     "selectColor": "Select Color"
   },
   "moveItemsDialog": {
-    "rootLevel": "Root (Top Level)"
+    "rootLevel": "Root (Top Level)",
+    "createFolder": "New Folder"
   },
   "defaultFolder": {
     "currentLabel": "Current: ",

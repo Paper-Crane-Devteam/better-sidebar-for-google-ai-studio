@@ -529,7 +529,8 @@
     "selectColor": "色を選択"
   },
   "moveItemsDialog": {
-    "rootLevel": "ルート（トップレベル）"
+    "rootLevel": "ルート（トップレベル）",
+    "createFolder": "新しいフォルダー"
   },
   "defaultFolder": {
     "currentLabel": "現在：",

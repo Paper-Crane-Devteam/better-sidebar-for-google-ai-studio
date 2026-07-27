@@ -528,7 +528,8 @@
     "selectColor": "Seleccionar Color"
   },
   "moveItemsDialog": {
-    "rootLevel": "Raíz (Nivel Superior)"
+    "rootLevel": "Raíz (Nivel Superior)",
+    "createFolder": "Nueva Carpeta"
   },
   "defaultFolder": {
     "currentLabel": "Actual: ",
