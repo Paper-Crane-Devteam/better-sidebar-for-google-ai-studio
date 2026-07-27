@@ -35,6 +35,15 @@ const getDefaultLanguage = ():
   return 'en';
 };
 
+export interface SelectionToolbarConfig {
+  enabled: boolean;
+  reference: boolean;
+  explain: boolean;
+  saveAsSnippet: boolean;
+  summarize: boolean;
+  copyAsMarkdown: boolean;
+}
+
 export interface GeminiEnhancedFeatures {
   defaultModel: 'default' | 'flash-lite' | 'flash' | 'pro';
   sidebarWidth: number;
@@ -50,6 +59,7 @@ export interface GeminiEnhancedFeatures {
   showHotkeyHelper: boolean;
   slashCommand: boolean;
   removeWatermark: boolean;
+  selectionToolbar: SelectionToolbarConfig;
 }
 
 export interface AIStudioEnhancedFeatures {
@@ -109,6 +119,14 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
       showHotkeyHelper: true,
       slashCommand: true,
       removeWatermark: true,
+      selectionToolbar: {
+        enabled: true,
+        reference: true,
+        explain: true,
+        saveAsSnippet: true,
+        summarize: true,
+        copyAsMarkdown: true,
+      },
     },
     aistudio: {
       sidebarWidth: 320,

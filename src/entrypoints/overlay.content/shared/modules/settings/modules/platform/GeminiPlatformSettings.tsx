@@ -340,6 +340,186 @@ export const GeminiPlatformSettings = () => {
           </div>
         </div>
       </div>
+
+      {/* Section 4: Selection Toolbar */}
+      <div className="space-y-2">
+        <h3 className="text-lg font-medium">{t('geminiUI.selectionToolbar')}</h3>
+        <Separator />
+        <div className="grid gap-4 py-4">
+          {/* Master toggle */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-sm font-medium">
+                {t('geminiUI.selectionToolbar')}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t('geminiUI.selectionToolbarDesc')}
+              </p>
+            </div>
+            <Switch
+              checked={geminiSettings.selectionToolbar?.enabled ?? true}
+              onCheckedChange={(c) =>
+                setGeminiFeature('selectionToolbar', {
+                  ...(geminiSettings.selectionToolbar ?? {
+                    enabled: true,
+                    reference: true,
+                    explain: true,
+                    saveAsSnippet: true,
+                    summarize: true,
+                    copyAsMarkdown: true,
+                  }),
+                  enabled: c,
+                })
+              }
+            />
+          </div>
+
+          {/* Individual toolbar actions (only show when enabled) */}
+          {(geminiSettings.selectionToolbar?.enabled ?? true) && (
+            <div className="grid gap-4 pl-4 border-l-2 border-muted">
+              {/* Reference */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">
+                    {t('geminiUI.selectionToolbarReference')}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('geminiUI.selectionToolbarReferenceDesc')}
+                  </p>
+                </div>
+                <Switch
+                  checked={geminiSettings.selectionToolbar?.reference ?? true}
+                  onCheckedChange={(c) =>
+                    setGeminiFeature('selectionToolbar', {
+                      ...(geminiSettings.selectionToolbar ?? {
+                        enabled: true,
+                        reference: true,
+                        explain: true,
+                        saveAsSnippet: true,
+                        summarize: true,
+                        copyAsMarkdown: true,
+                      }),
+                      reference: c,
+                    })
+                  }
+                />
+              </div>
+
+              {/* Explain */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">
+                    {t('geminiUI.selectionToolbarExplain')}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('geminiUI.selectionToolbarExplainDesc')}
+                  </p>
+                </div>
+                <Switch
+                  checked={geminiSettings.selectionToolbar?.explain ?? true}
+                  onCheckedChange={(c) =>
+                    setGeminiFeature('selectionToolbar', {
+                      ...(geminiSettings.selectionToolbar ?? {
+                        enabled: true,
+                        reference: true,
+                        explain: true,
+                        saveAsSnippet: true,
+                        summarize: true,
+                        copyAsMarkdown: true,
+                      }),
+                      explain: c,
+                    })
+                  }
+                />
+              </div>
+
+              {/* Save as Snippet */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">
+                    {t('geminiUI.selectionToolbarSaveAsSnippet')}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('geminiUI.selectionToolbarSaveAsSnippetDesc')}
+                  </p>
+                </div>
+                <Switch
+                  checked={geminiSettings.selectionToolbar?.saveAsSnippet ?? true}
+                  onCheckedChange={(c) =>
+                    setGeminiFeature('selectionToolbar', {
+                      ...(geminiSettings.selectionToolbar ?? {
+                        enabled: true,
+                        reference: true,
+                        explain: true,
+                        saveAsSnippet: true,
+                        summarize: true,
+                        copyAsMarkdown: true,
+                      }),
+                      saveAsSnippet: c,
+                    })
+                  }
+                />
+              </div>
+
+              {/* Summarize */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">
+                    {t('geminiUI.selectionToolbarSummarize')}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('geminiUI.selectionToolbarSummarizeDesc')}
+                  </p>
+                </div>
+                <Switch
+                  checked={geminiSettings.selectionToolbar?.summarize ?? true}
+                  onCheckedChange={(c) =>
+                    setGeminiFeature('selectionToolbar', {
+                      ...(geminiSettings.selectionToolbar ?? {
+                        enabled: true,
+                        reference: true,
+                        explain: true,
+                        saveAsSnippet: true,
+                        summarize: true,
+                        copyAsMarkdown: true,
+                      }),
+                      summarize: c,
+                    })
+                  }
+                />
+              </div>
+
+              {/* Copy as Markdown */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">
+                    {t('geminiUI.selectionToolbarCopyAsMarkdown')}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('geminiUI.selectionToolbarCopyAsMarkdownDesc')}
+                  </p>
+                </div>
+                <Switch
+                  checked={geminiSettings.selectionToolbar?.copyAsMarkdown ?? true}
+                  onCheckedChange={(c) =>
+                    setGeminiFeature('selectionToolbar', {
+                      ...(geminiSettings.selectionToolbar ?? {
+                        enabled: true,
+                        reference: true,
+                        explain: true,
+                        saveAsSnippet: true,
+                        summarize: true,
+                        copyAsMarkdown: true,
+                      }),
+                      copyAsMarkdown: c,
+                    })
+                  }
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

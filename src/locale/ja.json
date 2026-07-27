@@ -771,7 +771,19 @@
     "slashCommand": "スラッシュコマンド",
     "slashCommandDesc": "入力欄で / を入力してライブラリからプロンプトをすばやく挿入",
     "hotkeyHelper": "ショートカットヘルパー",
-    "hotkeyHelperDesc": "右下にキーボードアイコンを表示してショートカットをすぐに確認"
+    "hotkeyHelperDesc": "右下にキーボードアイコンを表示してショートカットをすぐに確認",
+    "selectionToolbar": "選択ツールバー",
+    "selectionToolbarDesc": "会話内でテキストを選択した際にフローティングツールバーを表示",
+    "selectionToolbarReference": "引用",
+    "selectionToolbarReferenceDesc": "選択したテキストを入力欄に引用として挿入",
+    "selectionToolbarExplain": "説明",
+    "selectionToolbarExplainDesc": "選択したテキストを AI に説明してもらう",
+    "selectionToolbarSaveAsSnippet": "スニペットとして保存",
+    "selectionToolbarSaveAsSnippetDesc": "選択したテキストをスニペットライブラリに保存",
+    "selectionToolbarSummarize": "要約",
+    "selectionToolbarSummarizeDesc": "選択したテキストを AI に要約してもらう",
+    "selectionToolbarCopyAsMarkdown": "Markdown としてコピー",
+    "selectionToolbarCopyAsMarkdownDesc": "選択したテキストを Markdown 形式でコピー"
   },
   "aistudioUI": {
     "title": "UI コントロール",

@@ -770,7 +770,19 @@
     "slashCommand": "Comandos com barra",
     "slashCommandDesc": "Digite / na entrada para inserir rapidamente prompts da biblioteca",
     "hotkeyHelper": "Ajuda de Atalhos",
-    "hotkeyHelperDesc": "Mostrar ícone de teclado no canto inferior direito para referência rápida de atalhos"
+    "hotkeyHelperDesc": "Mostrar ícone de teclado no canto inferior direito para referência rápida de atalhos",
+    "selectionToolbar": "Barra de ferramentas de seleção",
+    "selectionToolbarDesc": "Mostrar uma barra flutuante ao selecionar texto nas conversas",
+    "selectionToolbarReference": "Referência",
+    "selectionToolbarReferenceDesc": "Inserir o texto selecionado como referência na caixa de entrada",
+    "selectionToolbarExplain": "Explicar",
+    "selectionToolbarExplainDesc": "Pedir à IA para explicar o texto selecionado",
+    "selectionToolbarSaveAsSnippet": "Salvar como snippet",
+    "selectionToolbarSaveAsSnippetDesc": "Salvar o texto selecionado na sua biblioteca de snippets",
+    "selectionToolbarSummarize": "Resumir",
+    "selectionToolbarSummarizeDesc": "Pedir à IA para resumir o texto selecionado",
+    "selectionToolbarCopyAsMarkdown": "Copiar como Markdown",
+    "selectionToolbarCopyAsMarkdownDesc": "Copiar o texto selecionado com formatação Markdown"
   },
   "aistudioUI": {
     "title": "Controles de Interface",

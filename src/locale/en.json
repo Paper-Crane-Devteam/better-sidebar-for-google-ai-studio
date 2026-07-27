@@ -750,7 +750,19 @@
     "slashCommand": "Slash Commands",
     "slashCommandDesc": "Type / in input to quickly insert prompts from library",
     "hotkeyHelper": "Shortcut Helper",
-    "hotkeyHelperDesc": "Show keyboard icon in bottom-right for quick shortcut reference"
+    "hotkeyHelperDesc": "Show keyboard icon in bottom-right for quick shortcut reference",
+    "selectionToolbar": "Selection Toolbar",
+    "selectionToolbarDesc": "Show a floating toolbar when text is selected in conversations",
+    "selectionToolbarReference": "Reference",
+    "selectionToolbarReferenceDesc": "Insert selected text as reference into the input box",
+    "selectionToolbarExplain": "Explain",
+    "selectionToolbarExplainDesc": "Ask AI to explain the selected text",
+    "selectionToolbarSaveAsSnippet": "Save as Snippet",
+    "selectionToolbarSaveAsSnippetDesc": "Save selected text to your snippet library",
+    "selectionToolbarSummarize": "Summarize",
+    "selectionToolbarSummarizeDesc": "Ask AI to summarize the selected text",
+    "selectionToolbarCopyAsMarkdown": "Copy as Markdown",
+    "selectionToolbarCopyAsMarkdownDesc": "Copy selected text with Markdown formatting"
   },
   "aistudioUI": {
     "title": "UI Controls",

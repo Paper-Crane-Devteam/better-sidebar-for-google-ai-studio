@@ -770,7 +770,19 @@
     "slashCommand": "Слэш-команды",
     "slashCommandDesc": "Введите / в поле ввода для быстрой вставки промптов из библиотеки",
     "hotkeyHelper": "Помощник горячих клавиш",
-    "hotkeyHelperDesc": "Показывать значок клавиатуры в правом нижнем углу для быстрого просмотра горячих клавиш"
+    "hotkeyHelperDesc": "Показывать значок клавиатуры в правом нижнем углу для быстрого просмотра горячих клавиш",
+    "selectionToolbar": "Панель выделения",
+    "selectionToolbarDesc": "Показывать плавающую панель при выделении текста в беседах",
+    "selectionToolbarReference": "Цитата",
+    "selectionToolbarReferenceDesc": "Вставить выделенный текст как цитату в поле ввода",
+    "selectionToolbarExplain": "Объяснить",
+    "selectionToolbarExplainDesc": "Попросить ИИ объяснить выделенный текст",
+    "selectionToolbarSaveAsSnippet": "Сохранить как сниппет",
+    "selectionToolbarSaveAsSnippetDesc": "Сохранить выделенный текст в библиотеку сниппетов",
+    "selectionToolbarSummarize": "Резюмировать",
+    "selectionToolbarSummarizeDesc": "Попросить ИИ резюмировать выделенный текст",
+    "selectionToolbarCopyAsMarkdown": "Копировать как Markdown",
+    "selectionToolbarCopyAsMarkdownDesc": "Копировать выделенный текст с форматированием Markdown"
   },
   "aistudioUI": {
     "title": "Управление интерфейсом",

@@ -770,7 +770,19 @@
     "slashCommand": "斜線命令",
     "slashCommandDesc": "在輸入框中輸入 / 快速插入提示詞庫中的提示詞",
     "hotkeyHelper": "快捷鍵助手",
-    "hotkeyHelperDesc": "在右下角顯示鍵盤圖示，懸停查看快捷鍵"
+    "hotkeyHelperDesc": "在右下角顯示鍵盤圖示，懸停查看快捷鍵",
+    "selectionToolbar": "劃詞工具列",
+    "selectionToolbarDesc": "選取對話中的文字時顯示浮動工具列",
+    "selectionToolbarReference": "引用",
+    "selectionToolbarReferenceDesc": "將選取文字作為引用插入輸入框",
+    "selectionToolbarExplain": "解釋",
+    "selectionToolbarExplainDesc": "讓 AI 解釋選取的文字",
+    "selectionToolbarSaveAsSnippet": "儲存為片段",
+    "selectionToolbarSaveAsSnippetDesc": "將選取文字儲存到片段庫",
+    "selectionToolbarSummarize": "摘要",
+    "selectionToolbarSummarizeDesc": "讓 AI 摘要選取的文字",
+    "selectionToolbarCopyAsMarkdown": "複製為 Markdown",
+    "selectionToolbarCopyAsMarkdownDesc": "以 Markdown 格式複製選取文字"
   },
   "aistudioUI": {
     "title": "介面控制",

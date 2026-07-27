@@ -769,7 +769,19 @@
     "slashCommand": "斜杠命令",
     "slashCommandDesc": "在输入框中输入 / 快速插入提示词库中的提示词",
     "hotkeyHelper": "快捷键助手",
-    "hotkeyHelperDesc": "在右下角显示键盘图标，悬停查看快捷键"
+    "hotkeyHelperDesc": "在右下角显示键盘图标，悬停查看快捷键",
+    "selectionToolbar": "划词工具栏",
+    "selectionToolbarDesc": "选中对话中的文字时显示浮动工具栏",
+    "selectionToolbarReference": "引用",
+    "selectionToolbarReferenceDesc": "将选中文字作为引用插入输入框",
+    "selectionToolbarExplain": "解释",
+    "selectionToolbarExplainDesc": "让 AI 解释选中的文字",
+    "selectionToolbarSaveAsSnippet": "保存为片段",
+    "selectionToolbarSaveAsSnippetDesc": "将选中文字保存到片段库",
+    "selectionToolbarSummarize": "总结",
+    "selectionToolbarSummarizeDesc": "让 AI 总结选中的文字",
+    "selectionToolbarCopyAsMarkdown": "复制为 Markdown",
+    "selectionToolbarCopyAsMarkdownDesc": "以 Markdown 格式复制选中文字"
   },
   "aistudioUI": {
     "title": "界面控制",
