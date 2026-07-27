@@ -9,7 +9,7 @@
  * Call `initGeminiThemeSync()` once from the content script.
  */
 
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useLicenseStore, isLicenseValid } from '@/shared/lib/license-store';
 import { themeRegistry, applyTheme, removeTheme, applySidebarTheme, refreshThemeRegistry, onUserThemeStoreHydrated } from '@/themes';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
@@ -26,11 +26,11 @@ export function initGeminiThemeSync(): () => void {
 
   // On init: if a premium theme is persisted but user has no license, revert to default.
   // Preview only lives within a single session — refresh = reset.
-  const initialThemeId = useSettingsStore.getState().customTheme;
+  const initialThemeId = usePegasusStore.getState().customTheme;
   if (initialThemeId && themeRegistry[initialThemeId]?.isPremium) {
     const licenseState = useLicenseStore.getState();
     if (!isLicenseValid(licenseState)) {
-      useSettingsStore.getState().setCustomTheme(null);
+      usePegasusStore.getState().setCustomTheme(null);
       useLicenseStore.getState().endPreview();
       // Don't apply the premium theme — fall through to no-theme state
     } else {
@@ -48,7 +48,7 @@ export function initGeminiThemeSync(): () => void {
     // Theme ID set but not in registry — likely a user theme not yet hydrated
     onUserThemeStoreHydrated(() => {
       refreshThemeRegistry();
-      const id = useSettingsStore.getState().customTheme;
+      const id = usePegasusStore.getState().customTheme;
       if (id && themeRegistry[id]) {
         applyTheme(themeRegistry[id]);
         const preset = themeRegistry[id];
@@ -59,7 +59,7 @@ export function initGeminiThemeSync(): () => void {
   }
 
   // Subscribe to changes
-  const unsubscribe = useSettingsStore.subscribe((state, prevState) => {
+  const unsubscribe = usePegasusStore.subscribe((state, prevState) => {
     if (state.customTheme !== prevState.customTheme) {
       if (state.customTheme && themeRegistry[state.customTheme]) {
         applyTheme(themeRegistry[state.customTheme]);
@@ -92,14 +92,14 @@ export function bindShadowRootToTheme(container: HTMLElement): () => void {
   refreshThemeRegistry();
 
   // Apply current theme
-  const currentThemeId = useSettingsStore.getState().customTheme;
+  const currentThemeId = usePegasusStore.getState().customTheme;
   if (currentThemeId && themeRegistry[currentThemeId]) {
     applySidebarTheme(container, themeRegistry[currentThemeId]);
   } else if (currentThemeId && !themeRegistry[currentThemeId]) {
     // Theme ID is set but not in registry yet — wait for user theme store hydration
     onUserThemeStoreHydrated(() => {
       refreshThemeRegistry();
-      const id = useSettingsStore.getState().customTheme;
+      const id = usePegasusStore.getState().customTheme;
       if (id && themeRegistry[id]) {
         applySidebarTheme(container, themeRegistry[id]);
       }
@@ -107,7 +107,7 @@ export function bindShadowRootToTheme(container: HTMLElement): () => void {
   }
 
   // Subscribe to changes
-  const unsubscribe = useSettingsStore.subscribe((state, prevState) => {
+  const unsubscribe = usePegasusStore.subscribe((state, prevState) => {
     if (state.customTheme !== prevState.customTheme) {
       // Refresh registry in case a new user theme was just imported
       refreshThemeRegistry();

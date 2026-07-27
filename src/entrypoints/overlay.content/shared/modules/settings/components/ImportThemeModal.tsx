@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { AlertCircle, CheckCircle2, Sparkles, ShoppingCart } from 'lucide-react';
 import { validateUserTheme } from '@/themes/user-themes';
 import { useUserThemeStore, refreshThemeRegistry } from '@/themes';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useLicenseStore, isLicenseValid } from '@/shared/lib/license-store';
 import { openPurchasePage } from '@/shared/lib/license-links';
 import { toast } from '@/shared/lib/toast';
@@ -50,7 +50,7 @@ export function handleImportTheme(t: (key: string) => string): boolean {
 
   // Refresh registry and apply
   refreshThemeRegistry();
-  useSettingsStore.getState().setCustomTheme(validation.theme!.id);
+  usePegasusStore.getState().setCustomTheme(validation.theme!.id);
 
   toast.success(t('themeSettings.importSuccess'));
   return true;

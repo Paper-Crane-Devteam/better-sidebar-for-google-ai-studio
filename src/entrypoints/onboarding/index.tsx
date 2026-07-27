@@ -2,13 +2,14 @@ import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import '@/index.scss';
 import '@/locale/i18n';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { initPegasusTransport } from '@webext-pegasus/transport/popup';
+import { getPegasusStoreReady, usePegasusStore } from '@/shared/lib/pegasus-store';
 import { cn } from '@/shared/lib/utils/utils';
 import { PLATFORM_CONFIG } from '@/shared/types/platform';
 import { useI18n } from '@/shared/hooks/useI18n';
 
 const Onboarding = () => {
-  const theme = useSettingsStore((state) => state.theme);
+  const theme = usePegasusStore((state) => state.theme);
   const { t } = useI18n();
 
   useEffect(() => {
@@ -222,8 +223,11 @@ const Onboarding = () => {
   );
 };
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <Onboarding />
-  </React.StrictMode>,
-);
+initPegasusTransport();
+getPegasusStoreReady().then(() => {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <Onboarding />
+    </React.StrictMode>,
+  );
+});

@@ -1,17 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { detectPlatform, Platform } from '../types/platform';
-import {
-  syncGeminiTheme,
-  syncAiStudioTheme,
-  syncChatGPTTheme,
-} from './utils/utils';
-import type { ThemePresetId } from '@/themes/types';
 
 interface SettingsState {
-  theme: 'light' | 'dark' | 'system';
-  /** Custom theme preset ID, or null for default Gemini theme */
-  customTheme: ThemePresetId | null;
   /** Gemini sidebar base style: 'default' (v2) or 'classic' (pre-v2 blue-tinted) */
   geminiStyle: 'default' | 'classic';
   newChatBehavior: 'current-tab' | 'new-tab';
@@ -59,8 +50,6 @@ interface SettingsState {
   themeGridPage: number;
 
   // Actions
-  setTheme: (theme: 'light' | 'dark' | 'system') => void;
-  setCustomTheme: (themeId: ThemePresetId | null) => void;
   setGeminiStyle: (style: 'default' | 'classic') => void;
   setNewChatBehavior: (behavior: 'current-tab' | 'new-tab') => void;
   setAutoScanLibrary: (enabled: boolean) => void;
@@ -130,8 +119,6 @@ const getStorageName = () => {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      theme: 'system',
-      customTheme: null,
       geminiStyle: 'default',
       newChatBehavior: 'current-tab',
       autoScanLibrary: false,
@@ -172,26 +159,6 @@ export const useSettingsStore = create<SettingsState>()(
       outlineHeight: 200,
       themeGridPage: 0,
 
-      setTheme: (theme) => {
-        set({ theme });
-        if (platform === Platform.GEMINI) {
-          syncGeminiTheme(theme);
-        }
-        if (platform === Platform.AI_STUDIO) {
-          syncAiStudioTheme(theme);
-        }
-        if (platform === Platform.CHATGPT) {
-          syncChatGPTTheme(theme);
-        }
-        // if(platform === Platform.CLAUDE) {
-        //   syncClaudeTheme(theme)
-        // }
-      },
-      setCustomTheme: (themeId) => {
-        set({ customTheme: themeId });
-        // Theme engine apply/remove is handled by the content script
-        // that subscribes to this store change
-      },
       setGeminiStyle: (style) => {
         set({ geminiStyle: style });
       },
@@ -227,7 +194,7 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: getStorageName(),
       storage: createJSONStorage(() => storage),
-      version: 5,
+      version: 6,
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { themeGridPage, ...rest } = state;
@@ -249,6 +216,11 @@ export const useSettingsStore = create<SettingsState>()(
           delete persistedState.enhancedFeatures;
           delete persistedState.enableResizableSidebar;
           delete persistedState.customSidebarWidth;
+        }
+        if (version < 6) {
+          // theme/customTheme moved to pegasus-store; strip from persisted settings
+          delete persistedState.theme;
+          delete persistedState.customTheme;
         }
         return persistedState;
       },

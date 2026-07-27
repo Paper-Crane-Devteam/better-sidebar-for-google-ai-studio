@@ -4,6 +4,7 @@ import { Separator } from '../../../components/ui/separator';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { Moon, Sun, Monitor, Check, Sparkles, Eye, ShoppingCart, Wand2, Download, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useLicenseStore, isLicenseValid } from '@/shared/lib/license-store';
 import { openPurchasePage } from '@/shared/lib/license-links';
 import { useTheme } from '../hooks/useTheme';
@@ -193,7 +194,8 @@ const themeI18nKeys: Record<BuiltinThemePresetId, { name: string; description: s
 export const ThemeSettings = () => {
   const { t } = useI18n();
   const { theme, setTheme } = useTheme();
-  const { customTheme, setCustomTheme, geminiStyle, setGeminiStyle } = useSettingsStore();
+  const { customTheme, setCustomTheme } = usePegasusStore();
+  const { geminiStyle, setGeminiStyle } = useSettingsStore();
   const licenseState = useLicenseStore();
   const hasLicense = isLicenseValid(licenseState);
   const userThemes = useUserThemeStore((s) => s.themes);
@@ -298,7 +300,7 @@ export const ThemeSettings = () => {
     useUserThemeStore.getState().removeTheme(themeId);
     refreshThemeRegistry();
     // If the deleted theme was active, revert to default
-    if (useSettingsStore.getState().customTheme === themeId) {
+    if (usePegasusStore.getState().customTheme === themeId) {
       setCustomTheme(null);
       setGeminiStyle('default');
     }

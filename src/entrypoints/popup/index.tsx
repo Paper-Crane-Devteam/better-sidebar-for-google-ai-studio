@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import '@/shared/lib/iconify-bundle';
 import '@/index.scss';
 import '@/locale/i18n';
+import { initPegasusTransport } from '@webext-pegasus/transport/popup';
+import { getPegasusStoreReady, usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { Switch } from '@/shared/components/ui/switch';
 import { Label } from '@/shared/components/ui/label';
@@ -12,13 +14,45 @@ import {
   setPlatformEnabled,
   PlatformEnabledState,
 } from '@/shared/lib/platform-enabled-store';
-import { useSettingsStore } from '@/shared/lib/settings-store';
-import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { cn } from '@/shared/lib/utils/utils';
 import { SlidersHorizontal, Settings2, Globe2, Bot } from 'lucide-react';
 import { browser } from 'wxt/browser';
+import { themeRegistry, refreshThemeRegistry } from '@/themes';
 
 type Tab = 'platforms' | 'gemini' | 'aistudio';
+
+// Debounce utility
+function useDebouncedCallback<T extends (...args: any[]) => any>(fn: T, delay: number) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  return useCallback((...args: Parameters<T>) => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => fn(...args), delay);
+  }, [fn, delay]) as T;
+}
+
+// Slider with local state + debounced store write
+function DebouncedSlider({ value, min, max, step = 1, onChange }: {
+  value: number; min: number; max: number; step?: number;
+  onChange: (v: number) => void;
+}) {
+  const [local, setLocal] = useState(value);
+  useEffect(() => { setLocal(value); }, [value]);
+  const debouncedOnChange = useDebouncedCallback(onChange, 200);
+
+  return (
+    <input
+      type="range"
+      min={min} max={max} step={step}
+      value={local}
+      onChange={(e) => {
+        const v = Number(e.target.value);
+        setLocal(v);
+        debouncedOnChange(v);
+      }}
+      className="ui-slider w-full"
+    />
+  );
+}
 
 const Options = () => {
   const { t } = useI18n();
@@ -26,20 +60,48 @@ const Options = () => {
   const [activeTab, setActiveTab] = useState<Tab>('platforms');
   const [detectedPlatform, setDetectedPlatform] = useState<Platform>(Platform.UNKNOWN);
 
-  const theme = useSettingsStore((state) => state.theme);
-  
+  const theme = usePegasusStore((state) => state.theme);
+  const customTheme = usePegasusStore((state) => state.customTheme);
+
   const geminiSettings = usePegasusStore((s) => s.enhancedFeatures.gemini);
   const aistudioSettings = usePegasusStore((s) => s.enhancedFeatures.aistudio);
   const setGeminiFeature = usePegasusStore((s) => s.setGeminiEnhancedFeature);
   const setAIStudioFeature = usePegasusStore((s) => s.setAIStudioEnhancedFeature);
 
+  // Apply theme: base platform theme class + dark mode + custom theme overrides
   useEffect(() => {
-    const isDark =
-      theme === 'dark' ||
-      (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    if (isDark) document.documentElement.classList.add('dark');
-    else document.documentElement.classList.remove('dark');
-  }, [theme]);
+    const root = document.documentElement;
+
+    // Always apply the platform base theme class so default CSS variables are available
+    root.classList.add('theme-gemini');
+
+    refreshThemeRegistry();
+
+    if (customTheme && themeRegistry[customTheme]) {
+      const preset = themeRegistry[customTheme];
+      // Force dark/light based on the custom theme's preferred mode
+      if (preset.preferredMode === 'dark') {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+      // Apply sidebarVariables (same ones used for the overlay panel)
+      if (preset.sidebarVariables) {
+        for (const v of preset.sidebarVariables) {
+          root.style.setProperty(v.property, v.value);
+        }
+      }
+    } else {
+      // No custom theme — clear any previously set variable overrides
+      root.style.cssText = '';
+      // Fall back to user's light/dark preference
+      const isDark =
+        theme === 'dark' ||
+        (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (isDark) root.classList.add('dark');
+      else root.classList.remove('dark');
+    }
+  }, [theme, customTheme]);
 
   useEffect(() => {
     getPlatformEnabledState().then(setEnabledState);
@@ -86,19 +148,15 @@ const Options = () => {
         <div className="absolute top-[20px] -right-[100px] w-[350px] h-[350px] rounded-full bg-primary/5 blur-[90px]" />
       </div>
 
+      {/* Header */}
       <div className="relative z-10 w-full flex-shrink-0 flex flex-col items-center pt-6 pb-4 space-y-4 border-b border-border/40 bg-background/50 backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/80 to-primary shadow-md flex items-center justify-center">
-            <img src="/icons/icon128.png" className="w-6 h-6 drop-shadow-sm" alt="Logo" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/80 to-primary shadow-md flex items-center justify-center shrink-0">
+            <img src="/icons/icon128.png" className="w-6 h-6 object-contain drop-shadow-sm" alt="Logo" />
           </div>
-          <div className="flex flex-col">
-            <h1 className="text-base font-bold tracking-tight text-foreground leading-tight">
-              {t('popup.title')}
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              {t('popup.description')}
-            </p>
-          </div>
+          <h1 className="text-base font-bold tracking-tight text-foreground leading-tight">
+            {t('popup.title')}
+          </h1>
         </div>
 
         <div className="flex bg-muted/50 p-1 rounded-lg w-[85%]">
@@ -141,9 +199,13 @@ const Options = () => {
         </div>
       </div>
 
+      {/* Content */}
       <div className="relative z-10 flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
         {activeTab === 'platforms' && (
           <div className="w-full bg-card/60 backdrop-blur-xl border border-border/60 rounded-xl shadow-sm overflow-hidden flex flex-col">
+            <div className="px-4 pt-4 pb-2">
+              <p className="text-xs text-muted-foreground">{t('popup.description')}</p>
+            </div>
             <div className="flex flex-col divide-y divide-border/40">
               {platformsToConfigure.map((platform) => {
                 const config = PLATFORM_CONFIG[platform];
@@ -206,6 +268,7 @@ const Options = () => {
               <div className="text-sm text-muted-foreground text-center py-8">{t('common.loading')}</div>
             ) : (
               <>
+                {/* Layout Dimensions */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <SlidersHorizontal className="w-4 h-4 text-primary" />
@@ -217,25 +280,26 @@ const Options = () => {
                         <Label className="text-sm font-semibold">{t('geminiUI.sidebarWidth')}</Label>
                         <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-2 py-1 rounded leading-none">{geminiSettings.sidebarWidth}px</span>
                       </div>
-                      <input type="range" min={300} max={550} step={1} value={geminiSettings.sidebarWidth} onChange={(e) => setGeminiFeature('sidebarWidth', Number(e.target.value))} className="ui-slider" />
+                      <DebouncedSlider value={geminiSettings.sidebarWidth} min={300} max={550} onChange={(v) => setGeminiFeature('sidebarWidth', v)} />
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm font-semibold">{t('geminiUI.chatContentWidth')}</Label>
                         <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-2 py-1 rounded leading-none">{geminiSettings.chatWidth}%</span>
                       </div>
-                      <input type="range" min={40} max={100} step={1} value={geminiSettings.chatWidth} onChange={(e) => setGeminiFeature('chatWidth', Number(e.target.value))} className="ui-slider" />
+                      <DebouncedSlider value={geminiSettings.chatWidth} min={40} max={100} onChange={(v) => setGeminiFeature('chatWidth', v)} />
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm font-semibold">{t('geminiUI.inputBoxWidth')}</Label>
                         <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-2 py-1 rounded leading-none">{geminiSettings.inputWidth}%</span>
                       </div>
-                      <input type="range" min={40} max={100} step={1} value={geminiSettings.inputWidth} onChange={(e) => setGeminiFeature('inputWidth', Number(e.target.value))} className="ui-slider" />
+                      <DebouncedSlider value={geminiSettings.inputWidth} min={40} max={100} onChange={(v) => setGeminiFeature('inputWidth', v)} />
                     </div>
                   </div>
                 </div>
 
+                {/* Element Visibility */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Globe2 className="w-4 h-4 text-primary" />
@@ -256,9 +320,17 @@ const Options = () => {
                       </div>
                       <Switch checked={!geminiSettings.hideUpgrade} onCheckedChange={(c) => setGeminiFeature('hideUpgrade', !c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
                     </div>
+                    <div className="flex items-center justify-between p-4">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-semibold">{t('geminiUI.hotkeyHelper')}</Label>
+                        <p className="text-xs text-muted-foreground">{t('geminiUI.hotkeyHelperDesc')}</p>
+                      </div>
+                      <Switch checked={geminiSettings.showHotkeyHelper} onCheckedChange={(c) => setGeminiFeature('showHotkeyHelper', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
+                    </div>
                   </div>
                 </div>
 
+                {/* Additional Features */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Settings2 className="w-4 h-4 text-primary" />
@@ -300,13 +372,6 @@ const Options = () => {
                       </div>
                       <Switch checked={geminiSettings.slashCommand} onCheckedChange={(c) => setGeminiFeature('slashCommand', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
                     </div>
-                    <div className="flex items-center justify-between p-4">
-                      <div className="space-y-1">
-                        <Label className="text-sm font-semibold">{t('geminiUI.hotkeyHelper')}</Label>
-                        <p className="text-xs text-muted-foreground">{t('geminiUI.hotkeyHelperDesc')}</p>
-                      </div>
-                      <Switch checked={geminiSettings.showHotkeyHelper} onCheckedChange={(c) => setGeminiFeature('showHotkeyHelper', c)} className="data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
-                    </div>
                   </div>
                 </div>
               </>
@@ -320,6 +385,7 @@ const Options = () => {
               <div className="text-sm text-muted-foreground text-center py-8">{t('common.loading')}</div>
             ) : (
               <>
+                {/* Layout Dimensions */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <SlidersHorizontal className="w-4 h-4 text-primary" />
@@ -331,11 +397,12 @@ const Options = () => {
                         <Label className="text-sm font-semibold">{t('aistudioUI.sidebarWidth')}</Label>
                         <span className="text-[10px] font-mono font-medium text-primary bg-primary/10 px-2 py-1 rounded leading-none">{aistudioSettings.sidebarWidth}px</span>
                       </div>
-                      <input type="range" min={280} max={500} step={1} value={aistudioSettings.sidebarWidth} onChange={(e) => setAIStudioFeature('sidebarWidth', Number(e.target.value))} className="ui-slider" />
+                      <DebouncedSlider value={aistudioSettings.sidebarWidth} min={280} max={500} onChange={(v) => setAIStudioFeature('sidebarWidth', v)} />
                     </div>
                   </div>
                 </div>
 
+                {/* Additional Features */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Settings2 className="w-4 h-4 text-primary" />
@@ -387,8 +454,12 @@ const Options = () => {
   );
 };
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <Options />
-  </React.StrictMode>,
-);
+// Initialize Pegasus transport and wait for store sync before rendering
+initPegasusTransport();
+getPegasusStoreReady().then(() => {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <Options />
+    </React.StrictMode>,
+  );
+});

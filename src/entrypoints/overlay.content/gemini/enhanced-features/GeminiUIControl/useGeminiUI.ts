@@ -5,19 +5,19 @@ import { waitForElement } from '@/shared/lib/utils';
 import { useUrl } from '@/shared/hooks/useUrl';
 
 export const useGeminiUI = () => {
-  const geminiSettings = usePegasusStore((s) => s.enhancedFeatures.gemini);
+  const geminiSettings = usePegasusStore((s) => s.enhancedFeatures?.gemini);
   const setGeminiFeature = usePegasusStore((s) => s.setGeminiEnhancedFeature);
 
   const {
-    sidebarWidth: storeSidebarWidth,
-    chatWidth: storeChatWidth,
-    inputWidth: storeInputWidth,
-    hideBrand,
-    hideDisclaimer,
-    hideUpgrade,
-    zenMode,
-    showSmartScrollbar,
-  } = geminiSettings;
+    sidebarWidth: storeSidebarWidth = 360,
+    chatWidth: storeChatWidth = 46,
+    inputWidth: storeInputWidth = 42,
+    hideBrand = false,
+    hideDisclaimer = false,
+    hideUpgrade = false,
+    zenMode = false,
+    showSmartScrollbar = true,
+  } = geminiSettings ?? {};
 
   const { path } = useUrl();
   const isGemsCreatePage = path.includes('/gems/create');

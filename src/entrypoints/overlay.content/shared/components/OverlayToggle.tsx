@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Layout } from 'lucide-react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { useI18n } from '@/shared/hooks/useI18n';
 
@@ -13,7 +14,8 @@ const BUTTON_SIZE = 44;
 
 export const OverlayToggle = ({ onToggle }: OverlayToggleProps) => {
   const { t } = useI18n();
-  const { overlayPosition, setOverlayPosition, theme } = useSettingsStore();
+  const { overlayPosition, setOverlayPosition } = useSettingsStore();
+  const theme = usePegasusStore((s) => s.theme);
   const [isHovered, setIsHovered] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [isDragging, setIsDragging] = useState(false);

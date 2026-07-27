@@ -13,28 +13,21 @@ import { debounce } from 'lodash';
  */
 export const GeminiPlatformSettings = () => {
   const { t } = useI18n();
-  const geminiSettings = usePegasusStore((s) => s.enhancedFeatures.gemini);
+  const geminiSettings = usePegasusStore((s) => s.enhancedFeatures?.gemini);
   const setGeminiFeature = usePegasusStore((s) => s.setGeminiEnhancedFeature);
 
-  const pegasusGeminiFeatures = usePegasusStore(
-    (s) => s.enhancedFeatures.gemini,
-  );
-  const setPegasusGeminiFeature = usePegasusStore(
-    (s) => s.setGeminiEnhancedFeature,
-  );
-
   const {
-    sidebarWidth: storeSidebarWidth,
-    chatWidth: storeChatWidth,
-    inputWidth: storeInputWidth,
-    hideBrand,
-    hideDisclaimer,
-    hideUpgrade,
-    showTopBarTag,
-    zenMode,
-    showSmartScrollbar,
-    autoHideInput,
-  } = geminiSettings;
+    sidebarWidth: storeSidebarWidth = 360,
+    chatWidth: storeChatWidth = 46,
+    inputWidth: storeInputWidth = 42,
+    hideBrand = false,
+    hideDisclaimer = false,
+    hideUpgrade = false,
+    showTopBarTag = true,
+    zenMode = false,
+    showSmartScrollbar = true,
+    autoHideInput = false,
+  } = geminiSettings ?? {};
 
   // Local state for immediate slider feedback
   const [localSidebarWidth, setLocalSidebarWidth] = useState(storeSidebarWidth);
@@ -241,7 +234,7 @@ export const GeminiPlatformSettings = () => {
               </p>
             </div>
             <Switch
-              checked={geminiSettings.showHotkeyHelper}
+              checked={geminiSettings?.showHotkeyHelper ?? true}
               onCheckedChange={(c) => setGeminiFeature('showHotkeyHelper', c)}
             />
           </div>
@@ -296,9 +289,9 @@ export const GeminiPlatformSettings = () => {
               </p>
             </div>
             <Switch
-              checked={pegasusGeminiFeatures.removeWatermark}
+              checked={geminiSettings?.removeWatermark ?? true}
               onCheckedChange={(c) =>
-                setPegasusGeminiFeature('removeWatermark', c)
+                setGeminiFeature('removeWatermark', c)
               }
             />
           </div>

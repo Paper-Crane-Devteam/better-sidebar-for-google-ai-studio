@@ -12,7 +12,7 @@
  * Call `initAiStudioThemeSync()` once from the content script.
  */
 
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useLicenseStore, isLicenseValid } from '@/shared/lib/license-store';
 import { themeRegistry, applySidebarTheme, refreshThemeRegistry } from '@/themes';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
@@ -273,11 +273,11 @@ export function initAiStudioThemeSync(): () => void {
   refreshThemeRegistry();
 
   // On init: if a premium theme is persisted but user has no license, revert to default.
-  const initialThemeId = useSettingsStore.getState().customTheme;
+  const initialThemeId = usePegasusStore.getState().customTheme;
   if (initialThemeId && themeRegistry[initialThemeId]?.isPremium) {
     const licenseState = useLicenseStore.getState();
     if (!isLicenseValid(licenseState)) {
-      useSettingsStore.getState().setCustomTheme(null);
+      usePegasusStore.getState().setCustomTheme(null);
       useLicenseStore.getState().endPreview();
     } else {
       applyAiStudioTheme(themeRegistry[initialThemeId]);
@@ -293,7 +293,7 @@ export function initAiStudioThemeSync(): () => void {
   }
 
   // Subscribe to changes
-  const unsubscribe = useSettingsStore.subscribe((state, prevState) => {
+  const unsubscribe = usePegasusStore.subscribe((state, prevState) => {
     if (state.customTheme !== prevState.customTheme) {
       if (state.customTheme && themeRegistry[state.customTheme]) {
         applyAiStudioTheme(themeRegistry[state.customTheme]);
@@ -323,13 +323,13 @@ export function bindAiStudioShadowRootToTheme(container: HTMLElement): () => voi
   refreshThemeRegistry();
 
   // Apply current theme
-  const currentThemeId = useSettingsStore.getState().customTheme;
+  const currentThemeId = usePegasusStore.getState().customTheme;
   if (currentThemeId && themeRegistry[currentThemeId]) {
     applySidebarTheme(container, themeRegistry[currentThemeId]);
   }
 
   // Subscribe to changes
-  const unsubscribe = useSettingsStore.subscribe((state, prevState) => {
+  const unsubscribe = usePegasusStore.subscribe((state, prevState) => {
     if (state.customTheme !== prevState.customTheme) {
       refreshThemeRegistry();
       const preset = state.customTheme ? themeRegistry[state.customTheme] : null;

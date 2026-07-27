@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { useSettingsStore } from '@/shared/lib/settings-store';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
 
 export const useTheme = () => {
-    const { theme, setTheme, customTheme } = useSettingsStore();
+    const { theme, setTheme, customTheme } = usePegasusStore();
 
     // Apply theme side effects — skip when a custom theme is active
     // because the custom theme's preferredMode controls light/dark via the platform adapter.

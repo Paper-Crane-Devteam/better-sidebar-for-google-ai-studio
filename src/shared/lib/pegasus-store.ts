@@ -3,6 +3,7 @@ import {
   initPegasusZustandStoreBackend,
   pegasusZustandStoreReady,
 } from '@webext-pegasus/store-zustand';
+import type { ThemePresetId } from '@/themes/types';
 
 // Get default language from browser
 const getDefaultLanguage = ():
@@ -64,6 +65,8 @@ interface PegasusState {
   language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru';
   gdriveAutoSync: boolean;
   gdriveSyncing: boolean;
+  theme: 'light' | 'dark' | 'system';
+  customTheme: ThemePresetId | null;
   enhancedFeatures: {
     gemini: GeminiEnhancedFeatures;
     aistudio: AIStudioEnhancedFeatures;
@@ -79,6 +82,8 @@ interface PegasusState {
   setLanguage: (
     language: 'zh-CN' | 'zh-TW' | 'en' | 'ja' | 'pt' | 'es' | 'ru',
   ) => void;
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  setCustomTheme: (themeId: ThemePresetId | null) => void;
   setGdriveAutoSync: (enabled: boolean) => void;
   setGdriveSyncing: (syncing: boolean) => void;
 }
@@ -87,6 +92,8 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
   language: getDefaultLanguage(),
   gdriveAutoSync: true,
   gdriveSyncing: false,
+  theme: 'system',
+  customTheme: null,
   enhancedFeatures: {
     gemini: {
       defaultModel: 'default',
@@ -135,6 +142,8 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
       },
     })),
   setLanguage: (language) => set({ language }),
+  setTheme: (theme) => set({ theme }),
+  setCustomTheme: (customTheme) => set({ customTheme }),
   setGdriveAutoSync: (gdriveAutoSync) => set({ gdriveAutoSync }),
   setGdriveSyncing: (gdriveSyncing) => set({ gdriveSyncing }),
 }));
