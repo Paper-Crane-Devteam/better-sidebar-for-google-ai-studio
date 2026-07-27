@@ -8,6 +8,7 @@ import { AutoHideInputFeature } from './AutoHideInputFeature';
 import { SlashCommandFeature } from './SlashCommandFeature';
 import { AgentLoopFeature } from './AgentLoopFeature';
 import { SaveSnippetFeature } from './SaveSnippetFeature';
+import { SelectionToolbarFeature } from './SelectionToolbar/SelectionToolbarFeature';
 import { SnippetDragDrawer } from '@/entrypoints/overlay.content/shared/modules/snippets/components/SnippetDragFolderView';
 import { GlobalModal } from '@/shared/components/GlobalModal';
 import { GlobalPopoverPicker } from '@/shared/components/GlobalPopoverPicker';
@@ -56,6 +57,7 @@ export const GeminiEnhancedFeatures = () => {
       <SlashCommandFeature />
       <AgentLoopFeature />
       <SaveSnippetFeature />
+      <SelectionToolbarFeature />
       <SnippetDragDrawer />
       <SnippetReaderDrawer />
       <SettingsModal open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />

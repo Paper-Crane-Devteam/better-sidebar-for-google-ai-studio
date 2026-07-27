@@ -528,7 +528,8 @@
     "selectColor": "Seleccionar Color"
   },
   "moveItemsDialog": {
-    "rootLevel": "Raíz (Nivel Superior)"
+    "rootLevel": "Raíz (Nivel Superior)",
+    "createFolder": "Nueva Carpeta"
   },
   "defaultFolder": {
     "currentLabel": "Actual: ",
@@ -769,7 +770,19 @@
     "slashCommand": "Comandos con barra",
     "slashCommandDesc": "Escribe / en la entrada para insertar rápidamente prompts de la biblioteca",
     "hotkeyHelper": "Ayuda de Atajos",
-    "hotkeyHelperDesc": "Mostrar icono de teclado en la esquina inferior derecha para referencia rápida de atajos"
+    "hotkeyHelperDesc": "Mostrar icono de teclado en la esquina inferior derecha para referencia rápida de atajos",
+    "selectionToolbar": "Barra de herramientas de selección",
+    "selectionToolbarDesc": "Mostrar una barra flotante al seleccionar texto en las conversaciones",
+    "selectionToolbarReference": "Referencia",
+    "selectionToolbarReferenceDesc": "Insertar el texto seleccionado como referencia en el cuadro de entrada",
+    "selectionToolbarExplain": "Explicar",
+    "selectionToolbarExplainDesc": "Pedir a la IA que explique el texto seleccionado",
+    "selectionToolbarSaveAsSnippet": "Guardar como fragmento",
+    "selectionToolbarSaveAsSnippetDesc": "Guardar el texto seleccionado en tu biblioteca de fragmentos",
+    "selectionToolbarSummarize": "Resumir",
+    "selectionToolbarSummarizeDesc": "Pedir a la IA que resuma el texto seleccionado",
+    "selectionToolbarCopyAsMarkdown": "Copiar como Markdown",
+    "selectionToolbarCopyAsMarkdownDesc": "Copiar el texto seleccionado con formato Markdown"
   },
   "aistudioUI": {
     "title": "Controles de Interfaz",
@@ -1049,5 +1062,32 @@
   },
   "agentLoop": {
     "resultCapsulePrefix": "Resultado"
+  },
+  "backup": {
+    "title": "Copias de seguridad",
+    "description": "Instantáneas diarias automáticas para proteger tus datos. Restaura cualquier estado anterior si algo sale mal.",
+    "enabled": "Copia de seguridad automática",
+    "enabledDesc": "Guardar automáticamente una instantánea diaria después de cambios en los datos",
+    "maxSlots": "Máx. ranuras",
+    "maxSlotsDesc": "Número de ranuras de copia de seguridad a conservar (1–20)",
+    "viewBackups": "Ver",
+    "noBackups": "Aún no hay copias de seguridad. Se creará una instantánea automáticamente después de tu próxima sincronización o cambio de datos.",
+    "createBackup": "Crear copia ahora",
+    "creating": "Creando copia de seguridad...",
+    "created": "Copia de seguridad creada correctamente",
+    "createFailed": "Error al crear la copia de seguridad",
+    "restore": "Restaurar",
+    "restoreTitle": "Restaurar copia de seguridad",
+    "restoreConfirm": "¿Estás seguro de que deseas restaurar esta copia de seguridad? Esto sobrescribirá tus datos locales actuales (los mensajes no se ven afectados).",
+    "restoreSuccess": "Copia de seguridad restaurada correctamente",
+    "restoreFailed": "Error al restaurar la copia de seguridad",
+    "delete": "Eliminar",
+    "deleteTitle": "Eliminar copia de seguridad",
+    "deleteConfirm": "¿Estás seguro de que deseas eliminar esta copia de seguridad?",
+    "deleteSuccess": "Copia de seguridad eliminada",
+    "deleteFailed": "Error al eliminar la copia de seguridad",
+    "loading": "Cargando copias de seguridad...",
+    "size": "Tamaño",
+    "slots": "ranuras"
   }
 }

@@ -528,7 +528,8 @@
     "selectColor": "選擇顏色"
   },
   "moveItemsDialog": {
-    "rootLevel": "根目錄（頂層）"
+    "rootLevel": "根目錄（頂層）",
+    "createFolder": "新建資料夾"
   },
   "defaultFolder": {
     "currentLabel": "目前：",
@@ -769,7 +770,19 @@
     "slashCommand": "斜線命令",
     "slashCommandDesc": "在輸入框中輸入 / 快速插入提示詞庫中的提示詞",
     "hotkeyHelper": "快捷鍵助手",
-    "hotkeyHelperDesc": "在右下角顯示鍵盤圖示，懸停查看快捷鍵"
+    "hotkeyHelperDesc": "在右下角顯示鍵盤圖示，懸停查看快捷鍵",
+    "selectionToolbar": "劃詞工具列",
+    "selectionToolbarDesc": "選取對話中的文字時顯示浮動工具列",
+    "selectionToolbarReference": "引用",
+    "selectionToolbarReferenceDesc": "將選取文字作為引用插入輸入框",
+    "selectionToolbarExplain": "解釋",
+    "selectionToolbarExplainDesc": "讓 AI 解釋選取的文字",
+    "selectionToolbarSaveAsSnippet": "儲存為片段",
+    "selectionToolbarSaveAsSnippetDesc": "將選取文字儲存到片段庫",
+    "selectionToolbarSummarize": "摘要",
+    "selectionToolbarSummarizeDesc": "讓 AI 摘要選取的文字",
+    "selectionToolbarCopyAsMarkdown": "複製為 Markdown",
+    "selectionToolbarCopyAsMarkdownDesc": "以 Markdown 格式複製選取文字"
   },
   "aistudioUI": {
     "title": "介面控制",
@@ -1050,5 +1063,32 @@
   },
   "agentLoop": {
     "resultCapsulePrefix": "結果"
+  },
+  "backup": {
+    "title": "備份",
+    "description": "自動每日快照，保護你的資料安全。出現問題時可還原到任意歷史狀態。",
+    "enabled": "自動備份",
+    "enabledDesc": "資料變更後自動儲存每日快照",
+    "maxSlots": "最大槽位",
+    "maxSlotsDesc": "保留的備份槽位數量（1–20）",
+    "viewBackups": "檢視",
+    "noBackups": "尚無備份。下次同步或資料變更後將自動建立快照。",
+    "createBackup": "立即建立備份",
+    "creating": "正在建立備份...",
+    "created": "備份建立成功",
+    "createFailed": "建立備份失敗",
+    "restore": "還原",
+    "restoreTitle": "還原備份",
+    "restoreConfirm": "確定要還原此備份嗎？這將覆蓋目前的本機資料（訊息不受影響）。",
+    "restoreSuccess": "備份還原成功",
+    "restoreFailed": "還原備份失敗",
+    "delete": "刪除",
+    "deleteTitle": "刪除備份",
+    "deleteConfirm": "確定要刪除此備份嗎？",
+    "deleteSuccess": "備份已刪除",
+    "deleteFailed": "刪除備份失敗",
+    "loading": "正在載入備份...",
+    "size": "大小",
+    "slots": "個"
   }
 }

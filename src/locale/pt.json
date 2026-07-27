@@ -528,7 +528,8 @@
     "selectColor": "Selecionar Cor"
   },
   "moveItemsDialog": {
-    "rootLevel": "Raiz (Nível Superior)"
+    "rootLevel": "Raiz (Nível Superior)",
+    "createFolder": "Nova Pasta"
   },
   "defaultFolder": {
     "currentLabel": "Atual: ",
@@ -769,7 +770,19 @@
     "slashCommand": "Comandos com barra",
     "slashCommandDesc": "Digite / na entrada para inserir rapidamente prompts da biblioteca",
     "hotkeyHelper": "Ajuda de Atalhos",
-    "hotkeyHelperDesc": "Mostrar ícone de teclado no canto inferior direito para referência rápida de atalhos"
+    "hotkeyHelperDesc": "Mostrar ícone de teclado no canto inferior direito para referência rápida de atalhos",
+    "selectionToolbar": "Barra de ferramentas de seleção",
+    "selectionToolbarDesc": "Mostrar uma barra flutuante ao selecionar texto nas conversas",
+    "selectionToolbarReference": "Referência",
+    "selectionToolbarReferenceDesc": "Inserir o texto selecionado como referência na caixa de entrada",
+    "selectionToolbarExplain": "Explicar",
+    "selectionToolbarExplainDesc": "Pedir à IA para explicar o texto selecionado",
+    "selectionToolbarSaveAsSnippet": "Salvar como snippet",
+    "selectionToolbarSaveAsSnippetDesc": "Salvar o texto selecionado na sua biblioteca de snippets",
+    "selectionToolbarSummarize": "Resumir",
+    "selectionToolbarSummarizeDesc": "Pedir à IA para resumir o texto selecionado",
+    "selectionToolbarCopyAsMarkdown": "Copiar como Markdown",
+    "selectionToolbarCopyAsMarkdownDesc": "Copiar o texto selecionado com formatação Markdown"
   },
   "aistudioUI": {
     "title": "Controles de Interface",
@@ -1049,5 +1062,32 @@
   },
   "agentLoop": {
     "resultCapsulePrefix": "Resultado"
+  },
+  "backup": {
+    "title": "Backups",
+    "description": "Snapshots diários automáticos para proteger seus dados. Restaure qualquer estado anterior se algo der errado.",
+    "enabled": "Backup automático",
+    "enabledDesc": "Salvar automaticamente um snapshot diário após alterações nos dados",
+    "maxSlots": "Máx. slots",
+    "maxSlotsDesc": "Número de slots de backup a manter (1–20)",
+    "viewBackups": "Ver",
+    "noBackups": "Ainda não há backups. Um snapshot será criado automaticamente após sua próxima sincronização ou alteração de dados.",
+    "createBackup": "Criar backup agora",
+    "creating": "Criando backup...",
+    "created": "Backup criado com sucesso",
+    "createFailed": "Falha ao criar backup",
+    "restore": "Restaurar",
+    "restoreTitle": "Restaurar backup",
+    "restoreConfirm": "Tem certeza de que deseja restaurar este backup? Isso substituirá seus dados locais atuais (as mensagens não são afetadas).",
+    "restoreSuccess": "Backup restaurado com sucesso",
+    "restoreFailed": "Falha ao restaurar backup",
+    "delete": "Excluir",
+    "deleteTitle": "Excluir backup",
+    "deleteConfirm": "Tem certeza de que deseja excluir este backup?",
+    "deleteSuccess": "Backup excluído",
+    "deleteFailed": "Falha ao excluir backup",
+    "loading": "Carregando backups...",
+    "size": "Tamanho",
+    "slots": "slots"
   }
 }

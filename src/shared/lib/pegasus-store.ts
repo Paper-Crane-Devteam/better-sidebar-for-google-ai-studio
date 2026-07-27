@@ -36,6 +36,15 @@ const getDefaultLanguage = ():
   return 'en';
 };
 
+export interface SelectionToolbarConfig {
+  enabled: boolean;
+  reference: boolean;
+  explain: boolean;
+  saveAsSnippet: boolean;
+  summarize: boolean;
+  copyAsMarkdown: boolean;
+}
+
 export interface GeminiEnhancedFeatures {
   defaultModel: 'default' | 'flash-lite' | 'flash' | 'pro';
   sidebarWidth: number;
@@ -51,6 +60,7 @@ export interface GeminiEnhancedFeatures {
   showHotkeyHelper: boolean;
   slashCommand: boolean;
   removeWatermark: boolean;
+  selectionToolbar: SelectionToolbarConfig;
 }
 
 export interface AIStudioEnhancedFeatures {
@@ -67,6 +77,8 @@ interface PegasusState {
   gdriveSyncing: boolean;
   theme: 'light' | 'dark' | 'system';
   customTheme: ThemePresetId | null;
+  backupEnabled: boolean;
+  backupMaxSlots: number;
   enhancedFeatures: {
     gemini: GeminiEnhancedFeatures;
     aistudio: AIStudioEnhancedFeatures;
@@ -86,6 +98,8 @@ interface PegasusState {
   setCustomTheme: (themeId: ThemePresetId | null) => void;
   setGdriveAutoSync: (enabled: boolean) => void;
   setGdriveSyncing: (syncing: boolean) => void;
+  setBackupEnabled: (enabled: boolean) => void;
+  setBackupMaxSlots: (slots: number) => void;
 }
 
 export const usePegasusStore = create<PegasusState>()((set) => ({
@@ -94,6 +108,8 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
   gdriveSyncing: false,
   theme: 'system',
   customTheme: null,
+  backupEnabled: true,
+  backupMaxSlots: 5,
   enhancedFeatures: {
     gemini: {
       defaultModel: 'default',
@@ -110,6 +126,14 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
       showHotkeyHelper: true,
       slashCommand: true,
       removeWatermark: true,
+      selectionToolbar: {
+        enabled: true,
+        reference: true,
+        explain: true,
+        saveAsSnippet: true,
+        summarize: true,
+        copyAsMarkdown: true,
+      },
     },
     aistudio: {
       sidebarWidth: 320,
@@ -146,6 +170,9 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
   setCustomTheme: (customTheme) => set({ customTheme }),
   setGdriveAutoSync: (gdriveAutoSync) => set({ gdriveAutoSync }),
   setGdriveSyncing: (gdriveSyncing) => set({ gdriveSyncing }),
+  setBackupEnabled: (backupEnabled) => set({ backupEnabled }),
+  setBackupMaxSlots: (backupMaxSlots) =>
+    set({ backupMaxSlots: Math.min(Math.max(backupMaxSlots, 1), 20) }),
 }));
 
 export const STORE_NAME = 'pegasusGlobalStore';

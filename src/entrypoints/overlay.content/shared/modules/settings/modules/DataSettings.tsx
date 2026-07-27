@@ -20,15 +20,19 @@ import {
   Link,
   Unlink,
   AlertTriangle,
+  HardDrive,
 } from 'lucide-react';
 import { useDataManagement } from '../hooks/useDataManagement';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { ImportHistoryDialog } from '@/entrypoints/overlay.content/aistudio/modules/search/components/ImportHistoryDialog';
 import { GDriveSyncSection } from '@/entrypoints/overlay.content/shared/components/GDriveSyncSection';
+import { openBackupModal } from '@/entrypoints/overlay.content/shared/components/BackupListModal';
 import { detectPlatform, PLATFORM_CONFIG, Platform } from '@/shared/types/platform';
 import type { Profile } from '@/shared/lib/profile-registry';
 import { modal } from '@/shared/lib/modal';
 import { toast } from '@/shared/lib/toast';
+import { usePegasusStore } from '@/shared/lib/pegasus-store';
+import { Switch } from '@/shared/components/ui/switch';
 import dayjs from 'dayjs';
 
 export const DataSettings = () => {
@@ -39,6 +43,12 @@ export const DataSettings = () => {
   const { exportData, importData, resetData, scanLibrary, isLoading } =
     useDataManagement();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const {
+    backupEnabled,
+    setBackupEnabled,
+    backupMaxSlots,
+    setBackupMaxSlots,
+  } = usePegasusStore();
 
   // Profile management state
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -249,6 +259,59 @@ export const DataSettings = () => {
       {/* ── Google Drive Sync ── */}
       <GDriveSyncSection />
 
+      {/* ── Backup Settings ── */}
+      <div className="space-y-2">
+        <h3 className="text-lg font-medium">{t('backup.title')}</h3>
+        <Separator />
+        <div className="grid gap-4 py-4">
+          {/* Enable/disable toggle */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <span className="text-sm font-medium">
+                {t('backup.enabled')}
+              </span>
+              <p className="text-xs text-muted-foreground">
+                {t('backup.enabledDesc')}
+              </p>
+            </div>
+            <Switch
+              checked={backupEnabled}
+              onCheckedChange={setBackupEnabled}
+            />
+          </div>
+
+          {/* Max slots */}
+          {backupEnabled && (
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <span className="text-sm font-medium">
+                  {t('backup.maxSlots')}
+                </span>
+                <p className="text-xs text-muted-foreground">
+                  {t('backup.maxSlotsDesc')}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={backupMaxSlots}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val)) setBackupMaxSlots(val);
+                  }}
+                  className="w-16 h-8 text-center"
+                />
+                <span className="text-xs text-muted-foreground">
+                  {t('backup.slots')}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* ── Profiles & Storage ── */}
       <div className="space-y-2">
         <h3 className="text-lg font-medium">{t('data.storageManagement')}</h3>
@@ -363,6 +426,32 @@ export const DataSettings = () => {
                     <Trash2 className="h-4 w-4" />
                   )}
                   {t('data.resetData')}
+                </Button>
+              </div>
+
+              {/* Backups */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <span className="text-sm font-medium">
+                    {t('backup.title')}
+                  </span>
+                  <p className="text-xs text-muted-foreground">
+                    {t('backup.description')}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() =>
+                    openBackupModal(
+                      activeProfile.dbName,
+                      activeProfile.name,
+                    )
+                  }
+                >
+                  <HardDrive className="h-4 w-4" />
+                  {t('backup.viewBackups')}
                 </Button>
               </div>
             </div>

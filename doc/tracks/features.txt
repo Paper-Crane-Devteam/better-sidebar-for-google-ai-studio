@@ -43,3 +43,5 @@
 44. select text and reference or ask about it
 45. auto back up mechanism
 46. sync don't udpate last active time, leave it empty
+45. auto backup mechanism
+46. 

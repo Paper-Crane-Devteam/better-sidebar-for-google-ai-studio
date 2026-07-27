@@ -529,7 +529,8 @@
     "selectColor": "色を選択"
   },
   "moveItemsDialog": {
-    "rootLevel": "ルート（トップレベル）"
+    "rootLevel": "ルート（トップレベル）",
+    "createFolder": "新しいフォルダー"
   },
   "defaultFolder": {
     "currentLabel": "現在：",
@@ -770,7 +771,19 @@
     "slashCommand": "スラッシュコマンド",
     "slashCommandDesc": "入力欄で / を入力してライブラリからプロンプトをすばやく挿入",
     "hotkeyHelper": "ショートカットヘルパー",
-    "hotkeyHelperDesc": "右下にキーボードアイコンを表示してショートカットをすぐに確認"
+    "hotkeyHelperDesc": "右下にキーボードアイコンを表示してショートカットをすぐに確認",
+    "selectionToolbar": "選択ツールバー",
+    "selectionToolbarDesc": "会話内でテキストを選択した際にフローティングツールバーを表示",
+    "selectionToolbarReference": "引用",
+    "selectionToolbarReferenceDesc": "選択したテキストを入力欄に引用として挿入",
+    "selectionToolbarExplain": "説明",
+    "selectionToolbarExplainDesc": "選択したテキストを AI に説明してもらう",
+    "selectionToolbarSaveAsSnippet": "スニペットとして保存",
+    "selectionToolbarSaveAsSnippetDesc": "選択したテキストをスニペットライブラリに保存",
+    "selectionToolbarSummarize": "要約",
+    "selectionToolbarSummarizeDesc": "選択したテキストを AI に要約してもらう",
+    "selectionToolbarCopyAsMarkdown": "Markdown としてコピー",
+    "selectionToolbarCopyAsMarkdownDesc": "選択したテキストを Markdown 形式でコピー"
   },
   "aistudioUI": {
     "title": "UI コントロール",
@@ -1050,5 +1063,32 @@
   },
   "agentLoop": {
     "resultCapsulePrefix": "結果"
+  },
+  "backup": {
+    "title": "バックアップ",
+    "description": "データを保護する自動デイリースナップショット。問題が発生した場合に以前の状態を復元できます。",
+    "enabled": "自動バックアップ",
+    "enabledDesc": "データ変更後にスナップショットを毎日自動保存",
+    "maxSlots": "最大スロット数",
+    "maxSlotsDesc": "保持するバックアップスロット数（1〜20）",
+    "viewBackups": "表示",
+    "noBackups": "バックアップはまだありません。次回の同期またはデータ変更後に自動で作成されます。",
+    "createBackup": "今すぐバックアップ",
+    "creating": "バックアップを作成中...",
+    "created": "バックアップを作成しました",
+    "createFailed": "バックアップの作成に失敗しました",
+    "restore": "復元",
+    "restoreTitle": "バックアップの復元",
+    "restoreConfirm": "このバックアップを復元しますか？現在のローカルデータが上書きされます（メッセージは影響を受けません）。",
+    "restoreSuccess": "バックアップを復元しました",
+    "restoreFailed": "バックアップの復元に失敗しました",
+    "delete": "削除",
+    "deleteTitle": "バックアップの削除",
+    "deleteConfirm": "このバックアップを削除しますか？",
+    "deleteSuccess": "バックアップを削除しました",
+    "deleteFailed": "バックアップの削除に失敗しました",
+    "loading": "バックアップを読み込み中...",
+    "size": "サイズ",
+    "slots": "スロット"
   }
 }
