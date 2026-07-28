@@ -10,8 +10,13 @@ export interface AgentPlatformAdapter {
   /** Insert text into the editor (replaces current content) */
   insertText(text: string): void;
 
-  /** Programmatically trigger the send button */
-  triggerSend(): Promise<void>;
+  /**
+   * Programmatically trigger the send button.
+   * Resolves false when the click was refused (e.g. the platform is still
+   * generating and the button is currently "stop"), so callers can react instead
+   * of assuming the message went out.
+   */
+  triggerSend(options?: { humanDelay?: boolean }): Promise<boolean>;
 
   /** Get the current text content of the editor */
   getText(): string;
@@ -32,8 +37,12 @@ export interface AgentPlatformAdapter {
    */
   extractResponseText(responseElement: HTMLElement): string;
 
-  /** Whether the AI is currently streaming output */
-  isStreaming(): boolean;
+  /**
+   * Whether the AI is currently streaming output.
+   * Pass a response element to scope the check to that turn (preferred) —
+   * page-wide checks pick up unrelated spinners.
+   */
+  isStreaming(responseElement?: HTMLElement): boolean;
 
   /** Get the last AI response DOM container element */
   getLastAIResponseElement(): HTMLElement | null;

@@ -163,8 +163,9 @@ export function useEditorIntegration(config: EditorIntegrationConfig) {
           // Rewrite editor content via helper (handles Quill sync)
           replaceAllContent(editor, wrappedResult);
 
-          // After Quill processes the new content, click the send button
-          triggerSend();
+          // After Quill processes the new content, click the send button.
+          // User pressed Enter, so skip the anti-automation pause.
+          void triggerSend({ humanDelay: false });
           return;
         }
 

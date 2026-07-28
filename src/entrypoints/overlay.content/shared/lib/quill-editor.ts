@@ -360,38 +360,141 @@ export function hasCapsules(editor: HTMLElement, capsuleClass: string, triggerCh
 
 const SEND_BUTTON_SELECTOR = '.text-input-field .send-button-container>gem-icon-button>button';
 
+/** Minimum pause before clicking send (ms) */
+const SEND_DELAY_MIN_MS = 800;
+/** Maximum pause before clicking send (ms) */
+const SEND_DELAY_MAX_MS = 2000;
+/** How long to wait for the button to leave its "stop" state */
+const STOP_STATE_TIMEOUT_MS = 120000;
+/** Poll interval while waiting for the button to become a send button */
+const STOP_STATE_POLL_MS = 300;
+
 /**
- * Click the send button. Waits 150ms for Quill to process input changes first.
+ * Gemini reuses one button for send and stop-generating. Which one it currently
+ * is has to be read off the icon / label — the class and disabled state are the
+ * same for both.
  */
-export async function triggerSend(): Promise<void> {
+export type SendButtonState = 'send' | 'stop' | 'unknown';
+
+const STOP_LABEL_RE = /stop|停止|停止生成|中止/i;
+const SEND_LABEL_RE = /send|发送|傳送/i;
+
+/** Locate the send/stop button, trying the specific selector then fallbacks. */
+export function findSendButton(): HTMLButtonElement | null {
+  const primary = document.querySelector<HTMLButtonElement>(SEND_BUTTON_SELECTOR);
+  if (primary) return primary;
+
+  const fallback = document.querySelector<HTMLButtonElement>(
+    'button.send-button, button[aria-label="Send message"], button[data-at-shortcutkeys]',
+  );
+  if (fallback) return fallback;
+
+  // Last resort: match on the material icon glyph
+  for (const btn of document.querySelectorAll('button')) {
+    const glyph = btn.querySelector('mat-icon')?.textContent?.trim();
+    if (glyph === 'send' || glyph === 'stop') return btn as HTMLButtonElement;
+  }
+  return null;
+}
+
+/**
+ * Read whether the button would currently send a message or stop generation.
+ *
+ * This matters because clicking during generation aborts the answer instead of
+ * sending: the agent loop lost whole turns that way, and the icon lags behind the
+ * actual stream end, so "response looks done" is not enough on its own.
+ */
+export function getSendButtonState(button?: HTMLButtonElement | null): SendButtonState {
+  const btn = button ?? findSendButton();
+  if (!btn) return 'unknown';
+
+  const glyph = btn.querySelector('mat-icon')?.textContent?.trim().toLowerCase();
+  if (glyph === 'stop') return 'stop';
+  if (glyph === 'send') return 'send';
+
+  const label = `${btn.getAttribute('aria-label') ?? ''} ${btn.getAttribute('mattooltip') ?? ''}`;
+  if (STOP_LABEL_RE.test(label)) return 'stop';
+  if (SEND_LABEL_RE.test(label)) return 'send';
+
+  // Gemini also swaps the container class in some builds
+  if (btn.closest('.stop-button-container')) return 'stop';
+  if (btn.closest('.send-button-container')) return 'send';
+
+  return 'unknown';
+}
+
+/** Human-ish pause: a fixed cadence looks automated and risks rate limiting. */
+function randomSendDelay(): number {
+  return SEND_DELAY_MIN_MS + Math.random() * (SEND_DELAY_MAX_MS - SEND_DELAY_MIN_MS);
+}
+
+/**
+ * Wait until the button is no longer a stop button.
+ * Returns false if it stayed in stop state until the timeout.
+ */
+async function waitForSendState(timeoutMs = STOP_STATE_TIMEOUT_MS): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    if (getSendButtonState() !== 'stop') return true;
+    await new Promise((r) => setTimeout(r, STOP_STATE_POLL_MS));
+  }
+  return false;
+}
+
+export interface TriggerSendOptions {
+  /**
+   * Pause a random 0.8–2s before clicking. On for automated sends (gives the DOM
+   * time to settle and avoids a robotic cadence); off for sends the user just
+   * initiated, where the extra lag would only feel broken.
+   */
+  humanDelay?: boolean;
+}
+
+/**
+ * Click the send button.
+ *
+ * Guards, in order:
+ * 1. let Quill flush the pending input changes
+ * 2. wait out any in-progress generation — the same button is "stop generating"
+ *    while streaming, and clicking it there kills the answer instead of sending
+ * 3. optional random pause, then re-check the state right before clicking,
+ *    since the icon can still flip during the pause
+ *
+ * Returns whether a send was actually clicked.
+ */
+export async function triggerSend(options: TriggerSendOptions = {}): Promise<boolean> {
+  const { humanDelay = true } = options;
+
   await new Promise((r) => setTimeout(r, 150));
 
-  const sendBtn = document.querySelector<HTMLButtonElement>(SEND_BUTTON_SELECTOR);
-
-  if (sendBtn && !sendBtn.disabled) {
-    sendBtn.click();
-    return;
+  if (!(await waitForSendState())) {
+    console.warn('[QuillEditor] Send button stuck in stop state, not clicking');
+    return false;
   }
 
-  // Fallback selectors
-  const fallbackBtn = document.querySelector(
-    'button.send-button, button[aria-label="Send message"], button[data-at-shortcutkeys]',
-  ) as HTMLButtonElement | null;
-
-  if (fallbackBtn && !fallbackBtn.disabled) {
-    fallbackBtn.click();
-    return;
+  if (humanDelay) {
+    await new Promise((r) => setTimeout(r, randomSendDelay()));
   }
 
-  // Fallback: try finding by mat-icon content
-  const buttons = document.querySelectorAll('button');
-  for (const btn of buttons) {
-    if (btn.querySelector('mat-icon')?.textContent?.trim() === 'send') {
-      (btn as HTMLButtonElement).click();
-      return;
-    }
+  // Re-resolve and re-check: the delay above is long enough for Gemini to swap
+  // the button back into stop state (e.g. the user sent something meanwhile).
+  const btn = findSendButton();
+  if (!btn) {
+    console.warn('[QuillEditor] Could not find send button');
+    return false;
   }
-  console.warn('[QuillEditor] Could not find send button');
+  if (getSendButtonState(btn) === 'stop') {
+    console.warn('[QuillEditor] Button flipped back to stop, not clicking');
+    return false;
+  }
+  if (btn.disabled) {
+    console.warn('[QuillEditor] Send button is disabled, not clicking');
+    return false;
+  }
+
+  btn.click();
+  return true;
 }
 
 // ─── Send Button Interceptor ─────────────────────────────────────────────────
@@ -463,7 +566,8 @@ export function installSendButtonInterceptor(): void {
       const wrappedResult = `<bs_agent_result>\n${mergedContent}\n</bs_agent_result>`;
 
       replaceAllContent(editor, wrappedResult);
-      triggerSend();
+      // User already clicked — no artificial pause, but still wait out generation
+      void triggerSend({ humanDelay: false });
       return;
     }
 
