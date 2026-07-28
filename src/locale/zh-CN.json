@@ -1062,6 +1062,82 @@
   "agentLoop": {
     "resultCapsulePrefix": "结果"
   },
+  "agent": {
+    "launcher": {
+      "title": "Agent",
+      "subtitle": "让 AI 直接操作你的对话数据。",
+      "placeholder": "描述你想完成的事…",
+      "run": "运行",
+      "skills": "或从技能开始",
+      "stageHint": "会先放进输入框，你可以补充细节再发送。",
+      "noEditor": "请先打开一个对话，Agent 通过输入框运行。",
+      "safety": "只操作本地数据库，修改前会先向你确认。",
+      "freeTier": "免费版只能读取。升级后 Agent 才能修改数据。",
+      "manage": "管理技能与工具"
+    },
+    "status": {
+      "idle": "已完成",
+      "waiting_ai": "思考中…",
+      "parsing": "读取回复…",
+      "executing": "执行中…",
+      "sending": "发送中…",
+      "awaiting_send": "等你确认",
+      "paused": "已暂停",
+      "error": "出错"
+    },
+    "header": {
+      "step": "第 {{count}} 步",
+      "speedHint": "本次任务自动批准写操作"
+    },
+    "actions": {
+      "stop": "停止",
+      "retry": "重试",
+      "continue": "继续",
+      "dismiss": "忽略"
+    },
+    "continue": {
+      "title": "结果已就绪，继续下一步？",
+      "hint": "在输入框按 Enter 效果相同。"
+    },
+    "interrupt": {
+      "errorTitle": "出了点问题",
+      "pausedTitle": "循环已暂停"
+    },
+    "policy": {
+      "autoReads": "自动执行读操作",
+      "autoWrites": "自动批准写操作",
+      "autoWritesHint": "仅本次任务"
+    },
+    "confirm": {
+      "title": "确认修改",
+      "showFull": "查看完整语句",
+      "reject": "拒绝",
+      "approve": "允许",
+      "approveAll": "本次任务全部允许"
+    },
+    "instruction": {
+      "placeholder": "给 AI 补充说明…",
+      "sent": "已发送"
+    },
+    "history": {
+      "title": "步骤"
+    },
+    "summary": {
+      "done": "任务完成",
+      "paywall": "需要升级",
+      "stopped": "已停止",
+      "maxRounds": "已达步数上限",
+      "stuck": "已停止 — Agent 在重复同样的操作",
+      "ended": "会话结束",
+      "paywallDesc": "免费版只允许 Agent 读取数据，升级后可以修改。",
+      "steps": "执行了 {{count}} 步",
+      "failed": "{{count}} 步失败",
+      "noSteps": "没有执行任何工具。",
+      "upgrade": "查看方案",
+      "again": "新任务",
+      "clear": "清除"
+    }
+  },
   "backup": {
     "title": "备份",
     "description": "自动每日快照，保护你的数据安全。出现问题时可恢复到任意历史状态。",

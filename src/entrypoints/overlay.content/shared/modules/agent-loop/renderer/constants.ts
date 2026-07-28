@@ -59,3 +59,30 @@ export const PROMPT_ID_ATTR = 'data-bs-agent-prompt-id';
  * Data attribute for storing tool call info on rendered elements.
  */
 export const TOOL_CALL_ATTR = 'data-bs-agent-tool';
+
+/**
+ * Candidate selectors for the conversation scroll container, in priority order.
+ *
+ * ⚠️ Order matters and a comma-separated selector list will NOT work here:
+ * `querySelector('a, b')` returns the first match in *document order*, not in
+ * the order the selectors are listed. On Gemini the infinite-scroller has no
+ * `.chat-history` class, so a combined list silently resolved to the first
+ * `.conversation-container` — a single turn, nested inside the very element the
+ * overlay hides. Iterate explicitly instead.
+ */
+const SCROLLER_SELECTORS = [
+  'chat-window infinite-scroller', // Gemini
+  'infinite-scroller.chat-history', // Gemini (older markup)
+  '#chat-history', // Gemini fallback
+  'ms-autoscroll-container', // AI Studio
+  '.conversation-container', // last resort — a single turn
+] as const;
+
+/** Find the conversation scroll container for the current platform. */
+export function findConversationScroller(): HTMLElement | null {
+  for (const selector of SCROLLER_SELECTORS) {
+    const el = document.querySelector<HTMLElement>(selector);
+    if (el) return el;
+  }
+  return null;
+}

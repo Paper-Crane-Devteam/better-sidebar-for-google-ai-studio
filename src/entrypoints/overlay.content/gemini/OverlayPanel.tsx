@@ -61,8 +61,13 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
 
   const shortcuts = useSettingsStore((state) => state.shortcuts);
   const hasSettingsBadge = useBadgeStore((s) => s.isGroupVisible('settings.'));
+  // Anything that blocks the loop until the user acts
   const agentNeedsAttention = useAgentLoopStore(
-    (s) => s.pendingConfirmation !== null || s.status === 'error',
+    (s) =>
+      s.pendingConfirmation !== null ||
+      s.status === 'error' ||
+      s.status === 'paused' ||
+      s.status === 'awaiting_send',
   );
 
   const {

@@ -9,6 +9,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAgentLoopStore } from '../agent-loop-store';
+import { findConversationScroller } from './constants';
 import { useConversationMessages } from './useConversationMessages';
 import { CustomUserMessage } from './components/CustomUserMessage';
 import { CustomModelResponse } from './components/CustomModelResponse';
@@ -19,9 +20,6 @@ import { bindShadowRootToTheme, bindAiStudioShadowRootToTheme } from '@/themes';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { detectPlatform, Platform } from '@/shared/types/platform';
-
-const SCROLLER_SELECTOR =
-  'infinite-scroller.chat-history, .conversation-container';
 
 export const ConversationOverlay: React.FC = () => {
   const viewMode = useAgentLoopStore((s) => s.viewMode);
@@ -36,9 +34,7 @@ export const ConversationOverlay: React.FC = () => {
   // Find scroller container element and set up shadow DOM host with extension styles
   useEffect(() => {
     const findAndSetupTarget = () => {
-      const el = document.querySelector(
-        SCROLLER_SELECTOR,
-      ) as HTMLElement | null;
+      const el = findConversationScroller();
       if (!el) {
         setPortalTarget(null);
         return;
@@ -70,6 +66,9 @@ export const ConversationOverlay: React.FC = () => {
         shadowBody.style.height = '100%';
         shadowBody.style.display = 'none';
         shadowBody.style.pointerEvents = 'none';
+        // The hide-native rule uses visibility, which is inherited. If our host
+        // ever ends up inside a hidden container, opt back in explicitly.
+        shadowBody.style.visibility = 'visible';
 
         const platform = detectPlatform();
         if (platform === Platform.AI_STUDIO) {
@@ -119,6 +118,9 @@ export const ConversationOverlay: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Manual tool execution is only offered on the newest model turn
+  const latestModelMessageId = [...messages].reverse().find((m) => m.role === 'model')?.id;
+
   const hasAgentContent = messages.some(
     (m) =>
       Boolean(m.promptId) ||
@@ -136,10 +138,15 @@ export const ConversationOverlay: React.FC = () => {
       portalTarget.style.pointerEvents = isCustomActive ? 'auto' : 'none';
     }
 
+    // Only blank out the native conversation once we can actually render a
+    // replacement. Otherwise a selector regression leaves the user staring at
+    // an empty chat area with no way back.
+    const canReplaceNative = isCustomActive && !!portalTarget && messages.length > 0;
+
     const styleId = 'better-sidebar-hide-native-conversation-style';
     let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
 
-    if (isCustomActive) {
+    if (canReplaceNative) {
       if (!styleEl) {
         styleEl = document.createElement('style');
         styleEl.id = styleId;
@@ -160,7 +167,7 @@ export const ConversationOverlay: React.FC = () => {
       const el = document.getElementById(styleId);
       if (el) el.remove();
     };
-  }, [isCustomActive, portalTarget]);
+  }, [isCustomActive, portalTarget, messages.length]);
 
   // Handle auto-scroll
   const scrollToBottom = () => {
@@ -216,7 +223,11 @@ export const ConversationOverlay: React.FC = () => {
             msg.role === 'user' ? (
               <CustomUserMessage key={msg.id} message={msg} />
             ) : (
-              <CustomModelResponse key={msg.id} message={msg} />
+              <CustomModelResponse
+                key={msg.id}
+                message={msg}
+                isLatestResponse={msg.id === latestModelMessageId}
+              />
             ),
           )
         )}

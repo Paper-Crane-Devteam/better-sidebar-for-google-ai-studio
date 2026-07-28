@@ -3,7 +3,7 @@
  * native AI Studio conversation DOM and custom Agent rendered view.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAgentLoopStore } from '../agent-loop-store';
 import { useConversationMessages } from './useConversationMessages';
 import { Eye, Sparkles } from 'lucide-react';
@@ -59,12 +59,17 @@ export const ConversationViewSwitcher: React.FC = () => {
   const isRunning = status !== 'idle';
   const shouldShow = hasAgentContent || isRunning;
 
-  // Reset viewMode to 'original' when switching conversations (if loop is idle)
+  // Reset to the native view when the user actually navigates to another
+  // conversation. Keying this on `status` too used to flip the view back to
+  // native the moment a session finished, and on mount before it even started.
+  const previousConversationId = useRef(conversationId);
   useEffect(() => {
-    if (status === 'idle') {
+    if (previousConversationId.current === conversationId) return;
+    previousConversationId.current = conversationId;
+    if (useAgentLoopStore.getState().status === 'idle') {
       setViewMode('original');
     }
-  }, [conversationId, status, setViewMode]);
+  }, [conversationId, setViewMode]);
 
   if (!shouldShow) {
     return null;

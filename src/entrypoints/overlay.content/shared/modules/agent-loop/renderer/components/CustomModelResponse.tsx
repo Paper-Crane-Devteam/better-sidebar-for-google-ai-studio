@@ -12,9 +12,14 @@ import { ToolCallWidget } from './ToolCallWidget';
 
 interface CustomModelResponseProps {
   message: DisplayMessageTurn;
+  /** True for the newest model turn — only there can tools be run manually */
+  isLatestResponse?: boolean;
 }
 
-export const CustomModelResponse: React.FC<CustomModelResponseProps> = ({ message }) => {
+export const CustomModelResponse: React.FC<CustomModelResponseProps> = ({
+  message,
+  isLatestResponse = false,
+}) => {
   // Split raw text by tool calls to interleave markdown text and ToolCallWidget components
   const renderContentWithTools = () => {
     if (!message.toolCalls || message.toolCalls.length === 0) {
@@ -47,6 +52,7 @@ export const CustomModelResponse: React.FC<CustomModelResponseProps> = ({ messag
           description={tc.toolCall.description}
           query={tc.toolCall.params.query || tc.toolCall.params.summary}
           rawText={tc.matchString}
+          isLatestResponse={isLatestResponse}
         />,
       );
 

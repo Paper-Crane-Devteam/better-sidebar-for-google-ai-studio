@@ -1,6 +1,6 @@
 /**
- * AgentStatusPanel — Shown when an agent session is active or completed.
- * Displays status header, execution controls, history, and instruction input.
+ * AgentStatusPanel — Shown when an agent session is active or has just finished.
+ * Order matters: whatever needs the user's decision comes first.
  */
 
 import React from 'react';
@@ -8,6 +8,10 @@ import { useAgentLoopStore } from '../../agent-loop/agent-loop-store';
 import { AgentStatusHeader } from './AgentStatusHeader';
 import { AgentExecutionHistory } from './AgentExecutionHistory';
 import { AgentConfirmation } from './AgentConfirmation';
+import { AgentContinuePrompt } from './AgentContinuePrompt';
+import { AgentInterruptNotice } from './AgentInterruptNotice';
+import { AgentSessionSummary } from './AgentSessionSummary';
+import { AgentPolicyControls } from './AgentPolicyControls';
 import { AgentInstructionInput } from './AgentInstructionInput';
 
 export const AgentStatusPanel: React.FC = () => {
@@ -15,20 +19,21 @@ export const AgentStatusPanel: React.FC = () => {
   const isRunning = status !== 'idle';
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Fixed header — status + controls */}
+    <div className="flex h-full flex-col">
       <AgentStatusHeader />
 
-      {/* Scrollable body */}
-      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-2">
-        {/* Inline confirmation (shown when pending) */}
+      <div className="flex-1 space-y-2 overflow-y-auto px-3 py-2">
+        {/* Decisions first */}
         <AgentConfirmation />
+        <AgentContinuePrompt />
+        <AgentInterruptNotice />
+        <AgentSessionSummary />
 
-        {/* Execution history */}
         <AgentExecutionHistory />
+
+        {isRunning && <AgentPolicyControls />}
       </div>
 
-      {/* Fixed footer — instruction input (only when running) */}
       {isRunning && <AgentInstructionInput />}
     </div>
   );

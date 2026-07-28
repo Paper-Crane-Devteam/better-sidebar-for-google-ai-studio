@@ -5,7 +5,13 @@
  */
 
 import { create } from 'zustand';
-import type { AgentLoopStatus, ToolCallResult, PendingConfirmation } from './types';
+import type {
+  AgentLoopStatus,
+  AgentEndReason,
+  ToolCallResult,
+  PendingConfirmation,
+  ExecutedCall,
+} from './types';
 
 export interface AgentLoopStoreState {
   /** Current loop status */
@@ -38,8 +44,6 @@ export interface AgentLoopStoreState {
   tokenEstimation: number;
   /** User instruction to inject into next round */
   pendingInstruction: string | null;
-  /** Whether the control panel popover is open */
-  panelOpen: boolean;
 
   /** View rendering mode: 'custom' (our overlay) or 'original' (native DOM) */
   viewMode: 'custom' | 'original';
@@ -47,10 +51,35 @@ export interface AgentLoopStoreState {
   /** Currently activated skill ID in this loop session */
   activeSkillId: string | null;
 
+  /** Conversation this session belongs to — used to scope the Agent tab */
+  sessionConversationId: string | null;
+
+  /** Human-readable label of what this session is doing (skill title or user input) */
+  sessionTitle: string | null;
+
+  /** Timestamp when the session started (for elapsed time display) */
+  sessionStartedAt: number | null;
+
+  /** Why the last session ended (null while running) */
+  endReason: AgentEndReason | null;
+
+  /**
+   * Tool calls already executed in this session, keyed by fingerprint.
+   * Lets the conversation's manual "Run" button know what the engine has
+   * already done, so a write can't be fired twice.
+   */
+  executedCalls: Record<string, ExecutedCall>;
+
   // Actions
   setViewMode: (mode: 'custom' | 'original') => void;
   setActiveSkillId: (id: string | null) => void;
-  start: (maxRounds: number) => void;
+  start: (maxRounds: number, session?: { conversationId?: string | null; title?: string }) => void;
+  /** Tool results are in the editor — waiting for the user (or auto-continue) to send */
+  awaitSend: () => void;
+  /** Bind the running session to a conversation id once the platform assigns one */
+  attachSessionConversation: (id: string) => void;
+  /** Remember that a tool call ran, keyed by its fingerprint */
+  recordExecutedCall: (fingerprint: string, call: ExecutedCall) => void;
   nextRound: () => void;
   setStatus: (status: AgentLoopStatus) => void;
   setCurrentTool: (tool: string | null) => void;
@@ -58,7 +87,7 @@ export interface AgentLoopStoreState {
   removeLastResult: () => void;
   pause: (reason?: string) => void;
   resume: () => void;
-  stop: () => void;
+  stop: (endReason?: AgentEndReason) => void;
   reset: () => void;
   setError: (message: string) => void;
   setSnapshotCreated: (created: boolean) => void;
@@ -69,7 +98,6 @@ export interface AgentLoopStoreState {
   addTokens: (count: number) => void;
   resetTokens: () => void;
   setPendingInstruction: (instruction: string | null) => void;
-  setPanelOpen: (open: boolean) => void;
 }
 
 export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
@@ -89,16 +117,23 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
   breakpointRound: null,
   tokenEstimation: 0,
   pendingInstruction: null,
-  panelOpen: false,
   viewMode: 'custom',
   activeSkillId: null,
+  sessionConversationId: null,
+  sessionTitle: null,
+  sessionStartedAt: null,
+  endReason: null,
+  executedCalls: {},
 
   setViewMode: (mode) => set({ viewMode: mode }),
   setActiveSkillId: (id) => set({ activeSkillId: id }),
 
-  start: (maxRounds) =>
+  start: (maxRounds, session) =>
     set({
       status: 'waiting_ai',
+      // Starting a session switches the conversation area to the agent view.
+      // Without this the switcher's idle-reset leaves it on 'original' forever.
+      viewMode: 'custom',
       currentRound: 1,
       maxRounds,
       currentTool: null,
@@ -109,7 +144,24 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
       speedMode: false,
       pendingInstruction: null,
       activeSkillId: null,
+      sessionConversationId: session?.conversationId ?? null,
+      sessionTitle: session?.title ?? null,
+      sessionStartedAt: Date.now(),
+      endReason: null,
+      executedCalls: {},
     }),
+
+  awaitSend: () => set({ status: 'awaiting_send', errorMessage: null }),
+
+  // A session started in a brand new chat has no conversation id yet; adopt the
+  // one the platform assigns after the first message is sent.
+  attachSessionConversation: (id) =>
+    set((state) => (state.sessionConversationId ? {} : { sessionConversationId: id })),
+
+  recordExecutedCall: (fingerprint, call) =>
+    set((state) => ({
+      executedCalls: { ...state.executedCalls, [fingerprint]: call },
+    })),
 
   nextRound: () =>
     set((state) => ({
@@ -145,12 +197,13 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
       errorMessage: null,
     }),
 
-  stop: () =>
+  stop: (endReason) =>
     set((state) => ({
       status: 'idle',
       currentTool: null,
       speedMode: false,
       activeSkillId: null,
+      endReason: endReason ?? state.endReason ?? 'user_stop',
       // Preserve history for viewing
       history:
         state.currentResults.length > 0
@@ -174,7 +227,12 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
       breakpointRound: null,
       tokenEstimation: 0,
       pendingInstruction: null,
-      panelOpen: false,
+      sessionConversationId: null,
+      sessionTitle: null,
+      sessionStartedAt: null,
+      activeSkillId: null,
+      endReason: null,
+      executedCalls: {},
     }),
 
   setError: (message) =>
@@ -194,5 +252,4 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
   addTokens: (count) => set((state) => ({ tokenEstimation: state.tokenEstimation + count })),
   resetTokens: () => set({ tokenEstimation: 0 }),
   setPendingInstruction: (instruction) => set({ pendingInstruction: instruction }),
-  setPanelOpen: (open) => set({ panelOpen: open }),
 }));

@@ -7,9 +7,10 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { extractPromptId, RESULT_TAG } from './constants';
+import { extractPromptId, RESULT_TAG, findConversationScroller } from './constants';
+import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
 import { parseAllToolCallsFromText, type ExtractedToolCall } from './helpers/tool-parser';
-import { getBuiltInPromptById } from '../prompts/built-in-registry';
+import { getAgentEntryById } from '../agent-entry';
 import { htmlToMarkdown } from '@/shared/lib/utils/utils';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -40,7 +41,7 @@ export interface DisplayMessageTurn {
 
 // ─── DOM Selectors ───────────────────────────────────────────────────────────
 
-const SCROLLER_SELECTOR = 'infinite-scroller.chat-history, .conversation-container, chat-window';
+// Container lookup is shared with ConversationOverlay — see findConversationScroller()
 
 // ─── DOM → Markdown Extraction ───────────────────────────────────────────────
 
@@ -79,9 +80,11 @@ function parsePromptMarker(text: string): {
     return { promptId: null, promptTitle: null, promptContent: null, cleanText: text };
   }
 
-  const promptObj = getBuiltInPromptById(promptId);
-  const promptTitle = promptObj?.title || promptId;
-  const promptContent = promptObj?.getPromptContent() || '';
+  // Resolve against the current agent entries (auto entry + skills). The old
+  // built-in prompt registry doesn't know skill ids, so titles fell back to raw ids.
+  const entry = getAgentEntryById(promptId);
+  const promptTitle = entry?.title || promptId;
+  const promptContent = entry?.skill?.promptContent || '';
 
   // Extract user's additional input from "## User Request" section if present
   let cleanText = '';
@@ -170,9 +173,11 @@ function parseUserMessage(text: string) {
 
 export function useConversationMessages(): DisplayMessageTurn[] {
   const [messages, setMessages] = useState<DisplayMessageTurn[]>([]);
+  // Navigating between conversations must force a re-parse and re-bind
+  const conversationId = useCurrentConversationId();
 
   const parseConversationDOM = useCallback(() => {
-    const container = document.querySelector(SCROLLER_SELECTOR);
+    const container = findConversationScroller();
     if (!container) {
       setMessages([]);
       return;
@@ -225,21 +230,41 @@ export function useConversationMessages(): DisplayMessageTurn[] {
   }, []);
 
   useEffect(() => {
-    parseConversationDOM();
+    // Starting from a clean slate matters: message ids are index-based, so
+    // leftovers from the previous conversation would be reused by React.
+    setMessages([]);
 
-    const observer = new MutationObserver(() => {
+    let observed: HTMLElement | null = null;
+    const observer = new MutationObserver(() => parseConversationDOM());
+
+    /**
+     * (Re)bind to the current scroll container.
+     *
+     * Gemini swaps this element out on SPA navigation. The observer used to be
+     * bound once on mount, so after switching conversations it was watching a
+     * detached node — no more mutations arrived and the overlay kept showing the
+     * previous conversation forever.
+     */
+    const bind = () => {
+      const next = findConversationScroller();
+      if (next === observed) return;
+
+      observed = next;
+      observer.disconnect();
+      if (next) {
+        observer.observe(next, { childList: true, subtree: true, characterData: true });
+      }
       parseConversationDOM();
-    });
+    };
 
-    const targetContainer = document.querySelector(SCROLLER_SELECTOR) || document.body;
-    observer.observe(targetContainer, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
+    bind();
+    const interval = setInterval(bind, 1000);
 
-    return () => observer.disconnect();
-  }, [parseConversationDOM]);
+    return () => {
+      clearInterval(interval);
+      observer.disconnect();
+    };
+  }, [conversationId, parseConversationDOM]);
 
   return messages;
 }

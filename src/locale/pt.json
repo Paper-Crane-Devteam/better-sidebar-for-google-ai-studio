@@ -1063,6 +1063,84 @@
   "agentLoop": {
     "resultCapsulePrefix": "Resultado"
   },
+  "agent": {
+    "launcher": {
+      "title": "Agente",
+      "subtitle": "Deixe a IA trabalhar diretamente nos dados das suas conversas.",
+      "placeholder": "Descreva o que você quer fazer...",
+      "run": "Executar",
+      "skills": "Ou comece com uma habilidade",
+      "stageHint": "Adiciona ao campo do chat para você complementar antes de enviar.",
+      "noEditor": "Abra um chat primeiro — o agente funciona pelo campo de entrada.",
+      "safety": "Apenas o seu banco de dados local é alterado. As mudanças são confirmadas antes de rodar.",
+      "freeTier": "O plano gratuito é somente leitura. Faça upgrade para o agente poder alterar dados.",
+      "manage": "Gerenciar habilidades e ferramentas"
+    },
+    "status": {
+      "idle": "Concluído",
+      "waiting_ai": "Pensando...",
+      "parsing": "Lendo a resposta...",
+      "executing": "Trabalhando...",
+      "sending": "Enviando...",
+      "awaiting_send": "Aguardando você",
+      "paused": "Pausado",
+      "error": "Erro"
+    },
+    "header": {
+      "step": "Etapa {{count}}",
+      "speedHint": "Operações de escrita são aprovadas automaticamente nesta tarefa"
+    },
+    "actions": {
+      "stop": "Parar",
+      "retry": "Tentar novamente",
+      "continue": "Continuar",
+      "dismiss": "Descartar"
+    },
+    "continue": {
+      "title": "Resultados prontos. Continuar para a próxima etapa?",
+      "hint": "Pressionar Enter no campo do chat faz o mesmo."
+    },
+    "interrupt": {
+      "errorTitle": "Algo deu errado",
+      "pausedTitle": "Loop pausado"
+    },
+    "policy": {
+      "autoReads": "Executar leituras automaticamente",
+      "autoWrites": "Aprovar escritas automaticamente",
+      "autoWritesHint": "Somente nesta tarefa"
+    },
+    "confirm": {
+      "title": "Confirmar alterações",
+      "showFull": "Ver consulta completa",
+      "reject": "Rejeitar",
+      "approve": "Aprovar",
+      "approveAll": "Permitir tudo nesta tarefa"
+    },
+    "instruction": {
+      "placeholder": "Adicione uma observação para a IA...",
+      "sent": "Observação enviada"
+    },
+    "history": {
+      "title": "Etapas"
+    },
+    "summary": {
+      "done": "Tarefa finalizada",
+      "paywall": "Upgrade necessário",
+      "stopped": "Interrompido",
+      "maxRounds": "Limite de etapas atingido",
+      "stuck": "Interrompido — o agente estava em loop",
+      "ended": "Sessão encerrada",
+      "paywallDesc": "O plano gratuito permite que o agente leia seus dados, mas não os altere. Faça upgrade para permitir escritas.",
+      "steps_one": "{{count}} etapa executada",
+      "steps_other": "{{count}} etapas executadas",
+      "steps": "{{count}} etapas executadas",
+      "failed": "{{count}} com falha",
+      "noSteps": "Nenhuma ferramenta foi executada.",
+      "upgrade": "Ver planos",
+      "again": "Nova tarefa",
+      "clear": "Limpar"
+    }
+  },
   "backup": {
     "title": "Backups",
     "description": "Snapshots diários automáticos para proteger seus dados. Restaure qualquer estado anterior se algo der errado.",

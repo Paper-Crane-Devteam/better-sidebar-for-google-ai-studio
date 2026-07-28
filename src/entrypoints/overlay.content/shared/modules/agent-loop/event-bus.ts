@@ -47,14 +47,19 @@ export interface AgentEventMap {
   'user:confirmation-requested': { sql: string };
   'user:confirmation-responded': { confirmed: boolean; sql: string };
 
-  // ── Control Panel ──────────────────────────────────────────────────────
+  // ── Control ────────────────────────────────────────────────────────────
   'control:speed-mode-changed': { enabled: boolean };
   'control:instruction-injected': { instruction: string };
-  'control:tool-disabled': { toolName: string };
-  'control:tool-enabled': { toolName: string };
   'control:breakpoint-set': { round: number | null };
-  'control:undo-requested': undefined;
-  'control:undo-completed': { success: boolean; error?: string };
+
+  // ── Launcher (Agent tab → editor) ──────────────────────────────────────
+  /**
+   * Ask the platform feature to stage an agent entry in the chat input.
+   * `autoSend` sends it immediately; otherwise the user can add context first.
+   */
+  'launcher:run-entry': { entryId: string; userInput?: string; autoSend: boolean };
+  'launcher:staged': { entryId: string; autoSend: boolean };
+  'launcher:failed': { reason: 'no-editor' | 'unknown-entry' };
 
   // ── Generic ────────────────────────────────────────────────────────────
   'debug:log': { level: 'info' | 'warn' | 'error'; message: string; data?: unknown };

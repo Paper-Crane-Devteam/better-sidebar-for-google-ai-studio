@@ -10,13 +10,26 @@ import {
   RESULT_CAPSULE_ATTR_CONTENT,
 } from '@/entrypoints/overlay.content/shared/lib/quill-editor';
 import { parseToolCallFromText as parseFromText } from './tool-parser';
+import { useAgentLoopStore } from '../../agent-loop-store';
+import { buildToolCallFingerprint, isWriteOperation } from '../../execution-policy';
 import type { ParsedToolCall } from '../../types';
 
 export { parseFromText as parseToolCallFromText };
 
 export async function executeToolCallFn(parsed: ParsedToolCall): Promise<string> {
   const { executeToolCall } = await import('../../tools/tool-registry');
-  return executeToolCall(parsed);
+  const result = await executeToolCall(parsed);
+
+  // Claim the call so neither this button nor the engine repeats it
+  useAgentLoopStore.getState().recordExecutedCall(buildToolCallFingerprint(parsed), {
+    toolName: parsed.name,
+    isWrite: isWriteOperation(parsed),
+    success: !result.startsWith('ERROR:') && !result.startsWith('CANCELLED:'),
+    timestamp: Date.now(),
+    source: 'manual',
+  });
+
+  return result;
 }
 
 export function fillResultToEditor(toolName: string, result: string): void {

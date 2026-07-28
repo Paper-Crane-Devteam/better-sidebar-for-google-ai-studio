@@ -19,11 +19,13 @@ import { useAgentLoopStore } from '../agent-loop-store';
 import { parseToolCalls } from './ToolCallParser';
 import { executeToolCall } from '../tools/tool-registry';
 import { CircuitBreaker } from './circuit-breaker';
+import { buildToolCallFingerprint, isWriteOperation } from '../execution-policy';
 import { agentEventBus } from '../event-bus';
 import { COMPLETE_TASK_SIGNAL } from '../tools/complete-task';
 import {
   insertMultipleCapsules,
   buildResultCapsuleText,
+  triggerSend,
   RESULT_CAPSULE_CLASS,
   RESULT_CAPSULE_ATTR_CONTENT,
 } from '@/entrypoints/overlay.content/shared/lib/quill-editor';
@@ -43,11 +45,14 @@ export class AgentLoopEngine {
    * Start the agent loop.
    * Call this after the initial prompt message has been sent.
    */
-  async start(maxRounds: number = 20): Promise<void> {
+  async start(
+    maxRounds: number = 20,
+    session?: { conversationId?: string | null; title?: string },
+  ): Promise<void> {
     this.abortController = new AbortController();
     this.circuitBreaker.reset();
     const store = useAgentLoopStore.getState();
-    store.start(maxRounds);
+    store.start(maxRounds, session);
 
     console.log('[AgentLoop] Engine started, max rounds:', maxRounds);
     agentEventBus.emit('loop:started', { maxRounds, timestamp: Date.now() });
@@ -70,18 +75,20 @@ export class AgentLoopEngine {
   /** Stop the loop gracefully */
   stop(): void {
     console.log('[AgentLoop] Engine stopped by user');
+    const totalRounds = useAgentLoopStore.getState().currentRound;
     this.abortController?.abort();
-    useAgentLoopStore.getState().stop();
-    agentEventBus.emit('loop:ended', {
-      reason: 'user_stop',
-      totalRounds: useAgentLoopStore.getState().currentRound,
-    });
+    useAgentLoopStore.getState().stop('user_stop');
+    agentEventBus.emit('loop:ended', { reason: 'user_stop', totalRounds });
   }
 
-  /** Resume after pause (retry) */
+  /**
+   * Resume after a guard stopped the loop (timeout, breakpoint, circuit breaker,
+   * max rounds) or after an error. Restarts `runLoop` — the previous invocation
+   * has already returned in all of these cases.
+   */
   async resume(): Promise<void> {
     const store = useAgentLoopStore.getState();
-    if (store.status !== 'paused') return;
+    if (store.status !== 'paused' && store.status !== 'error') return;
 
     store.resume();
     this.abortController = new AbortController();
@@ -94,6 +101,16 @@ export class AgentLoopEngine {
         useAgentLoopStore.getState().setError(msg);
       }
     }
+  }
+
+  /**
+   * Send the pending tool results and continue the loop.
+   * Valid only while status is `awaiting_send` — clicking the real send button
+   * lets the existing interceptor merge the result capsules for us.
+   */
+  async continueNow(): Promise<void> {
+    if (useAgentLoopStore.getState().status !== 'awaiting_send') return;
+    await triggerSend();
   }
 
   private async runLoop(): Promise<void> {
@@ -172,7 +189,7 @@ export class AgentLoopEngine {
 
         // First time no tools — task is likely complete
         console.log('[AgentLoop] No tool calls found, loop complete');
-        getStore().stop();
+        getStore().stop('complete');
         agentEventBus.emit('loop:ended', {
           reason: 'complete',
           totalRounds: getStore().currentRound,
@@ -257,9 +274,20 @@ export class AgentLoopEngine {
 
         getStore().addResult({
           toolName: toolCall.name,
+          // The AI's own wording — shown in the Agent tab instead of the tool name
+          description: toolCall.description,
           success,
           result: finalResult,
           timestamp: Date.now(),
+        });
+
+        // Claim this call so the conversation's manual Run button won't repeat it
+        getStore().recordExecutedCall(buildToolCallFingerprint(toolCall), {
+          toolName: toolCall.name,
+          isWrite: isWriteOperation(toolCall),
+          success,
+          timestamp: Date.now(),
+          source: 'engine',
         });
 
         results.push(`### ${toolCall.description || toolCall.name}\n${finalResult}`);
@@ -270,11 +298,12 @@ export class AgentLoopEngine {
           console.log('[AgentLoop] Task explicitly completed:', summary);
           getStore().addResult({
             toolName: 'complete_task',
+            description: summary,
             success: true,
             result: summary,
             timestamp: Date.now(),
           });
-          getStore().stop();
+          getStore().stop('complete');
           agentEventBus.emit('loop:ended', {
             reason: 'complete',
             totalRounds: getStore().currentRound,
@@ -282,10 +311,10 @@ export class AgentLoopEngine {
           return;
         }
 
-        // Check if paywall was hit
+        // Check if paywall was hit — the tab renders an upgrade prompt for this
         if (result.includes('PAYWALL')) {
           console.log('[AgentLoop] Paywall hit, stopping');
-          getStore().stop();
+          getStore().stop('paywall');
           agentEventBus.emit('loop:ended', { reason: 'error', totalRounds: getStore().currentRound });
           return;
         }
@@ -316,11 +345,12 @@ export class AgentLoopEngine {
 
       this.insertResultCapsule(formattedResult);
 
-      // 6. Pause — user must press Enter/send to continue the loop
-      getStore().pause('Tool results ready. Press Enter to send and continue.');
+      // 6. Hand control back to the user — results are staged in the editor.
+      //    This is a normal checkpoint, not a fault, so it gets its own status.
+      getStore().awaitSend();
       agentEventBus.emit('loop:paused', { reason: 'Waiting for user to send results' });
 
-      // 7. Wait for user to send (we listen for the message to actually be sent)
+      // 7. Wait for the results to actually be sent
       await this.waitForUserSend();
 
       this.checkAbort();
@@ -431,59 +461,66 @@ export class AgentLoopEngine {
    */
   private waitForUserSend(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        observer.disconnect();
-        // Don't reject — just resolve so the engine can continue waiting
-        resolve();
-      }, 300000); // 5 min timeout
-
       const editor = this.adapter.getEditor();
       if (!editor) {
-        clearTimeout(timeout);
         resolve();
         return;
       }
 
-      const checkCapsule = () => {
-        // If capsule is gone, user sent the message
-        const capsule = editor.querySelector('.bs-agent-result-capsule');
-        if (!capsule) {
-          clearTimeout(timeout);
-          observer.disconnect();
-          // Small delay for the message to be processed
-          setTimeout(resolve, 500);
+      const signal = this.abortController?.signal;
+      let settled = false;
+
+      const cleanup = () => {
+        clearTimeout(timeout);
+        observer.disconnect();
+        parentObserver.disconnect();
+        signal?.removeEventListener('abort', onAbort);
+      };
+
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        // Small delay for the message to be processed
+        setTimeout(resolve, 500);
+      };
+
+      // Abort must interrupt the wait immediately. Previously this only reacted
+      // to DOM mutations, so stopping the loop while idle left it hanging here.
+      const onAbort = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(new Error('Agent loop aborted'));
+      };
+
+      const timeout = setTimeout(() => {
+        // Don't reject — just resolve so the engine can continue
+        finish();
+      }, 300000); // 5 min
+
+      const checkCapsule = (target: HTMLElement | null) => {
+        if (target && !target.querySelector('.bs-agent-result-capsule')) {
+          finish();
         }
       };
 
-      // Also check if abort was called
-      const checkAbort = () => {
-        if (this.abortController?.signal.aborted) {
-          clearTimeout(timeout);
-          observer.disconnect();
-          reject(new Error('Agent loop aborted'));
-        }
-      };
-
-      const observer = new MutationObserver(() => {
-        checkAbort();
-        checkCapsule();
-      });
-
+      const observer = new MutationObserver(() => checkCapsule(editor));
       observer.observe(editor, { childList: true, subtree: true, characterData: true });
 
-      // Also observe parent (in case editor gets replaced)
-      const parentObserver = new MutationObserver(() => {
-        const newEditor = this.adapter.getEditor();
-        if (newEditor && !newEditor.querySelector('.bs-agent-result-capsule')) {
-          clearTimeout(timeout);
-          parentObserver.disconnect();
-          observer.disconnect();
-          setTimeout(resolve, 500);
-        }
-      });
+      // Also observe parent (in case editor gets replaced on SPA navigation)
+      const parentObserver = new MutationObserver(() =>
+        checkCapsule(this.adapter.getEditor()),
+      );
       if (editor.parentElement) {
         parentObserver.observe(editor.parentElement, { childList: true, subtree: true });
       }
+
+      if (signal?.aborted) {
+        onAbort();
+        return;
+      }
+      signal?.addEventListener('abort', onAbort);
     });
   }
 

@@ -1064,6 +1064,83 @@
   "agentLoop": {
     "resultCapsulePrefix": "結果"
   },
+  "agent": {
+    "launcher": {
+      "title": "エージェント",
+      "subtitle": "AI に会話データを直接操作させます。",
+      "placeholder": "実行したい内容を入力してください…",
+      "run": "実行",
+      "skills": "またはスキルから始める",
+      "stageHint": "入力欄に追加されるので、送信前に詳細を追記できます。",
+      "noEditor": "まずチャットを開いてください。エージェントは入力欄経由で動作します。",
+      "safety": "操作対象はローカルデータベースのみです。変更前に必ず確認します。",
+      "freeTier": "無料プランは読み取り専用です。アップグレードするとエージェントが変更できるようになります。",
+      "manage": "スキルとツールを管理"
+    },
+    "status": {
+      "idle": "完了",
+      "waiting_ai": "考えています…",
+      "parsing": "応答を読み取っています…",
+      "executing": "実行中…",
+      "sending": "送信中…",
+      "awaiting_send": "操作をお待ちしています",
+      "paused": "一時停止中",
+      "error": "エラー"
+    },
+    "header": {
+      "step": "ステップ {{count}}",
+      "speedHint": "このタスクでは書き込み操作を自動承認します"
+    },
+    "actions": {
+      "stop": "停止",
+      "retry": "再試行",
+      "continue": "続行",
+      "dismiss": "閉じる"
+    },
+    "continue": {
+      "title": "結果が揃いました。次のステップに進みますか？",
+      "hint": "入力欄で Enter を押しても同じ動作になります。"
+    },
+    "interrupt": {
+      "errorTitle": "問題が発生しました",
+      "pausedTitle": "ループを一時停止しました"
+    },
+    "policy": {
+      "autoReads": "読み取りを自動実行",
+      "autoWrites": "書き込みを自動承認",
+      "autoWritesHint": "このタスクのみ"
+    },
+    "confirm": {
+      "title": "変更の確認",
+      "showFull": "クエリ全文を表示",
+      "reject": "拒否",
+      "approve": "承認",
+      "approveAll": "このタスクではすべて許可"
+    },
+    "instruction": {
+      "placeholder": "AI へのメモを追加…",
+      "sent": "メモを送信しました"
+    },
+    "history": {
+      "title": "ステップ"
+    },
+    "summary": {
+      "done": "タスク完了",
+      "paywall": "アップグレードが必要",
+      "stopped": "停止しました",
+      "maxRounds": "ステップ上限に達しました",
+      "stuck": "停止しました — エージェントが同じ処理を繰り返していました",
+      "ended": "セッション終了",
+      "paywallDesc": "無料プランではエージェントはデータの読み取りのみ可能です。書き込みを許可するにはアップグレードしてください。",
+      "steps_other": "{{count}} ステップ実行",
+      "steps": "{{count}} ステップ実行",
+      "failed": "{{count}} 件失敗",
+      "noSteps": "ツールは実行されませんでした。",
+      "upgrade": "プランを見る",
+      "again": "新しいタスク",
+      "clear": "クリア"
+    }
+  },
   "backup": {
     "title": "バックアップ",
     "description": "データを保護する自動デイリースナップショット。問題が発生した場合に以前の状態を復元できます。",

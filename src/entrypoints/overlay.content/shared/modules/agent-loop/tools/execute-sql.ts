@@ -127,19 +127,16 @@ export async function executeSql(params: ExecuteSqlParams): Promise<string> {
  * Uses the control panel's confirmation strategy.
  */
 async function requestUserConfirmation(sql: string): Promise<boolean> {
-  const { requiresConfirmation } = await import('../control-panel/utils');
+  const { requiresConfirmation } = await import('../execution-policy');
   const toolCall = { name: 'execute_sql', params: { query: sql } };
 
   if (!requiresConfirmation(toolCall)) {
     return true; // Speed mode or no confirmation needed
   }
 
+  // The Agent tab renders the confirmation and the sidebar shows an attention
+  // badge while `pendingConfirmation` is set.
   return new Promise((resolve) => {
-    useAgentLoopStore.getState().setPendingConfirmation({
-      sql,
-      resolve,
-    });
-    // Auto-open panel when confirmation is needed
-    useAgentLoopStore.getState().setPanelOpen(true);
+    useAgentLoopStore.getState().setPendingConfirmation({ sql, resolve });
   });
 }

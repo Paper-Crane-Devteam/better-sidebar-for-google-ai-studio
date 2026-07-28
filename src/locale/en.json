@@ -1062,6 +1062,84 @@
   "agentLoop": {
     "resultCapsulePrefix": "Result"
   },
+  "agent": {
+    "launcher": {
+      "title": "Agent",
+      "subtitle": "Let the AI work directly on your conversation data.",
+      "placeholder": "Describe what you want to get done...",
+      "run": "Run",
+      "skills": "Or start with a skill",
+      "stageHint": "Adds it to the chat input so you can add details before sending.",
+      "noEditor": "Open a chat first — the agent runs through the chat input.",
+      "safety": "Only your local database is touched. Changes are confirmed before they run.",
+      "freeTier": "Free plan is read-only. Upgrade to let the agent make changes.",
+      "manage": "Manage skills & tools"
+    },
+    "status": {
+      "idle": "Completed",
+      "waiting_ai": "Thinking...",
+      "parsing": "Reading response...",
+      "executing": "Working...",
+      "sending": "Sending...",
+      "awaiting_send": "Waiting for you",
+      "paused": "Paused",
+      "error": "Error"
+    },
+    "header": {
+      "step": "Step {{count}}",
+      "speedHint": "Write operations are auto-approved for this task"
+    },
+    "actions": {
+      "stop": "Stop",
+      "retry": "Retry",
+      "continue": "Continue",
+      "dismiss": "Dismiss"
+    },
+    "continue": {
+      "title": "Results ready. Continue to the next step?",
+      "hint": "Pressing Enter in the chat input does the same thing."
+    },
+    "interrupt": {
+      "errorTitle": "Something went wrong",
+      "pausedTitle": "Loop paused"
+    },
+    "policy": {
+      "autoReads": "Run reads automatically",
+      "autoWrites": "Auto-approve writes",
+      "autoWritesHint": "This task only"
+    },
+    "confirm": {
+      "title": "Confirm changes",
+      "showFull": "Show full query",
+      "reject": "Reject",
+      "approve": "Approve",
+      "approveAll": "Allow all in this task"
+    },
+    "instruction": {
+      "placeholder": "Add a note for the AI...",
+      "sent": "Note sent"
+    },
+    "history": {
+      "title": "Steps"
+    },
+    "summary": {
+      "done": "Task finished",
+      "paywall": "Upgrade required",
+      "stopped": "Stopped",
+      "maxRounds": "Step limit reached",
+      "stuck": "Stopped — the agent was looping",
+      "ended": "Session ended",
+      "paywallDesc": "The free plan lets the agent read your data but not change it. Upgrade to allow writes.",
+      "steps_one": "{{count}} step run",
+      "steps_other": "{{count}} steps run",
+      "steps": "{{count}} steps run",
+      "failed": "{{count}} failed",
+      "noSteps": "No tools were run.",
+      "upgrade": "See plans",
+      "again": "New task",
+      "clear": "Clear"
+    }
+  },
   "backup": {
     "title": "Backups",
     "description": "Automatic daily snapshots to protect your data. Restore any previous state if something goes wrong.",

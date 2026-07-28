@@ -5,12 +5,21 @@
 
 // ─── Status ──────────────────────────────────────────────────────────────────
 
+/**
+ * Loop status.
+ *
+ * `awaiting_send` is distinct from `paused`: it is the normal end of every round
+ * (tool results are sitting in the editor, waiting to be sent back to the AI).
+ * `paused` means something went wrong or the loop hit a guard (timeout,
+ * breakpoint, circuit breaker, max rounds) and needs an explicit retry.
+ */
 export type AgentLoopStatus =
   | 'idle'
   | 'waiting_ai'
   | 'parsing'
   | 'executing'
   | 'sending'
+  | 'awaiting_send'
   | 'paused'
   | 'error';
 
@@ -30,10 +39,35 @@ export interface ParseResult {
 
 export interface ToolCallResult {
   toolName: string;
+  /**
+   * The AI's own human-readable description of this step
+   * ("Create folder Coding"). Preferred over `toolName` in the UI.
+   */
+  description?: string;
   success: boolean;
   result: string;
   timestamp: number;
 }
+
+/** Record of a tool call that has already run in the current session */
+export interface ExecutedCall {
+  toolName: string;
+  /** Write operations must never run twice; reads may be repeated on request */
+  isWrite: boolean;
+  success: boolean;
+  timestamp: number;
+  /** 'engine' = automatic loop, 'manual' = the Run button in the conversation */
+  source: 'engine' | 'manual';
+}
+
+/** Why a session ended — drives the completion card in the Agent tab */
+export type AgentEndReason =
+  | 'complete'
+  | 'max_rounds'
+  | 'user_stop'
+  | 'error'
+  | 'circuit_breaker'
+  | 'paywall';
 
 // ─── Built-in Prompts ────────────────────────────────────────────────────────
 
@@ -65,11 +99,4 @@ export interface AgentLoopSettings {
 }
 
 // ─── Trigger State ───────────────────────────────────────────────────────────
-
-export interface AgentTriggerState {
-  isOpen: boolean;
-  query: string;
-  triggerPosition: number;
-  matches: import('./skills/types').Skill[];
-  selectedIndex: number;
-}
+// See useAgentTrigger.ts → AgentTriggerPopupState

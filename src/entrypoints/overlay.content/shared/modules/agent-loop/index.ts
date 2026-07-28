@@ -11,7 +11,7 @@ export type {
   BuiltInPrompt,
   PendingConfirmation,
   AgentLoopSettings,
-  AgentTriggerState,
+  AgentEndReason,
 } from './types';
 
 // Store
@@ -23,6 +23,7 @@ export type { AgentEventMap } from './event-bus';
 
 // Engine
 export { AgentLoopEngine } from './engine/AgentLoopEngine';
+export { setActiveEngine, getActiveEngine, clearActiveEngine } from './engine/engine-registry';
 export { parseToolCalls } from './engine/ToolCallParser';
 export { CircuitBreaker } from './engine/circuit-breaker';
 export type { CircuitBreakerState, LoopCheckResult, FailureCheckResult, NoProgressResult } from './engine/circuit-breaker';
@@ -42,6 +43,16 @@ export { getBuiltInPrompts, getBuiltInPromptById } from './prompts/built-in-regi
 
 // Hooks
 export { useAgentTrigger } from './useAgentTrigger';
+export type { AgentTriggerPopupState } from './useAgentTrigger';
+
+// Agent entries (auto entry + skills) — shared by the `>` popup and the tab launcher
+export {
+  getAgentEntries,
+  getAgentEntryById,
+  searchAgentEntries,
+  AGENT_AUTO_ID,
+} from './agent-entry';
+export type { AgentEntry } from './agent-entry';
 
 // Adapters
 export type { AgentPlatformAdapter } from './adapters/types';
@@ -59,9 +70,17 @@ export type { PlatformId, PlatformInfo } from './adapters/adapter-factory';
 // UI Components
 export { AgentCommandPopup } from './AgentCommandPopup';
 
-// Control Panel Store (still used by execute-sql confirmation logic)
-export { useControlPanelStore } from './control-panel-store';
-export type { ControlPanelState } from './control-panel-store';
+// Execution policy (confirmation strategy + token helpers)
+export { useAgentPolicyStore } from './agent-policy-store';
+export type { AgentPolicyState } from './agent-policy-store';
+export {
+  requiresConfirmation,
+  isWriteOperation,
+  getConfirmationStrategy,
+  estimateTokens,
+  formatTokenCount,
+} from './execution-policy';
+export type { ConfirmationStrategy } from './execution-policy';
 
 // Renderer
 export { ConversationOverlay, ConversationViewSwitcher, injectRendererStyles, buildPromptMarker } from './renderer';

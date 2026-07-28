@@ -983,7 +983,6 @@
     "ppFeatureWrite": "無需動手 —— 讓 AI 幫你重新命名、移動、合併和清理",
     "ppFeatureHistory": "完整時間線 —— AI 可分析和操作你的全部歷史紀錄，不限最近 7 天",
     "ppFeatureExport": "對話和片段一鍵匯出到 Obsidian 和 Notion",
-    "comingSoon": "即將推出",
     "comingSoon": "即將上線",
     "getPowerPack": "取得 Power Pack",
     "popular": "熱門",
@@ -1063,6 +1062,82 @@
   },
   "agentLoop": {
     "resultCapsulePrefix": "結果"
+  },
+  "agent": {
+    "launcher": {
+      "title": "Agent",
+      "subtitle": "讓 AI 直接操作你的對話資料。",
+      "placeholder": "描述你想完成的事…",
+      "run": "執行",
+      "skills": "或從技能開始",
+      "stageHint": "會先放進輸入框，你可以補充細節再送出。",
+      "noEditor": "請先開啟一個對話，Agent 透過輸入框執行。",
+      "safety": "只操作本機資料庫，修改前會先向你確認。",
+      "freeTier": "免費版只能讀取。升級後 Agent 才能修改資料。",
+      "manage": "管理技能與工具"
+    },
+    "status": {
+      "idle": "已完成",
+      "waiting_ai": "思考中…",
+      "parsing": "讀取回覆…",
+      "executing": "執行中…",
+      "sending": "傳送中…",
+      "awaiting_send": "等你確認",
+      "paused": "已暫停",
+      "error": "出錯"
+    },
+    "header": {
+      "step": "第 {{count}} 步",
+      "speedHint": "本次任務自動核准寫入操作"
+    },
+    "actions": {
+      "stop": "停止",
+      "retry": "重試",
+      "continue": "繼續",
+      "dismiss": "忽略"
+    },
+    "continue": {
+      "title": "結果已就緒，繼續下一步？",
+      "hint": "在輸入框按 Enter 效果相同。"
+    },
+    "interrupt": {
+      "errorTitle": "出了點問題",
+      "pausedTitle": "迴圈已暫停"
+    },
+    "policy": {
+      "autoReads": "自動執行讀取操作",
+      "autoWrites": "自動核准寫入操作",
+      "autoWritesHint": "僅本次任務"
+    },
+    "confirm": {
+      "title": "確認修改",
+      "showFull": "查看完整語句",
+      "reject": "拒絕",
+      "approve": "允許",
+      "approveAll": "本次任務全部允許"
+    },
+    "instruction": {
+      "placeholder": "給 AI 補充說明…",
+      "sent": "已送出"
+    },
+    "history": {
+      "title": "步驟"
+    },
+    "summary": {
+      "done": "任務完成",
+      "paywall": "需要升級",
+      "stopped": "已停止",
+      "maxRounds": "已達步數上限",
+      "stuck": "已停止 — Agent 在重複同樣的操作",
+      "ended": "工作階段結束",
+      "paywallDesc": "免費版只允許 Agent 讀取資料，升級後可以修改。",
+      "steps": "執行了 {{count}} 步",
+      "failed": "{{count}} 步失敗",
+      "noSteps": "沒有執行任何工具。",
+      "upgrade": "查看方案",
+      "again": "新任務",
+      "clear": "清除"
+    }
   },
   "backup": {
     "title": "備份",

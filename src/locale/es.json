@@ -1063,6 +1063,84 @@
   "agentLoop": {
     "resultCapsulePrefix": "Resultado"
   },
+  "agent": {
+    "launcher": {
+      "title": "Agente",
+      "subtitle": "Deja que la IA trabaje directamente con los datos de tus conversaciones.",
+      "placeholder": "Describe lo que quieres conseguir...",
+      "run": "Ejecutar",
+      "skills": "O empieza con una habilidad",
+      "stageHint": "Lo añade al campo del chat para que puedas dar más detalles antes de enviarlo.",
+      "noEditor": "Abre primero un chat: el agente funciona a través del campo de entrada.",
+      "safety": "Solo se toca tu base de datos local. Los cambios se confirman antes de ejecutarse.",
+      "freeTier": "El plan gratuito es de solo lectura. Mejora tu plan para que el agente pueda hacer cambios.",
+      "manage": "Gestionar habilidades y herramientas"
+    },
+    "status": {
+      "idle": "Completado",
+      "waiting_ai": "Pensando...",
+      "parsing": "Leyendo la respuesta...",
+      "executing": "Trabajando...",
+      "sending": "Enviando...",
+      "awaiting_send": "Esperando tu acción",
+      "paused": "En pausa",
+      "error": "Error"
+    },
+    "header": {
+      "step": "Paso {{count}}",
+      "speedHint": "Las operaciones de escritura se aprueban automáticamente en esta tarea"
+    },
+    "actions": {
+      "stop": "Detener",
+      "retry": "Reintentar",
+      "continue": "Continuar",
+      "dismiss": "Descartar"
+    },
+    "continue": {
+      "title": "Resultados listos. ¿Continuar con el siguiente paso?",
+      "hint": "Pulsar Enter en el campo del chat hace lo mismo."
+    },
+    "interrupt": {
+      "errorTitle": "Algo salió mal",
+      "pausedTitle": "Bucle en pausa"
+    },
+    "policy": {
+      "autoReads": "Ejecutar lecturas automáticamente",
+      "autoWrites": "Aprobar escrituras automáticamente",
+      "autoWritesHint": "Solo en esta tarea"
+    },
+    "confirm": {
+      "title": "Confirmar cambios",
+      "showFull": "Ver consulta completa",
+      "reject": "Rechazar",
+      "approve": "Aprobar",
+      "approveAll": "Permitir todo en esta tarea"
+    },
+    "instruction": {
+      "placeholder": "Añade una nota para la IA...",
+      "sent": "Nota enviada"
+    },
+    "history": {
+      "title": "Pasos"
+    },
+    "summary": {
+      "done": "Tarea finalizada",
+      "paywall": "Se requiere mejorar el plan",
+      "stopped": "Detenido",
+      "maxRounds": "Límite de pasos alcanzado",
+      "stuck": "Detenido: el agente estaba en un bucle",
+      "ended": "Sesión finalizada",
+      "paywallDesc": "El plan gratuito permite al agente leer tus datos, pero no modificarlos. Mejora tu plan para permitir escrituras.",
+      "steps_one": "{{count}} paso ejecutado",
+      "steps_other": "{{count}} pasos ejecutados",
+      "steps": "{{count}} pasos ejecutados",
+      "failed": "{{count}} con error",
+      "noSteps": "No se ejecutó ninguna herramienta.",
+      "upgrade": "Ver planes",
+      "again": "Nueva tarea",
+      "clear": "Limpiar"
+    }
+  },
   "backup": {
     "title": "Copias de seguridad",
     "description": "Instantáneas diarias automáticas para proteger tus datos. Restaura cualquier estado anterior si algo sale mal.",

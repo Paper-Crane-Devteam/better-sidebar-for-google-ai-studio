@@ -44,18 +44,32 @@ export class GeminiAgentAdapter implements AgentPlatformAdapter {
       }, timeoutMs);
 
       let debounceTimer: ReturnType<typeof setTimeout>;
-      let lastKnownResponse: HTMLElement | null = null;
+
+      // Snapshot the response that already exists when we start waiting.
+      // Without this, the initial check resolves immediately with the PREVIOUS
+      // turn's answer: it parses zero tool calls, so the engine concludes the
+      // task is done and shuts the session down right after it started.
+      const baselineElement = this.getLastAIResponseElement();
+      const baselineText = baselineElement
+        ? this.extractResponseText(baselineElement).trim()
+        : '';
+
+      const isStaleResponse = (el: HTMLElement, text: string): boolean =>
+        el === baselineElement && text === baselineText;
 
       const checkComplete = () => {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
           const response = this.getLastAIResponseElement();
-          if (response && !this.isStreaming()) {
-            lastKnownResponse = response;
-            clearTimeout(timeout);
-            observer.disconnect();
-            resolve(response);
-          }
+          if (!response || this.isStreaming()) return;
+
+          const text = this.extractResponseText(response).trim();
+          // Empty means the bubble exists but nothing has streamed in yet
+          if (!text || isStaleResponse(response, text)) return;
+
+          clearTimeout(timeout);
+          observer.disconnect();
+          resolve(response);
         }, 500);
       };
 
