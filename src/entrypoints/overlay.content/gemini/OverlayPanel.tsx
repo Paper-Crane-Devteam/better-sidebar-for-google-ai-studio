@@ -426,7 +426,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
 
       {/* Main Content Area */}
       <div
-        className={`flex flex-col`}
+        className={`flex flex-col px-1 pt-1`}
         style={{
           width:
             'calc(var(--bard-sidenav-open-width, 360px) - var(--bard-sidenav-closed-width, 64px))',

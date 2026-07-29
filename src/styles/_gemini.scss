@@ -139,7 +139,7 @@
   /* Sidebar - Gemini Specific (flat, no gradient, no border — color separation handles distinction) */
   .theme-gemini .sidebar-nav,
   :host(.theme-gemini) .sidebar-nav {
-    background: rgb(var(--background));
+    background: rgb(var(--secondary));
   }
 
   /* Content area (file tree, outline, etc.) - white background */
