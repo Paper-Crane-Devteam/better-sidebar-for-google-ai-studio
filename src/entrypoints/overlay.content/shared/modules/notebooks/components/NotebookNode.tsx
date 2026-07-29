@@ -272,11 +272,10 @@ export const NotebookNode = ({
       : [];
   const isMenuActive = isContextMenuOpen || isDropdownOpen;
 
-  const nodeClasses = cn(
-    'flex items-center gap-2 px-1 pr-2 h-full',
-    'cursor-pointer group relative',
-    'no-underline outline-none',
-    'text-density text-foreground/80 font-medium',
+  // --- Outer wrapper classes (visual states: hover, selected, etc.) ---
+  const wrapperClasses = cn(
+    'outline-none h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]',
+    'rounded-md cursor-pointer',
     !isActive && !isCurrentConversation && 'hover:bg-accent/50',
     isActive && 'node-item-selected',
     !isActive && isCurrentConversation && 'node-item-current',
@@ -286,6 +285,14 @@ export const NotebookNode = ({
     isMenuActive && 'node-menu-active',
   );
 
+  // --- Inner content classes (layout only) ---
+  const nodeClasses = cn(
+    'flex items-center gap-2 px-1 pr-2 h-full',
+    'group relative',
+    'no-underline outline-none',
+    'text-density text-foreground/80 font-medium',
+  );
+
   const searchQuery = useAppStore((state) => state.ui.notebooks.search.query);
 
   return (
@@ -293,7 +300,7 @@ export const NotebookNode = ({
       <ContextMenuTrigger asChild>
         <div
           style={style}
-          className="outline-none h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]"
+          className={wrapperClasses}
         >
           <div
             ref={combinedRef}

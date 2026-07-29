@@ -186,7 +186,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
       {/* Header row */}
       <div
         className={cn(
-          'flex items-center h-7 px-3 select-none bg-muted/30',
+          'flex items-center h-7 px-3 select-none',
           'hover:bg-accent/50 cursor-pointer',
         )}
         onClick={onToggle}

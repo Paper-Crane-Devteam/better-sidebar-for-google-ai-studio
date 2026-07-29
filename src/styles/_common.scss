@@ -117,10 +117,7 @@
     mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent 100%);
   }
 
-  /* Folder child tint (for items inside uncolored folders) */
-  .node-folder-child {
-    background-color: rgba(var(--foreground) / 0.04);
-  }
+
 
   /* Pinned item indicator */
   .node-item-pinned {
@@ -129,10 +126,10 @@
       content: '';
       position: absolute;
       left: 0;
-      top: 4px;
-      bottom: 4px;
-      width: 2px;
-      border-radius: 1px;
+      top: 8px;
+      bottom: 8px;
+      width: 3px;
+      border-radius: 2px;
       background-color: rgb(var(--primary));
       opacity: 0.7;
     }
@@ -145,10 +142,10 @@
       content: '';
       position: absolute;
       left: 0;
-      top: 4px;
-      bottom: 4px;
-      width: 2px;
-      border-radius: 1px;
+      top: 8px;
+      bottom: 8px;
+      width: 4px;
+      border-radius: 2px;
       background-color: rgb(var(--highlight));
       opacity: 0.7;
     }

@@ -346,7 +346,7 @@ export const ExplorerHeader = ({
       >
         <div className="animate-in fade-in slide-in-from-top-1 duration-150">
             {/* Search row with filter funnel on left */}
-            <div className="px-2 py-2 flex items-center gap-1">
+            <div className="pl-2 pr-3 py-2 flex items-center gap-1">
               {/* Filter funnel toggle */}
               <SimpleTooltip content={t('explorerHeader.moreFilters')}>
                 <Button

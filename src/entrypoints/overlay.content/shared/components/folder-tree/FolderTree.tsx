@@ -49,7 +49,7 @@ export const FolderTree = forwardRef<FolderTreeHandle, FolderTreeProps>(
     }));
 
     return (
-      <div ref={containerRef} className="h-full w-full">
+      <div ref={containerRef} className="h-full w-full pl-1">
         <Tree
           padding={2}
           ref={treeRef}

@@ -342,13 +342,10 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
       ? { backgroundColor: `${folderColor}26`, color: folderColor }
       : undefined;
 
-  // --- CSS classes ---
-  const nodeClasses = cn(
-    // Base layout
-    'flex items-center gap-1.5 px-1 pr-2 h-full',
-    'cursor-pointer group relative',
-    'no-underline outline-none',
-    'text-density text-foreground/80 font-medium',
+  // --- Outer wrapper classes (visual states: hover, selected, etc.) ---
+  const wrapperClasses = cn(
+    'outline-none h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]',
+    'rounded-md cursor-pointer',
     // Hover: only apply default hover when not active and not current conversation
     !isActive && !isCurrentConversation && 'hover:bg-accent/50',
     // Selection state: use node-item-selected for non-colored, inline style for colored (highest priority)
@@ -366,19 +363,26 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
     isMenuActive && 'node-menu-active',
   );
 
+  // --- Inner content classes (layout only) ---
+  const nodeClasses = cn(
+    'flex items-center gap-1.5 px-1 pr-2 h-full',
+    'group relative',
+    'no-underline outline-none',
+    'text-density text-foreground/80 font-medium',
+  );
+
   return (
     <ExclusiveContextMenu onOpenChange={setIsContextMenuOpen}>
       <ContextMenuTrigger asChild disabled={isTimeGroup || isBatchMode}>
         <div
-          style={style}
-          className="outline-none h-[calc(100%-2px)] w-[calc(100%-4px)] mx-auto mt-[1px]"
+          style={{ ...style, ...coloredSelectedStyle }}
+          className={wrapperClasses}
         >
           <div
             ref={combinedRef}
             role="button"
             tabIndex={0}
             className={nodeClasses}
-            style={coloredSelectedStyle}
             onClick={handleClick}
             onKeyDown={handleKeyDown}
             onContextMenu={(e) => {
