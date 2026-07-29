@@ -223,7 +223,13 @@ export const AgentLoopFeature: React.FC = () => {
       const title = userInput || entry?.title || 'Agent task';
 
       adapter.insertText(fullMessage);
-      adapter.triggerSend().then(() => startAgentEngine({ title }));
+      // User pressed Enter / clicked send, so no artificial pause. Only start the
+      // engine if the message actually went out — otherwise it would sit waiting
+      // for a response to a prompt that was never delivered.
+      adapter.triggerSend({ humanDelay: false }).then((sent) => {
+        if (sent) startAgentEngine({ title });
+        else console.warn('[AgentLoop] Initial prompt was not sent, engine not started');
+      });
 
       return true; // We handled sending
     },
@@ -289,7 +295,7 @@ export const AgentLoopFeature: React.FC = () => {
 
       if (autoSend) {
         // Route through the real send button so the interceptor composes the message
-        await triggerSend();
+        await triggerSend({ humanDelay: false });
       } else {
         editor.focus();
       }

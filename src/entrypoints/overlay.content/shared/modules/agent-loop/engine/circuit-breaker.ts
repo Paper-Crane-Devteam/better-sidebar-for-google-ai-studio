@@ -29,7 +29,7 @@ export const FAILURE_SOFT_THRESHOLD = 2;
 export const FAILURE_HARD_THRESHOLD = 4;
 
 /** Consecutive no-tool responses before pausing */
-export const NO_PROGRESS_THRESHOLD = 2;
+export const NO_PROGRESS_THRESHOLD = 3;
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -196,15 +196,21 @@ export class CircuitBreaker {
 
   /**
    * Record a round where AI produced no tool calls.
-   * Returns a nudge or stop decision.
+   * Always returns a decision: nudge first, stop once the threshold is reached.
+   *
+   * A tool-less response is never treated as success. The protocol requires the
+   * AI to end with `complete_task`, so "no tool calls" means it either forgot the
+   * format or is just talking. Returning `null` here used to make the engine call
+   * the session complete — which is why a task could report "Task finished" on its
+   * very first round without having done anything.
    */
-  recordNoToolResponse(): NoProgressResult | null {
+  recordNoToolResponse(): NoProgressResult {
     this.state.consecutiveNoToolRounds++;
     const count = this.state.consecutiveNoToolRounds;
 
     agentEventBus.emit('circuit-breaker:no-progress', { consecutiveCount: count });
 
-    if (count > NO_PROGRESS_THRESHOLD) {
+    if (count >= NO_PROGRESS_THRESHOLD) {
       return {
         action: 'stop',
         message:
@@ -214,18 +220,14 @@ export class CircuitBreaker {
       };
     }
 
-    if (count === NO_PROGRESS_THRESHOLD) {
-      return {
-        action: 'nudge',
-        message:
-          `[System] You did not use any tools in your response. ` +
-          `If the task is complete, clearly state what was accomplished. ` +
-          `Otherwise, use a tool to continue making progress.`,
-        count,
-      };
-    }
-
-    return null;
+    return {
+      action: 'nudge',
+      message:
+        `[System] Your last response contained no <bs_agent_tool> block. ` +
+        `If the task is fully done, call complete_task with a summary. ` +
+        `Otherwise use a tool to continue making progress.`,
+      count,
+    };
   }
 
   /**

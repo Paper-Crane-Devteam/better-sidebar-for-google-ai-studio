@@ -104,17 +104,47 @@ AgentLoopEngine.start(20, { conversationId, title })
        ↓ AI 回复完成                                       │
   status = parsing → parseToolCalls()                     │
        ↓                                                  │
-  无 tool call  → stop('complete')                        │
+  无 tool call  → circuitBreaker.recordNoToolResponse()   │
+                  nudge（前 2 次）/ pause（第 3 次）        │
   有 tool call  → status = executing，逐个执行             │
                   写操作 → requiresConfirmation() → 确认   │
+                  complete_task → stop('complete')        │
        ↓                                                  │
-  insertMultipleCapsules() 把结果写回编辑器                 │
+  handoffResults()                                        │
+    await insertMultipleCapsules() 把结果写回编辑器          │
+    status = awaiting_send  ← 正常检查点，不是故障          │
+    autoContinue ? 引擎自己 triggerSend()                  │
+                 : 等用户 Enter / Tab 的「继续」            │
        ↓                                                  │
-  status = awaiting_send   ← 正常检查点，不是故障           │
-  用户按 Enter，或点 Agent Tab 的「继续」(engine.continueNow) │
-       ↓                                                  │
-  waitForUserSend() resolve → nextRound() ───────────────┘
+  waitForUserSend() → true → nextRound() ────────────────┘
+                    → false（没发出去 / 5min 超时）→ pause
 ```
+
+### 发送按钮：send 与 stop 是同一个按钮
+
+Gemini 用同一个按钮承担「发送」和「停止生成」，class 和 disabled 状态都一样，
+只能靠 `mat-icon` 文本 / `aria-label` / 容器 class 区分 —— 见 `getSendButtonState()`。
+生成中点它 = 掐掉这一轮回答，而不是发消息，这会让 agent loop 直接丢一整轮。
+
+所以 `triggerSend()` 有三层保护：
+
+1. 等 150ms 让 Quill 把输入变更 flush 进 Delta
+2. 轮询等按钮离开 stop 态（`waitForSendState`，上限 120s）
+3. `humanDelay` 时随机停 0.8–2s，**点击前再查一次状态** —— 这段延迟里图标完全可能翻回 stop
+
+返回值是「有没有真的点下去」。被拒绝时引擎会 pause 并说明原因，而不是继续空等回复。
+
+| 调用方 | humanDelay | 原因 |
+|--------|-----------|------|
+| 引擎自动继续（autoContinue） | on | 给 DOM 留渲染时间，同时避免固定节奏被风控 |
+| 用户按 Enter / 点发送 / 点「继续」 | off | 用户已经表达意图，额外延迟只会像卡住 |
+
+`isStreaming()` 也把按钮状态作为最强信号：按钮是 stop 就一定没生成完，这一票
+没有 grace 上限；DOM 启发式（`aria-busy`、`message-actions[hidden]` 等）可能
+锁在过期节点上，所以只允许否决有限轮次（`STREAMING_VETO_TICKS`）。
+
+⚠️ 「无 tool call」不等于任务完成。协议要求以 `complete_task` 结束，所以没有工具调用
+只说明 AI 忘了格式或在闲聊 —— 早期版本把它当成 complete，导致任务第一轮就报「Task finished」。
 
 ### 状态语义（重要）
 
@@ -353,7 +383,7 @@ agentEventBus.emit('launcher:run-entry', { entryId, userInput, autoSend });
 | sync_conversation_messages | 占位 | 需实现页面导航 + 滚动抓取 |
 | settings UI | 未做 | 需在设置面板加 agentLoop 独立开关（现复用 slashCommand） |
 | AI Studio 支持 | 未做 | 需写 adapter + entry component |
-| 自动继续 | 未做 | 现在每轮仍需用户点「继续」/ 按 Enter，没有 autoContinue 开关 |
+| 自动继续 | 已做 | `agentPolicyStore.autoContinue`（持久化，默认开）→ 引擎每轮自己点发送；关掉则停在 `awaiting_send` 等用户 |
 | `awaiting_send` 期间发普通消息 | 未处理 | result capsule 消失即视为已发送，用户此时另发消息会被当成继续 |
 | `slash-command/capsule.ts` | 废弃 | 已无 import，但文件未删除 |
 | SlashCommand `data-` attr | 未加 | 需给 SlashCommandPopup 加 `data-slash-command-popup` |

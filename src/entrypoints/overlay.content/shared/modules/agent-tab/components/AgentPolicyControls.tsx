@@ -8,6 +8,8 @@
  *
  * - Auto-run reads   : persisted, default on
  * - Auto-approve writes : session-scoped (resets when a new task starts)
+ * - Auto-continue    : persisted, default on — the engine sends each round's
+ *   results back to the AI itself instead of waiting for Enter
  */
 
 import React from 'react';
@@ -20,6 +22,8 @@ export const AgentPolicyControls: React.FC = () => {
   const { t } = useI18n();
   const autoExecuteReads = useAgentPolicyStore((s) => s.autoExecuteReads);
   const setAutoExecuteReads = useAgentPolicyStore((s) => s.setAutoExecuteReads);
+  const autoContinue = useAgentPolicyStore((s) => s.autoContinue);
+  const setAutoContinue = useAgentPolicyStore((s) => s.setAutoContinue);
 
   const speedMode = useAgentLoopStore((s) => s.speedMode);
   const setSpeedMode = useAgentLoopStore((s) => s.setSpeedMode);
@@ -51,6 +55,19 @@ export const AgentPolicyControls: React.FC = () => {
           </p>
         </div>
         <Switch checked={speedMode} onCheckedChange={handleSpeedMode} />
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <label className="text-xs text-foreground">
+            {t('agent.policy.autoContinue', { defaultValue: 'Continue automatically' })}
+          </label>
+          <p className="text-xs text-muted-foreground">
+            {t('agent.policy.autoContinueHint', {
+              defaultValue: 'Send each round of results without asking',
+            })}
+          </p>
+        </div>
+        <Switch checked={autoContinue} onCheckedChange={setAutoContinue} />
       </div>
     </div>
   );

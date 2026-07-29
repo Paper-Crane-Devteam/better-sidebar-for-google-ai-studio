@@ -21,6 +21,7 @@ import { executeToolCall } from '../tools/tool-registry';
 import { CircuitBreaker } from './circuit-breaker';
 import { buildToolCallFingerprint, isWriteOperation } from '../execution-policy';
 import { agentEventBus } from '../event-bus';
+import { useAgentPolicyStore } from '../agent-policy-store';
 import { COMPLETE_TASK_SIGNAL } from '../tools/complete-task';
 import {
   insertMultipleCapsules,
@@ -94,6 +95,21 @@ export class AgentLoopEngine {
     this.abortController = new AbortController();
 
     try {
+      // Results still sitting in the editor mean the previous round never got
+      // sent. Resuming straight into runLoop would wait for a response to a
+      // message that was never delivered, so send it first.
+      if (this.hasStagedResults()) {
+        const sent = await this.waitForSendAfter(() => triggerSend({ humanDelay: false }));
+        if (!sent) {
+          useAgentLoopStore
+            .getState()
+            .pause('Could not send the staged results. Send them from the chat input.');
+          return;
+        }
+        useAgentLoopStore.getState().resume();
+        useAgentLoopStore.getState().nextRound();
+      }
+
       await this.runLoop();
     } catch (e) {
       const msg = (e as Error).message;
@@ -110,7 +126,25 @@ export class AgentLoopEngine {
    */
   async continueNow(): Promise<void> {
     if (useAgentLoopStore.getState().status !== 'awaiting_send') return;
-    await triggerSend();
+    // User-initiated, so no artificial pause — triggerSend still waits out any
+    // in-progress generation so the click can't land on the stop button.
+    await triggerSend({ humanDelay: false });
+  }
+
+  /** Whether tool results are still staged in the editor, unsent */
+  private hasStagedResults(): boolean {
+    const editor = this.adapter.getEditor();
+    return !!editor?.querySelector(`.${RESULT_CAPSULE_CLASS}`);
+  }
+
+  /**
+   * Run `action` and wait for the staged results to leave the editor.
+   * The watcher is armed before the action so a fast send can't be missed.
+   */
+  private async waitForSendAfter(action: () => Promise<unknown>): Promise<boolean> {
+    const watcher = this.waitForUserSend();
+    await action();
+    return watcher;
   }
 
   private async runLoop(): Promise<void> {
@@ -163,11 +197,14 @@ export class AgentLoopEngine {
       // ── Token estimation for AI response ───────────────────────────────
       getStore().addTokens(Math.round(responseText.length * 0.25));
 
-      // 3. No tool calls → check circuit breaker for no-progress
+      // 3. No tool calls → nudge the AI, or stop if it keeps not making progress.
+      //    A tool-less response is NOT completion: the protocol ends with
+      //    complete_task. Treating it as completion made the loop declare
+      //    "Task finished" on round 1 whenever a response was read early.
       if (toolCalls.length === 0) {
         const noProgressResult = this.circuitBreaker.recordNoToolResponse();
 
-        if (noProgressResult && noProgressResult.action === 'stop') {
+        if (noProgressResult.action === 'stop') {
           console.log('[AgentLoop] No-progress threshold reached, stopping');
           getStore().pause(noProgressResult.message);
           agentEventBus.emit('loop:ended', {
@@ -177,24 +214,19 @@ export class AgentLoopEngine {
           return;
         }
 
-        if (noProgressResult && noProgressResult.action === 'nudge') {
-          // AI didn't use tools — send a nudge and let it try again
-          console.log('[AgentLoop] No tool calls, nudging AI');
-          this.insertResultCapsule(noProgressResult.message);
-          await this.waitForUserSend();
-          this.checkAbort();
-          getStore().nextRound();
-          continue;
-        }
+        console.log('[AgentLoop] No tool calls, nudging AI');
+        const nudge =
+          errors.length > 0
+            ? // Blocks were present but unparseable — tell the AI what broke
+              `${noProgressResult.message}\n\n## Parse Errors\n\n${errors.map((e) => `- ${e}`).join('\n')}`
+            : noProgressResult.message;
 
-        // First time no tools — task is likely complete
-        console.log('[AgentLoop] No tool calls found, loop complete');
-        getStore().stop('complete');
-        agentEventBus.emit('loop:ended', {
-          reason: 'complete',
-          totalRounds: getStore().currentRound,
-        });
-        return;
+        if (!(await this.handoffResults(nudge))) return;
+
+        this.checkAbort();
+        getStore().resume();
+        getStore().nextRound();
+        continue;
       }
 
       // Reset no-progress counter since we have tool calls
@@ -338,20 +370,12 @@ export class AgentLoopEngine {
         toolCallCount: toolCalls.length,
       });
 
-      // 5. Format results and insert into editor as a capsule (user decides to send)
+      // 5-7. Stage the results in the editor and get them sent (auto or by the user)
       getStore().setStatus('sending');
       const formattedResult = this.formatResults(results, errors);
       console.log('[AgentLoop] Inserting results into editor, length:', formattedResult.length);
 
-      this.insertResultCapsule(formattedResult);
-
-      // 6. Hand control back to the user — results are staged in the editor.
-      //    This is a normal checkpoint, not a fault, so it gets its own status.
-      getStore().awaitSend();
-      agentEventBus.emit('loop:paused', { reason: 'Waiting for user to send results' });
-
-      // 7. Wait for the results to actually be sent
-      await this.waitForUserSend();
+      if (!(await this.handoffResults(formattedResult))) return;
 
       this.checkAbort();
 
@@ -374,11 +398,52 @@ export class AgentLoopEngine {
   }
 
   /**
+   * Stage `text` in the editor and get it back to the AI.
+   *
+   * With `autoContinue` on (default) the engine clicks send itself, so the loop
+   * runs unattended; otherwise it parks in `awaiting_send` for the user. Returns
+   * false when the handoff never completed — the caller must stop the loop then,
+   * because continuing would wait on an AI response nobody asked for (that is
+   * the "stuck pending until timeout" symptom).
+   */
+  private async handoffResults(text: string): Promise<boolean> {
+    const store = () => useAgentLoopStore.getState();
+
+    await this.insertResultCapsule(text);
+
+    // Normal checkpoint, not a fault — hence its own status.
+    store().awaitSend();
+    agentEventBus.emit('loop:paused', { reason: 'Waiting for user to send results' });
+
+    // Route through the real send button so the interceptor merges the capsules
+    let clicked = true;
+    const sent = await this.waitForSendAfter(async () => {
+      if (useAgentPolicyStore.getState().autoContinue) {
+        clicked = await triggerSend();
+      }
+    });
+
+    if (!sent) {
+      // A refused click means the button was still "stop generating" — pausing is
+      // right, because clicking anyway would have aborted the AI's answer.
+      const reason = clicked
+        ? 'Tool results were not sent. Click "Continue" to send them.'
+        : 'Could not send while the AI was still generating. Click "Continue" to retry.';
+      console.warn('[AgentLoop] Results were never sent, pausing');
+      store().pause(reason);
+      agentEventBus.emit('loop:paused', { reason: 'Results not sent' });
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
    * Insert the tool execution results into the editor as individual capsule elements.
    * Each tool result gets its own capsule for clarity. On send, they are merged into
    * a single <bs_agent_result> block.
    */
-  private insertResultCapsule(resultText: string): void {
+  private async insertResultCapsule(resultText: string): Promise<void> {
     const editor = this.adapter.getEditor();
     if (!editor) {
       // Fallback: just insert raw text
@@ -415,7 +480,10 @@ export class AgentLoopEngine {
       }
     }
 
-    insertMultipleCapsules(editor, capsuleData);
+    // Must be awaited: the capsules only exist in the DOM after the rAF wrap.
+    // Starting waitForUserSend() before that made it see a capsule-free editor
+    // and resolve immediately, so the round advanced without anything being sent.
+    await insertMultipleCapsules(editor, capsuleData);
   }
 
   /**
@@ -455,15 +523,18 @@ export class AgentLoopEngine {
   }
 
   /**
-   * Wait for the user to send the message (detects the result capsule being removed
-   * from the editor — meaning the message was sent).
-   * Resolves when the editor no longer contains the result capsule.
+   * Wait for the staged results to be sent (detected by the result capsule
+   * disappearing from the editor).
+   *
+   * Resolves true once sent, false if the wait timed out. It used to resolve
+   * unconditionally, so a missed send looked identical to a real one and the loop
+   * moved on to wait for a response that was never requested.
    */
-  private waitForUserSend(): Promise<void> {
+  private waitForUserSend(): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const editor = this.adapter.getEditor();
       if (!editor) {
-        resolve();
+        resolve(false);
         return;
       }
 
@@ -477,12 +548,12 @@ export class AgentLoopEngine {
         signal?.removeEventListener('abort', onAbort);
       };
 
-      const finish = () => {
+      const finish = (sent: boolean) => {
         if (settled) return;
         settled = true;
         cleanup();
         // Small delay for the message to be processed
-        setTimeout(resolve, 500);
+        setTimeout(() => resolve(sent), 500);
       };
 
       // Abort must interrupt the wait immediately. Previously this only reacted
@@ -494,14 +565,12 @@ export class AgentLoopEngine {
         reject(new Error('Agent loop aborted'));
       };
 
-      const timeout = setTimeout(() => {
-        // Don't reject — just resolve so the engine can continue
-        finish();
-      }, 300000); // 5 min
+      // Don't reject — report the miss so the caller can pause with a clear reason
+      const timeout = setTimeout(() => finish(false), 300000); // 5 min
 
       const checkCapsule = (target: HTMLElement | null) => {
-        if (target && !target.querySelector('.bs-agent-result-capsule')) {
-          finish();
+        if (target && !target.querySelector(`.${RESULT_CAPSULE_CLASS}`)) {
+          finish(true);
         }
       };
 
