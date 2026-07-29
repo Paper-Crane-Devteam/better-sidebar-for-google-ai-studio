@@ -351,9 +351,6 @@ export const SnippetReaderDrawer = () => {
         left: `${sidebarWidth}px`,
       }}
     >
-      {/* Left border to separate from sidebar */}
-      <div className="absolute left-0 top-0 bottom-0 w-px bg-border z-10" />
-
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-background/95 backdrop-blur-sm"
@@ -368,7 +365,7 @@ export const SnippetReaderDrawer = () => {
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border/50 bg-background/80 backdrop-blur-sm flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 bg-background/80 backdrop-blur-sm flex-shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <h2 className="text-lg font-semibold text-foreground truncate">
               {folderName}
