@@ -14,6 +14,7 @@ import {
   deleteBackup,
   restoreBackup,
   pruneBackups,
+  createSafetyBackup,
 } from '@/shared/lib/gdrive';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { notifyDataUpdated } from '../notify';
@@ -64,7 +65,20 @@ export async function handleBackup(
     case 'BACKUP_RESTORE': {
       try {
         const { dbName, backupId } = message.payload;
+
+        // Restoring clears every sync table before inserting, so the current
+        // state would be unrecoverable if the user picked the wrong slot.
+        // Snapshot it first, and abort the restore if that fails.
+        // Pruning is deferred until after the restore — it could otherwise
+        // evict the very slot being restored from.
+        const { backupMaxSlots } = usePegasusStore.getState();
+        await createSafetyBackup(dbName, backupMaxSlots, {
+          reason: 'pre-restore',
+          prune: false,
+        });
+
         await restoreBackup(dbName, backupId);
+        await pruneBackups(dbName, backupMaxSlots);
         await notifyDataUpdated();
         return { success: true };
       } catch (e: unknown) {

@@ -78,7 +78,27 @@ export interface AutoSyncOptions {
   dbName: string;
   ensureActiveDb?: () => Promise<void>;
   onSyncComplete?: () => void;
+  /**
+   * Called once the target DB is settled but before anything is pulled or
+   * pushed. Used to snapshot the pre-sync state. Failures are logged and
+   * ignored — a missing routine snapshot must not block syncing.
+   */
+  onBeforeSync?: () => Promise<void>;
+  /**
+   * Called immediately before the merge deletes rows. Throwing aborts the
+   * deletions (inserts and updates still apply).
+   */
+  onBeforeDestructiveMerge?: (plan: {
+    total: number;
+    byTable: Record<string, number>;
+  }) => Promise<void>;
 }
+
+/** Hooks that callers can forward to `performMergeSync`. */
+export type AutoSyncHooks = Pick<
+  AutoSyncOptions,
+  'onBeforeSync' | 'onBeforeDestructiveMerge'
+>;
 
 // --- Core sync ---
 
@@ -107,6 +127,17 @@ export async function performMergeSync(
       await opts.ensureActiveDb();
     }
 
+    // Snapshot BEFORE the sync touches anything. A sync that pulls a stale or
+    // empty remote file can mirror deletions locally, so the useful recovery
+    // point is the one captured while the data is still intact.
+    if (opts.onBeforeSync) {
+      try {
+        await opts.onBeforeSync();
+      } catch (err: any) {
+        console.warn('[AutoSync] Pre-sync backup failed:', err?.message ?? err);
+      }
+    }
+
     const token = await getAccessToken(true);
     const syncFileName = buildSyncFileName(opts.dbName);
     const metaKey = buildSyncMetaKey(opts.dbName);
@@ -120,9 +151,14 @@ export async function performMergeSync(
       const metaResult = await browser.storage.local.get(metaKey);
       const lastSyncTime = (metaResult[metaKey] as number) || 0;
 
-      const result = await mergeSyncData(remoteData, lastSyncTime);
+      const result = await mergeSyncData(remoteData, lastSyncTime, {
+        onBeforeDelete: opts.onBeforeDestructiveMerge,
+      });
       console.log(
-        `[AutoSync] Merge: +${result.inserted} ins, ~${result.updated} upd, -${result.deleted} del, =${result.skipped} skip`,
+        `[AutoSync] Merge: +${result.inserted} ins, ~${result.updated} upd, -${result.deleted} del, =${result.skipped} skip` +
+          (result.deletionBlocked > 0
+            ? `, !${result.deletionBlocked} deletions blocked by safety guard`
+            : ''),
       );
     }
 
@@ -186,6 +222,7 @@ export async function scheduleDebouncedSync(dbName: string): Promise<void> {
 export async function flushPendingSync(
   ensureActiveDb: () => Promise<void>,
   onSyncComplete?: () => void,
+  hooks?: AutoSyncHooks,
 ): Promise<boolean> {
   const result = await browser.storage.local.get(PENDING_SYNC_DB_KEY);
   const dbName = result[PENDING_SYNC_DB_KEY] as string | undefined;
@@ -202,7 +239,7 @@ export async function flushPendingSync(
   const auth = await getAuthStatus();
   if (!auth.isAuthenticated) return false;
 
-  await performMergeSync({ dbName, ensureActiveDb, onSyncComplete });
+  await performMergeSync({ dbName, ensureActiveDb, onSyncComplete, ...hooks });
   return true;
 }
 
@@ -227,6 +264,7 @@ export async function handleAutoSyncAlarm(
   getDbName: () => string,
   ensureActiveDb: () => Promise<void>,
   onSyncComplete?: () => void,
+  hooks?: AutoSyncHooks,
 ): Promise<void> {
   if (alarm.name === DEBOUNCE_ALARM) {
     // Debounce alarm fired — read the persisted dbName
@@ -244,7 +282,12 @@ export async function handleAutoSyncAlarm(
     console.log(`[AutoSync] Debounce alarm fired for db: ${dbName}`);
     notifySyncingState(true);
     try {
-      await performMergeSync({ dbName, ensureActiveDb, onSyncComplete });
+      await performMergeSync({
+        dbName,
+        ensureActiveDb,
+        onSyncComplete,
+        ...hooks,
+      });
     } finally {
       notifySyncingState(false);
     }
@@ -265,6 +308,7 @@ export async function handleAutoSyncAlarm(
         dbName: getDbName(),
         ensureActiveDb,
         onSyncComplete,
+        ...hooks,
       });
     } finally {
       notifySyncingState(false);
@@ -309,6 +353,7 @@ export async function triggerSyncOnPageLoad(
   dbName: string,
   ensureActiveDb: () => Promise<void>,
   onSyncComplete?: () => void,
+  hooks?: AutoSyncHooks,
 ): Promise<void> {
   const auth = await getAuthStatus();
   if (!auth.isAuthenticated) return;
@@ -326,7 +371,7 @@ export async function triggerSyncOnPageLoad(
   console.log('[AutoSync] Page-load sync triggered');
   notifySyncingState(true);
   try {
-    await performMergeSync({ dbName, ensureActiveDb, onSyncComplete });
+    await performMergeSync({ dbName, ensureActiveDb, onSyncComplete, ...hooks });
   } finally {
     notifySyncingState(false);
   }

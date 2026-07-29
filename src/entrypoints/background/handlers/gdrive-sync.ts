@@ -23,8 +23,10 @@ import {
   scheduleDebouncedSync,
   isAutoSyncing,
   triggerSyncOnPageLoad,
-  maybeCreateAutoBackup,
+  maybeCreatePreSyncBackup,
+  createSafetyBackup,
 } from '@/shared/lib/gdrive';
+import type { AutoSyncHooks } from '@/shared/lib/gdrive';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import i18n from '@/locale/i18n';
 import { notifyDataUpdated } from '../notify';
@@ -53,27 +55,63 @@ async function saveSyncMeta(direction: 'up' | 'down' | 'merge'): Promise<number>
 }
 
 /**
+ * Take a throttled snapshot before a sync run.
+ * Respects the backupEnabled setting from pegasus store.
+ *
+ * Deliberately runs BEFORE the sync: a sync that pulls a stale or empty remote
+ * file can mirror those deletions into the local DB, so the snapshot worth
+ * keeping is the one captured while the data is still intact.
+ */
+async function createPreSyncBackup(): Promise<void> {
+  const { backupEnabled, backupMaxSlots } = usePegasusStore.getState();
+  if (!backupEnabled) return;
+  await maybeCreatePreSyncBackup(getCurrentDbName(), backupMaxSlots);
+}
+
+/**
+ * Take an un-throttled safety snapshot right before a destructive operation.
+ * Throws on failure so the caller abandons the operation rather than destroying
+ * data without a recovery point.
+ *
+ * Ignores the backupEnabled setting on purpose: this is a last-resort recovery
+ * point, not a routine snapshot.
+ */
+async function captureSafetyBackup(context: string): Promise<void> {
+  const { backupMaxSlots } = usePegasusStore.getState();
+  console.log(`[GDriveSync] ${context} — capturing safety snapshot`);
+  await createSafetyBackup(getCurrentDbName(), backupMaxSlots);
+}
+
+/** Safety snapshot hook for the merge's deletion phase. */
+async function createPreDeleteBackup(plan: {
+  total: number;
+  byTable: Record<string, number>;
+}): Promise<void> {
+  await captureSafetyBackup(
+    `merge plans to delete ${plan.total} row(s) ${JSON.stringify(plan.byTable)}`,
+  );
+}
+
+/** Backup hooks shared by every sync entry point. */
+export const syncBackupHooks: AutoSyncHooks = {
+  onBeforeSync: createPreSyncBackup,
+  onBeforeDestructiveMerge: createPreDeleteBackup,
+};
+
+/**
  * Trigger a debounced auto-sync after local data changes.
  * Respects the gdriveAutoSync setting from pegasus store.
- * Also triggers auto-backup check (independent of GDrive).
  */
 export function triggerAutoSync(): void {
   const { gdriveAutoSync } = usePegasusStore.getState();
   if (gdriveAutoSync) {
     scheduleDebouncedSync(getCurrentDbName());
+    // The scheduled sync takes its own pre-sync snapshot via syncBackupHooks.
+    return;
   }
-  // Auto-backup is independent of GDrive — always check
-  triggerAutoBackupIfDue();
-}
-
-/**
- * After a successful sync, check if an auto-backup is due.
- * Respects the backupEnabled setting from pegasus store.
- */
-async function triggerAutoBackupIfDue(): Promise<void> {
-  const { backupEnabled, backupMaxSlots } = usePegasusStore.getState();
-  if (!backupEnabled) return;
-  await maybeCreateAutoBackup(getCurrentDbName(), backupMaxSlots);
+  // GDrive off: backups are still wanted, and there is no sync to hook into,
+  // so fall back to a throttled snapshot on local data change.
+  createPreSyncBackup();
 }
 
 /**
@@ -86,10 +124,8 @@ export function triggerPageLoadSync(): void {
   triggerSyncOnPageLoad(
     getCurrentDbName(),
     ensureDbForActiveTab,
-    () => {
-      notifyDataUpdated();
-      triggerAutoBackupIfDue();
-    },
+    () => notifyDataUpdated(),
+    syncBackupHooks,
   );
 }
 
@@ -140,6 +176,11 @@ export async function handleGdriveSync(
     case 'GDRIVE_SYNC_UP': {
       try {
         usePegasusStore.getState().setGdriveSyncing(true);
+
+        // Snapshot first — this overwrites the remote file, so the local state
+        // being uploaded is the last chance to capture a recovery point.
+        await createPreSyncBackup();
+
         const token = await getAccessToken();
         const syncFileName = getSyncFileName();
 
@@ -148,9 +189,6 @@ export async function handleGdriveSync(
         await uploadFile(token, syncFileName, syncData, existing?.id);
 
         const now = await saveSyncMeta('up');
-
-        // Trigger auto-backup after successful upload
-        triggerAutoBackupIfDue();
 
         return { success: true, data: { lastSyncTime: now } };
       } catch (e: unknown) {
@@ -175,6 +213,11 @@ export async function handleGdriveSync(
         }
 
         const content = await downloadFile(token, file.id);
+
+        // importSyncData clears every sync table before inserting, so this is
+        // an unconditional overwrite. Snapshot first, and abort if that fails.
+        await captureSafetyBackup('sync-down overwrites all local tables');
+
         await importSyncData(content);
 
         const now = await saveSyncMeta('down');
@@ -195,6 +238,7 @@ export async function handleGdriveSync(
           dbName: getCurrentDbName(),
           ensureActiveDb: ensureDbForActiveTab,
           onSyncComplete: () => notifyDataUpdated(),
+          ...syncBackupHooks,
         });
 
         if (!result.success) {
@@ -204,9 +248,6 @@ export async function handleGdriveSync(
         await saveSyncMeta('merge');
         const metaKey = getSyncMetaKey();
         const meta = await browser.storage.local.get(metaKey);
-
-        // Trigger auto-backup after successful merge
-        triggerAutoBackupIfDue();
 
         return {
           success: true,

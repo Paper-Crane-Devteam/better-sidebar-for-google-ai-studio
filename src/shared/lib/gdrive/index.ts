@@ -32,10 +32,11 @@ export {
   restoreBackup,
   pruneBackups,
   isBackupDue,
-  maybeCreateAutoBackup,
+  maybeCreatePreSyncBackup,
+  createSafetyBackup,
 } from './backup';
 export type { SyncPayload } from './sync-data';
-export type { MergeResult } from './sync-merge';
+export type { MergeResult, MergeOptions } from './sync-merge';
 export type { AuthStatus } from './google-auth';
-export type { AutoSyncOptions } from './auto-sync';
-export type { BackupSlot } from './backup';
+export type { AutoSyncOptions, AutoSyncHooks } from './auto-sync';
+export type { BackupSlot, BackupReason } from './backup';
