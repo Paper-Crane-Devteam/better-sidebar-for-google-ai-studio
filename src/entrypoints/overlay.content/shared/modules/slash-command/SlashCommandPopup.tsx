@@ -41,12 +41,12 @@ export const SlashCommandPopup: React.FC<SlashCommandPopupProps> = ({
 
   return (
     <div
-      className="fixed z-[9999] min-w-[280px] max-w-[400px] rounded-lg border border-border bg-popover shadow-xl overflow-hidden"
+      className="fixed z-[9999] min-w-[280px] max-w-[400px] rounded-lg bg-popover shadow-xl overflow-hidden"
       style={{ bottom: position.bottom, left: position.left }}
       onMouseDown={(e) => e.preventDefault()} // Prevent input blur on popup interaction
     >
       {/* Header */}
-      <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border/50 bg-muted/30">
+      <div className="flex items-center gap-1.5 px-3 py-2 bg-muted/30">
         <UIcon icon="fluent-color:bot-sparkle-24" className="w-3 h-3" />
         <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
           {t('slashCommand.promptLibrary')}

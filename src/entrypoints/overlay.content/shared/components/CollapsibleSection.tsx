@@ -155,7 +155,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
     <div
       ref={containerRef}
       className={cn(
-        'flex flex-col relative border-t border-border/50',
+        'flex flex-col relative',
         fillAvailable
           ? 'flex-1 min-h-0'
           : isExpanded && resizable
@@ -186,7 +186,7 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
       {/* Header row */}
       <div
         className={cn(
-          'flex items-center h-7 px-3 select-none',
+          'flex items-center h-7 px-3 select-none bg-muted/30',
           'hover:bg-accent/50 cursor-pointer',
         )}
         onClick={onToggle}

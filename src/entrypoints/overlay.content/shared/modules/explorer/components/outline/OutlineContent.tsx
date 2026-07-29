@@ -89,9 +89,9 @@ export const OutlineContent = forwardRef<OutlineContentHandle>((_, ref) => {
 
   // ── Toolbar ──────────────────────────────────────────────────────
   const toolbar = (
-    <div className="flex flex-col border-b border-border/30">
+    <div className="flex flex-col">
       {/* Search row with filter icon on left */}
-      <div className="px-2 py-1 flex items-center gap-1">
+      <div className="px-2 py-2 flex items-center gap-1">
         <SimpleTooltip content={t('explorerHeader.moreFilters')}>
           <Button
             variant={hasActiveFilter || filtersOpen ? 'secondary' : 'ghost'}

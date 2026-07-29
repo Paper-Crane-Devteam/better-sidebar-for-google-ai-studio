@@ -95,7 +95,9 @@
     --sidebar-padding-y: 8px;
     // --sidebar-icon-color: 68 71 70;
   }
+}
 
+@layer components {
   /* Custom Slider Styles */
   .theme-aistudio .ui-slider,
   :host(.theme-aistudio) .ui-slider {

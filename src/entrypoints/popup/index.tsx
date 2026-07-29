@@ -92,7 +92,7 @@ const Options = () => {
         }
       }
     } else {
-      // No custom theme â€” clear any previously set variable overrides
+      // No custom theme â€?clear any previously set variable overrides
       root.style.cssText = '';
       // Fall back to user's light/dark preference
       const isDark =
@@ -149,7 +149,7 @@ const Options = () => {
       </div>
 
       {/* Header */}
-      <div className="relative z-10 w-full flex-shrink-0 flex flex-col items-center pt-6 pb-4 space-y-4 border-b border-border/40 bg-background/50 backdrop-blur-sm">
+      <div className="relative z-10 w-full flex-shrink-0 flex flex-col items-center pt-6 pb-4 space-y-4 bg-background/50 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/80 to-primary shadow-md flex items-center justify-center shrink-0">
             <img src="/icons/icon128.png" className="w-6 h-6 object-contain drop-shadow-sm" alt="Logo" />
@@ -202,11 +202,11 @@ const Options = () => {
       {/* Content */}
       <div className="relative z-10 flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
         {activeTab === 'platforms' && (
-          <div className="w-full bg-card/60 backdrop-blur-xl border border-border/60 rounded-xl shadow-sm overflow-hidden flex flex-col">
+          <div className="w-full bg-card/60 backdrop-blur-xl rounded-xl shadow-sm overflow-hidden flex flex-col">
             <div className="px-4 pt-4 pb-2">
               <p className="text-xs text-muted-foreground">{t('popup.description')}</p>
             </div>
-            <div className="flex flex-col divide-y divide-border/40">
+            <div className="flex flex-col">
               {platformsToConfigure.map((platform) => {
                 const config = PLATFORM_CONFIG[platform];
                 if (!config) return null;
@@ -233,7 +233,7 @@ const Options = () => {
                       onClick={(e) => !isSupported && e.preventDefault()}
                     >
                       <div className={cn(
-                        'w-10 h-10 rounded-xl flex items-center justify-center border border-border/50 relative overflow-hidden shrink-0',
+                        'w-10 h-10 rounded-xl flex items-center justify-center relative overflow-hidden shrink-0',
                         isSupported && isEnabled ? 'bg-background shadow-sm scale-100' : 'bg-muted/50 scale-[0.98]'
                       )}>
                         {isSupported && isEnabled && (
@@ -244,7 +244,7 @@ const Options = () => {
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-semibold text-foreground truncate group-hover:underline underline-offset-2 decoration-foreground/30">{config.name}</span>
-                          {!isSupported && <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-muted text-muted-foreground border border-border/50 uppercase leading-none">{t('onboarding.comingSoon')}</span>}
+                          {!isSupported && <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-muted text-muted-foreground uppercase leading-none">{t('onboarding.comingSoon')}</span>}
                         </div>
                         <span className="text-xs text-muted-foreground truncate mt-1">{config.hostname}</span>
                       </div>
@@ -274,7 +274,7 @@ const Options = () => {
                     <SlidersHorizontal className="w-4 h-4 text-primary" />
                     <h3 className="text-xs font-bold text-primary uppercase tracking-wider">{t('geminiUI.layoutDimensions')}</h3>
                   </div>
-                  <div className="bg-card/40 border border-border/50 rounded-xl p-4 space-y-5">
+                  <div className="bg-card/40 rounded-xl p-4 space-y-5">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm font-semibold">{t('geminiUI.sidebarWidth')}</Label>
@@ -305,7 +305,7 @@ const Options = () => {
                     <Globe2 className="w-4 h-4 text-primary" />
                     <h3 className="text-xs font-bold text-primary uppercase tracking-wider">{t('geminiUI.elementVisibility')}</h3>
                   </div>
-                  <div className="bg-card/40 border border-border/50 rounded-xl divide-y divide-border/40">
+                  <div className="bg-card/40 rounded-xl">
                     <div className="flex items-center justify-between p-4">
                       <div className="space-y-1">
                         <Label className="text-sm font-semibold">{t('geminiUI.aiDisclaimer')}</Label>
@@ -336,7 +336,7 @@ const Options = () => {
                     <Settings2 className="w-4 h-4 text-primary" />
                     <h3 className="text-xs font-bold text-primary uppercase tracking-wider">{t('geminiUI.additionalFeatures')}</h3>
                   </div>
-                  <div className="bg-card/40 border border-border/50 rounded-xl divide-y divide-border/40">
+                  <div className="bg-card/40 rounded-xl">
                     <div className="flex items-center justify-between p-4">
                       <div className="space-y-1">
                         <Label className="text-sm font-semibold">{t('geminiUI.zenMode')}</Label>
@@ -391,7 +391,7 @@ const Options = () => {
                     <SlidersHorizontal className="w-4 h-4 text-primary" />
                     <h3 className="text-xs font-bold text-primary uppercase tracking-wider">{t('aistudioUI.layoutDimensions')}</h3>
                   </div>
-                  <div className="bg-card/40 border border-border/50 rounded-xl p-4 space-y-5">
+                  <div className="bg-card/40 rounded-xl p-4 space-y-5">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label className="text-sm font-semibold">{t('aistudioUI.sidebarWidth')}</Label>
@@ -408,7 +408,7 @@ const Options = () => {
                     <Settings2 className="w-4 h-4 text-primary" />
                     <h3 className="text-xs font-bold text-primary uppercase tracking-wider">{t('aistudioUI.additionalFeatures')}</h3>
                   </div>
-                  <div className="bg-card/40 border border-border/50 rounded-xl divide-y divide-border/40">
+                  <div className="bg-card/40 rounded-xl">
                     <div className="flex items-center justify-between p-4">
                       <div className="space-y-1">
                         <Label className="text-sm font-semibold">{t('aistudioUI.autoHideInput')}</Label>
@@ -445,7 +445,7 @@ const Options = () => {
         )}
       </div>
 
-      <div className="relative z-10 flex-shrink-0 text-center py-2 bg-background/80 backdrop-blur-sm border-t border-border/40">
+      <div className="relative z-10 flex-shrink-0 text-center py-2 bg-background/80 backdrop-blur-sm">
         <p className="text-[10px] text-muted-foreground font-medium tracking-wide">
           {t('footer.madeWith')}
         </p>

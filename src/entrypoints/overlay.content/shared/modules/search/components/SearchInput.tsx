@@ -45,7 +45,7 @@ export const SearchInput = () => {
   const isCurrentConvScope = !!options.conversationId;
 
   return (
-    <div className="flex flex-col gap-2 p-4 border-b border-border/50">
+    <div className="flex flex-col gap-2 p-4">
       <div className="relative flex items-center">
         <Input
           value={query}

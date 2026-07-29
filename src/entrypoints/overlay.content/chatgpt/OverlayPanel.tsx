@@ -3,7 +3,6 @@ import { useAppStore } from '@/shared/lib/store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Button } from '../shared/components/ui/button';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
-import { Separator } from '../shared/components/ui/separator';
 import {
   Files,
   Star,
@@ -170,7 +169,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       className={`flex bg-background text-foreground ${className || 'h-full'} relative`}
     >
       {/* Sidebar Tabs */}
-      <div className="sidebar-nav border-r flex flex-col items-center bg-muted/20 shrink-0">
+      <div className="sidebar-nav flex flex-col items-center bg-muted/20 shrink-0">
         <SimpleTooltip content={t('tabs.files')}>
           <Button
             variant={activeTab === 'files' ? 'secondary' : 'ghost'}
@@ -235,7 +234,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
         </SimpleTooltip>
 
         {(shortcuts?.images || shortcuts?.apps || shortcuts?.codex) && (
-          <Separator className="w-8 my-1" />
+          <div className="h-2" />
         )}
 
         {shortcuts?.images && (

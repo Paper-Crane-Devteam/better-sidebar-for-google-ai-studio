@@ -3,7 +3,6 @@ import { useAppStore } from '@/shared/lib/store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { Button } from '../shared/components/ui/button';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
-import { Separator } from '../shared/components/ui/separator';
 import {
   Files,
   Star,
@@ -203,7 +202,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             <Menu className="sidebar-icon" />
           </Button>
         </SimpleTooltip>
-        <Separator className="w-8 my-1" />
+        <div className="h-2" />
 
         <div
           className={
@@ -338,7 +337,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           </SimpleTooltip>
 
           {((shortcuts?.gems ?? true) || (shortcuts?.notebooks ?? true) || (shortcuts?.myStuff ?? true)) && (
-            <Separator className="w-8 my-1" />
+            <div className="h-2" />
           )}
 
           {(shortcuts?.gems ?? true) && (

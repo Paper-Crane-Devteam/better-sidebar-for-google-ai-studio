@@ -30,14 +30,14 @@ export const AgentCommandPopup: React.FC<AgentCommandPopupProps> = ({
 
   return (
     <div
-      className="fixed z-[99999] max-w-[360px] min-w-[280px] overflow-hidden rounded-lg border border-border bg-popover shadow-lg"
+      className="fixed z-[99999] max-w-[360px] min-w-[280px] overflow-hidden rounded-lg bg-popover shadow-lg"
       style={{
         bottom: `${position.bottom}px`,
         left: `${position.left}px`,
       }}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+      <div className="flex items-center gap-2 px-3 py-2">
         <Bot className="h-4 w-4 text-primary" />
         <span className="text-xs font-medium text-muted-foreground">Agent</span>
         {query && (

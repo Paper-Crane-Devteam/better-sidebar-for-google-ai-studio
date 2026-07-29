@@ -51,7 +51,7 @@ export const NotebooksHeader = ({
   };
 
   return (
-    <div className="flex flex-col border-b border-border/50">
+    <div className="flex flex-col">
       <div className="px-3 pt-2 pb-1 flex items-center justify-between">
         <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground/70">
           {t('notebooks.title')}

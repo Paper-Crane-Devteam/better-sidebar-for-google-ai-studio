@@ -136,11 +136,10 @@
 }
 
 @layer components {
-  /* Sidebar - Gemini Specific (flat, no gradient) */
+  /* Sidebar - Gemini Specific (flat, no gradient, no border — color separation handles distinction) */
   .theme-gemini .sidebar-nav,
   :host(.theme-gemini) .sidebar-nav {
     background: rgb(var(--background));
-    border-right: 1px solid rgb(var(--border) / 0.5);
   }
 
   /* Content area (file tree, outline, etc.) - white background */

@@ -258,7 +258,7 @@ export const ExplorerHeader = ({
   return (
     <div className="flex flex-col">
       {/* Row 1: Library title | cloud, (divider), sort, new folder, menu */}
-      <div className="px-3 py-2 flex items-center justify-between border-b border-border/50 h-12 shrink-0">
+      <div className="px-3 py-2 flex items-center justify-between h-12 shrink-0">
         <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground/70">
           {t('explorerHeader.library')}
         </h1>
@@ -290,8 +290,6 @@ export const ExplorerHeader = ({
             </Button>
           </SimpleTooltip>
 
-          <div className="h-4 w-[1px] bg-border mx-1" />
-
           <SimpleTooltip
             content={
               sortOrder === 'alpha'
@@ -302,7 +300,7 @@ export const ExplorerHeader = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground ml-2"
               onClick={handleSort}
             >
               {sortOrder === 'alpha' ? (
@@ -348,13 +346,13 @@ export const ExplorerHeader = ({
       >
         <div className="animate-in fade-in slide-in-from-top-1 duration-150">
             {/* Search row with filter funnel on left */}
-            <div className="px-3 py-1 flex items-center gap-1">
+            <div className="px-2 py-2 flex items-center gap-1">
               {/* Filter funnel toggle */}
               <SimpleTooltip content={t('explorerHeader.moreFilters')}>
                 <Button
-                  variant={hasActiveExtraFilters || moreFiltersOpen ? 'secondary' : 'ghost'}
+                  variant="ghost"
                   size="icon"
-                  className="h-7 w-7 shrink-0"
+                  className={`h-7 w-7 shrink-0 ${hasActiveExtraFilters || moreFiltersOpen ? 'text-primary' : ''}`}
                   onClick={() => setMoreFiltersOpen(!moreFiltersOpen)}
                 >
                   <Filter className="h-4 w-4" />
@@ -388,7 +386,7 @@ export const ExplorerHeader = ({
 
             {/* Expandable filter options (tags, type dropdown, favorites) */}
             {moreFiltersOpen && (
-              <div className="px-3 py-1 flex items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-100">
+              <div className="px-2 py-1 flex items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-100">
                 <SimpleTooltip content={t('tooltip.filterByTags')}>
                   <Button
                     variant={filter.tags.isOpen || filter.tags.selected.length > 0 ? 'secondary' : 'ghost'}

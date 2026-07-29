@@ -87,7 +87,7 @@ export const SelectionToolbarPopup = ({
         transform: 'translateX(-50%)',
       }}
     >
-      <div className="flex items-center gap-1 rounded-lg border border-border bg-popover p-1 shadow-lg">
+      <div className="flex items-center gap-1 rounded-lg bg-popover p-1 shadow-lg">
         {actions.map(({ key, icon: Icon, label, onClick }) => (
           <button
             key={key}
