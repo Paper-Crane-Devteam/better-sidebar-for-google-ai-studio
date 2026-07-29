@@ -50,7 +50,7 @@ const Onboarding = () => {
 
       <div className="relative z-10 max-w-4xl w-full px-6 py-12 flex flex-col items-center">
         {/* Header section */}
-        <div className="flex flex-col items-center text-center space-y-8 mb-10 max-w-2xl">
+        <div className="flex flex-col items-center text-center space-y-6 mb-10 max-w-2xl">
           <div className="relative w-28 h-28 rounded-3xl bg-gradient-to-br from-cyan-400 to-indigo-600 shadow-2xl shadow-indigo-500/30 flex items-center justify-center overflow-hidden animate-in zoom-in duration-700">
             <div className="absolute inset-0 bg-white/10 backdrop-blur-sm" />
             <img

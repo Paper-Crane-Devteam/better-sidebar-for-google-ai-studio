@@ -92,7 +92,7 @@ const Options = () => {
         }
       }
     } else {
-      // No custom theme â€?clear any previously set variable overrides
+      // No custom theme ï¿½?clear any previously set variable overrides
       root.style.cssText = '';
       // Fall back to user's light/dark preference
       const isDark =
