@@ -25,23 +25,41 @@ import {
   triggerSyncOnPageLoad,
   maybeCreatePreSyncBackup,
   createSafetyBackup,
+  getAccountId,
+  resolveSyncTarget,
+  checkSyncOrigin,
 } from '@/shared/lib/gdrive';
 import type { AutoSyncHooks } from '@/shared/lib/gdrive';
+import { withDbSession } from '@/shared/db';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import i18n from '@/locale/i18n';
 import { notifyDataUpdated } from '../notify';
-import { getCurrentDbName, ensureDbForActiveTab } from '../tab-profile-map';
+import { getCurrentDbName } from '../tab-profile-map';
 
-function getSyncFileName(): string {
-  return `better-sidebar-sync__${getCurrentDbName()}.json`;
+/**
+ * The active dbName, or throw.
+ *
+ * `getCurrentDbName()` returns null until the active profile has been resolved.
+ * Every sync and backup operation is namespaced by dbName, so proceeding with a
+ * placeholder would read and write the wrong profile's data. Failing is the only
+ * correct option.
+ */
+function requireDbName(): string {
+  const dbName = getCurrentDbName();
+  if (!dbName) {
+    throw new Error(
+      'Active profile database is not resolved yet — try again in a moment',
+    );
+  }
+  return dbName;
 }
 
 function getSyncMetaKey(): string {
-  return `gdrive_last_sync_time__${getCurrentDbName()}`;
+  return `gdrive_last_sync_time__${requireDbName()}`;
 }
 
 function getSyncDirectionKey(): string {
-  return `gdrive_last_sync_dir__${getCurrentDbName()}`;
+  return `gdrive_last_sync_dir__${requireDbName()}`;
 }
 
 /** Save sync metadata (time + direction) */
@@ -62,10 +80,14 @@ async function saveSyncMeta(direction: 'up' | 'down' | 'merge'): Promise<number>
  * file can mirror those deletions into the local DB, so the snapshot worth
  * keeping is the one captured while the data is still intact.
  */
-async function createPreSyncBackup(): Promise<void> {
+async function createPreSyncBackup(dbName?: string): Promise<void> {
   const { backupEnabled, backupMaxSlots } = usePegasusStore.getState();
   if (!backupEnabled) return;
-  await maybeCreatePreSyncBackup(getCurrentDbName(), backupMaxSlots);
+  // Prefer the caller's verified dbName; fall back to the ambient one only when
+  // there is no sync in flight to take it from.
+  const target = dbName ?? getCurrentDbName();
+  if (!target) return; // profile unresolved — nothing safe to snapshot
+  await maybeCreatePreSyncBackup(target, backupMaxSlots);
 }
 
 /**
@@ -76,26 +98,26 @@ async function createPreSyncBackup(): Promise<void> {
  * Ignores the backupEnabled setting on purpose: this is a last-resort recovery
  * point, not a routine snapshot.
  */
-async function captureSafetyBackup(context: string): Promise<void> {
+async function captureSafetyBackup(
+  context: string,
+  dbName?: string,
+): Promise<void> {
   const { backupMaxSlots } = usePegasusStore.getState();
+  // Throws if the profile is unresolved — correct, since the caller is about to
+  // destroy data and must not do so without a recovery point.
+  const target = dbName ?? requireDbName();
   console.log(`[GDriveSync] ${context} — capturing safety snapshot`);
-  await createSafetyBackup(getCurrentDbName(), backupMaxSlots);
-}
-
-/** Safety snapshot hook for the merge's deletion phase. */
-async function createPreDeleteBackup(plan: {
-  total: number;
-  byTable: Record<string, number>;
-}): Promise<void> {
-  await captureSafetyBackup(
-    `merge plans to delete ${plan.total} row(s) ${JSON.stringify(plan.byTable)}`,
-  );
+  await createSafetyBackup(target, backupMaxSlots);
 }
 
 /** Backup hooks shared by every sync entry point. */
 export const syncBackupHooks: AutoSyncHooks = {
-  onBeforeSync: createPreSyncBackup,
-  onBeforeDestructiveMerge: createPreDeleteBackup,
+  onBeforeSync: (dbName) => createPreSyncBackup(dbName),
+  onBeforeDestructiveMerge: (dbName, plan) =>
+    captureSafetyBackup(
+      `merge plans to delete ${plan.total} row(s) ${JSON.stringify(plan.byTable)}`,
+      dbName,
+    ),
 };
 
 /**
@@ -103,9 +125,12 @@ export const syncBackupHooks: AutoSyncHooks = {
  * Respects the gdriveAutoSync setting from pegasus store.
  */
 export function triggerAutoSync(): void {
+  const dbName = getCurrentDbName();
+  if (!dbName) return; // profile unresolved — don't guess which DB to sync
+
   const { gdriveAutoSync } = usePegasusStore.getState();
   if (gdriveAutoSync) {
-    scheduleDebouncedSync(getCurrentDbName());
+    scheduleDebouncedSync(dbName);
     // The scheduled sync takes its own pre-sync snapshot via syncBackupHooks.
     return;
   }
@@ -119,14 +144,12 @@ export function triggerAutoSync(): void {
  * Respects the gdriveAutoSync setting and uses a 5-minute cooldown.
  */
 export function triggerPageLoadSync(): void {
+  const dbName = getCurrentDbName();
+  if (!dbName) return; // profile unresolved — don't guess which DB to sync
+
   const { gdriveAutoSync } = usePegasusStore.getState();
   if (!gdriveAutoSync) return;
-  triggerSyncOnPageLoad(
-    getCurrentDbName(),
-    ensureDbForActiveTab,
-    () => notifyDataUpdated(),
-    syncBackupHooks,
-  );
+  triggerSyncOnPageLoad(dbName, () => notifyDataUpdated(), syncBackupHooks);
 }
 
 export async function handleGdriveSync(
@@ -176,19 +199,30 @@ export async function handleGdriveSync(
     case 'GDRIVE_SYNC_UP': {
       try {
         usePegasusStore.getState().setGdriveSyncing(true);
+        const dbName = requireDbName();
 
-        // Snapshot first — this overwrites the remote file, so the local state
-        // being uploaded is the last chance to capture a recovery point.
-        await createPreSyncBackup();
+        // Pinned session: exportSyncData reads 11 tables in sequence, and a
+        // concurrent tab message would otherwise be able to switch the database
+        // partway through, uploading a mix of two profiles.
+        const now = await withDbSession(dbName, async () => {
+          // Snapshot first — this overwrites the remote file, so the local state
+          // being uploaded is the last chance to capture a recovery point.
+          await createPreSyncBackup(dbName);
 
-        const token = await getAccessToken();
-        const syncFileName = getSyncFileName();
+          const token = await getAccessToken();
+          const accountId = await getAccountId(token);
+          const target = await resolveSyncTarget(
+            token,
+            dbName,
+            accountId,
+            downloadFile,
+          );
 
-        const syncData = await exportSyncData();
-        const existing = await findFile(token, syncFileName);
-        await uploadFile(token, syncFileName, syncData, existing?.id);
+          const syncData = await exportSyncData({ dbName, accountId });
+          await uploadFile(token, target.fileName, syncData, target.file?.id);
 
-        const now = await saveSyncMeta('up');
+          return saveSyncMeta('up');
+        });
 
         return { success: true, data: { lastSyncTime: now } };
       } catch (e: unknown) {
@@ -201,29 +235,52 @@ export async function handleGdriveSync(
     case 'GDRIVE_SYNC_DOWN': {
       try {
         usePegasusStore.getState().setGdriveSyncing(true);
-        const token = await getAccessToken();
-        const syncFileName = getSyncFileName();
+        const dbName = requireDbName();
 
-        const file = await findFile(token, syncFileName);
-        if (!file) {
-          return {
-            success: false,
-            error: i18n.t('data.gdriveNoBackupFound'),
-          };
+        // Pinned session: importSyncData empties and refills 11 tables, so a
+        // mid-operation database switch would clear one profile and repopulate
+        // another.
+        const result = await withDbSession(dbName, async () => {
+          const token = await getAccessToken();
+          const accountId = await getAccountId(token);
+          const target = await resolveSyncTarget(
+            token,
+            dbName,
+            accountId,
+            downloadFile,
+          );
+
+          if (!target.file) {
+            return { error: i18n.t('data.gdriveNoBackupFound') } as const;
+          }
+
+          const content =
+            target.content ?? (await downloadFile(token, target.file.id));
+
+          // Refuse to overwrite local data with another profile's or account's
+          const originCheck = checkSyncOrigin(content, { dbName, accountId });
+          if (!originCheck.ok) {
+            return { error: `Download aborted — ${originCheck.reason}` } as const;
+          }
+
+          // importSyncData clears every sync table before inserting, so this is
+          // an unconditional overwrite. Snapshot first, and abort if that fails.
+          await captureSafetyBackup(
+            'sync-down overwrites all local tables',
+            dbName,
+          );
+
+          await importSyncData(content);
+
+          return { lastSyncTime: await saveSyncMeta('down') } as const;
+        });
+
+        if ('error' in result) {
+          return { success: false, error: result.error };
         }
 
-        const content = await downloadFile(token, file.id);
-
-        // importSyncData clears every sync table before inserting, so this is
-        // an unconditional overwrite. Snapshot first, and abort if that fails.
-        await captureSafetyBackup('sync-down overwrites all local tables');
-
-        await importSyncData(content);
-
-        const now = await saveSyncMeta('down');
         await notifyDataUpdated();
-
-        return { success: true, data: { lastSyncTime: now } };
+        return { success: true, data: { lastSyncTime: result.lastSyncTime } };
       } catch (e: unknown) {
         return { success: false, error: (e as Error).message };
       } finally {
@@ -235,8 +292,7 @@ export async function handleGdriveSync(
       try {
         usePegasusStore.getState().setGdriveSyncing(true);
         const result = await performMergeSync({
-          dbName: getCurrentDbName(),
-          ensureActiveDb: ensureDbForActiveTab,
+          dbName: requireDbName(),
           onSyncComplete: () => notifyDataUpdated(),
           ...syncBackupHooks,
         });

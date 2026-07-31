@@ -60,7 +60,11 @@ export const SidePanelMenu = ({
 
   const isInsideContent = (target: EventTarget | null): boolean => {
     if (!target || !contentRef.current) return false;
-    return contentRef.current.contains(target as Node);
+    // React's enter/leave plugin sets relatedTarget to `window` (not null) when the
+    // pointer moves to a node React doesn't manage — common here since the overlay
+    // lives in a shadow root inside the host page. contains() would throw on it.
+    if (!(target instanceof Node)) return false;
+    return contentRef.current.contains(target);
   };
 
   const cancelClose = () => {

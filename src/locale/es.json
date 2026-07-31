@@ -745,6 +745,8 @@
     "sidebarWidth": "Ancho de la Barra Lateral",
     "chatContentWidth": "Ancho del Contenido del Chat",
     "inputBoxWidth": "Ancho del Cuadro de Entrada",
+    "tableAutoWidth": "Ancho Automático de Tabla",
+    "tableAutoWidthDesc": "Eliminar el límite de ancho máximo de tabla para que se ajuste al espacio disponible",
     "elementVisibility": "Visibilidad de Elementos",
     "geminiLogo": "Logo de Gemini",
     "geminiLogoDesc": "Alternar visibilidad del logo de Gemini en la esquina superior izquierda",
@@ -1143,13 +1145,13 @@
   },
   "backup": {
     "title": "Copias de seguridad",
-    "description": "Instantáneas diarias automáticas para proteger tus datos. Restaura cualquier estado anterior si algo sale mal.",
+    "description": "Instantáneas tomadas antes de cada sincronización, para que puedas revertir si algo va mal.",
     "enabled": "Copia de seguridad automática",
-    "enabledDesc": "Guardar automáticamente una instantánea diaria después de cambios en los datos",
+    "enabledDesc": "Guardar una instantánea diaria antes de sincronizar",
     "maxSlots": "Máx. ranuras",
     "maxSlotsDesc": "Número de ranuras de copia de seguridad a conservar (1–20)",
     "viewBackups": "Ver",
-    "noBackups": "Aún no hay copias de seguridad. Se creará una instantánea automáticamente después de tu próxima sincronización o cambio de datos.",
+    "noBackups": "Aún no hay copias de seguridad. Se creará una instantánea automáticamente antes de la próxima sincronización.",
     "createBackup": "Crear copia ahora",
     "creating": "Creando copia de seguridad...",
     "created": "Copia de seguridad creada correctamente",
@@ -1166,6 +1168,10 @@
     "deleteFailed": "Error al eliminar la copia de seguridad",
     "loading": "Cargando copias de seguridad...",
     "size": "Tamaño",
-    "slots": "ranuras"
+    "slots": "ranuras",
+    "reasonManual": "Manual",
+    "reasonPreSync": "Antes de sincronizar",
+    "reasonPreMergeDelete": "Antes de eliminación masiva",
+    "reasonPreRestore": "Antes de restaurar"
   }
 }

@@ -24,11 +24,17 @@ export async function handleDbAdmin(
         await dbAdmin.resetDatabase();
         await notifyDataUpdated();
 
-        // Clear sync timestamps so next merge treats everything as first-ever sync
+        // Clear sync timestamps so next merge treats everything as first-ever
+        // sync (lastSyncTime = 0 disables the deletion phase entirely, which is
+        // what we want right after wiping the DB — otherwise the next merge
+        // would read the reset as "everything was deleted" and propagate it).
         const dbName = getCurrentDbName();
-        const syncMetaKey = `gdrive_last_sync_time__${dbName}`;
-        const syncDirKey = `gdrive_last_sync_dir__${dbName}`;
-        await browser.storage.local.remove([syncMetaKey, syncDirKey]);
+        if (dbName) {
+          await browser.storage.local.remove([
+            `gdrive_last_sync_time__${dbName}`,
+            `gdrive_last_sync_dir__${dbName}`,
+          ]);
+        }
 
         return { success: true };
       } catch (e: unknown) {

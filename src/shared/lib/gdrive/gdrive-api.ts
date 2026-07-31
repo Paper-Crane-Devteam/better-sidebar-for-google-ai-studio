@@ -146,3 +146,32 @@ export async function deleteFile(token: string, fileId: string): Promise<void> {
   const client = createClient(token);
   await client.delete(`${DRIVE_API_BASE}/files/${fileId}`);
 }
+
+/**
+ * Resolve a stable identifier for the Drive account the token belongs to.
+ *
+ * `permissionId` is preferred: it is stable per account and, unlike the email
+ * address, is returned under the narrow `drive.appdata` scope.
+ *
+ * Deliberately fetched rather than cached by callers — the point is to notice
+ * when the effective account is not the one we expect. Returns null if the
+ * lookup fails, in which case callers should degrade to account-agnostic
+ * behaviour rather than block.
+ */
+export async function getAccountId(token: string): Promise<string | null> {
+  try {
+    const client = createClient(token);
+    const res = await client.get(`${DRIVE_API_BASE}/about`, {
+      params: { fields: 'user(permissionId,emailAddress)' },
+    });
+    const user = res.data?.user;
+    const id = user?.permissionId || user?.emailAddress;
+    return typeof id === 'string' && id.length > 0 ? id : null;
+  } catch (err: any) {
+    console.warn(
+      '[GDriveApi] Could not resolve account id:',
+      err?.message ?? err,
+    );
+    return null;
+  }
+}

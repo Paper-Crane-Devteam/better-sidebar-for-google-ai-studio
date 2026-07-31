@@ -60,6 +60,7 @@ export interface GeminiEnhancedFeatures {
   showHotkeyHelper: boolean;
   slashCommand: boolean;
   removeWatermark: boolean;
+  tableAutoWidth: boolean;
   selectionToolbar: SelectionToolbarConfig;
 }
 
@@ -126,6 +127,7 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
       showHotkeyHelper: true,
       slashCommand: true,
       removeWatermark: true,
+      tableAutoWidth: false,
       selectionToolbar: {
         enabled: true,
         reference: true,

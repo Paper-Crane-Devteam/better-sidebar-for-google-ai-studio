@@ -19,7 +19,22 @@ interface BackupSlotInfo {
   id: string;
   createdAt: number;
   size: number;
+  /** Absent on slots created before snapshot reasons were recorded */
+  reason?: 'manual' | 'pre-sync' | 'pre-merge-delete' | 'pre-restore';
 }
+
+const REASON_LABEL_KEYS = {
+  manual: 'backup.reasonManual',
+  'pre-sync': 'backup.reasonPreSync',
+  'pre-merge-delete': 'backup.reasonPreMergeDelete',
+  'pre-restore': 'backup.reasonPreRestore',
+} as const;
+
+/**
+ * Snapshots taken because data was about to be destroyed are the ones a user
+ * actually hunts for after an incident, so they get visual weight.
+ */
+const PROTECTIVE_REASONS = ['pre-merge-delete', 'pre-restore'];
 
 interface BackupListModalProps {
   dbName: string;
@@ -184,8 +199,21 @@ export const BackupListModal: React.FC<BackupListModalProps> = ({
               className="group flex items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors"
             >
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium">
-                  {dayjs.unix(backup.createdAt).format('YYYY-MM-DD HH:mm')}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">
+                    {dayjs.unix(backup.createdAt).format('YYYY-MM-DD HH:mm')}
+                  </span>
+                  {backup.reason && (
+                    <span
+                      className={`shrink-0 rounded px-1 py-1 text-xs leading-none ${
+                        PROTECTIVE_REASONS.includes(backup.reason)
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {t(REASON_LABEL_KEYS[backup.reason])}
+                    </span>
+                  )}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {formatSize(backup.size)}

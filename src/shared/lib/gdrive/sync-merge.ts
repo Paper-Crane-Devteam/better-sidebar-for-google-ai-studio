@@ -39,18 +39,15 @@
  */
 
 import { runQuery, runCommand, runBatch } from '@/shared/db';
-import type { SyncPayload } from './sync-data';
+import { SYNC_TABLES, type SyncPayload } from './sync-data';
 
-/** Tables to merge (order matters for FK constraints) */
-const MERGE_TABLES = [
-  'prompt_folders',
-  'prompts',
-  'folders',
-  'conversations',
-  'favorites',
-  'tags',
-  'conversation_tags',
-] as const;
+/**
+ * Tables to merge, in FK-safe order (parents first).
+ * Shares the single source of truth with the export layer so the two can never
+ * drift — a table present in one but not the other would either never sync or
+ * be treated as "missing from remote" and deleted.
+ */
+const MERGE_TABLES = SYNC_TABLES;
 
 /** Tables to delete in reverse order (dependents first) */
 const DELETE_ORDER = [...MERGE_TABLES].reverse();
@@ -65,24 +62,43 @@ const TABLE_KEYS: Record<string, readonly string[]> = {
   prompt_folders: ['id'],
   prompts: ['id'],
   folders: ['id'],
+  gems: ['id'],
+  notebooks: ['id'],
   conversations: ['id'],
   favorites: ['id'],
   tags: ['id'],
   conversation_tags: ['conversation_id', 'tag_id'],
+  snippet_folders: ['id'],
+  snippets: ['id'],
 };
 
 /**
- * Deletions are held back when they would remove more than this fraction of
- * all local rows.
+ * All deletions are held back when they would remove more than this fraction of
+ * the local rows that existed *before* the merge started.
  */
 const MAX_SAFE_DELETE_RATIO = 0.3;
 
 /**
- * Absolute floor below which the ratio guard is not applied. Small datasets
- * trip high ratios trivially (3 folders, 1 removed = 33%), so tiny deletions
- * always pass through.
+ * Absolute floor below which the global ratio guard is not applied. Small
+ * datasets trip high ratios trivially (3 folders, 1 removed = 33%), so tiny
+ * deletions always pass through.
  */
 const MIN_ROWS_FOR_RATIO_GUARD = 10;
+
+/**
+ * A single table's deletions are held back when they would remove more than
+ * this fraction of that table's pre-merge rows.
+ *
+ * The per-table guard exists because the global ratio can be diluted into
+ * harmlessness: phase 1 inserts the remote rows first, so if a payload from a
+ * different dataset arrives, the local table grows before phase 1 even looks at
+ * deletions. Wiping 100% of what this profile owned can then read as a small
+ * fraction of the inflated total.
+ */
+const MAX_SAFE_TABLE_DELETE_RATIO = 0.5;
+
+/** Absolute floor for the per-table guard. */
+const MIN_ROWS_FOR_TABLE_GUARD = 5;
 
 export interface MergeResult {
   inserted: number;
@@ -145,6 +161,16 @@ export async function mergeSyncData(
   let totalSkipped = 0;
   let deletionBlocked = 0;
   const guardReasons: string[] = [];
+
+  // Row counts as they are *before* phase 1 adds anything. The deletion guards
+  // must reason about what this profile already owned, not about a total that
+  // phase 1 has already inflated with remote rows.
+  const preMergeCounts: Record<string, number> = {};
+  for (const table of MERGE_TABLES) {
+    const rows: any[] = (await runQuery(`SELECT COUNT(*) AS n FROM ${table}`)) || [];
+    preMergeCounts[table] = Number(rows[0]?.n ?? 0);
+  }
+  const preMergeTotal = Object.values(preMergeCounts).reduce((a, b) => a + b, 0);
 
   await runCommand('PRAGMA foreign_keys = OFF');
 
@@ -232,9 +258,8 @@ export async function mergeSyncData(
     // --- Phase 2: Delete stale local rows (dependents first) ---
     // Skip deletion on first-ever sync (no baseline to compare against)
     if (lastSyncTime > 0) {
-      const plannedOps: { sql: string; bind?: any[] }[] = [];
+      let plannedOps: { sql: string; bind?: any[] }[] = [];
       const plannedByTable: Record<string, number> = {};
-      let localRowTotal = 0;
 
       for (const table of DELETE_ORDER) {
         const keyCols = TABLE_KEYS[table] ?? ['id'];
@@ -242,7 +267,6 @@ export async function mergeSyncData(
         const localRows: any[] =
           (await runQuery(`SELECT * FROM ${table}`)) || [];
 
-        localRowTotal += localRows.length;
         if (localRows.length === 0) continue;
 
         // Guard 1: remote table is entirely empty while local has data.
@@ -261,6 +285,8 @@ export async function mergeSyncData(
             .map((r) => rowKey(r, keyCols)),
         );
 
+        const tableOps: { sql: string; bind?: any[] }[] = [];
+
         for (const localRow of localRows) {
           if (!hasCompleteKey(localRow, keyCols)) continue; // not addressable
           if (remoteKeys.has(rowKey(localRow, keyCols))) continue; // keep
@@ -272,18 +298,38 @@ export async function mergeSyncData(
             // Existed before last sync but remote doesn't have it
             // → was deleted on another device → delete locally
             const where = keyCols.map((c) => `${c} = ?`).join(' AND ');
-            plannedOps.push({
+            tableOps.push({
               sql: `DELETE FROM ${table} WHERE ${where}`,
               bind: keyCols.map((c) => localRow[c]),
             });
-            plannedByTable[table] = (plannedByTable[table] || 0) + 1;
           }
           // else: created after last sync → keep
         }
+
+        if (tableOps.length === 0) continue;
+
+        // Guard 2: this table is losing most of what it had before the merge
+        const before = preMergeCounts[table] ?? 0;
+        const tableRatio = before > 0 ? tableOps.length / before : 0;
+        if (
+          tableOps.length >= MIN_ROWS_FOR_TABLE_GUARD &&
+          tableRatio > MAX_SAFE_TABLE_DELETE_RATIO
+        ) {
+          deletionBlocked += tableOps.length;
+          guardReasons.push(
+            `${table}: would delete ${tableOps.length}/${before} pre-merge rows ` +
+              `(${(tableRatio * 100).toFixed(0)}%), over the ` +
+              `${(MAX_SAFE_TABLE_DELETE_RATIO * 100).toFixed(0)}% per-table limit`,
+          );
+          continue;
+        }
+
+        plannedOps = plannedOps.concat(tableOps);
+        plannedByTable[table] = tableOps.length;
       }
 
-      // Guard 2: bulk-wipe ratio check across the whole payload
-      const ratio = localRowTotal > 0 ? plannedOps.length / localRowTotal : 0;
+      // Guard 3: bulk-wipe ratio across everything this profile already owned
+      const ratio = preMergeTotal > 0 ? plannedOps.length / preMergeTotal : 0;
       const exceedsRatio =
         plannedOps.length >= MIN_ROWS_FOR_RATIO_GUARD &&
         ratio > MAX_SAFE_DELETE_RATIO;
@@ -291,7 +337,7 @@ export async function mergeSyncData(
       if (exceedsRatio) {
         deletionBlocked += plannedOps.length;
         guardReasons.push(
-          `bulk deletion blocked: ${plannedOps.length}/${localRowTotal} rows ` +
+          `bulk deletion blocked: ${plannedOps.length}/${preMergeTotal} pre-merge rows ` +
             `(${(ratio * 100).toFixed(0)}%) exceeds the ` +
             `${(MAX_SAFE_DELETE_RATIO * 100).toFixed(0)}% safety limit`,
         );

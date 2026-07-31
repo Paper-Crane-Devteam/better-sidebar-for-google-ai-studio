@@ -17,6 +17,7 @@ export const useGeminiUI = () => {
     hideUpgrade = false,
     zenMode = false,
     showSmartScrollbar = true,
+    tableAutoWidth = false,
   } = geminiSettings ?? {};
 
   const { path } = useUrl();
@@ -155,6 +156,12 @@ export const useGeminiUI = () => {
       `;
     }
 
+    if (tableAutoWidth) {
+      css += `
+        .table-block.new-table-style { max-width: none !important; }
+      `;
+    }
+
     // [DEPRECATED] showTopBarTag - removed due to Gemini UI redesign
     // if (geminiSettings.showTopBarTag) {
     //   css += `
@@ -175,6 +182,7 @@ export const useGeminiUI = () => {
     storeInputWidth,
     // [DEPRECATED] geminiSettings.showTopBarTag,
     zenMode,
+    tableAutoWidth,
     isGemsCreatePage,
   ]);
 

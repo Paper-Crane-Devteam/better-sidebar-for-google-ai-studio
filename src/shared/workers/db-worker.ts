@@ -7,7 +7,19 @@ import { runMigrations } from './migrations';
 let db: any = null;
 let initPromise: Promise<boolean> | null = null;
 
-let dbName = 'prompt-manager-for-google-ai-studio.db';
+/**
+ * Name of the database this worker has open.
+ *
+ * Deliberately starts as null instead of defaulting to the legacy filename.
+ * A worker can be recreated at any time (Chrome reclaims offscreen documents),
+ * and any default here means a recreated worker silently opens — or creates —
+ * the wrong database while the caller still believes it is talking to the
+ * profile DB it asked for. That mismatch is how a profile's data ends up
+ * exported as "empty" and mirrored back over the real thing.
+ *
+ * With no default, an un-named worker fails loudly instead.
+ */
+let dbName: string | null = null;
 const WASM_URL = '/assets/wa-sqlite-async.wasm';
 
 // Request queue to ensure serial execution of DB operations
@@ -21,12 +33,23 @@ const initDB = async (newDbName?: string) => {
     initPromise = null;
   }
 
+  if (!dbName) {
+    throw new Error(
+      'Worker: refusing to open a database without an explicit name. ' +
+        'Send INIT with a dbName first.',
+    );
+  }
+
   if (db) return true;
   if (initPromise) return initPromise;
 
+  // Pin the name for this init run so the async closures below can't observe a
+  // concurrent switch, and so TS knows it is non-null.
+  const openingDbName = dbName;
+
   initPromise = (async () => {
     try {
-      console.log(`Worker: Initializing database "${dbName}"...`);
+      console.log(`Worker: Initializing database "${openingDbName}"...`);
 
       // Add 30s timeout for DB initialization
       const initPromise = new Promise(async (resolve, reject) => {
@@ -44,11 +67,11 @@ const initDB = async (newDbName?: string) => {
           let database;
           if (useOpfs) {
             database = await initSQLite(
-              useOpfsStorage(dbName, { url: WASM_URL }),
+              useOpfsStorage(openingDbName, { url: WASM_URL }),
             );
           } else {
             database = await initSQLite(
-              useIdbStorage(dbName, { url: WASM_URL }),
+              useIdbStorage(openingDbName, { url: WASM_URL }),
             );
           }
           clearTimeout(timeoutId);
@@ -68,7 +91,7 @@ const initDB = async (newDbName?: string) => {
       // Run Migrations
       await runMigrations(db);
 
-      console.log(`Worker: Database "${dbName}" initialized successfully`);
+      console.log(`Worker: Database "${openingDbName}" initialized successfully`);
       return true;
     } catch (err) {
       console.error('Worker: Failed to initialize database:', err);
@@ -224,6 +247,11 @@ const handleImport = async (
     importBuffer.length = 0;
   }
 
+  if (!dbName) {
+    throw new Error('Worker: cannot import before a database is opened');
+  }
+  const targetDbName = dbName;
+
   try {
     const useOpfs = await isOpfsSupported();
 
@@ -249,14 +277,14 @@ const handleImport = async (
       // 4. Clean up auxiliary files
       for (const suffix of ['-journal', '-wal', '-shm']) {
         try {
-          await root.removeEntry(dbName + suffix);
+          await root.removeEntry(targetDbName + suffix);
         } catch (e) {
           // Ignore if file doesn't exist
         }
       }
 
       // 5. Overwrite the main DB file
-      const fileHandle = await root.getFileHandle(dbName, {
+      const fileHandle = await root.getFileHandle(targetDbName, {
         create: true,
       });
       const writable = await fileHandle.createWritable();
@@ -297,7 +325,22 @@ const processMessage = async (e: MessageEvent) => {
   const { id, type, payload } = e.data;
 
   try {
+    // GET_DB_NAME must answer even before a DB is open — callers use it
+    // precisely to detect the "worker has nothing open" state.
+    if (type === 'GET_DB_NAME') {
+      self.postMessage({ id, success: true, data: db ? dbName : null });
+      return;
+    }
+
     if (!db && type !== 'INIT') {
+      if (!dbName) {
+        // The worker was (re)created without being told which DB to open.
+        // Failing here is intentional; see the `dbName` declaration.
+        throw new Error(
+          `Worker: no database open and no name known (request "${type}"). ` +
+            'The caller must send INIT with a dbName after (re)creating the worker.',
+        );
+      }
       await initDB();
     }
 

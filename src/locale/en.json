@@ -725,6 +725,8 @@
     "sidebarWidth": "Sidebar Width",
     "chatContentWidth": "Chat Content Width",
     "inputBoxWidth": "Input Box Width",
+    "tableAutoWidth": "Table Auto Width",
+    "tableAutoWidthDesc": "Remove table max-width limit so tables render at full available width",
     "elementVisibility": "Element Visibility",
     "geminiLogo": "Gemini Logo",
     "geminiLogoDesc": "Toggle Top Left Gemini logo visibility",
@@ -1142,13 +1144,13 @@
   },
   "backup": {
     "title": "Backups",
-    "description": "Automatic daily snapshots to protect your data. Restore any previous state if something goes wrong.",
+    "description": "Snapshots taken before each sync, so you can roll back if a sync goes wrong.",
     "enabled": "Auto Backup",
-    "enabledDesc": "Automatically save a daily snapshot after data changes",
+    "enabledDesc": "Save a daily snapshot before syncing",
     "maxSlots": "Max Slots",
     "maxSlotsDesc": "Number of backup slots to keep (1–20)",
     "viewBackups": "View",
-    "noBackups": "No backups yet. A snapshot will be created automatically after your next sync or data change.",
+    "noBackups": "No backups yet. A snapshot will be created automatically before your next sync.",
     "createBackup": "Create Backup Now",
     "creating": "Creating backup...",
     "created": "Backup created successfully",
@@ -1165,6 +1167,10 @@
     "deleteFailed": "Failed to delete backup",
     "loading": "Loading backups...",
     "size": "Size",
-    "slots": "slots"
+    "slots": "slots",
+    "reasonManual": "Manual",
+    "reasonPreSync": "Before sync",
+    "reasonPreMergeDelete": "Before bulk delete",
+    "reasonPreRestore": "Before restore"
   }
 }

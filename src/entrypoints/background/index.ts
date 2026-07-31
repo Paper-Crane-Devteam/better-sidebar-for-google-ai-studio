@@ -14,7 +14,6 @@ import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import {
   getActiveDbName,
   setActiveTabId,
-  ensureDbForActiveTab,
 } from './tab-profile-map';
 import { notifyDataUpdated } from './notify';
 import { syncBackupHooks } from './handlers/gdrive-sync';
@@ -67,11 +66,7 @@ export default defineBackground(() => {
   // When switching tabs, flush any pending debounced sync first
   // so it runs against the OLD tab's profile before we switch.
   browser.tabs.onActivated.addListener((activeInfo) => {
-    flushPendingSync(
-      ensureDbForActiveTab,
-      () => notifyDataUpdated(),
-      syncBackupHooks,
-    ).then(() => {
+    flushPendingSync(() => notifyDataUpdated(), syncBackupHooks).then(() => {
       setActiveTabId(activeInfo.tabId);
     });
   });
@@ -98,7 +93,6 @@ export default defineBackground(() => {
       handleAutoSyncAlarm(
         alarm,
         getActiveDbName,
-        ensureDbForActiveTab,
         () => notifyDataUpdated(),
         syncBackupHooks,
       );

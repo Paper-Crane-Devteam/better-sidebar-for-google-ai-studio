@@ -201,13 +201,14 @@ export const SelectionToolbarFeature = () => {
     };
 
     const handleMouseDown = (e: MouseEvent) => {
-      // If clicking outside the toolbar, hide it
-      if (hostRef.current) {
-        const shadow = hostRef.current.shadowRoot;
-        const path = e.composedPath();
-        if (!path.includes(hostRef.current) && (!shadow || !path.some(n => shadow.contains(n as Node)))) {
-          setVisible(false);
-        }
+      // If clicking outside the toolbar, hide it.
+      // composedPath() crosses the shadow boundary, so the host element is always
+      // present in the path when the event originates inside our shadow tree —
+      // no need to probe individual nodes (the path also contains `window`,
+      // which is not a Node and would throw in contains()).
+      if (!hostRef.current) return;
+      if (!e.composedPath().includes(hostRef.current)) {
+        setVisible(false);
       }
     };
 

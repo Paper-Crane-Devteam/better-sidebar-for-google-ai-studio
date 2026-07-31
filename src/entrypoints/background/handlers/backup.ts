@@ -18,6 +18,7 @@ import {
 } from '@/shared/lib/gdrive';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { notifyDataUpdated } from '../notify';
+import { withDbSession } from '@/shared/db';
 
 export async function handleBackup(
   message: ExtensionMessage,
@@ -38,7 +39,12 @@ export async function handleBackup(
     case 'BACKUP_CREATE': {
       try {
         const { dbName } = message.payload;
-        const backup = await createBackup(dbName);
+
+        // Pinned session: the export reads every sync table in sequence, so a
+        // concurrent database switch would produce a snapshot mixing profiles.
+        const backup = await withDbSession(dbName, () =>
+          createBackup(dbName),
+        );
 
         // Prune to max slots
         const { backupMaxSlots } = usePegasusStore.getState();
@@ -72,12 +78,17 @@ export async function handleBackup(
         // Pruning is deferred until after the restore — it could otherwise
         // evict the very slot being restored from.
         const { backupMaxSlots } = usePegasusStore.getState();
-        await createSafetyBackup(dbName, backupMaxSlots, {
-          reason: 'pre-restore',
-          prune: false,
+
+        // Pinned session: the snapshot and the restore must both apply to this
+        // profile. A switch in between would snapshot one and overwrite another.
+        await withDbSession(dbName, async () => {
+          await createSafetyBackup(dbName, backupMaxSlots, {
+            reason: 'pre-restore',
+            prune: false,
+          });
+          await restoreBackup(dbName, backupId);
         });
 
-        await restoreBackup(dbName, backupId);
         await pruneBackups(dbName, backupMaxSlots);
         await notifyDataUpdated();
         return { success: true };

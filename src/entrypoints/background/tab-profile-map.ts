@@ -18,8 +18,17 @@ import { switchDB } from '@/shared/db';
 // tabId → dbName
 const tabDbMap = new Map<number, string>();
 
-// Track the currently active dbName in the background
-let currentDbName = 'prompt-manager-for-google-ai-studio.db';
+/**
+ * The dbName the background currently considers active.
+ *
+ * Starts as null rather than the legacy filename on purpose. This lives in
+ * service-worker memory, which is wiped whenever the SW is terminated, so a
+ * default here means that after every SW restart — before `dbReady` resolves —
+ * sync file names and backup namespaces would be computed from a database that
+ * may not even be the active profile's. Callers must treat null as "unknown"
+ * and skip work rather than fall back to a guess.
+ */
+let currentDbName: string | null = null;
 
 // Track the browser's currently active/focused tab
 let activeTabId: number | null = null;
@@ -40,9 +49,10 @@ export function setCurrentDbName(dbName: string) {
 }
 
 /**
- * Get the current DB name.
+ * Get the current DB name, or null if it hasn't been established yet.
+ * Callers must not substitute a default — see `currentDbName`.
  */
-export function getCurrentDbName(): string {
+export function getCurrentDbName(): string | null {
   return currentDbName;
 }
 
@@ -63,9 +73,10 @@ export function getActiveTabId(): number | null {
 
 /**
  * Get the dbName for the active tab.
- * Falls back to currentDbName if active tab has no mapping.
+ * Falls back to currentDbName if active tab has no mapping, and to null if
+ * neither is known.
  */
-export function getActiveDbName(): string {
+export function getActiveDbName(): string | null {
   if (activeTabId != null) {
     const db = tabDbMap.get(activeTabId);
     if (db) return db;
@@ -87,16 +98,6 @@ export async function ensureDbForTab(tabId: number | undefined): Promise<boolean
   await switchDB(expectedDb);
   currentDbName = expectedDb;
   return true;
-}
-
-/**
- * Ensure the background DB is switched to the active tab's profile.
- * Used by auto-sync before performing sync operations.
- */
-export async function ensureDbForActiveTab(): Promise<void> {
-  if (activeTabId != null) {
-    await ensureDbForTab(activeTabId);
-  }
 }
 
 /**

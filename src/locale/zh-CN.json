@@ -744,6 +744,8 @@
     "sidebarWidth": "侧边栏宽度",
     "chatContentWidth": "聊天内容宽度",
     "inputBoxWidth": "输入框宽度",
+    "tableAutoWidth": "表格宽度自适应",
+    "tableAutoWidthDesc": "移除表格最大宽度限制，使表格渲染时自动适应可用空间",
     "elementVisibility": "元素可见性",
     "geminiLogo": "Gemini Logo",
     "geminiLogoDesc": "切换左上角 Gemini Logo 的显示",
@@ -1140,13 +1142,13 @@
   },
   "backup": {
     "title": "备份",
-    "description": "自动每日快照，保护你的数据安全。出现问题时可恢复到任意历史状态。",
+    "description": "在每次同步前保存快照，同步出问题时可以回滚到之前的状态。",
     "enabled": "自动备份",
-    "enabledDesc": "数据变更后自动保存每日快照",
+    "enabledDesc": "每天在同步前保存一次快照",
     "maxSlots": "最大槽位",
     "maxSlotsDesc": "保留的备份槽位数量（1–20）",
     "viewBackups": "查看",
-    "noBackups": "暂无备份。下次同步或数据变更后将自动创建快照。",
+    "noBackups": "还没有备份。下次同步前会自动创建一个快照。",
     "createBackup": "立即创建备份",
     "creating": "正在创建备份...",
     "created": "备份创建成功",
@@ -1163,6 +1165,10 @@
     "deleteFailed": "删除备份失败",
     "loading": "正在加载备份...",
     "size": "大小",
-    "slots": "个"
+    "slots": "个",
+    "reasonManual": "手动",
+    "reasonPreSync": "同步前",
+    "reasonPreMergeDelete": "批量删除前",
+    "reasonPreRestore": "还原前"
   }
 }

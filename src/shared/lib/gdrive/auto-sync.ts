@@ -15,9 +15,11 @@
  */
 
 import { getAccessToken, getAuthStatus, silentRefresh } from './google-auth';
-import { findFile, uploadFile, downloadFile } from './gdrive-api';
+import { findFile, uploadFile, downloadFile, getAccountId } from './gdrive-api';
 import { exportSyncData } from './sync-data';
 import { mergeSyncData } from './sync-merge';
+import { resolveSyncTarget, checkSyncOrigin } from './sync-identity';
+import { withDbSession } from '@/shared/db';
 
 // --- Constants ---
 
@@ -66,32 +68,44 @@ function isRetryable(err: any): boolean {
 
 // --- Helpers ---
 
-function buildSyncFileName(dbName: string): string {
-  return `better-sidebar-sync__${dbName}.json`;
-}
-
+/**
+ * Sync metadata stays keyed by dbName only, not by the resolved file name.
+ * The status UI reads this key synchronously without a token, and a profile has
+ * exactly one active sync file at a time, so the extra dimension would buy
+ * nothing. When a profile does move to an account-scoped file, the inherited
+ * timestamp is harmless: the new file starts out absent (no merge at all) or
+ * empty (deletion guards hold), so no stale baseline can delete anything.
+ */
 function buildSyncMetaKey(dbName: string): string {
   return `gdrive_last_sync_time__${dbName}`;
 }
 
 export interface AutoSyncOptions {
+  /**
+   * The profile database this sync operates on. The connection is pinned to it
+   * for the whole run, so this is the single source of truth — no ambient
+   * "current database" is consulted.
+   */
   dbName: string;
-  ensureActiveDb?: () => Promise<void>;
   onSyncComplete?: () => void;
   /**
-   * Called once the target DB is settled but before anything is pulled or
+   * Called once the target DB is verified but before anything is pulled or
    * pushed. Used to snapshot the pre-sync state. Failures are logged and
    * ignored — a missing routine snapshot must not block syncing.
+   *
+   * Receives the verified dbName rather than letting the callback look it up:
+   * the caller's ambient "current DB" can differ from the one being synced, and
+   * a snapshot filed under the wrong profile is worse than none.
    */
-  onBeforeSync?: () => Promise<void>;
+  onBeforeSync?: (dbName: string) => Promise<void>;
   /**
    * Called immediately before the merge deletes rows. Throwing aborts the
    * deletions (inserts and updates still apply).
    */
-  onBeforeDestructiveMerge?: (plan: {
-    total: number;
-    byTable: Record<string, number>;
-  }) => Promise<void>;
+  onBeforeDestructiveMerge?: (
+    dbName: string,
+    plan: { total: number; byTable: Record<string, number> },
+  ) => Promise<void>;
 }
 
 /** Hooks that callers can forward to `performMergeSync`. */
@@ -123,55 +137,15 @@ export async function performMergeSync(
   isSyncing = true;
 
   try {
-    if (opts.ensureActiveDb) {
-      await opts.ensureActiveDb();
-    }
-
-    // Snapshot BEFORE the sync touches anything. A sync that pulls a stale or
-    // empty remote file can mirror deletions locally, so the useful recovery
-    // point is the one captured while the data is still intact.
-    if (opts.onBeforeSync) {
-      try {
-        await opts.onBeforeSync();
-      } catch (err: any) {
-        console.warn('[AutoSync] Pre-sync backup failed:', err?.message ?? err);
-      }
-    }
-
-    const token = await getAccessToken(true);
-    const syncFileName = buildSyncFileName(opts.dbName);
-    const metaKey = buildSyncMetaKey(opts.dbName);
-
-    // Step 1: Pull & merge
-    const existing = await findFile(token, syncFileName);
-    if (existing) {
-      const remoteData = await downloadFile(token, existing.id);
-
-      // Read lastSyncTime to distinguish "deleted elsewhere" from "new locally"
-      const metaResult = await browser.storage.local.get(metaKey);
-      const lastSyncTime = (metaResult[metaKey] as number) || 0;
-
-      const result = await mergeSyncData(remoteData, lastSyncTime, {
-        onBeforeDelete: opts.onBeforeDestructiveMerge,
-      });
-      console.log(
-        `[AutoSync] Merge: +${result.inserted} ins, ~${result.updated} upd, -${result.deleted} del, =${result.skipped} skip` +
-          (result.deletionBlocked > 0
-            ? `, !${result.deletionBlocked} deletions blocked by safety guard`
-            : ''),
-      );
-    }
-
-    // Step 2: Export & push
-    const localData = await exportSyncData();
-    const file = existing || (await findFile(token, syncFileName));
-    await uploadFile(token, syncFileName, localData, file?.id);
-
-    const now = Math.floor(Date.now() / 1000);
-    await browser.storage.local.set({ [metaKey]: now });
-
-    opts.onSyncComplete?.();
-    return { success: true };
+    // Everything below runs with the connection pinned to opts.dbName.
+    //
+    // This is the critical guarantee. A sync is dozens of separate round trips
+    // to the DB worker, and other extension messages switch the active database
+    // to match their sender tab. Unpinned, a switch lands mid-merge and the
+    // deletion phase executes against a different profile's data while comparing
+    // it to this profile's remote payload — wiping it. Checking the database once
+    // up front cannot prevent that; it has to stay pinned throughout.
+    return await withDbSession(opts.dbName, () => runMergeSync(opts));
   } catch (err: any) {
     if (retries > 0 && isRetryable(err)) {
       // On 401, try to refresh the token before retrying
@@ -192,6 +166,78 @@ export async function performMergeSync(
     isSyncing = false;
     await releaseLock();
   }
+}
+
+/**
+ * The actual sync body. Always invoked inside a pinned DB session.
+ */
+async function runMergeSync(
+  opts: AutoSyncOptions,
+): Promise<{ success: boolean; error?: string }> {
+  // Snapshot BEFORE the sync touches anything. A sync that pulls a stale or
+  // empty remote file can mirror deletions locally, so the useful recovery
+  // point is the one captured while the data is still intact.
+  if (opts.onBeforeSync) {
+    try {
+      await opts.onBeforeSync(opts.dbName);
+    } catch (err: any) {
+      console.warn('[AutoSync] Pre-sync backup failed:', err?.message ?? err);
+    }
+  }
+
+  const token = await getAccessToken(true);
+  const accountId = await getAccountId(token);
+  const metaKey = buildSyncMetaKey(opts.dbName);
+
+  const target = await resolveSyncTarget(
+    token,
+    opts.dbName,
+    accountId,
+    downloadFile,
+  );
+
+  // Step 1: Pull & merge
+  if (target.file) {
+    const remoteData =
+      target.content ?? (await downloadFile(token, target.file.id));
+
+    // Only merge a payload that provably belongs to this dataset
+    const originCheck = checkSyncOrigin(remoteData, {
+      dbName: opts.dbName,
+      accountId,
+    });
+    if (!originCheck.ok) {
+      console.error(`[AutoSync] Aborted: ${originCheck.reason}`);
+      return { success: false, error: `Sync aborted \u2014 ${originCheck.reason}` };
+    }
+
+    // Read lastSyncTime to distinguish "deleted elsewhere" from "new locally"
+    const metaResult = await browser.storage.local.get(metaKey);
+    const lastSyncTime = (metaResult[metaKey] as number) || 0;
+
+    const result = await mergeSyncData(remoteData, lastSyncTime, {
+      onBeforeDelete: opts.onBeforeDestructiveMerge
+        ? (plan) => opts.onBeforeDestructiveMerge!(opts.dbName, plan)
+        : undefined,
+    });
+    console.log(
+      `[AutoSync] Merge: +${result.inserted} ins, ~${result.updated} upd, -${result.deleted} del, =${result.skipped} skip` +
+        (result.deletionBlocked > 0
+          ? `, !${result.deletionBlocked} deletions blocked by safety guard`
+          : ''),
+    );
+  }
+
+  // Step 2: Export & push
+  const localData = await exportSyncData({ dbName: opts.dbName, accountId });
+  const file = target.file || (await findFile(token, target.fileName));
+  await uploadFile(token, target.fileName, localData, file?.id);
+
+  const now = Math.floor(Date.now() / 1000);
+  await browser.storage.local.set({ [metaKey]: now });
+
+  opts.onSyncComplete?.();
+  return { success: true };
 }
 
 // --- Debounce scheduling (alarm-based, SW-safe) ---
@@ -220,7 +266,6 @@ export async function scheduleDebouncedSync(dbName: string): Promise<void> {
  * Call BEFORE switching active tab so the sync uses the old profile.
  */
 export async function flushPendingSync(
-  ensureActiveDb: () => Promise<void>,
   onSyncComplete?: () => void,
   hooks?: AutoSyncHooks,
 ): Promise<boolean> {
@@ -239,7 +284,7 @@ export async function flushPendingSync(
   const auth = await getAuthStatus();
   if (!auth.isAuthenticated) return false;
 
-  await performMergeSync({ dbName, ensureActiveDb, onSyncComplete, ...hooks });
+  await performMergeSync({ dbName, onSyncComplete, ...hooks });
   return true;
 }
 
@@ -261,8 +306,8 @@ export function registerAutoSyncAlarm(): void {
  */
 export async function handleAutoSyncAlarm(
   alarm: { name: string },
-  getDbName: () => string,
-  ensureActiveDb: () => Promise<void>,
+  /** Returns null while the active profile is still unresolved */
+  getDbName: () => string | null,
   onSyncComplete?: () => void,
   hooks?: AutoSyncHooks,
 ): Promise<void> {
@@ -282,12 +327,7 @@ export async function handleAutoSyncAlarm(
     console.log(`[AutoSync] Debounce alarm fired for db: ${dbName}`);
     notifySyncingState(true);
     try {
-      await performMergeSync({
-        dbName,
-        ensureActiveDb,
-        onSyncComplete,
-        ...hooks,
-      });
+      await performMergeSync({ dbName, onSyncComplete, ...hooks });
     } finally {
       notifySyncingState(false);
     }
@@ -301,15 +341,16 @@ export async function handleAutoSyncAlarm(
       return;
     }
 
+    const dbName = getDbName();
+    if (!dbName) {
+      console.log('[AutoSync] Active profile unresolved, skipping periodic sync');
+      return;
+    }
+
     console.log('[AutoSync] Periodic sync triggered');
     notifySyncingState(true);
     try {
-      await performMergeSync({
-        dbName: getDbName(),
-        ensureActiveDb,
-        onSyncComplete,
-        ...hooks,
-      });
+      await performMergeSync({ dbName, onSyncComplete, ...hooks });
     } finally {
       notifySyncingState(false);
     }
@@ -351,7 +392,6 @@ const PAGE_LOAD_SYNC_TIME_KEY = 'gdrive_page_load_sync_time';
  */
 export async function triggerSyncOnPageLoad(
   dbName: string,
-  ensureActiveDb: () => Promise<void>,
   onSyncComplete?: () => void,
   hooks?: AutoSyncHooks,
 ): Promise<void> {
@@ -371,7 +411,7 @@ export async function triggerSyncOnPageLoad(
   console.log('[AutoSync] Page-load sync triggered');
   notifySyncingState(true);
   try {
-    await performMergeSync({ dbName, ensureActiveDb, onSyncComplete, ...hooks });
+    await performMergeSync({ dbName, onSyncComplete, ...hooks });
   } finally {
     notifySyncingState(false);
   }

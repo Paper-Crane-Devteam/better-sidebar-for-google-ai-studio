@@ -385,7 +385,6 @@
     "hideItem": "項目を非表示",
     "deleteConfirm": "\"{{name}}\" を削除してもよろしいですか？",
     "hideConfirm": "\"{{name}}\" を非表示にしてもよろしいですか？",
-
     "deleteFolderConfirm": "フォルダ \"{{name}}\" を削除してもよろしいですか？",
     "deleteNote": "注意：この操作により、会話が完全に削除されます。",
     "hideNote": "注意：非表示にした項目は、チャットリストをインポートすることで復元できます。",
@@ -746,6 +745,8 @@
     "sidebarWidth": "サイドバーの幅",
     "chatContentWidth": "チャットコンテンツの幅",
     "inputBoxWidth": "入力ボックスの幅",
+    "tableAutoWidth": "テーブル幅の自動調整",
+    "tableAutoWidthDesc": "テーブルの最大幅制限を解除し、利用可能なスペースに合わせて表示",
     "elementVisibility": "要素の表示",
     "geminiLogo": "Gemini ロゴ",
     "geminiLogoDesc": "左上の Gemini ロゴの表示を切り替え",
@@ -1143,13 +1144,13 @@
   },
   "backup": {
     "title": "バックアップ",
-    "description": "データを保護する自動デイリースナップショット。問題が発生した場合に以前の状態を復元できます。",
+    "description": "同期の前にスナップショットを保存します。同期に問題があった場合に元に戻せます。",
     "enabled": "自動バックアップ",
-    "enabledDesc": "データ変更後にスナップショットを毎日自動保存",
+    "enabledDesc": "同期前に1日1回スナップショットを保存",
     "maxSlots": "最大スロット数",
     "maxSlotsDesc": "保持するバックアップスロット数（1〜20）",
     "viewBackups": "表示",
-    "noBackups": "バックアップはまだありません。次回の同期またはデータ変更後に自動で作成されます。",
+    "noBackups": "バックアップはまだありません。次の同期の前に自動でスナップショットが作成されます。",
     "createBackup": "今すぐバックアップ",
     "creating": "バックアップを作成中...",
     "created": "バックアップを作成しました",
@@ -1166,6 +1167,10 @@
     "deleteFailed": "バックアップの削除に失敗しました",
     "loading": "バックアップを読み込み中...",
     "size": "サイズ",
-    "slots": "スロット"
+    "slots": "スロット",
+    "reasonManual": "手動",
+    "reasonPreSync": "同期前",
+    "reasonPreMergeDelete": "一括削除前",
+    "reasonPreRestore": "復元前"
   }
 }

@@ -2,6 +2,55 @@ const pendingRequests = new Map<string, { resolve: (val: any) => void; reject: (
 let isOffscreenCreating = false;
 let localWorker: Worker | null = null;
 
+/**
+ * The database this side of the bridge believes should be open.
+ * Set by initDB/switchDB and replayed to any freshly created worker.
+ */
+let desiredDbName: string | null = null;
+
+/**
+ * True when the worker host was just created and has therefore not been told
+ * which database to open. The worker refuses to guess (see db-worker.ts), so we
+ * must replay INIT before any other request.
+ *
+ * This matters because the offscreen document can be reclaimed or crash
+ * independently of the service worker: without the replay, the recreated worker
+ * would have no dbName and every subsequent request would fail.
+ */
+let workerNeedsInit = false;
+
+// ─── DB session lock ─────────────────────────────────────────────────────────
+
+/**
+ * Serializes database *switches* against multi-step database *operations*.
+ *
+ * There is exactly one worker and one open database at a time, but callers run
+ * concurrently: every extension message is handled in its own async task, and
+ * each one may switch the active database to match its sender tab. Meanwhile a
+ * sync performs dozens of separate round trips (read a table, write a batch,
+ * read the next table...).
+ *
+ * Without this lock, a switch can land between any two of those round trips, so
+ * the second half of an operation executes against a different database than the
+ * first half. For a merge that means Phase 2 issues its DELETEs against another
+ * profile's data while judging it against this profile's remote payload — which
+ * deletes nearly everything in it.
+ *
+ * Validating the database once at the start cannot catch this; the connection
+ * has to stay pinned for the whole operation.
+ */
+let lockChain: Promise<unknown> = Promise.resolve();
+
+function runExclusive<T>(fn: () => Promise<T>): Promise<T> {
+  const result = lockChain.then(fn, fn);
+  // Keep the chain alive regardless of individual failures
+  lockChain = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  return result;
+}
+
 // Helper to handle partial chunks
 const chunkedResponses = new Map<string, { chunks: string[]; received: number; total: number }>();
 
@@ -58,6 +107,7 @@ async function ensureWorker() {
     // Dynamic import to avoid `new Worker()` appearing in service worker context (Chrome MV3)
     const { default: DbWorker } = await import('@/shared/workers/db-worker?worker');
     localWorker = new DbWorker();
+    workerNeedsInit = true;
     localWorker.onmessage = (e) => {
       const { id, success, data, error, chunk } = e.data;
       const request = pendingRequests.get(id);
@@ -136,6 +186,8 @@ async function ensureWorker() {
           reasons: [browser.offscreen.Reason.WORKERS],
           justification: 'Run SQLite WASM in a Web Worker',
         });
+        // Brand new document → its worker has no dbName yet
+        workerNeedsInit = true;
       } catch (err: any) {
         if (!err.message.startsWith('Only a single offscreen')) {
            console.error('Failed to create offscreen document:', err);
@@ -150,20 +202,96 @@ async function ensureWorker() {
   }
 }
 
-export const initDB = async (dbName?: string) => {
+export const initDB = async (dbName?: string) =>
+  runExclusive(async () => {
+    await ensureWorker();
+    if (dbName) desiredDbName = dbName;
+    const result = await rawSendWorkerMessage(
+      'INIT',
+      dbName ? { dbName } : undefined,
+    );
+    workerNeedsInit = false;
+    return result;
+  });
+
+/**
+ * Switch the active database.
+ *
+ * Waits for any in-flight `withDbSession` to finish, so a tab that wants a
+ * different profile cannot yank the connection out from under a running sync.
+ */
+export const switchDB = async (dbName: string) =>
+  runExclusive(() => rawSwitchDB(dbName));
+
+/** Switch without taking the lock. Only for callers that already hold it. */
+const rawSwitchDB = async (dbName: string) => {
   await ensureWorker();
-  // We can also send an INIT message if needed, but the offscreen script inits worker on load
-  return sendWorkerMessage('INIT', dbName ? { dbName } : undefined);
+  desiredDbName = dbName;
+  const result = await rawSendWorkerMessage('SWITCH_DB', { dbName });
+  workerNeedsInit = false;
+  return result;
 };
 
-export const switchDB = async (dbName: string) => {
-  await ensureWorker();
-  return sendWorkerMessage('SWITCH_DB', { dbName });
+/**
+ * Run a multi-step database operation with the connection pinned to `dbName`.
+ *
+ * Switches to the database first, then holds the lock for the duration of `fn`,
+ * so concurrent `switchDB` calls queue behind it instead of changing the
+ * database mid-operation.
+ *
+ * Use this for anything that issues more than one dependent query — sync,
+ * export, import, restore. Do not call `switchDB`/`initDB`/`withDbSession` from
+ * inside `fn`; the lock is not reentrant.
+ */
+export const withDbSession = async <T>(
+  dbName: string,
+  fn: () => Promise<T>,
+): Promise<T> =>
+  runExclusive(async () => {
+    await ensureWorker();
+    const current = workerNeedsInit
+      ? null
+      : await rawSendWorkerMessage('GET_DB_NAME');
+    if (current !== dbName) {
+      console.log(`[DB] Session pinning "${dbName}" (was "${current}")`);
+      await rawSwitchDB(dbName);
+    }
+    return fn();
+  });
+
+/**
+ * Ask the worker which database it actually has open.
+ * Returns null when the worker has nothing open and none is expected.
+ *
+ * Use this to verify assumptions before destructive or identity-sensitive work
+ * (sync, export). The value being verified against generally comes from a
+ * different piece of service-worker memory (e.g. the tab→profile map), so this
+ * still catches real drift; it only settles a worker that was just recreated
+ * rather than reporting a transient "nothing open".
+ */
+export const getWorkerDbName = async (): Promise<string | null> => {
+  return sendWorkerMessage('GET_DB_NAME');
 };
 
 const sendWorkerMessage = async (type: string, payload?: any): Promise<any> => {
   await ensureWorker();
-  
+
+  // A freshly (re)created worker has no dbName. Replay INIT before anything
+  // else so the request lands on the intended database rather than failing.
+  if (workerNeedsInit && desiredDbName) {
+    console.log(`[DB] Worker was recreated, re-initializing "${desiredDbName}"`);
+    await rawSendWorkerMessage('INIT', { dbName: desiredDbName });
+    workerNeedsInit = false;
+  }
+
+  return rawSendWorkerMessage(type, payload);
+};
+
+/** Post a message to the worker without any ensure/re-init handling. */
+const rawSendWorkerMessage = async (
+  type: string,
+  payload?: any,
+): Promise<any> => {
   return new Promise((resolve, reject) => {
     const id = crypto.randomUUID();
     

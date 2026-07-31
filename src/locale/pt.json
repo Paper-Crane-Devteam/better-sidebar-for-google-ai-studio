@@ -745,6 +745,8 @@
     "sidebarWidth": "Largura da Barra Lateral",
     "chatContentWidth": "Largura do Conteúdo do Chat",
     "inputBoxWidth": "Largura da Caixa de Entrada",
+    "tableAutoWidth": "Largura Automática da Tabela",
+    "tableAutoWidthDesc": "Remover o limite de largura máxima da tabela para que se adapte ao espaço disponível",
     "elementVisibility": "Visibilidade dos Elementos",
     "geminiLogo": "Logo do Gemini",
     "geminiLogoDesc": "Alternar visibilidade do logo do Gemini no canto superior esquerdo",
@@ -1143,13 +1145,13 @@
   },
   "backup": {
     "title": "Backups",
-    "description": "Snapshots diários automáticos para proteger seus dados. Restaure qualquer estado anterior se algo der errado.",
+    "description": "Instantâneos feitos antes de cada sincronização, para você reverter se algo der errado.",
     "enabled": "Backup automático",
-    "enabledDesc": "Salvar automaticamente um snapshot diário após alterações nos dados",
+    "enabledDesc": "Salvar um instantâneo diário antes de sincronizar",
     "maxSlots": "Máx. slots",
     "maxSlotsDesc": "Número de slots de backup a manter (1–20)",
     "viewBackups": "Ver",
-    "noBackups": "Ainda não há backups. Um snapshot será criado automaticamente após sua próxima sincronização ou alteração de dados.",
+    "noBackups": "Ainda não há backups. Um instantâneo será criado automaticamente antes da próxima sincronização.",
     "createBackup": "Criar backup agora",
     "creating": "Criando backup...",
     "created": "Backup criado com sucesso",
@@ -1166,6 +1168,10 @@
     "deleteFailed": "Falha ao excluir backup",
     "loading": "Carregando backups...",
     "size": "Tamanho",
-    "slots": "slots"
+    "slots": "slots",
+    "reasonManual": "Manual",
+    "reasonPreSync": "Antes da sincronização",
+    "reasonPreMergeDelete": "Antes da exclusão em massa",
+    "reasonPreRestore": "Antes da restauração"
   }
 }
