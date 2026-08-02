@@ -121,6 +121,8 @@
     "importAiStudioSystemFailed": "Error al importar instrucciones de sistema de AI Studio"
   },
   "prompts": {
+    "inbox": "Bandeja de entrada",
+    "savedToInbox": "Guardado en Prompts",
     "importAiStudioSystem": "Importar instrucciones de sistema de AI Studio",
     "untitledSystem": "Sistema sin título",
     "aiStudioSystemFolderName": "Sistema AI Studio",
@@ -784,7 +786,11 @@
     "selectionToolbarSummarize": "Resumir",
     "selectionToolbarSummarizeDesc": "Pedir a la IA que resuma el texto seleccionado",
     "selectionToolbarCopyAsMarkdown": "Copiar como Markdown",
-    "selectionToolbarCopyAsMarkdownDesc": "Copiar el texto seleccionado con formato Markdown"
+    "selectionToolbarCopyAsMarkdownDesc": "Copiar el texto seleccionado con formato Markdown",
+    "selectionToolbarCopy": "Copiar",
+    "selectionToolbarCopyDesc": "Copiar el texto seleccionado al portapapeles",
+    "selectionToolbarSaveAsPrompt": "Guardar como Prompt",
+    "selectionToolbarSaveAsPromptDesc": "Guardar el texto seleccionado en la bandeja de prompts"
   },
   "aistudioUI": {
     "title": "Controles de Interfaz",

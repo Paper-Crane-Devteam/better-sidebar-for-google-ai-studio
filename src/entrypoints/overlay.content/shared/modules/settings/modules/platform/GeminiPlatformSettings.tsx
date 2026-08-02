@@ -374,8 +374,9 @@ export const GeminiPlatformSettings = () => {
                     reference: true,
                     explain: true,
                     saveAsSnippet: true,
-                    summarize: true,
-                    copyAsMarkdown: true,
+                    summarize: false,
+                    copy: true,
+                    saveAsPrompt: true,
                   }),
                   enabled: c,
                 })
@@ -405,8 +406,9 @@ export const GeminiPlatformSettings = () => {
                         reference: true,
                         explain: true,
                         saveAsSnippet: true,
-                        summarize: true,
-                        copyAsMarkdown: true,
+                        summarize: false,
+                        copy: true,
+                        saveAsPrompt: true,
                       }),
                       reference: c,
                     })
@@ -433,8 +435,9 @@ export const GeminiPlatformSettings = () => {
                         reference: true,
                         explain: true,
                         saveAsSnippet: true,
-                        summarize: true,
-                        copyAsMarkdown: true,
+                        summarize: false,
+                        copy: true,
+                        saveAsPrompt: true,
                       }),
                       explain: c,
                     })
@@ -461,8 +464,9 @@ export const GeminiPlatformSettings = () => {
                         reference: true,
                         explain: true,
                         saveAsSnippet: true,
-                        summarize: true,
-                        copyAsMarkdown: true,
+                        summarize: false,
+                        copy: true,
+                        saveAsPrompt: true,
                       }),
                       saveAsSnippet: c,
                     })
@@ -481,7 +485,7 @@ export const GeminiPlatformSettings = () => {
                   </p>
                 </div>
                 <Switch
-                  checked={geminiSettings.selectionToolbar?.summarize ?? true}
+                  checked={geminiSettings.selectionToolbar?.summarize ?? false}
                   onCheckedChange={(c) =>
                     setGeminiFeature('selectionToolbar', {
                       ...(geminiSettings.selectionToolbar ?? {
@@ -489,8 +493,9 @@ export const GeminiPlatformSettings = () => {
                         reference: true,
                         explain: true,
                         saveAsSnippet: true,
-                        summarize: true,
-                        copyAsMarkdown: true,
+                        summarize: false,
+                        copy: true,
+                        saveAsPrompt: true,
                       }),
                       summarize: c,
                     })
@@ -498,18 +503,18 @@ export const GeminiPlatformSettings = () => {
                 />
               </div>
 
-              {/* Copy as Markdown */}
+              {/* Copy */}
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label className="text-sm font-medium">
-                    {t('geminiUI.selectionToolbarCopyAsMarkdown')}
+                    {t('geminiUI.selectionToolbarCopy')}
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    {t('geminiUI.selectionToolbarCopyAsMarkdownDesc')}
+                    {t('geminiUI.selectionToolbarCopyDesc')}
                   </p>
                 </div>
                 <Switch
-                  checked={geminiSettings.selectionToolbar?.copyAsMarkdown ?? true}
+                  checked={geminiSettings.selectionToolbar?.copy ?? true}
                   onCheckedChange={(c) =>
                     setGeminiFeature('selectionToolbar', {
                       ...(geminiSettings.selectionToolbar ?? {
@@ -517,10 +522,40 @@ export const GeminiPlatformSettings = () => {
                         reference: true,
                         explain: true,
                         saveAsSnippet: true,
-                        summarize: true,
-                        copyAsMarkdown: true,
+                        summarize: false,
+                        copy: true,
+                        saveAsPrompt: true,
                       }),
-                      copyAsMarkdown: c,
+                      copy: c,
+                    })
+                  }
+                />
+              </div>
+
+              {/* Save as Prompt */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">
+                    {t('geminiUI.selectionToolbarSaveAsPrompt')}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t('geminiUI.selectionToolbarSaveAsPromptDesc')}
+                  </p>
+                </div>
+                <Switch
+                  checked={geminiSettings.selectionToolbar?.saveAsPrompt ?? true}
+                  onCheckedChange={(c) =>
+                    setGeminiFeature('selectionToolbar', {
+                      ...(geminiSettings.selectionToolbar ?? {
+                        enabled: true,
+                        reference: true,
+                        explain: true,
+                        saveAsSnippet: true,
+                        summarize: false,
+                        copy: true,
+                        saveAsPrompt: true,
+                      }),
+                      saveAsPrompt: c,
                     })
                   }
                 />

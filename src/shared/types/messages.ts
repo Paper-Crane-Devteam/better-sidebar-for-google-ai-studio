@@ -460,6 +460,7 @@ export type ExtensionMessage = (
       payload: { ids: string[]; folderId: string | null };
     }
   | { type: 'RESOLVE_SNIPPET_INBOX' }
+  | { type: 'RESOLVE_PROMPT_INBOX' }
   // Notion API proxy
   | {
       type: 'NOTION_API_REQUEST';

@@ -42,7 +42,10 @@ export interface SelectionToolbarConfig {
   explain: boolean;
   saveAsSnippet: boolean;
   summarize: boolean;
-  copyAsMarkdown: boolean;
+  copy: boolean;
+  saveAsPrompt: boolean;
+  /** @deprecated use `copy` instead */
+  copyAsMarkdown?: boolean;
 }
 
 export interface GeminiEnhancedFeatures {
@@ -133,8 +136,9 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
         reference: true,
         explain: true,
         saveAsSnippet: true,
-        summarize: true,
-        copyAsMarkdown: true,
+        summarize: false,
+        copy: true,
+        saveAsPrompt: true,
       },
     },
     aistudio: {

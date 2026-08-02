@@ -121,6 +121,8 @@
     "importAiStudioSystemFailed": "Failed to import AI Studio system instructions"
   },
   "prompts": {
+    "inbox": "Inbox",
+    "savedToInbox": "Saved to Prompts",
     "importAiStudioSystem": "Import AI Studio System Instructions",
     "untitledSystem": "Untitled System",
     "aiStudioSystemFolderName": "AI Studio System",
@@ -764,7 +766,11 @@
     "selectionToolbarSummarize": "Summarize",
     "selectionToolbarSummarizeDesc": "Ask AI to summarize the selected text",
     "selectionToolbarCopyAsMarkdown": "Copy as Markdown",
-    "selectionToolbarCopyAsMarkdownDesc": "Copy selected text with Markdown formatting"
+    "selectionToolbarCopyAsMarkdownDesc": "Copy selected text with Markdown formatting",
+    "selectionToolbarCopy": "Copy",
+    "selectionToolbarCopyDesc": "Copy selected text to clipboard",
+    "selectionToolbarSaveAsPrompt": "Save as Prompt",
+    "selectionToolbarSaveAsPromptDesc": "Save selected text to your prompt inbox"
   },
   "aistudioUI": {
     "title": "UI Controls",

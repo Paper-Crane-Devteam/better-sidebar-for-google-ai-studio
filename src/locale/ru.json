@@ -121,6 +121,8 @@
     "importAiStudioSystemFailed": "Не удалось импортировать системные инструкции AI Studio"
   },
   "prompts": {
+    "inbox": "Входящие",
+    "savedToInbox": "Сохранено в промпты",
     "importAiStudioSystem": "Импорт системных инструкций AI Studio",
     "untitledSystem": "Без названия",
     "aiStudioSystemFolderName": "Система AI Studio",
@@ -784,7 +786,11 @@
     "selectionToolbarSummarize": "Резюмировать",
     "selectionToolbarSummarizeDesc": "Попросить ИИ резюмировать выделенный текст",
     "selectionToolbarCopyAsMarkdown": "Копировать как Markdown",
-    "selectionToolbarCopyAsMarkdownDesc": "Копировать выделенный текст с форматированием Markdown"
+    "selectionToolbarCopyAsMarkdownDesc": "Копировать выделенный текст с форматированием Markdown",
+    "selectionToolbarCopy": "Копировать",
+    "selectionToolbarCopyDesc": "Копировать выделенный текст в буфер обмена",
+    "selectionToolbarSaveAsPrompt": "Сохранить как промпт",
+    "selectionToolbarSaveAsPromptDesc": "Сохранить выделенный текст в папку входящих промптов"
   },
   "aistudioUI": {
     "title": "Управление интерфейсом",

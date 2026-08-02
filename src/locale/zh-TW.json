@@ -121,6 +121,8 @@
     "importAiStudioSystemFailed": "匯入 AI Studio 系統指令失敗"
   },
   "prompts": {
+    "inbox": "收件匣",
+    "savedToInbox": "已儲存到 Prompts",
     "importAiStudioSystem": "匯入 AI Studio 系統指令",
     "untitledSystem": "未命名系統",
     "aiStudioSystemFolderName": "AI Studio 系統指令",
@@ -784,7 +786,11 @@
     "selectionToolbarSummarize": "摘要",
     "selectionToolbarSummarizeDesc": "讓 AI 摘要選取的文字",
     "selectionToolbarCopyAsMarkdown": "複製為 Markdown",
-    "selectionToolbarCopyAsMarkdownDesc": "以 Markdown 格式複製選取文字"
+    "selectionToolbarCopyAsMarkdownDesc": "以 Markdown 格式複製選取文字",
+    "selectionToolbarCopy": "複製",
+    "selectionToolbarCopyDesc": "將選取文字複製到剪貼簿",
+    "selectionToolbarSaveAsPrompt": "儲存為 Prompt",
+    "selectionToolbarSaveAsPromptDesc": "將選取文字儲存到 Prompt 收件匣"
   },
   "aistudioUI": {
     "title": "介面控制",

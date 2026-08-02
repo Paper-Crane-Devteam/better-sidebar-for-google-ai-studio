@@ -118,11 +118,43 @@ export const SelectionToolbarFeature = () => {
     window.getSelection()?.removeAllRanges();
   }, [selectedText]);
 
-  const handleCopyAsMarkdown = useCallback(() => {
+  const handleCopy = useCallback(() => {
     if (!selectedText) return;
     navigator.clipboard.writeText(selectedText).then(() => {
       toast.success(i18n.t('common.copy'), 1500);
     });
+    setVisible(false);
+    window.getSelection()?.removeAllRanges();
+  }, [selectedText]);
+
+  const handleSaveAsPrompt = useCallback(async () => {
+    if (!selectedText) return;
+    try {
+      const inboxRes = await browser.runtime.sendMessage({
+        type: 'RESOLVE_PROMPT_INBOX',
+      });
+      const folderId = inboxRes?.success ? inboxRes.data : null;
+
+      const title =
+        selectedText.substring(0, 50) +
+        (selectedText.length > 50 ? '...' : '');
+
+      await browser.runtime.sendMessage({
+        type: 'CREATE_PROMPT',
+        payload: {
+          id: crypto.randomUUID(),
+          title,
+          content: selectedText,
+          type: 'normal',
+          folderId,
+        },
+      });
+
+      useAppStore.getState().fetchData(true);
+      toast.success(i18n.t('prompts.savedToInbox'), 1500);
+    } catch (err) {
+      console.error('[SelectionToolbar] Failed to save prompt:', err);
+    }
     setVisible(false);
     window.getSelection()?.removeAllRanges();
   }, [selectedText]);
@@ -271,7 +303,8 @@ export const SelectionToolbarFeature = () => {
           onExplain={handleExplain}
           onSummarize={handleSummarize}
           onSaveAsSnippet={handleSaveAsSnippet}
-          onCopyAsMarkdown={handleCopyAsMarkdown}
+          onCopy={handleCopy}
+          onSaveAsPrompt={handleSaveAsPrompt}
         />
       </ShadowRootProvider>,
     );
@@ -282,7 +315,8 @@ export const SelectionToolbarFeature = () => {
     handleExplain,
     handleSummarize,
     handleSaveAsSnippet,
-    handleCopyAsMarkdown,
+    handleCopy,
+    handleSaveAsPrompt,
   ]);
 
   return null;

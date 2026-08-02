@@ -6,6 +6,27 @@ import type {
 import type { MessageSender } from '../types';
 import { notifyDataUpdated } from '../notify';
 import { triggerAutoSync } from './gdrive-sync';
+import i18n from '@/locale/i18n';
+
+const PROMPT_INBOX_ID = '__prompt_inbox__';
+
+/** Find or create the prompt inbox folder */
+async function resolvePromptInbox(): Promise<string> {
+  const existing = await promptFolderRepo.getById(PROMPT_INBOX_ID);
+  if (existing) return PROMPT_INBOX_ID;
+
+  // Check by name fallback
+  const all = await promptFolderRepo.getAll();
+  const inboxName = i18n.t('prompts.inbox');
+  const byName = all.find(
+    (f) => f.name === inboxName || f.name === 'Inbox' || f.name === '收件箱',
+  );
+  if (byName) return byName.id;
+
+  // Create with deterministic ID
+  await promptFolderRepo.create({ id: PROMPT_INBOX_ID, name: inboxName });
+  return PROMPT_INBOX_ID;
+}
 
 export async function handlePrompts(
   message: ExtensionMessage,
@@ -90,6 +111,10 @@ export async function handlePrompts(
       );
       triggerAutoSync();
       return { success: true };
+    }
+    case 'RESOLVE_PROMPT_INBOX': {
+      const inboxId = await resolvePromptInbox();
+      return { success: true, data: inboxId };
     }
     default:
       return null;

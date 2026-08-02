@@ -10,7 +10,8 @@ import {
   LightbulbIcon,
   BookmarkIcon,
   FileTextIcon,
-  ClipboardCopyIcon,
+  CopyIcon,
+  SaveIcon,
 } from 'lucide-react';
 
 interface SelectionToolbarPopupProps {
@@ -21,7 +22,8 @@ interface SelectionToolbarPopupProps {
   onExplain: () => void;
   onSummarize: () => void;
   onSaveAsSnippet: () => void;
-  onCopyAsMarkdown: () => void;
+  onCopy: () => void;
+  onSaveAsPrompt: () => void;
 }
 
 export const SelectionToolbarPopup = ({
@@ -32,7 +34,8 @@ export const SelectionToolbarPopup = ({
   onExplain,
   onSummarize,
   onSaveAsSnippet,
-  onCopyAsMarkdown,
+  onCopy,
+  onSaveAsPrompt,
 }: SelectionToolbarPopupProps) => {
   const { t } = useI18n();
 
@@ -55,7 +58,7 @@ export const SelectionToolbarPopup = ({
     },
     {
       key: 'summarize' as const,
-      enabled: config?.summarize ?? true,
+      enabled: config?.summarize ?? false,
       icon: FileTextIcon,
       label: t('geminiUI.selectionToolbarSummarize'),
       onClick: onSummarize,
@@ -68,11 +71,18 @@ export const SelectionToolbarPopup = ({
       onClick: onSaveAsSnippet,
     },
     {
-      key: 'copyAsMarkdown' as const,
-      enabled: config?.copyAsMarkdown ?? true,
-      icon: ClipboardCopyIcon,
-      label: t('geminiUI.selectionToolbarCopyAsMarkdown'),
-      onClick: onCopyAsMarkdown,
+      key: 'copy' as const,
+      enabled: config?.copy ?? true,
+      icon: CopyIcon,
+      label: t('geminiUI.selectionToolbarCopy'),
+      onClick: onCopy,
+    },
+    {
+      key: 'saveAsPrompt' as const,
+      enabled: config?.saveAsPrompt ?? true,
+      icon: SaveIcon,
+      label: t('geminiUI.selectionToolbarSaveAsPrompt'),
+      onClick: onSaveAsPrompt,
     },
   ].filter((a) => a.enabled);
 
@@ -87,7 +97,7 @@ export const SelectionToolbarPopup = ({
         transform: 'translateX(-50%)',
       }}
     >
-      <div className="flex items-center gap-1 rounded-lg bg-popover p-1 shadow-lg">
+      <div className="flex items-center gap-1 rounded-lg bg-popover p-1 shadow-lg whitespace-nowrap">
         {actions.map(({ key, icon: Icon, label, onClick }) => (
           <button
             key={key}
@@ -98,10 +108,10 @@ export const SelectionToolbarPopup = ({
               e.stopPropagation();
               onClick();
             }}
-            className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors shrink-0"
           >
-            <Icon size={14} />
-            <span>{label}</span>
+            <Icon size={14} className="shrink-0" />
+            <span className="whitespace-nowrap">{label}</span>
           </button>
         ))}
       </div>

@@ -121,6 +121,8 @@
     "importAiStudioSystemFailed": "AI Studioのシステム指示のインポートに失敗しました"
   },
   "prompts": {
+    "inbox": "受信トレイ",
+    "savedToInbox": "プロンプトに保存しました",
     "importAiStudioSystem": "AI Studioのシステム指示をインポート",
     "untitledSystem": "無題のシステム",
     "aiStudioSystemFolderName": "AI Studio システム指示",
@@ -784,7 +786,11 @@
     "selectionToolbarSummarize": "要約",
     "selectionToolbarSummarizeDesc": "選択したテキストを AI に要約してもらう",
     "selectionToolbarCopyAsMarkdown": "Markdown としてコピー",
-    "selectionToolbarCopyAsMarkdownDesc": "選択したテキストを Markdown 形式でコピー"
+    "selectionToolbarCopyAsMarkdownDesc": "選択したテキストを Markdown 形式でコピー",
+    "selectionToolbarCopy": "コピー",
+    "selectionToolbarCopyDesc": "選択したテキストをクリップボードにコピー",
+    "selectionToolbarSaveAsPrompt": "プロンプトとして保存",
+    "selectionToolbarSaveAsPromptDesc": "選択したテキストをプロンプトの受信トレイに保存"
   },
   "aistudioUI": {
     "title": "UI コントロール",
