@@ -1,7 +1,8 @@
-import React, { useMemo, forwardRef, useImperativeHandle, useState, useCallback, useRef } from 'react';
+import React, { useMemo, forwardRef, useImperativeHandle, useCallback, useRef } from 'react';
 import { useAppStore } from '@/shared/lib/store';
+import { useModalStore } from '@/shared/lib/modal';
 import { Node } from './node';
-import { PendingPromptNode } from './node/PendingPromptNode';
+import { CreatePromptForm } from './CreatePromptForm';
 import {
   FolderTree,
   FolderTreeHandle,
@@ -14,8 +15,6 @@ import { useDeleteHandler } from '../hooks/useDeleteHandler';
 import { STORAGE_KEY } from '../hooks/usePromptsTree';
 
 export type { ArboristTreeHandle } from '../types';
-
-const PENDING_PROMPT_NODE_ID = '__pending_new_prompt__';
 
 interface PromptsTreeProps {
   onSelect: (item: any) => void;
@@ -41,42 +40,35 @@ export const PromptsTree = forwardRef<ArboristTreeHandle, PromptsTreeProps>(
     const { query: searchTerm } = ui.prompts.search;
 
     const folderTreeRef = React.useRef<FolderTreeHandle>(null);
+    const createFormRef = useRef<HTMLFormElement>(null);
 
-    // Pending new prompt state — only folderId triggers tree rebuild
-    const [pendingFolderId, setPendingFolderId] = useState<string | null>(null);
-    const pendingTitleRef = useRef('');
-    const [pendingTitle, setPendingTitle] = useState('');
-
+    // Create prompt in folder via modal
     const handleCreateInFolder = useCallback((folderId: string) => {
-      pendingTitleRef.current = '';
-      setPendingTitle('');
-      setPendingFolderId(folderId);
-      folderTreeRef.current?.open?.(folderId);
-      setTimeout(() => {
-        folderTreeRef.current?.select(PENDING_PROMPT_NODE_ID);
-      }, 50);
-    }, []);
+      let formData: { title: string; content: string; type: 'normal' | 'system'; icon: string } = { title: '', content: '', type: 'system', icon: 'Bot' };
 
-    const handlePendingTitleChange = useCallback((title: string) => {
-      pendingTitleRef.current = title;
-      setPendingTitle(title);
-    }, []);
+      const doCreate = () => {
+        if (!formData.title.trim()) return;
+        useModalStore.getState().close();
+        createPrompt(formData.title, formData.content, formData.type, formData.icon, folderId);
+      };
 
-    const handlePendingCommit = useCallback(() => {
-      const title = pendingTitleRef.current.trim();
-      if (title && pendingFolderId) {
-        createPrompt(title, '', 'system', 'Bot', pendingFolderId);
-      }
-      pendingTitleRef.current = '';
-      setPendingTitle('');
-      setPendingFolderId(null);
-    }, [pendingFolderId, createPrompt]);
-
-    const handlePendingCancel = useCallback(() => {
-      pendingTitleRef.current = '';
-      setPendingTitle('');
-      setPendingFolderId(null);
-    }, []);
+      useModalStore.getState().open({
+        type: 'confirm',
+        title: t('prompts.createPrompt'),
+        content: (
+          <CreatePromptForm
+            formRef={createFormRef}
+            onChange={(d) => (formData = d)}
+            onValidSubmit={doCreate}
+          />
+        ),
+        confirmText: t('common.create'),
+        cancelText: t('common.cancel'),
+        onConfirm: () => createFormRef.current?.requestSubmit(),
+        onCancel: () => useModalStore.getState().close(),
+        modalClassName: 'max-w-2xl',
+      });
+    }, [createPrompt, t]);
 
     useImperativeHandle(ref, () => ({
       collapseAll: () => folderTreeRef.current?.collapseAll(),
@@ -193,39 +185,21 @@ export const PromptsTree = forwardRef<ArboristTreeHandle, PromptsTreeProps>(
       return rootNodes;
     }, [promptFolders, prompts, sortOrder, favorites, typeFilter, onlyFavorites, t]);
 
-    // Inject pending prompt node into the tree data if active
-    const treeData = useMemo(() => {
-      if (!pendingFolderId) return data;
-
-      const pendingNode: FolderTreeNodeData = {
-        id: PENDING_PROMPT_NODE_ID,
-        name: '',
-        type: 'file',
-        data: { isPendingPrompt: true },
-      };
-
-      const injectPending = (nodes: FolderTreeNodeData[]): FolderTreeNodeData[] => {
-        return nodes.map((node) => {
-          if (node.type === 'folder' && node.id === pendingFolderId) {
-            return {
-              ...node,
-              children: [pendingNode, ...(node.children || [])],
-            };
-          }
-          if (node.children) {
-            return { ...node, children: injectPending(node.children) };
-          }
-          return node;
-        });
-      };
-
-      return injectPending(data);
-    }, [data, pendingFolderId]);
+    const renderNode = useCallback((props: NodeRendererProps<FolderTreeNodeData>) => {
+      return (
+        <Node
+          {...props}
+          onPreview={onPreview}
+          onEdit={onEdit}
+          onCreateInFolder={handleCreateInFolder}
+        />
+      );
+    }, [onPreview, onEdit, handleCreateInFolder]);
 
     return (
       <FolderTree
         ref={folderTreeRef}
-        data={treeData}
+        data={data}
         storageKey={STORAGE_KEY}
         folders={promptFolders}
         searchTerm={searchTerm}
@@ -242,28 +216,7 @@ export const PromptsTree = forwardRef<ArboristTreeHandle, PromptsTreeProps>(
         onCreateFolder={async (name, parentId) => {
           return createPromptFolder(name, parentId);
         }}
-        renderNode={(props: NodeRendererProps<FolderTreeNodeData>) => {
-          // Render pending prompt inline entry
-          if (props.node.data.id === PENDING_PROMPT_NODE_ID && pendingFolderId) {
-            return (
-              <PendingPromptNode
-                style={props.style}
-                title={pendingTitle}
-                onTitleChange={handlePendingTitleChange}
-                onCommit={handlePendingCommit}
-                onCancel={handlePendingCancel}
-              />
-            );
-          }
-          return (
-            <Node
-              {...props}
-              onPreview={onPreview}
-              onEdit={onEdit}
-              onCreateInFolder={handleCreateInFolder}
-            />
-          );
-        }}
+        renderNode={renderNode}
       />
     );
   },
