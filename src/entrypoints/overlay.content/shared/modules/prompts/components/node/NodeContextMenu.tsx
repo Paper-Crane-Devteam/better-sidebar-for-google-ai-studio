@@ -15,6 +15,7 @@ interface NodeContextMenuProps extends NodeProps {
   onCopy: (e?: React.MouseEvent) => void;
   onDuplicate: () => void;
   onEditPrompt?: (e?: React.MouseEvent) => void;
+  onPreviewPrompt?: (e?: React.MouseEvent) => void;
 }
 
 export const NodeContextMenu = ({
@@ -26,6 +27,7 @@ export const NodeContextMenu = ({
   onCopy,
   onDuplicate,
   onEditPrompt,
+  onPreviewPrompt,
 }: NodeContextMenuProps) => {
   const shouldPreventRef = React.useRef(false);
 
@@ -41,6 +43,7 @@ export const NodeContextMenu = ({
     onCopy,
     onDuplicate,
     onEdit: onEditPrompt,
+    onPreview: onPreviewPrompt,
   });
 
   return (

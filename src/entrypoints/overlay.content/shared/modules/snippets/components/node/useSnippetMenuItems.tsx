@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   Edit,
+  Eye,
   FolderPlus,
   FolderInput,
   Pin,
@@ -32,6 +33,7 @@ interface UseSnippetMenuItemsParams {
   onMoveTo?: () => void;
   onCopy: (e?: React.MouseEvent) => void;
   onEdit?: (e?: React.MouseEvent) => void;
+  onPreview?: (e?: React.MouseEvent) => void;
   onExport?: (format: 'markdown' | 'text' | 'json' | 'obsidian' | 'notion') => void;
 }
 
@@ -46,6 +48,7 @@ export function useSnippetMenuItems({
   onMoveTo,
   onCopy,
   onEdit,
+  onPreview,
   onExport,
 }: UseSnippetMenuItemsParams): MenuEntryDef[] {
   const { t } = useI18n();
@@ -53,6 +56,16 @@ export function useSnippetMenuItems({
   const isFolder = node.data.type === 'folder';
 
   const items: MenuEntryDef[] = [];
+
+  if (isFile && onPreview) {
+    items.push({
+      type: 'item',
+      key: 'view',
+      icon: <Eye className="h-4 w-4" />,
+      label: t('snippets.viewSnippet'),
+      onClick: () => onPreview?.(),
+    });
+  }
 
   if (isFile && onEdit) {
     items.push({

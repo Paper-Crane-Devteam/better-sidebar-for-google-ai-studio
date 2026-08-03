@@ -1,6 +1,7 @@
-import React, { useMemo, forwardRef, useImperativeHandle } from 'react';
+import React, { useMemo, forwardRef, useImperativeHandle, useState, useCallback, useRef } from 'react';
 import { useAppStore } from '@/shared/lib/store';
 import { SnippetNode } from './node';
+import { PendingSnippetNode } from './node/PendingSnippetNode';
 import {
   FolderTree,
   FolderTreeHandle,
@@ -11,6 +12,7 @@ import { useI18n } from '@/shared/hooks/useI18n';
 import { useDeleteHandler } from '../hooks/useDeleteHandler';
 
 const STORAGE_KEY = 'snippets-tree-open-state';
+const PENDING_SNIPPET_NODE_ID = '__pending_new_snippet__';
 
 export interface SnippetsTreeHandle {
   collapseAll: () => void;
@@ -36,6 +38,7 @@ export const SnippetsTree = forwardRef<SnippetsTreeHandle, SnippetsTreeProps>(
       moveSnippetItem,
       renameSnippetItem,
       createSnippetFolder,
+      createSnippet,
       ui,
     } = useAppStore();
     const { handleDelete } = useDeleteHandler();
@@ -43,6 +46,43 @@ export const SnippetsTree = forwardRef<SnippetsTreeHandle, SnippetsTreeProps>(
     const { query: searchTerm } = ui.snippets.search;
 
     const folderTreeRef = React.useRef<FolderTreeHandle>(null);
+
+    // Pending new snippet state — only folderId triggers tree rebuild
+    const [pendingFolderId, setPendingFolderId] = useState<string | null>(null);
+    const pendingTitleRef = useRef('');
+    const [pendingTitle, setPendingTitle] = useState('');
+
+    const handleCreateInFolder = useCallback((folderId: string) => {
+      pendingTitleRef.current = '';
+      setPendingTitle('');
+      setPendingFolderId(folderId);
+      // Open the folder and scroll to the pending node
+      folderTreeRef.current?.open?.(folderId);
+      setTimeout(() => {
+        folderTreeRef.current?.select(PENDING_SNIPPET_NODE_ID);
+      }, 50);
+    }, []);
+
+    const handlePendingTitleChange = useCallback((title: string) => {
+      pendingTitleRef.current = title;
+      setPendingTitle(title);
+    }, []);
+
+    const handlePendingCommit = useCallback(() => {
+      const title = pendingTitleRef.current.trim();
+      if (title && pendingFolderId) {
+        createSnippet(title, '', null, null, pendingFolderId);
+      }
+      pendingTitleRef.current = '';
+      setPendingTitle('');
+      setPendingFolderId(null);
+    }, [pendingFolderId, createSnippet]);
+
+    const handlePendingCancel = useCallback(() => {
+      pendingTitleRef.current = '';
+      setPendingTitle('');
+      setPendingFolderId(null);
+    }, []);
 
     useImperativeHandle(ref, () => ({
       collapseAll: () => folderTreeRef.current?.collapseAll(),
@@ -176,10 +216,40 @@ export const SnippetsTree = forwardRef<SnippetsTreeHandle, SnippetsTreeProps>(
       return rootNodes;
     }, [snippetFolders, snippets, sortOrder, favorites, onlyFavorites, searchTerm, t]);
 
+    // Inject pending snippet node into the tree data if active
+    const treeData = useMemo(() => {
+      if (!pendingFolderId) return data;
+
+      const pendingNode: FolderTreeNodeData = {
+        id: PENDING_SNIPPET_NODE_ID,
+        name: '',
+        type: 'file',
+        data: { isPendingSnippet: true },
+      };
+
+      // Deep-clone data and inject into the target folder
+      const injectPending = (nodes: FolderTreeNodeData[]): FolderTreeNodeData[] => {
+        return nodes.map((node) => {
+          if (node.type === 'folder' && node.id === pendingFolderId) {
+            return {
+              ...node,
+              children: [pendingNode, ...(node.children || [])],
+            };
+          }
+          if (node.children) {
+            return { ...node, children: injectPending(node.children) };
+          }
+          return node;
+        });
+      };
+
+      return injectPending(data);
+    }, [data, pendingFolderId]);
+
     return (
       <FolderTree
         ref={folderTreeRef}
-        data={data}
+        data={treeData}
         storageKey={STORAGE_KEY}
         folders={snippetFolders}
         searchTerm={searchTerm}
@@ -196,9 +266,28 @@ export const SnippetsTree = forwardRef<SnippetsTreeHandle, SnippetsTreeProps>(
         onCreateFolder={async (name, parentId) => {
           return createSnippetFolder(name, parentId);
         }}
-        renderNode={(props: NodeRendererProps<FolderTreeNodeData>) => (
-          <SnippetNode {...props} onPreview={onPreview} onEdit={onEdit} />
-        )}
+        renderNode={(props: NodeRendererProps<FolderTreeNodeData>) => {
+          // Render pending snippet inline entry
+          if (props.node.data.id === PENDING_SNIPPET_NODE_ID && pendingFolderId) {
+            return (
+              <PendingSnippetNode
+                style={props.style}
+                title={pendingTitle}
+                onTitleChange={handlePendingTitleChange}
+                onCommit={handlePendingCommit}
+                onCancel={handlePendingCancel}
+              />
+            );
+          }
+          return (
+            <SnippetNode
+              {...props}
+              onPreview={onPreview}
+              onEdit={onEdit}
+              onCreateInFolder={handleCreateInFolder}
+            />
+          );
+        }}
       />
     );
   },

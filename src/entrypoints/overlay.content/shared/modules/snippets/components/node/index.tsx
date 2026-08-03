@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Folder as FolderIcon,
   ChevronRight,
   ChevronDown,
   Star,
+  FilePlus,
+  Pencil,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { useAppStore } from '@/shared/lib/store';
@@ -32,6 +34,7 @@ import type { ExportFormat } from '../../../../features/export/types';
 interface SnippetNodeProps extends NodeRendererProps<FolderTreeNodeData> {
   onPreview?: (snippet: any) => void;
   onEdit?: (snippet: any) => void;
+  onCreateInFolder?: (folderId: string) => void;
 }
 
 export const SnippetNode = ({
@@ -42,6 +45,7 @@ export const SnippetNode = ({
   preview,
   onPreview,
   onEdit,
+  onCreateInFolder,
 }: SnippetNodeProps) => {
   const { t } = useI18n();
   const {
@@ -59,12 +63,8 @@ export const SnippetNode = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Disable drag when node is in editing (rename) mode so user can drag-select text
-  const safeDragHandle = useCallback(
-    (el: HTMLDivElement | null) => {
-      if (dragHandle) dragHandle(node.isEditing ? null : el);
-    },
-    [dragHandle, node.isEditing],
-  );
+  // Also captures a ref for hover tooltip detection
+  // (combinedRef is defined below after quickActions/tooltipContent)
 
   const { isBatchMode, selectedIds: batchSelectedIds } = ui.snippets.batch;
   const isBatchSelected = batchSelectedIds.includes(node.data.id);
@@ -175,6 +175,14 @@ export const SnippetNode = ({
     );
   };
 
+  const handlePreview = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    e?.preventDefault();
+    if (onPreview) {
+      onPreview(node.data.data);
+    }
+  };
+
   const menuItems = useSnippetMenuItems({
     node,
     isPinned: !!node.data.data?.is_pinned,
@@ -188,24 +196,83 @@ export const SnippetNode = ({
     onMoveTo: handleMoveTo,
     onCopy: handleCopy,
     onEdit: onEdit ? handleEdit : undefined,
+    onPreview: onPreview ? handlePreview : undefined,
     onExport: isFile ? handleExport : undefined,
   });
 
   const isMenuActive = isContextMenuOpen || isDropdownOpen;
 
+  const nodeRowRef = useRef<HTMLDivElement>(null);
+
+  // Combine dragHandle and nodeRowRef
+  const combinedRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      (nodeRowRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+      if (dragHandle) dragHandle(node.isEditing ? null : el);
+    },
+    [dragHandle, node.isEditing],
+  );
+
   const quickActions: ActionButtonDef[] = [];
-  if (isFile && isFavorite) {
-    quickActions.push({
-      icon: <Star className="h-3.5 w-3.5 fill-highlight text-highlight" />,
-      tooltip: t('node.removeFromFavorites'),
-      onClick: (e) => {
-        e?.stopPropagation();
-        e?.preventDefault();
-        toggleFavorite(node.data.id, 'snippet', true);
-      },
-      className: 'text-highlight hover:text-highlight/80',
-    });
+
+  if (isFile) {
+    // Edit button for files
+    if (onEdit) {
+      quickActions.push({
+        icon: <Pencil className="h-3.5 w-3.5" />,
+        tooltip: t('common.edit'),
+        onClick: (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          handleEdit(e);
+        },
+      });
+    }
+    // Favorite star for favorited files
+    if (isFavorite) {
+      quickActions.push({
+        icon: <Star className="h-3.5 w-3.5 fill-highlight text-highlight" />,
+        tooltip: t('node.removeFromFavorites'),
+        onClick: (e) => {
+          e?.stopPropagation();
+          e?.preventDefault();
+          toggleFavorite(node.data.id, 'snippet', true);
+        },
+        className: 'text-highlight hover:text-highlight/80',
+      });
+    }
+  } else {
+    // New prompt button for folders
+    if (onCreateInFolder) {
+      quickActions.push({
+        icon: <FilePlus className="h-3.5 w-3.5" />,
+        tooltip: t('tooltip.newPrompt'),
+        onClick: (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          node.select();
+          onCreateInFolder(node.data.id);
+        },
+      });
+    }
   }
+
+  // Tooltip content for file nodes: show full title + snippet content
+  const snippetContent = isFile ? (node.data.data?.content || '') : '';
+  const tooltipContent = isFile
+    ? (isOverflowing: boolean) => (
+        <div className="max-h-[200px] overflow-y-auto">
+          {isOverflowing && (
+            <div className="font-medium mb-1">{node.data.name}</div>
+          )}
+          {snippetContent && (
+            <div className="whitespace-pre-wrap text-xs opacity-90">
+              {snippetContent.length > 300 ? snippetContent.slice(0, 300) + '…' : snippetContent}
+            </div>
+          )}
+        </div>
+      )
+    : undefined;
 
   const searchQuery = ui.snippets.search.query;
 
@@ -226,6 +293,9 @@ export const SnippetNode = ({
         newName={newName}
         setNewName={setNewName}
         searchQuery={searchQuery}
+        hoverRef={nodeRowRef}
+        tooltipContent={tooltipContent}
+        forceShowTooltip={isFile && !!snippetContent}
       />
       {/* Action bar with three-dot menu – hidden while renaming */}
       {!isBatchMode && !node.isEditing && (
@@ -277,7 +347,7 @@ export const SnippetNode = ({
       }}
     >
       <div
-        ref={safeDragHandle}
+        ref={combinedRef}
         role="button"
         tabIndex={0}
         className={commonClasses}
@@ -328,6 +398,7 @@ export const SnippetNode = ({
           onDelete={handleDelete}
           onCopy={handleCopy}
           onEditSnippet={onEdit ? handleEdit : undefined}
+          onPreviewSnippet={onPreview ? handlePreview : undefined}
           isFavorite={isFavorite}
           isPinned={!!node.data.data?.is_pinned}
           onToggleFavorite={(id: string, isFav: boolean) =>

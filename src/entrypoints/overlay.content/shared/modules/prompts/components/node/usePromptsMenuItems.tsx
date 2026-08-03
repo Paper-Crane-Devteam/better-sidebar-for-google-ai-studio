@@ -1,6 +1,7 @@
 import React from 'react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import {
+  Eye,
   FolderPlus,
   Edit2,
   Trash2,
@@ -27,6 +28,7 @@ interface UsePromptsMenuItemsParams {
   onCopy: (e?: React.MouseEvent) => void;
   onDuplicate: () => void;
   onEdit?: (e?: React.MouseEvent) => void;
+  onPreview?: (e?: React.MouseEvent) => void;
 }
 
 export function usePromptsMenuItems({
@@ -40,6 +42,7 @@ export function usePromptsMenuItems({
   onCopy,
   onDuplicate,
   onEdit,
+  onPreview,
 }: UsePromptsMenuItemsParams): MenuEntryDef[] {
   const { t } = useI18n();
   const isFile = node.data.type === 'file';
@@ -71,6 +74,17 @@ export function usePromptsMenuItems({
 
   // File-specific
   if (isFile) {
+    // — View —
+    if (onPreview) {
+      items.push({
+        type: 'item',
+        key: 'view',
+        icon: <Eye className="h-4 w-4" />,
+        label: t('prompts.viewPrompt'),
+        onClick: () => onPreview?.(),
+      });
+    }
+
     // — Organize —
     items.push({
       type: 'item',

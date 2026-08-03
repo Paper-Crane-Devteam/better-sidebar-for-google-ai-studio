@@ -4,8 +4,9 @@ import {
   MessageSquare,
   ChevronRight,
   ChevronDown,
-  Eye,
   Star,
+  FilePlus,
+  Pencil,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { useAppStore } from '@/shared/lib/store';
@@ -44,6 +45,7 @@ export const Node = ({
   preview,
   onPreview,
   onEdit,
+  onCreateInFolder,
 }: NodeProps) => {
   const { t } = useI18n();
   const {
@@ -61,8 +63,11 @@ export const Node = ({
   const variableFormRef = useRef<VariableFillFormRef | null>(null);
 
   // Disable drag when node is in editing (rename) mode so user can drag-select text
-  const safeDragHandle = useCallback(
+  // Also captures a ref for hover tooltip detection
+  const nodeRowRef = useRef<HTMLDivElement>(null);
+  const combinedRef = useCallback(
     (el: HTMLDivElement | null) => {
+      (nodeRowRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
       if (dragHandle) dragHandle(node.isEditing ? null : el);
     },
     [dragHandle, node.isEditing],
@@ -225,30 +230,67 @@ export const Node = ({
     onCopy: handleCopy,
     onDuplicate: handleDuplicate,
     onEdit: onEdit ? handleEdit : undefined,
+    onPreview: onPreview ? handleView : undefined,
   });
 
   const isMenuActive = isContextMenuOpen || isDropdownOpen;
 
   const quickActions: ActionButtonDef[] = [];
-  if (isFile && isFavorite) {
-    quickActions.push({
-      icon: <Star className="h-3.5 w-3.5 fill-highlight text-highlight" />,
-      tooltip: t('tooltip.removeFromFavorites'),
-      onClick: (e: React.MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
-        toggleFavorite(node.data.id, 'prompt', isFavorite);
-      },
-      className: 'text-highlight hover:text-highlight/80',
-    });
+
+  if (isFile) {
+    // Edit button for files
+    if (onEdit) {
+      quickActions.push({
+        icon: <Pencil className="h-3.5 w-3.5" />,
+        tooltip: t('prompts.editPrompt'),
+        onClick: handleEdit,
+      });
+    }
+    // Favorite star for favorited files
+    if (isFavorite) {
+      quickActions.push({
+        icon: <Star className="h-3.5 w-3.5 fill-highlight text-highlight" />,
+        tooltip: t('tooltip.removeFromFavorites'),
+        onClick: (e: React.MouseEvent) => {
+          e.stopPropagation();
+          e.preventDefault();
+          toggleFavorite(node.data.id, 'prompt', isFavorite);
+        },
+        className: 'text-highlight hover:text-highlight/80',
+      });
+    }
+  } else {
+    // New prompt button for folders
+    if (onCreateInFolder) {
+      quickActions.push({
+        icon: <FilePlus className="h-3.5 w-3.5" />,
+        tooltip: t('tooltip.newPrompt'),
+        onClick: (e: React.MouseEvent) => {
+          e.stopPropagation();
+          e.preventDefault();
+          node.select();
+          onCreateInFolder(node.data.id);
+        },
+      });
+    }
   }
-  if (isFile && onPreview) {
-    quickActions.push({
-      icon: <Eye className="h-3.5 w-3.5" />,
-      tooltip: t('prompts.viewPrompt'),
-      onClick: handleView,
-    });
-  }
+
+  // Tooltip content for file nodes: show full title + prompt content
+  const promptContent = isFile ? (node.data.data?.content || '') : '';
+  const tooltipContent = isFile
+    ? (isOverflowing: boolean) => (
+        <div className="max-h-[200px] overflow-y-auto">
+          {isOverflowing && (
+            <div className="font-medium mb-1">{node.data.name}</div>
+          )}
+          {promptContent && (
+            <div className="whitespace-pre-wrap text-xs opacity-90">
+              {promptContent.length > 300 ? promptContent.slice(0, 300) + '…' : promptContent}
+            </div>
+          )}
+        </div>
+      )
+    : undefined;
 
   const innerContent = (
     <>
@@ -274,6 +316,9 @@ export const Node = ({
         preview={preview}
         newName={newName}
         setNewName={setNewName}
+        hoverRef={nodeRowRef}
+        tooltipContent={tooltipContent}
+        forceShowTooltip={isFile && !!promptContent}
       />
       {/* Action bar with three-dot menu – hidden while renaming */}
       {!isBatchMode && !node.isEditing && (
@@ -307,7 +352,7 @@ export const Node = ({
       )}
     >
       <div
-        ref={safeDragHandle}
+        ref={combinedRef}
         role="button"
         tabIndex={0}
         className={commonClasses}
@@ -374,6 +419,7 @@ export const Node = ({
           onDuplicate={handleDuplicate}
           onCopy={handleCopy}
           onEditPrompt={onEdit ? handleEdit : undefined}
+          onPreviewPrompt={onPreview ? handleView : undefined}
         />
       )}
     </ExclusiveContextMenu>

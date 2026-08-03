@@ -389,10 +389,17 @@ export function findSendButton(): HTMLButtonElement | null {
   );
   if (fallback) return fallback;
 
-  // Last resort: match on the material icon glyph
+  // Last resort: match on the gem-icon-button with send-button class
+  const gemSendBtn = document.querySelector<HTMLElement>('gem-icon-button.send-button button');
+  if (gemSendBtn) return gemSendBtn as HTMLButtonElement;
+
+  // Or match on the material icon fonticon attribute
   for (const btn of document.querySelectorAll('button')) {
-    const glyph = btn.querySelector('mat-icon')?.textContent?.trim();
-    if (glyph === 'send' || glyph === 'stop') return btn as HTMLButtonElement;
+    const matIcon = btn.querySelector('mat-icon');
+    const fonticon = matIcon?.getAttribute('fonticon') || matIcon?.getAttribute('data-mat-icon-name') || '';
+    if (fonticon === 'arrow_upward' || fonticon === 'send' || fonticon === 'stop' || fonticon === 'stop_circle') {
+      return btn as HTMLButtonElement;
+    }
   }
   return null;
 }
@@ -403,20 +410,32 @@ export function findSendButton(): HTMLButtonElement | null {
  * This matters because clicking during generation aborts the answer instead of
  * sending: the agent loop lost whole turns that way, and the icon lags behind the
  * actual stream end, so "response looks done" is not enough on its own.
+ *
+ * Primary signal: the parent `gem-icon-button` element gains a `stop` class
+ * while streaming. This is language-agnostic and the most reliable indicator.
  */
 export function getSendButtonState(button?: HTMLButtonElement | null): SendButtonState {
   const btn = button ?? findSendButton();
   if (!btn) return 'unknown';
 
-  const glyph = btn.querySelector('mat-icon')?.textContent?.trim().toLowerCase();
-  if (glyph === 'stop') return 'stop';
-  if (glyph === 'send') return 'send';
+  // Primary: gem-icon-button adds "stop" class during generation
+  const gemIconButton = btn.closest('gem-icon-button');
+  if (gemIconButton?.classList.contains('stop')) return 'stop';
+  // If gem-icon-button exists but has no "stop" class, it's in send mode
+  if (gemIconButton?.classList.contains('send-button')) return 'send';
 
+  // Fallback: check mat-icon fonticon attribute (Gemini uses fonticon, not textContent)
+  const matIcon = btn.querySelector('mat-icon');
+  const fonticon = matIcon?.getAttribute('fonticon') || matIcon?.getAttribute('data-mat-icon-name') || '';
+  if (fonticon === 'stop' || fonticon === 'stop_circle') return 'stop';
+  if (fonticon === 'arrow_upward' || fonticon === 'send') return 'send';
+
+  // Last resort: aria-label (language-dependent, but better than nothing)
   const label = `${btn.getAttribute('aria-label') ?? ''} ${btn.getAttribute('mattooltip') ?? ''}`;
   if (STOP_LABEL_RE.test(label)) return 'stop';
   if (SEND_LABEL_RE.test(label)) return 'send';
 
-  // Gemini also swaps the container class in some builds
+  // Container class fallback
   if (btn.closest('.stop-button-container')) return 'stop';
   if (btn.closest('.send-button-container')) return 'send';
 

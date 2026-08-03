@@ -207,8 +207,12 @@ export function useConversationMessages(): DisplayMessageTurn[] {
           isStreaming: false,
         });
       } else {
-        const markdownEl = el.querySelector('.markdown, .model-response-text, .response-content');
-        const isBusy = el.getAttribute('aria-busy') === 'true' || markdownEl?.getAttribute('aria-busy') === 'true';
+        // aria-busy is not used by Gemini (always null). Use the send button's "stop" class
+        // as streaming indicator — but only for the last model-response (earlier ones are done).
+        const isLast = index === elements.length - 1;
+        const isBusy = isLast && (
+          document.querySelector('gem-icon-button.send-button.stop') !== null
+        );
         const toolCalls = parseAllToolCallsFromText(text);
 
         turns.push({

@@ -17,6 +17,9 @@ interface NodeContentProps extends NodeProps {
   handleToggle: (e: React.MouseEvent) => void;
   newName: string;
   setNewName: (name: string) => void;
+  hoverRef?: React.RefObject<HTMLElement | null>;
+  tooltipContent?: React.ReactNode | ((isOverflowing: boolean) => React.ReactNode);
+  forceShowTooltip?: boolean;
 }
 
 export const NodeContent = ({
@@ -33,6 +36,9 @@ export const NodeContent = ({
   handleToggle,
   newName,
   setNewName,
+  hoverRef,
+  tooltipContent,
+  forceShowTooltip,
 }: NodeContentProps) => {
   const isFile = node.data.type === 'file';
   const searchQuery = useAppStore((state) => state.ui.prompts.search.query);
@@ -69,6 +75,9 @@ export const NodeContent = ({
       namePrefix={undefined}
       isPinned={!isFile && !!node.data.data?.is_pinned}
       searchQuery={searchQuery}
+      hoverRef={hoverRef}
+      tooltipContent={tooltipContent}
+      forceShowTooltip={forceShowTooltip}
     />
   );
 };

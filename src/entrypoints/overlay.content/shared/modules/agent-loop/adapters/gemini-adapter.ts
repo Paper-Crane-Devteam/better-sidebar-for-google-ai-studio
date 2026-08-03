@@ -128,29 +128,13 @@ export class GeminiAgentAdapter implements AgentPlatformAdapter {
   /**
    * Whether the given (or last) response is still streaming.
    *
-   * Scoped to the response element on purpose. The previous version queried the
-   * whole document for things like `mat-progress-bar` and `message-actions[hidden]`,
-   * which match unrelated parts of Gemini's UI — that made the loop believe the
-   * answer never finished and it sat there until the 60s timeout.
+   * The only reliable signal is the send/stop button state: when `gem-icon-button`
+   * has the `stop` class, the model is still generating. All other DOM heuristics
+   * (aria-busy, message-actions[hidden], .loading-indicator etc.) were verified to
+   * not exist in the current Gemini build and have been removed as dead code.
    */
-  isStreaming(responseElement?: HTMLElement): boolean {
-    // Strongest signal: the composer button is "stop generating" while streaming.
-    // It lags slightly behind the real stream end, which is fine here — the send
-    // path waits for it separately, so a click can never hit stop by mistake.
-    if (getSendButtonState() === 'stop') return true;
-
-    const response = responseElement ?? this.getLastAIResponseElement();
-    const turn = response?.closest('model-response');
-    if (!turn) return false;
-
-    if (turn.getAttribute('aria-busy') === 'true') return true;
-    if (response?.getAttribute('aria-busy') === 'true') return true;
-
-    // Gemini keeps the per-turn action bar hidden until the answer is complete
-    const actions = turn.querySelector('message-actions');
-    if (actions?.hasAttribute('hidden')) return true;
-
-    return turn.querySelector('.loading-indicator, .streaming-indicator, .response-streaming') !== null;
+  isStreaming(_responseElement?: HTMLElement): boolean {
+    return getSendButtonState() === 'stop';
   }
 
   getLastAIResponseElement(): HTMLElement | null {

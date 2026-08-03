@@ -14,6 +14,7 @@ interface NodeContextMenuProps {
   onDelete: () => void;
   onCopy: (e?: React.MouseEvent) => void;
   onEditSnippet?: (e?: React.MouseEvent) => void;
+  onPreviewSnippet?: (e?: React.MouseEvent) => void;
   isFavorite?: boolean;
   isPinned?: boolean;
   onToggleFavorite?: (id: string, isFav: boolean) => void;
@@ -28,6 +29,7 @@ export const NodeContextMenu = ({
   onDelete,
   onCopy,
   onEditSnippet,
+  onPreviewSnippet,
   isFavorite,
   isPinned,
   onToggleFavorite,
@@ -48,6 +50,7 @@ export const NodeContextMenu = ({
     onMoveTo,
     onCopy,
     onEdit: onEditSnippet,
+    onPreview: onPreviewSnippet,
     onExport,
   });
 
