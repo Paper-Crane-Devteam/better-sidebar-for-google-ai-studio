@@ -722,6 +722,9 @@
   "errors": {
     "profileNotFound": "未找到 Profile {{profileId}}"
   },
+  "account": {
+    "signInRequired": "未检测到已登录的 Google 账号，请先登录"
+  },
   "profile": {
     "selectProfile": "选择 Profile",
     "newAccountDetected": "在 {{platform}} 上检测到新账号：",

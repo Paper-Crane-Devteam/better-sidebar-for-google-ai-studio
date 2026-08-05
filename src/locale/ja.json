@@ -723,6 +723,9 @@
   "errors": {
     "profileNotFound": "プロファイル {{profileId}} が見つかりません"
   },
+  "account": {
+    "signInRequired": "ログイン済みの Google アカウントが見つかりません。ログインしてください"
+  },
   "profile": {
     "selectProfile": "プロファイルを選択",
     "newAccountDetected": "{{platform}} で新しいアカウントが検出されました：",

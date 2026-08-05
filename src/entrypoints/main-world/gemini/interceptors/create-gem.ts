@@ -51,9 +51,9 @@ export function handleCNgdBeResponse(response: any, url: string) {
         }
 
         // Otherwise assume this is a gem creation response:
-        //   outer === [gemId, [gemName], …]
-        const gemId = firstEntry;
-        const gemName = outer[1]?.[0];
+        //  firstEntry === [gemId, [gemName], …]
+        const gemId = firstEntry[0];
+        const gemName = firstEntry[1]?.[0];
         if (typeof gemId === 'string' && gemId && !gemId.includes('/')) {
           console.log(
             `Better Sidebar (Gemini): Detected gem creation: ${gemId} - ${gemName}`,

@@ -4,6 +4,7 @@ import '@/shared/lib/iconify-bundle';
 import mainStyles from '@/index.scss?inline';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 import { isPlatformEnabled } from '@/shared/lib/platform-enabled-store';
+import { warnIfNoAccount } from './shared/lib/account-guard';
 import { initPegasusTransport } from '@webext-pegasus/transport/content-script';
 import { getPegasusStoreReady } from '@/shared/lib/pegasus-store';
 import '@/locale/i18n';
@@ -33,6 +34,9 @@ export default defineContentScript({
       );
       return;
     }
+
+    // Non-blocking: toast a sign-in hint if no account can be detected.
+    warnIfNoAccount(platform);
 
     switch (platform) {
       case Platform.AI_STUDIO: {

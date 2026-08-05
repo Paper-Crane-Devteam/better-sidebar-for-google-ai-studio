@@ -723,6 +723,9 @@
   "errors": {
     "profileNotFound": "Профиль {{profileId}} не найден"
   },
+  "account": {
+    "signInRequired": "Аккаунт Google не обнаружен. Войдите в аккаунт, чтобы продолжить."
+  },
   "profile": {
     "selectProfile": "Выбрать профиль",
     "newAccountDetected": "Обнаружен новый аккаунт на {{platform}}:",

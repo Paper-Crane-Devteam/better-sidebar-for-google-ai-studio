@@ -26,14 +26,20 @@ function waitForSelector(
   });
 }
 
+/** Default time to wait for the account element to show up in the DOM. */
+export const DEFAULT_DETECT_TIMEOUT_MS = 10000;
+
 /**
  * Detect current user on AI Studio.
  * Reads `.account-switcher-container .account-switcher-text` text content.
  */
-export async function detectAiStudioAccount(): Promise<string | null> {
+export async function detectAiStudioAccount(
+  timeoutMs = DEFAULT_DETECT_TIMEOUT_MS,
+): Promise<string | null> {
   try {
     const el = await waitForSelector(
       '.account-switcher-container .account-switcher-text',
+      timeoutMs,
     );
     const text = el?.textContent?.trim();
     if (text) {
@@ -50,10 +56,12 @@ export async function detectAiStudioAccount(): Promise<string | null> {
  * Detect current user on Gemini.
  * Reads `<meta name="og-profile-acct" content="...">` from head.
  */
-export async function detectGeminiAccount(): Promise<string | null> {
+export async function detectGeminiAccount(
+  timeoutMs = DEFAULT_DETECT_TIMEOUT_MS,
+): Promise<string | null> {
   try {
     // Meta tag may already be in the DOM or may appear shortly after load
-    const el = await waitForSelector('meta[name="og-profile-acct"]');
+    const el = await waitForSelector('meta[name="og-profile-acct"]', timeoutMs);
     const content = el?.getAttribute('content')?.trim();
     if (content) {
       console.log('[DetectAccount] Gemini account:', content);
@@ -96,12 +104,13 @@ export async function detectChatGPTAccount(): Promise<string | null> {
  */
 export async function detectAccount(
   platform: Platform,
+  timeoutMs = DEFAULT_DETECT_TIMEOUT_MS,
 ): Promise<string | null> {
   switch (platform) {
     case Platform.AI_STUDIO:
-      return detectAiStudioAccount();
+      return detectAiStudioAccount(timeoutMs);
     case Platform.GEMINI:
-      return detectGeminiAccount();
+      return detectGeminiAccount(timeoutMs);
     case Platform.CHATGPT:
       return detectChatGPTAccount();
     default:

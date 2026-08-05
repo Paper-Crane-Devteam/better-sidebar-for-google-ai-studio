@@ -703,6 +703,9 @@
   "errors": {
     "profileNotFound": "Profile {{profileId}} not found"
   },
+  "account": {
+    "signInRequired": "No signed-in Google account detected. Please sign in to use Better Sidebar."
+  },
   "profile": {
     "selectProfile": "Select Profile",
     "newAccountDetected": "New account detected on {{platform}}:",

@@ -723,6 +723,9 @@
   "errors": {
     "profileNotFound": "找不到 Profile {{profileId}}"
   },
+  "account": {
+    "signInRequired": "未偵測到已登入的 Google 帳號，請先登入"
+  },
   "profile": {
     "selectProfile": "選擇設定檔",
     "newAccountDetected": "在 {{platform}} 上偵測到新帳號：",

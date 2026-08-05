@@ -723,6 +723,9 @@
   "errors": {
     "profileNotFound": "Perfil {{profileId}} no encontrado"
   },
+  "account": {
+    "signInRequired": "No se detectó ninguna cuenta de Google conectada. Inicia sesión para continuar."
+  },
   "profile": {
     "selectProfile": "Seleccionar Perfil",
     "newAccountDetected": "Nueva cuenta detectada en {{platform}}:",
