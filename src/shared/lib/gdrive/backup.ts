@@ -5,19 +5,17 @@
  * Each profile gets its own set of backup slots, namespaced by dbName.
  * Maximum slots is configurable (1–20, default 5).
  *
- * Backup is triggered BEFORE a sync runs (not after), so the snapshot always
- * captures the pre-sync state. If a sync turns out to be destructive — e.g. it
- * pulled an empty/stale remote file and mirrored those deletions locally — the
- * newest slot still holds the data as it was before that sync.
- * Periodic pre-sync snapshots are rate-limited to one per 24h.
+ * Two kinds of snapshot:
  *
- * On top of that, `createSafetyBackup` takes an un-throttled snapshot right
- * before the merge executes any bulk DELETE, which is the moment data is most
- * at risk.
+ *  - Routine (`maybeCreateRoutineBackup`): throttled to one per 24h, taken when
+ *    local data changes. Independent of Google Drive — this is plain
+ *    point-in-time recovery whether or not sync is connected.
+ *  - Safety (`createSafetyBackup`): un-throttled, taken immediately before an
+ *    operation that replaces local data wholesale. Today the only such
+ *    operation is a sync-down / backup restore.
  *
- * Does NOT depend on Google Drive — works purely with local storage.
- * If GDrive is also connected, data is already synced there separately;
- * backups serve as point-in-time recovery regardless.
+ * Uploading to Drive needs no snapshot: a push only ever overwrites the remote
+ * file, so local data is never at risk.
  */
 
 import { exportSyncData, importSyncData } from './sync-data';
@@ -28,17 +26,22 @@ import { exportSyncData, importSyncData } from './sync-data';
 export type BackupReason =
   /** User pressed "create backup" */
   | 'manual'
-  /** Throttled snapshot taken before a sync run */
-  | 'pre-sync'
-  /** Un-throttled snapshot taken right before a merge deletes rows */
-  | 'pre-merge-delete'
+  /** Throttled snapshot taken when local data changed */
+  | 'routine'
   /** Un-throttled snapshot of the state being replaced by a restore */
-  | 'pre-restore';
+  | 'pre-restore'
+  /**
+   * Written by versions that automated a bidirectional merge. Never produced
+   * anymore, but existing slots in storage still carry these values and must
+   * keep rendering correctly.
+   */
+  | 'pre-sync'
+  | 'pre-merge-delete';
 
 /** Reasons that mark a slot as a recovery point worth protecting from pruning */
 const PROTECTED_REASONS: readonly BackupReason[] = [
-  'pre-merge-delete',
   'pre-restore',
+  'pre-merge-delete',
 ];
 
 export interface BackupSlot {
@@ -220,17 +223,14 @@ export async function isBackupDue(dbName: string): Promise<boolean> {
 }
 
 /**
- * Take a throttled snapshot BEFORE a sync runs, if conditions are met:
+ * Take a throttled routine snapshot, if conditions are met:
  * 1. Backup feature is enabled (caller should check)
  * 2. Last backup was >24h ago
  *
- * Running before the sync (rather than after) is deliberate: a sync that pulls
- * a stale or empty remote file can mirror deletions into the local DB, so the
- * useful snapshot is the one taken while the data is still intact.
- *
- * Never throws — a failed snapshot must not block the sync itself.
+ * Never throws — a failed routine snapshot must not block whatever the caller
+ * was doing.
  */
-export async function maybeCreatePreSyncBackup(
+export async function maybeCreateRoutineBackup(
   dbName: string,
   maxSlots: number,
 ): Promise<{ created: boolean; error?: string }> {
@@ -240,8 +240,8 @@ export async function maybeCreatePreSyncBackup(
       return { created: false };
     }
 
-    await createBackup(dbName, 'pre-sync');
-    console.log(`[Backup] Pre-sync backup created for ${dbName}`);
+    await createBackup(dbName, 'routine');
+    console.log(`[Backup] Routine backup created for ${dbName}`);
 
     // Prune old backups
     const pruned = await pruneBackups(dbName, maxSlots);
@@ -251,18 +251,19 @@ export async function maybeCreatePreSyncBackup(
 
     return { created: true };
   } catch (err: any) {
-    console.error('[Backup] Pre-sync backup failed:', err.message);
+    console.error('[Backup] Routine backup failed:', err.message);
     return { created: false, error: err.message };
   }
 }
 
 /**
- * Take an un-throttled safety snapshot right before a destructive operation.
+ * Take an un-throttled safety snapshot right before an operation that replaces
+ * local data wholesale.
  *
- * Unlike `maybeCreatePreSyncBackup` this ignores the 24h cooldown, because the
- * caller has already determined that rows are about to be deleted.
+ * Unlike `maybeCreateRoutineBackup` this ignores the 24h cooldown, because the
+ * caller has already determined that local data is about to be replaced.
  *
- * Deduplicates against an identical snapshot taken in the last minute so sync
+ * Deduplicates against an identical snapshot taken in the last minute so
  * retries don't fill every slot with the same data.
  *
  * THROWS on failure — callers are expected to abort the destructive operation
@@ -280,7 +281,7 @@ export async function createSafetyBackup(
     prune?: boolean;
   } = {},
 ): Promise<{ created: boolean }> {
-  const { reason = 'pre-merge-delete', prune = true } = options;
+  const { reason = 'pre-restore', prune = true } = options;
 
   const backups = await loadBackups(dbName);
   const newest = backups

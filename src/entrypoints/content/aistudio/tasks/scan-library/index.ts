@@ -49,9 +49,11 @@ export async function scanLibrary() {
       if (apiItem) {
         return {
           ...item,
-          created_at: apiItem.created_at,
-          updated_at: apiItem.created_at,
-          last_active_at: apiItem.created_at,
+          // ListPrompts only exposes a last-active timestamp. `created_at` is
+          // intentionally omitted so the DB upsert's COALESCE keeps any real
+          // creation time captured on the create path.
+          updated_at: apiItem.last_active_at,
+          last_active_at: apiItem.last_active_at,
           prompt_metadata: apiItem.prompt_metadata,
           type: apiItem.type,
           platform: Platform.AI_STUDIO,

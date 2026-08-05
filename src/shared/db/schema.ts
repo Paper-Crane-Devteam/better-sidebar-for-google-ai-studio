@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS prompt_folders (
   name TEXT NOT NULL,
   parent_id TEXT,
   order_index INTEGER DEFAULT 0,
+  is_pinned INTEGER DEFAULT 0,
   created_at INTEGER DEFAULT (unixepoch()),
   updated_at INTEGER DEFAULT (unixepoch()),
   FOREIGN KEY(parent_id) REFERENCES prompt_folders(id) ON DELETE CASCADE
@@ -32,6 +33,7 @@ CREATE TABLE IF NOT EXISTS folders (
   platform TEXT DEFAULT 'aistudio', -- 'aistudio' | 'gemini' | 'chatgpt' | 'claude'
   color TEXT, -- hex color for folder icon, e.g. '#4F46E5'
   order_index INTEGER DEFAULT 0,
+  is_pinned INTEGER DEFAULT 0,
   created_at INTEGER DEFAULT (unixepoch()),
   updated_at INTEGER DEFAULT (unixepoch()),
   FOREIGN KEY(parent_id) REFERENCES folders(id) ON DELETE CASCADE

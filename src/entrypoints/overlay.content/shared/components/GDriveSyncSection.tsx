@@ -9,7 +9,6 @@ import {
   Link,
   Unlink,
   AlertTriangle,
-  RefreshCw,
 } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { modal } from '@/shared/lib/modal';
@@ -17,7 +16,7 @@ import { toast } from '@/shared/lib/toast';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import dayjs from 'dayjs';
 
-type SyncDirection = 'up' | 'down' | 'merge' | null;
+type SyncDirection = 'up' | 'down' | null;
 
 export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
   const { t } = useI18n();
@@ -29,6 +28,8 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
     lastSyncTime?: number | null;
     lastSyncDirection?: SyncDirection;
     autoSyncing?: boolean;
+    /** Automatic uploads are frozen until the user picks a direction */
+    hasConflict?: boolean;
   }>({ isAuthenticated: false });
   const [gdriveSyncing, setGdriveSyncing] = useState<SyncDirection>(null);
   const [gdriveConnecting, setGdriveConnecting] = useState(false);
@@ -60,7 +61,6 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
   const directionLabel = (dir: SyncDirection) => {
     if (dir === 'up') return t('data.gdriveDirUp');
     if (dir === 'down') return t('data.gdriveDirDown');
-    if (dir === 'merge') return t('data.gdriveDirMerge');
     return '';
   };
 
@@ -90,23 +90,6 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
       console.error('GDrive disconnect error:', e);
     } finally {
       setGdriveConnecting(false);
-    }
-  };
-
-  const handleGdriveMerge = async () => {
-    setGdriveSyncing('merge');
-    try {
-      const res = await browser.runtime.sendMessage({ type: 'GDRIVE_MERGE' });
-      if (res?.success) {
-        toast.success(t('data.gdriveSyncSuccess'));
-        await fetchGdriveStatus();
-      } else {
-        toast.error(res?.error || t('data.gdriveBackupFailed'));
-      }
-    } catch (e) {
-      toast.error(t('data.gdriveBackupFailed'));
-    } finally {
-      setGdriveSyncing(null);
     }
   };
 
@@ -264,30 +247,24 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
               />
             </div>
 
-            <Separator />
-
-            {/* Merge sync button */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full gap-2"
-              onClick={handleGdriveMerge}
-              disabled={gdriveSyncing !== null}
-            >
-              {gdriveSyncing === 'merge' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <RefreshCw className="h-4 w-4" />
-              )}
-              {t('data.gdriveMergeSync')}
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              {t('data.gdriveMergeSyncDesc')}
-            </p>
+            {/* Divergence notice — automatic uploads are frozen until resolved */}
+            {gdriveStatus.hasConflict && (
+              <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+                <AlertTriangle className="h-4 w-4 mt-1 shrink-0 text-amber-600 dark:text-amber-400" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
+                    {t('data.gdriveConflictTitle')}
+                  </p>
+                  <p className="text-xs text-amber-700/80 dark:text-amber-300/80">
+                    {t('data.gdriveConflictDesc')}
+                  </p>
+                </div>
+              </div>
+            )}
 
             <Separator />
 
-            {/* Manual backup/restore */}
+            {/* Manual upload / download — the only two data operations */}
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -318,9 +295,9 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
                 {t('data.gdriveRestore')}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground flex items-start gap-1.5">
-              <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-yellow-500" />
-              {t('data.gdriveRestoreWarning')}
+            <p className="text-xs text-muted-foreground flex items-start gap-2">
+              <AlertTriangle className="h-4 w-4 mt-1 shrink-0 text-yellow-500" />
+              {t('data.gdriveOverwriteWarning')}
             </p>
           </>
         )}

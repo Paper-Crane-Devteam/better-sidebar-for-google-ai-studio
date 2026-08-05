@@ -1,24 +1,36 @@
 /**
- * Auto-sync manager for Google Drive.
+ * Auto-push manager for Google Drive.
  *
- * SW-safe design: all state is persisted to browser.storage.local,
- * all scheduling uses chrome.alarms (survives SW termination).
- * No setTimeout, no in-memory-only state for scheduling.
+ * ── Why this only pushes ─────────────────────────────────────────────────────
+ * Sync has exactly two operations, both whole-file replacements:
  *
- * Responsibilities:
- * - Periodic sync via chrome.alarms (every 25 min)
- * - Debounced sync via chrome.alarms (replaces setTimeout)
- * - Pending sync dbName persisted to storage (survives SW restart)
- * - Lock to prevent concurrent syncs
- * - Retry with backoff on transient errors
- * - Silent token refresh (no user interaction during auto-sync)
+ *   push (up)   local  → remote    never touches local data
+ *   pull (down) remote → local     replaces every local sync table
+ *
+ * Only `push` is automated. It cannot lose local data — the worst case is that
+ * the remote file ends up holding an older snapshot, which the next push fixes.
+ * `pull` is destructive by definition, so it stays manual, confirmed, and
+ * preceded by a safety snapshot (see the background handler).
+ *
+ * The previous design automated a bidirectional row-level merge that inferred
+ * remote deletions from `lastSyncTime`. That inference cannot be made correct
+ * without deletion records: because `lastSyncTime` advances to "now" after every
+ * run, on the next run nearly every local row looks older than it, so the rule
+ * degraded into "delete anything the remote file lacks". The safety guards added
+ * to contain that produced partial deletions, which left the two sides
+ * permanently divergent and resurrected remote deletions on the following push.
+ * Whole-file replacement has none of those failure modes.
+ *
+ * ── SW-safe design ───────────────────────────────────────────────────────────
+ * All state is persisted to browser.storage.local and all scheduling uses
+ * chrome.alarms, so nothing is lost when the service worker is terminated.
+ * No setTimeout for scheduling, no in-memory-only state.
  */
 
 import { getAccessToken, getAuthStatus, silentRefresh } from './google-auth';
-import { findFile, uploadFile, downloadFile, getAccountId } from './gdrive-api';
+import { uploadFile, downloadFile, getAccountId } from './gdrive-api';
 import { exportSyncData } from './sync-data';
-import { mergeSyncData } from './sync-merge';
-import { resolveSyncTarget, checkSyncOrigin } from './sync-identity';
+import { resolveSyncTarget } from './sync-identity';
 import { withDbSession } from '@/shared/db';
 
 // --- Constants ---
@@ -33,12 +45,76 @@ const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 3_000;
 const PAGE_LOAD_SYNC_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 
-/** Storage key for the pending debounce sync's target dbName */
+/** Storage key for the pending debounce push's target dbName */
 const PENDING_SYNC_DB_KEY = 'gdrive_pending_sync_db';
 
 // --- In-memory guard (within a single SW lifecycle) ---
 
 let isSyncing = false;
+
+// --- Storage key helpers ---
+
+/**
+ * Sync metadata stays keyed by dbName only, not by the resolved file name.
+ * The status UI reads these keys without a token, and a profile has exactly one
+ * active sync file at a time, so the extra dimension would buy nothing.
+ */
+export function syncTimeKey(dbName: string): string {
+  return `gdrive_last_sync_time__${dbName}`;
+}
+
+export function syncDirectionKey(dbName: string): string {
+  return `gdrive_last_sync_dir__${dbName}`;
+}
+
+/**
+ * Drive's `modifiedTime` for the remote file as of our last push or pull.
+ *
+ * This is the whole conflict story: if the current remote `modifiedTime` differs
+ * from what we recorded, some other device wrote the file after we last agreed
+ * with it, and an automatic push would silently discard that work.
+ */
+export function remoteMtimeKey(dbName: string): string {
+  return `gdrive_remote_mtime__${dbName}`;
+}
+
+/** Set when an automatic push was skipped because the remote had diverged. */
+export function conflictKey(dbName: string): string {
+  return `gdrive_conflict__${dbName}`;
+}
+
+/**
+ * Set when local data changed, cleared once it reaches Drive.
+ *
+ * Lets the periodic alarm tell "nothing to do" apart from "a push failed and
+ * never got retried", so it can stay a cheap no-op in the common case instead of
+ * re-uploading the whole database every 25 minutes.
+ */
+export function dirtyKey(dbName: string): string {
+  return `gdrive_dirty__${dbName}`;
+}
+
+/** Every storage key this module owns, for cleanup when a profile is deleted. */
+export function syncStorageKeys(dbName: string): string[] {
+  return [
+    syncTimeKey(dbName),
+    syncDirectionKey(dbName),
+    remoteMtimeKey(dbName),
+    conflictKey(dbName),
+    dirtyKey(dbName),
+  ];
+}
+
+/** Mark local data as having changes that are not on Drive yet. */
+export async function markDirty(dbName: string): Promise<void> {
+  await browser.storage.local.set({ [dirtyKey(dbName)]: true });
+}
+
+async function isDirty(dbName: string): Promise<boolean> {
+  const key = dirtyKey(dbName);
+  const result = await browser.storage.local.get(key);
+  return result[key] === true;
+}
 
 // --- Lock (persisted, survives SW restart) ---
 
@@ -66,64 +142,44 @@ function isRetryable(err: any): boolean {
   return status === 401 || status === 429 || status >= 500;
 }
 
-// --- Helpers ---
+// --- Types ---
 
-/**
- * Sync metadata stays keyed by dbName only, not by the resolved file name.
- * The status UI reads this key synchronously without a token, and a profile has
- * exactly one active sync file at a time, so the extra dimension would buy
- * nothing. When a profile does move to an account-scoped file, the inherited
- * timestamp is harmless: the new file starts out absent (no merge at all) or
- * empty (deletion guards hold), so no stale baseline can delete anything.
- */
-function buildSyncMetaKey(dbName: string): string {
-  return `gdrive_last_sync_time__${dbName}`;
-}
-
-export interface AutoSyncOptions {
+export interface PushOptions {
   /**
-   * The profile database this sync operates on. The connection is pinned to it
+   * The profile database this push reads from. The connection is pinned to it
    * for the whole run, so this is the single source of truth — no ambient
    * "current database" is consulted.
    */
   dbName: string;
-  onSyncComplete?: () => void;
   /**
-   * Called once the target DB is verified but before anything is pulled or
-   * pushed. Used to snapshot the pre-sync state. Failures are logged and
-   * ignored — a missing routine snapshot must not block syncing.
-   *
-   * Receives the verified dbName rather than letting the callback look it up:
-   * the caller's ambient "current DB" can differ from the one being synced, and
-   * a snapshot filed under the wrong profile is worse than none.
+   * Overwrite the remote file even if another device modified it since our last
+   * push. Only set this for an explicit user action.
    */
-  onBeforeSync?: (dbName: string) => Promise<void>;
-  /**
-   * Called immediately before the merge deletes rows. Throwing aborts the
-   * deletions (inserts and updates still apply).
-   */
-  onBeforeDestructiveMerge?: (
-    dbName: string,
-    plan: { total: number; byTable: Record<string, number> },
-  ) => Promise<void>;
+  force?: boolean;
+  onComplete?: () => void;
 }
 
-/** Hooks that callers can forward to `performMergeSync`. */
-export type AutoSyncHooks = Pick<
-  AutoSyncOptions,
-  'onBeforeSync' | 'onBeforeDestructiveMerge'
->;
+export interface PushResult {
+  success: boolean;
+  error?: string;
+  /**
+   * True when the push was skipped because the remote file had been modified
+   * elsewhere. Not an error — the caller surfaces it so the user can choose a
+   * direction.
+   */
+  conflict?: boolean;
+}
 
-// --- Core sync ---
+// --- Core push ---
 
 /**
- * Perform a bidirectional merge sync.
- * Singleton: if already syncing, returns immediately.
+ * Upload the local database as the complete remote snapshot.
+ * Singleton: if a push is already running, returns immediately.
  */
-export async function performMergeSync(
-  opts: AutoSyncOptions,
+export async function performSyncUp(
+  opts: PushOptions,
   retries = MAX_RETRIES,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<PushResult> {
   if (isSyncing) {
     console.log('[AutoSync] Already syncing, skipping');
     return { success: false, error: 'Already syncing' };
@@ -139,13 +195,10 @@ export async function performMergeSync(
   try {
     // Everything below runs with the connection pinned to opts.dbName.
     //
-    // This is the critical guarantee. A sync is dozens of separate round trips
-    // to the DB worker, and other extension messages switch the active database
-    // to match their sender tab. Unpinned, a switch lands mid-merge and the
-    // deletion phase executes against a different profile's data while comparing
-    // it to this profile's remote payload — wiping it. Checking the database once
-    // up front cannot prevent that; it has to stay pinned throughout.
-    return await withDbSession(opts.dbName, () => runMergeSync(opts));
+    // exportSyncData reads eleven tables in sequence, and other extension
+    // messages switch the active database to match their sender tab. Unpinned,
+    // a switch landing mid-export would upload a mix of two profiles.
+    return await withDbSession(opts.dbName, () => runSyncUp(opts));
   } catch (err: any) {
     if (retries > 0 && isRetryable(err)) {
       // On 401, try to refresh the token before retrying
@@ -157,7 +210,7 @@ export async function performMergeSync(
       isSyncing = false;
       await releaseLock();
       await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
-      return performMergeSync(opts, retries - 1);
+      return performSyncUp(opts, retries - 1);
     }
 
     console.error('[AutoSync] Failed:', err.message);
@@ -169,25 +222,11 @@ export async function performMergeSync(
 }
 
 /**
- * The actual sync body. Always invoked inside a pinned DB session.
+ * The actual push body. Always invoked inside a pinned DB session.
  */
-async function runMergeSync(
-  opts: AutoSyncOptions,
-): Promise<{ success: boolean; error?: string }> {
-  // Snapshot BEFORE the sync touches anything. A sync that pulls a stale or
-  // empty remote file can mirror deletions locally, so the useful recovery
-  // point is the one captured while the data is still intact.
-  if (opts.onBeforeSync) {
-    try {
-      await opts.onBeforeSync(opts.dbName);
-    } catch (err: any) {
-      console.warn('[AutoSync] Pre-sync backup failed:', err?.message ?? err);
-    }
-  }
-
+async function runSyncUp(opts: PushOptions): Promise<PushResult> {
   const token = await getAccessToken(true);
   const accountId = await getAccountId(token);
-  const metaKey = buildSyncMetaKey(opts.dbName);
 
   const target = await resolveSyncTarget(
     token,
@@ -196,61 +235,150 @@ async function runMergeSync(
     downloadFile,
   );
 
-  // Step 1: Pull & merge
-  if (target.file) {
-    const remoteData =
-      target.content ?? (await downloadFile(token, target.file.id));
-
-    // Only merge a payload that provably belongs to this dataset
-    const originCheck = checkSyncOrigin(remoteData, {
-      dbName: opts.dbName,
-      accountId,
-    });
-    if (!originCheck.ok) {
-      console.error(`[AutoSync] Aborted: ${originCheck.reason}`);
-      return { success: false, error: `Sync aborted \u2014 ${originCheck.reason}` };
+  // Refuse to clobber a remote file that changed under us, unless the user
+  // explicitly asked for it. A first push (no remote file yet) can't conflict.
+  if (!opts.force) {
+    // The flag is sticky: once the two sides are known to have diverged, every
+    // automatic push stays frozen until the user picks a direction. Nothing
+    // else can resolve it — silently uploading would discard the other device's
+    // work, silently downloading would discard this one's.
+    if (await hasSyncConflict(opts.dbName)) {
+      console.log('[AutoSync] Unresolved conflict, push frozen');
+      return { success: false, conflict: true };
     }
 
-    // Read lastSyncTime to distinguish "deleted elsewhere" from "new locally"
-    const metaResult = await browser.storage.local.get(metaKey);
-    const lastSyncTime = (metaResult[metaKey] as number) || 0;
+    if (target.file) {
+      const seenKey = remoteMtimeKey(opts.dbName);
+      const stored = await browser.storage.local.get(seenKey);
+      const lastSeen = stored[seenKey] as string | undefined;
 
-    const result = await mergeSyncData(remoteData, lastSyncTime, {
-      onBeforeDelete: opts.onBeforeDestructiveMerge
-        ? (plan) => opts.onBeforeDestructiveMerge!(opts.dbName, plan)
-        : undefined,
-    });
-    console.log(
-      `[AutoSync] Merge: +${result.inserted} ins, ~${result.updated} upd, -${result.deleted} del, =${result.skipped} skip` +
-        (result.deletionBlocked > 0
-          ? `, !${result.deletionBlocked} deletions blocked by safety guard`
-          : ''),
-    );
+      if (lastSeen && target.file.modifiedTime !== lastSeen) {
+        console.warn(
+          `[AutoSync] Remote changed elsewhere ` +
+            `(seen ${lastSeen}, now ${target.file.modifiedTime}) — push skipped`,
+        );
+        await markSyncConflict(opts.dbName);
+        return { success: false, conflict: true };
+      }
+    }
   }
 
-  // Step 2: Export & push
   const localData = await exportSyncData({ dbName: opts.dbName, accountId });
-  const file = target.file || (await findFile(token, target.fileName));
-  await uploadFile(token, target.fileName, localData, file?.id);
+  const uploaded = await uploadFile(
+    token,
+    target.fileName,
+    localData,
+    target.file?.id,
+  );
 
-  const now = Math.floor(Date.now() / 1000);
-  await browser.storage.local.set({ [metaKey]: now });
+  await recordSyncSuccess(opts.dbName, 'up', uploaded.modifiedTime);
 
-  opts.onSyncComplete?.();
+  opts.onComplete?.();
   return { success: true };
+}
+
+/**
+ * Record a successful sync: timestamp, direction, and the remote
+ * `modifiedTime` the two sides now agree on. Clears any conflict flag.
+ */
+export async function recordSyncSuccess(
+  dbName: string,
+  direction: 'up' | 'down',
+  remoteModifiedTime?: string,
+): Promise<number> {
+  const now = Math.floor(Date.now() / 1000);
+  await browser.storage.local.set({
+    [syncTimeKey(dbName)]: now,
+    [syncDirectionKey(dbName)]: direction,
+    ...(remoteModifiedTime
+      ? { [remoteMtimeKey(dbName)]: remoteModifiedTime }
+      : {}),
+  });
+  // Both directions leave the two sides in agreement, so any conflict is
+  // resolved and there is nothing left to upload.
+  await browser.storage.local.remove([conflictKey(dbName), dirtyKey(dbName)]);
+  return now;
+}
+
+/**
+ * Check whether Drive holds a newer copy, without transferring any data.
+ *
+ * One metadata request. Never uploads and never writes to the local database —
+ * it only raises the conflict flag so the UI can offer a download. Safe to call
+ * on page load, where pushing would be pointless and pulling would be
+ * presumptuous.
+ */
+export async function checkRemoteForUpdates(
+  dbName: string,
+): Promise<{ hasUpdate: boolean }> {
+  const auth = await getAuthStatus();
+  if (!auth.isAuthenticated) return { hasUpdate: false };
+
+  if (await hasSyncConflict(dbName)) return { hasUpdate: true };
+
+  try {
+    const token = await getAccessToken(true);
+    const accountId = await getAccountId(token);
+    const target = await resolveSyncTarget(
+      token,
+      dbName,
+      accountId,
+      downloadFile,
+    );
+
+    if (!target.file) return { hasUpdate: false };
+
+    const seenKey = remoteMtimeKey(dbName);
+    const stored = await browser.storage.local.get(seenKey);
+    const lastSeen = stored[seenKey] as string | undefined;
+
+    // No baseline yet means we have never agreed with this file, which is not
+    // the same as it being newer. Leave it to the next push to establish one.
+    if (!lastSeen || target.file.modifiedTime === lastSeen) {
+      return { hasUpdate: false };
+    }
+
+    console.log(
+      `[AutoSync] Drive has a newer copy ` +
+        `(seen ${lastSeen}, now ${target.file.modifiedTime})`,
+    );
+    await markSyncConflict(dbName);
+    return { hasUpdate: true };
+  } catch (err: any) {
+    // A failed check is not worth surfacing — it changes nothing either way.
+    console.warn('[AutoSync] Remote check failed:', err?.message ?? err);
+    return { hasUpdate: false };
+  }
+}
+
+/** Whether an automatic push is currently being held back by a conflict. */
+export async function hasSyncConflict(dbName: string): Promise<boolean> {
+  const key = conflictKey(dbName);
+  const result = await browser.storage.local.get(key);
+  return result[key] === true;
+}
+
+/**
+ * Freeze automatic pushes until the user picks a direction.
+ *
+ * Also used after the local database is wiped or replaced out-of-band: local no
+ * longer derives from the remote file, so an automatic push would upload the new
+ * state over data the user may still want.
+ */
+export async function markSyncConflict(dbName: string): Promise<void> {
+  await browser.storage.local.set({ [conflictKey(dbName)]: true });
 }
 
 // --- Debounce scheduling (alarm-based, SW-safe) ---
 
 /**
- * Schedule a debounced merge sync using chrome.alarms.
+ * Schedule a debounced push using chrome.alarms.
  * Persists the target dbName to storage so it survives SW restarts.
  *
- * Multiple calls coalesce: each call resets the alarm and overwrites
- * the pending dbName with the CURRENT profile's dbName.
+ * Multiple calls coalesce: each resets the alarm and overwrites the pending
+ * dbName with the current profile's.
  */
 export async function scheduleDebouncedSync(dbName: string): Promise<void> {
-  // Persist which db needs syncing
   await browser.storage.local.set({ [PENDING_SYNC_DB_KEY]: dbName });
 
   // (Re)create the debounce alarm — this resets the countdown
@@ -262,29 +390,26 @@ export async function scheduleDebouncedSync(dbName: string): Promise<void> {
 }
 
 /**
- * Flush any pending debounced sync immediately.
- * Call BEFORE switching active tab so the sync uses the old profile.
+ * Flush any pending debounced push immediately.
+ * Call BEFORE switching active tab so the push uses the old profile.
  */
 export async function flushPendingSync(
-  onSyncComplete?: () => void,
-  hooks?: AutoSyncHooks,
+  onComplete?: () => void,
 ): Promise<boolean> {
   const result = await browser.storage.local.get(PENDING_SYNC_DB_KEY);
   const dbName = result[PENDING_SYNC_DB_KEY] as string | undefined;
 
   if (!dbName) return false;
 
-  // Cancel the pending alarm
   await browser.alarms.clear(DEBOUNCE_ALARM);
-  // Clear the persisted state
   await browser.storage.local.remove(PENDING_SYNC_DB_KEY);
 
-  console.log(`[AutoSync] Flushing pending sync for db: ${dbName}`);
+  console.log(`[AutoSync] Flushing pending push for db: ${dbName}`);
 
   const auth = await getAuthStatus();
   if (!auth.isAuthenticated) return false;
 
-  await performMergeSync({ dbName, onSyncComplete, ...hooks });
+  await performSyncUp({ dbName, onComplete });
   return true;
 }
 
@@ -308,15 +433,12 @@ export async function handleAutoSyncAlarm(
   alarm: { name: string },
   /** Returns null while the active profile is still unresolved */
   getDbName: () => string | null,
-  onSyncComplete?: () => void,
-  hooks?: AutoSyncHooks,
+  onComplete?: () => void,
 ): Promise<void> {
   if (alarm.name === DEBOUNCE_ALARM) {
-    // Debounce alarm fired — read the persisted dbName
     const result = await browser.storage.local.get(PENDING_SYNC_DB_KEY);
     const dbName = result[PENDING_SYNC_DB_KEY] as string | undefined;
 
-    // Clear persisted state
     await browser.storage.local.remove(PENDING_SYNC_DB_KEY);
 
     if (!dbName) return;
@@ -325,40 +447,54 @@ export async function handleAutoSyncAlarm(
     if (!auth.isAuthenticated) return;
 
     console.log(`[AutoSync] Debounce alarm fired for db: ${dbName}`);
-    notifySyncingState(true);
-    try {
-      await performMergeSync({ dbName, onSyncComplete, ...hooks });
-    } finally {
-      notifySyncingState(false);
-    }
+    await pushWithStatus(dbName, onComplete);
     return;
   }
 
   if (alarm.name === PERIODIC_ALARM) {
     const auth = await getAuthStatus();
     if (!auth.isAuthenticated) {
-      console.log('[AutoSync] Not authenticated, skipping periodic sync');
+      console.log('[AutoSync] Not authenticated, skipping periodic check');
       return;
     }
 
     const dbName = getDbName();
     if (!dbName) {
-      console.log('[AutoSync] Active profile unresolved, skipping periodic sync');
+      console.log('[AutoSync] Active profile unresolved, skipping periodic check');
       return;
     }
 
-    console.log('[AutoSync] Periodic sync triggered');
-    notifySyncingState(true);
-    try {
-      await performMergeSync({ dbName, onSyncComplete, ...hooks });
-    } finally {
-      notifySyncingState(false);
+    // Not a scheduled upload — data changes already schedule their own via the
+    // debounce. This exists to catch the case where those uploads never landed
+    // (offline, expired token, SW killed mid-retry), so it only acts when there
+    // is something outstanding.
+    if (!(await isDirty(dbName))) {
+      // Still worth one metadata request: it is how a second device's changes
+      // get noticed while this one sits idle.
+      await checkRemoteForUpdates(dbName);
+      return;
     }
+
+    console.log('[AutoSync] Retrying an upload that never landed');
+    await pushWithStatus(dbName, onComplete);
+  }
+}
+
+/** Run a push with the UI busy indicator wrapped around it. */
+async function pushWithStatus(
+  dbName: string,
+  onComplete?: () => void,
+): Promise<void> {
+  notifySyncingState(true);
+  try {
+    await performSyncUp({ dbName, onComplete });
+  } finally {
+    notifySyncingState(false);
   }
 }
 
 /**
- * Check if auto-sync is currently in progress.
+ * Check if a push is currently in progress.
  */
 export function isAutoSyncing(): boolean {
   return isSyncing;
@@ -380,21 +516,23 @@ function notifySyncingState(syncing: boolean): void {
   onSyncingStateChange?.(syncing);
 }
 
-// --- Page-load sync ---
+// --- Page-load check ---
 
-/** Storage key for the last page-load sync timestamp */
+/** Storage key for the last page-load remote check timestamp */
 const PAGE_LOAD_SYNC_TIME_KEY = 'gdrive_page_load_sync_time';
 
 /**
- * Trigger a merge sync on page load if enough time has passed since the last sync.
- * Called after SYNC_CONVERSATIONS completes in the background.
- * Uses a 5-minute cooldown to avoid redundant syncs.
+ * On page load, look at whether Drive holds a newer copy. Nothing is uploaded
+ * and nothing is downloaded.
+ *
+ * Uploading here would be busywork — local changes already schedule their own
+ * upload. Downloading would replace local data without being asked. So the only
+ * useful thing is to notice a second device's changes and let the user decide.
+ *
+ * Called after SYNC_CONVERSATIONS completes in the background, with a 5-minute
+ * cooldown.
  */
-export async function triggerSyncOnPageLoad(
-  dbName: string,
-  onSyncComplete?: () => void,
-  hooks?: AutoSyncHooks,
-): Promise<void> {
+export async function checkRemoteOnPageLoad(dbName: string): Promise<void> {
   const auth = await getAuthStatus();
   if (!auth.isAuthenticated) return;
 
@@ -402,17 +540,12 @@ export async function triggerSyncOnPageLoad(
   const lastTime = (result[PAGE_LOAD_SYNC_TIME_KEY] as number) || 0;
 
   if (Date.now() - lastTime < PAGE_LOAD_SYNC_COOLDOWN_MS) {
-    console.log('[AutoSync] Page-load sync skipped (cooldown)');
+    console.log('[AutoSync] Page-load remote check skipped (cooldown)');
     return;
   }
 
   await browser.storage.local.set({ [PAGE_LOAD_SYNC_TIME_KEY]: Date.now() });
 
-  console.log('[AutoSync] Page-load sync triggered');
-  notifySyncingState(true);
-  try {
-    await performMergeSync({ dbName, onSyncComplete, ...hooks });
-  } finally {
-    notifySyncingState(false);
-  }
+  console.log('[AutoSync] Page-load remote check');
+  await checkRemoteForUpdates(dbName);
 }

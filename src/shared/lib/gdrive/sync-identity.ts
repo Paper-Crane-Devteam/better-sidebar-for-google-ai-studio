@@ -43,8 +43,14 @@ export function scopedSyncFileName(dbName: string, accountId: string): string {
 export interface SyncTarget {
   /** Name to read from and write to */
   fileName: string;
-  /** Existing Drive file, or null if it doesn't exist yet */
-  file: { id: string; name: string } | null;
+  /**
+   * Existing Drive file, or null if it doesn't exist yet.
+   *
+   * `modifiedTime` is what conflict detection compares against: a value
+   * differing from the one recorded at our last sync means another device wrote
+   * the file in between.
+   */
+  file: { id: string; name: string; modifiedTime: string } | null;
   /**
    * File content, when resolving already had to download it. Lets the caller
    * skip a second round trip for the same bytes.

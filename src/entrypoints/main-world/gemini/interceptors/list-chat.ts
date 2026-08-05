@@ -51,11 +51,15 @@ export function handleListChatResponse(response: any, url: string) {
                              // Example item: ["id","Title",null,null,null,[1770271826,895639000],...]
                              const id = chatItem?.[0];
                              const title = chatItem?.[1];
-                             let createdAtSeconds = null;
-                             
+                             // chatItem[5] is a [seconds, nanos] tuple holding the
+                             // LAST ACTIVE time, not the creation time. Gemini's list
+                             // endpoint does not expose a creation timestamp at all,
+                             // so never map this into `created_at` downstream.
+                             let lastActiveAtSeconds = null;
+
                              const timeArr = chatItem?.[5];
                              if (Array.isArray(timeArr) && timeArr.length > 0) {
-                                 createdAtSeconds = timeArr[0];
+                                 lastActiveAtSeconds = timeArr[0];
                              }
                              
                              if (id) {
@@ -72,7 +76,7 @@ export function handleListChatResponse(response: any, url: string) {
                                 items.push({
                                     id: id.replace(/^c_/, ''),
                                     title,
-                                    created_at: createdAtSeconds,
+                                    last_active_at: lastActiveAtSeconds,
                                     type,
                                     gem_id: gemId,
                                     notebook_id: notebookId,

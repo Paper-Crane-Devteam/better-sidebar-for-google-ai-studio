@@ -26,9 +26,12 @@ class AutoSyncHandler {
                     title: item.title,
                     external_id: item.id,
                     external_url: `https://aistudio.google.com/prompts/${item.id}`,
-                    created_at: item.created_at ?? Math.floor(Date.now() / 1000),
-                    updated_at: item.created_at ?? Math.floor(Date.now() / 1000),
-                    last_active_at: item.created_at ?? Math.floor(Date.now() / 1000),
+                    // ListPrompts only exposes a last-active timestamp.
+                    // `created_at` is intentionally omitted so the DB upsert's
+                    // COALESCE keeps any real creation time captured on the
+                    // create path.
+                    updated_at: item.last_active_at ?? Math.floor(Date.now() / 1000),
+                    last_active_at: item.last_active_at ?? Math.floor(Date.now() / 1000),
                     prompt_metadata: item.prompt_metadata,
                     type: item.type,
                 }));

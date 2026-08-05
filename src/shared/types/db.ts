@@ -22,7 +22,10 @@ export interface Conversation {
   platform: string; // 'aistudio' | 'gemini' | 'chatgpt' | 'claude'
   order_index: number;
   updated_at: number;
-  created_at: number;
+  // NULL when the platform's list API never exposed a real creation time.
+  // Only populated on paths that observe creation directly (create/generate
+  // interceptors). Consumers must fall back to last_active_at.
+  created_at: number | null;
   last_active_at: number; // business timestamp: last chat activity, rename, etc.
   prompt_metadata: any;
   deleted_at: number | null; // Unix timestamp in seconds, NULL = active (not deleted)

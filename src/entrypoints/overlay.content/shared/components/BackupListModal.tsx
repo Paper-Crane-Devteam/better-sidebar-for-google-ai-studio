@@ -19,15 +19,26 @@ interface BackupSlotInfo {
   id: string;
   createdAt: number;
   size: number;
-  /** Absent on slots created before snapshot reasons were recorded */
-  reason?: 'manual' | 'pre-sync' | 'pre-merge-delete' | 'pre-restore';
+  /**
+   * Absent on slots created before snapshot reasons were recorded.
+   * `pre-sync` and `pre-merge-delete` are legacy values written by versions
+   * that automated a bidirectional merge; they still exist in storage.
+   */
+  reason?:
+    | 'manual'
+    | 'routine'
+    | 'pre-restore'
+    | 'pre-sync'
+    | 'pre-merge-delete';
 }
 
 const REASON_LABEL_KEYS = {
   manual: 'backup.reasonManual',
+  routine: 'backup.reasonRoutine',
+  'pre-restore': 'backup.reasonPreRestore',
+  // Legacy reasons — kept so existing slots still render a label
   'pre-sync': 'backup.reasonPreSync',
   'pre-merge-delete': 'backup.reasonPreMergeDelete',
-  'pre-restore': 'backup.reasonPreRestore',
 } as const;
 
 /**

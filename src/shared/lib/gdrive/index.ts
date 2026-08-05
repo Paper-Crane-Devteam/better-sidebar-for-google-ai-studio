@@ -15,7 +15,6 @@ export {
   getAccountId,
 } from './gdrive-api';
 export { exportSyncData, importSyncData, SYNC_TABLES } from './sync-data';
-export { mergeSyncData } from './sync-merge';
 export {
   resolveSyncTarget,
   checkSyncOrigin,
@@ -23,14 +22,25 @@ export {
   scopedSyncFileName,
 } from './sync-identity';
 export {
-  performMergeSync,
+  performSyncUp,
+  recordSyncSuccess,
+  hasSyncConflict,
+  markSyncConflict,
+  markDirty,
+  checkRemoteForUpdates,
+  checkRemoteOnPageLoad,
   scheduleDebouncedSync,
   flushPendingSync,
   registerAutoSyncAlarm,
   handleAutoSyncAlarm,
   isAutoSyncing,
-  triggerSyncOnPageLoad,
   onSyncingChange,
+  syncTimeKey,
+  syncDirectionKey,
+  remoteMtimeKey,
+  conflictKey,
+  dirtyKey,
+  syncStorageKeys,
 } from './auto-sync';
 export {
   listBackups,
@@ -39,12 +49,11 @@ export {
   restoreBackup,
   pruneBackups,
   isBackupDue,
-  maybeCreatePreSyncBackup,
+  maybeCreateRoutineBackup,
   createSafetyBackup,
 } from './backup';
 export type { SyncPayload, SyncOrigin } from './sync-data';
-export type { MergeResult, MergeOptions } from './sync-merge';
 export type { SyncTarget, OriginCheck } from './sync-identity';
 export type { AuthStatus } from './google-auth';
-export type { AutoSyncOptions, AutoSyncHooks } from './auto-sync';
+export type { PushOptions, PushResult } from './auto-sync';
 export type { BackupSlot, BackupReason } from './backup';

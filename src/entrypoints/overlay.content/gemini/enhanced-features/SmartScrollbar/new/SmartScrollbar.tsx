@@ -63,7 +63,6 @@ export const SmartScrollbar: React.FC = () => {
       className={cn(
         'fixed right-4 top-1/2 -translate-y-1/2',
         'flex flex-col items-end',
-        'transition-all duration-300 ease-out',
       )}
       style={{ zIndex: Z_INDEX.SMART_SCROLLBAR }}
     >
@@ -73,7 +72,8 @@ export const SmartScrollbar: React.FC = () => {
           'border border-border/40 rounded-xl',
           'bg-background/80 backdrop-blur-xl',
           'shadow-lg shadow-black/5',
-          'transition-all duration-300 ease-out origin-right',
+          // Only the width animates; height snaps instantly
+          'transition-[width] duration-300 ease-out origin-right',
           'overflow-hidden',
           expanded ? 'w-[240px]' : 'w-8',
           isDisabled && 'opacity-40 pointer-events-none',
@@ -237,33 +237,42 @@ const OutlineItem: React.FC<OutlineItemProps> = ({
       ref={activeRef}
       onClick={() => node.inDom && scrollToNode(node.id)}
       className={cn(
-        'group flex items-start gap-2 px-3 py-1',
-        'transition-colors duration-150',
-        'rounded-md mx-1',
+        // Fixed row pitch: keeps the panel height independent of the
+        // animating width, so expanding doesn't reflow (no height flicker)
+        'group flex items-center h-8 shrink-0 mx-1',
         node.inDom ? 'cursor-pointer' : 'cursor-default opacity-50',
-        isActive
-          ? 'bg-primary/10 text-foreground'
-          : 'hover:bg-accent/60 text-muted-foreground hover:text-foreground',
       )}
     >
-      {/* Index indicator */}
-      <span
+      {/* Inner block is 28px tall, leaving 4px of breathing room inside
+          the 32px row without changing the overall list height */}
+      <div
         className={cn(
-          'shrink-0 text-[10px] font-medium mt-0.5 w-4 text-center rounded',
-          isActive ? 'text-primary' : 'text-muted-foreground/60',
+          'flex items-center gap-2 px-3 h-7 w-full min-w-0',
+          'rounded-md transition-colors duration-150',
+          isActive
+            ? 'bg-primary/10 text-foreground'
+            : 'group-hover:bg-accent/60 text-muted-foreground group-hover:text-foreground',
         )}
       >
-        {index + 1}
-      </span>
-      {/* Content preview — CSS truncation with line-clamp */}
-      <span
-        className={cn(
-          'text-xs leading-relaxed line-clamp-2 break-all min-w-0',
-          isActive && 'font-medium',
-        )}
-      >
-        {displayText}
-      </span>
+        {/* Index indicator */}
+        <span
+          className={cn(
+            'shrink-0 text-[10px] font-medium w-4 text-center rounded',
+            isActive ? 'text-primary' : 'text-muted-foreground/60',
+          )}
+        >
+          {index + 1}
+        </span>
+        {/* Content preview — single line, ellipsis on overflow */}
+        <span
+          className={cn(
+            'text-xs truncate min-w-0',
+            isActive && 'font-medium',
+          )}
+        >
+          {displayText}
+        </span>
+      </div>
     </div>
   );
 

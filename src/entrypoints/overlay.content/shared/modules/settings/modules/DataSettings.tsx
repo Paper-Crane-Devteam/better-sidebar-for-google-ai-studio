@@ -402,7 +402,31 @@ export const DataSettings = () => {
                   {t('data.import')}
                 </Button>
               </div>
-
+              {/* Backups */}
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <span className="text-sm font-medium">
+                    {t('backup.title')}
+                  </span>
+                  <p className="text-xs text-muted-foreground">
+                    {t('backup.description')}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() =>
+                    openBackupModal(
+                      activeProfile.dbName,
+                      activeProfile.name,
+                    )
+                  }
+                >
+                  <HardDrive className="h-4 w-4" />
+                  {t('backup.viewBackups')}
+                </Button>
+              </div>
               {/* Reset */}
               <div className="flex items-center justify-between mt-1 p-3 border rounded-md bg-destructive/5">
                 <div className="space-y-0.5">
@@ -429,31 +453,7 @@ export const DataSettings = () => {
                 </Button>
               </div>
 
-              {/* Backups */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <span className="text-sm font-medium">
-                    {t('backup.title')}
-                  </span>
-                  <p className="text-xs text-muted-foreground">
-                    {t('backup.description')}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() =>
-                    openBackupModal(
-                      activeProfile.dbName,
-                      activeProfile.name,
-                    )
-                  }
-                >
-                  <HardDrive className="h-4 w-4" />
-                  {t('backup.viewBackups')}
-                </Button>
-              </div>
+   
             </div>
           </div>
         )}

@@ -3,6 +3,11 @@ import type { ExtensionMessage, ExtensionResponse } from '@/shared/types/message
 import type { MessageSender } from '../types';
 import { notifyDataUpdated } from '../notify';
 import { getCurrentDbName } from '../tab-profile-map';
+import {
+  markSyncConflict,
+  syncTimeKey,
+  syncDirectionKey,
+} from '@/shared/lib/gdrive';
 
 const CHUNK_SIZE = 8 * 1024 * 1024; // 8MB
 
@@ -24,15 +29,20 @@ export async function handleDbAdmin(
         await dbAdmin.resetDatabase();
         await notifyDataUpdated();
 
-        // Clear sync timestamps so next merge treats everything as first-ever
-        // sync (lastSyncTime = 0 disables the deletion phase entirely, which is
-        // what we want right after wiping the DB — otherwise the next merge
-        // would read the reset as "everything was deleted" and propagate it).
+        // Freeze automatic uploads. The local DB is now empty while the remote
+        // file still holds the old data, and an automatic push would overwrite
+        // it — wiping local data is not the same request as wiping the backup.
+        // The user resolves it explicitly: upload to make the reset global, or
+        // download to restore from the remote copy.
+        //
+        // The recorded remote modifiedTime is deliberately kept, so the choice
+        // stays available even if the flag is cleared.
         const dbName = getCurrentDbName();
         if (dbName) {
+          await markSyncConflict(dbName);
           await browser.storage.local.remove([
-            `gdrive_last_sync_time__${dbName}`,
-            `gdrive_last_sync_dir__${dbName}`,
+            syncTimeKey(dbName),
+            syncDirectionKey(dbName),
           ]);
         }
 

@@ -15,7 +15,10 @@ export function handleLibraryResponse(response: any) {
         .map((item: any) => {
           const promptPath = item[0];
           const id = promptPath?.split('/')?.pop();
-          let createdAtSeconds = null;
+          // item[4][4][0] holds the LAST ACTIVE time, not the creation time.
+          // ListPrompts does not expose a creation timestamp, so this must never
+          // be mapped into `created_at` downstream.
+          let lastActiveAtSeconds = null;
           let promptMetadata = null;
           let type = 'conversation';
           let title = null;
@@ -31,7 +34,7 @@ export function handleLibraryResponse(response: any) {
               const metaArray = item[4][4];
               const secondsStr = metaArray[0];
               if (secondsStr) {
-                createdAtSeconds = parseInt(secondsStr, 10);
+                lastActiveAtSeconds = parseInt(secondsStr, 10);
               }
               if (metaArray.length > 1) {
                 promptMetadata = metaArray[1];
@@ -44,7 +47,7 @@ export function handleLibraryResponse(response: any) {
           return {
             id,
             title,
-            created_at: createdAtSeconds,
+            last_active_at: lastActiveAtSeconds,
             prompt_metadata: promptMetadata,
             type,
           };

@@ -106,9 +106,11 @@ async function processAndSendItems() {
         title: item.title || i18n.t('common.untitled'),
         external_id: item.id,
         external_url: `https://gemini.google.com/app/${item.id}`,
-        updated_at: item.created_at ?? Math.floor(Date.now() / 1000),
-        last_active_at: item.created_at ?? Math.floor(Date.now() / 1000),
-        created_at: item.created_at,
+        // The list endpoint only exposes a last-active timestamp (already in
+        // seconds). `created_at` is intentionally omitted so the DB upsert's
+        // COALESCE keeps any real creation time captured on the create path.
+        updated_at: item.last_active_at ?? Math.floor(Date.now() / 1000),
+        last_active_at: item.last_active_at ?? Math.floor(Date.now() / 1000),
         platform: Platform.GEMINI,
         type: item.type || 'conversation',
         gem_id: item.gem_id || null,

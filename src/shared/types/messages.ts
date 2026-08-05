@@ -408,7 +408,6 @@ export type ExtensionMessage = (
   | { type: 'GDRIVE_GET_STATUS' }
   | { type: 'GDRIVE_SYNC_UP' }
   | { type: 'GDRIVE_SYNC_DOWN' }
-  | { type: 'GDRIVE_MERGE' }
   | { type: 'GDRIVE_CHECK_SUPPORT' }
   // Backup (save slots)
   | { type: 'BACKUP_LIST'; payload: { dbName: string } }

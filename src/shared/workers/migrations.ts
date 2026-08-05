@@ -25,6 +25,14 @@ export const runMigrations = async (db: any) => {
 
   try {
 
+    // These early migrations predate the `step` wrapper and ran bare inside the
+    // outer try, so a single failure jumped straight to the catch and silently
+    // skipped every migration below — including the ones that add `is_pinned`.
+    // That is how two profiles in the same install end up with different
+    // columns, which then breaks restoring a backup from one into the other.
+    // Wrapping them contains a failure to this group.
+    await step('legacy column migrations', async () => {
+
     // Migration: Add order_index to messages if missing
     if (!(await hasColumn('messages', 'order_index'))) {
       console.log('Worker: Migrating messages table - adding order_index');
@@ -138,6 +146,7 @@ export const runMigrations = async (db: any) => {
           description TEXT,
           platform TEXT DEFAULT 'gemini',
           order_index INTEGER DEFAULT 0,
+          is_pinned INTEGER DEFAULT 0,
           is_deleted INTEGER DEFAULT 0,
           created_at INTEGER DEFAULT (unixepoch()),
           updated_at INTEGER DEFAULT (unixepoch())
@@ -155,6 +164,8 @@ export const runMigrations = async (db: any) => {
         'ALTER TABLE gems ADD COLUMN is_deleted INTEGER DEFAULT 0',
       );
     }
+
+    }); // end legacy column migrations
 
     // Migration: Add notebook_id to conversations if missing
     await step('add notebook_id to conversations', async () => {
@@ -184,6 +195,7 @@ export const runMigrations = async (db: any) => {
             description TEXT,
             platform TEXT DEFAULT 'gemini',
             order_index INTEGER DEFAULT 0,
+            is_pinned INTEGER DEFAULT 0,
             is_deleted INTEGER DEFAULT 0,
             created_at INTEGER DEFAULT (unixepoch()),
             updated_at INTEGER DEFAULT (unixepoch())
@@ -194,6 +206,11 @@ export const runMigrations = async (db: any) => {
         );
       }
     });
+
+    // Same reasoning as the group above: these ran bare, and because they sit
+    // ahead of the `is_pinned` migrations, a failure here was enough to leave a
+    // profile without those columns.
+    await step('timestamp column migrations', async () => {
 
     // Migration: Add updated_at to favorites if missing
     if (!(await hasColumn('favorites', 'updated_at'))) {
@@ -234,6 +251,8 @@ export const runMigrations = async (db: any) => {
       // Backfill from existing updated_at (which previously held the business timestamp)
       await db.run('UPDATE conversations SET last_active_at = COALESCE(updated_at, unixepoch())');
     }
+
+    }); // end timestamp column migrations
 
     // Migration: Add description to conversations if missing
     await step('add description to conversations', async () => {

@@ -16,7 +16,6 @@ import {
   setActiveTabId,
 } from './tab-profile-map';
 import { notifyDataUpdated } from './notify';
-import { syncBackupHooks } from './handlers/gdrive-sync';
 
 console.log(
   'Better Sidebar for Gemini & AI Studio: Background Service Worker Starting...',
@@ -63,10 +62,10 @@ export default defineBackground(() => {
   );
 
   // Track active tab for auto-sync profile resolution.
-  // When switching tabs, flush any pending debounced sync first
+  // When switching tabs, flush any pending debounced upload first
   // so it runs against the OLD tab's profile before we switch.
   browser.tabs.onActivated.addListener((activeInfo) => {
-    flushPendingSync(() => notifyDataUpdated(), syncBackupHooks).then(() => {
+    flushPendingSync(() => notifyDataUpdated()).then(() => {
       setActiveTabId(activeInfo.tabId);
     });
   });
@@ -90,12 +89,7 @@ export default defineBackground(() => {
         console.log('[Background] Auto-sync disabled, skipping alarm');
         return;
       }
-      handleAutoSyncAlarm(
-        alarm,
-        getActiveDbName,
-        () => notifyDataUpdated(),
-        syncBackupHooks,
-      );
+      handleAutoSyncAlarm(alarm, getActiveDbName, () => notifyDataUpdated());
     });
   });
 });

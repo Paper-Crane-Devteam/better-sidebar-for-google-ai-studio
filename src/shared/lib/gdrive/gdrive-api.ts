@@ -82,13 +82,20 @@ export async function uploadFile(
     `--${boundary}--`,
   ].join('\r\n');
 
+  // `modifiedTime` is not in Drive's default response fields, and callers rely
+  // on the post-upload value as the baseline for conflict detection.
+  const params = {
+    uploadType: 'multipart',
+    fields: 'id, name, modifiedTime, size',
+  };
+
   if (existingFileId) {
     // Update existing file
     const res = await client.patch(
       `${DRIVE_UPLOAD_BASE}/files/${existingFileId}`,
       multipartBody,
       {
-        params: { uploadType: 'multipart' },
+        params,
         headers: {
           'Content-Type': `multipart/related; boundary=${boundary}`,
         },
@@ -98,7 +105,7 @@ export async function uploadFile(
   } else {
     // Create new file
     const res = await client.post(`${DRIVE_UPLOAD_BASE}/files`, multipartBody, {
-      params: { uploadType: 'multipart' },
+      params,
       headers: {
         'Content-Type': `multipart/related; boundary=${boundary}`,
       },
