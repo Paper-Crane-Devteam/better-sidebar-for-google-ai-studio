@@ -807,7 +807,10 @@
     "dismiss": "dismiss",
     "fillVariables": "Fill Variables",
     "insert": "Insert",
-    "promptInserted": "Prompt inserted"
+    "promptInserted": "Prompt inserted",
+    "emptyLibrary": "No prompts yet",
+    "emptyLibraryDesc": "Create prompts in your library to use them here",
+    "goToPrompts": "Open Prompt Library"
   },
   "filterBar": {
     "all": "All"

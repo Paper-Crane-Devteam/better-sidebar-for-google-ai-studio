@@ -827,7 +827,10 @@
     "dismiss": "閉じる",
     "fillVariables": "変数を入力",
     "insert": "挿入",
-    "promptInserted": "プロンプトを挿入しました"
+    "promptInserted": "プロンプトを挿入しました",
+    "emptyLibrary": "プロンプトがありません",
+    "emptyLibraryDesc": "ライブラリでプロンプトを作成すると、ここで使用できます",
+    "goToPrompts": "プロンプトライブラリを開く"
   },
   "filterBar": {
     "all": "すべて"

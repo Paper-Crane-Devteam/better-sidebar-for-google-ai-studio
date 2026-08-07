@@ -827,7 +827,10 @@
     "dismiss": "закрыть",
     "fillVariables": "Заполнить переменные",
     "insert": "Вставить",
-    "promptInserted": "Промпт вставлен"
+    "promptInserted": "Промпт вставлен",
+    "emptyLibrary": "Промптов пока нет",
+    "emptyLibraryDesc": "Создайте промпты в библиотеке, чтобы использовать их здесь",
+    "goToPrompts": "Открыть библиотеку промптов"
   },
   "filterBar": {
     "all": "Все"

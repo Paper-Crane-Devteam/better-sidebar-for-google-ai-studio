@@ -15,7 +15,7 @@ import {
   PlatformEnabledState,
 } from '@/shared/lib/platform-enabled-store';
 import { cn } from '@/shared/lib/utils/utils';
-import { SlidersHorizontal, Settings2, Globe2, Bot } from 'lucide-react';
+import { SlidersHorizontal, Settings2, Globe2 } from 'lucide-react';
 import { browser } from 'wxt/browser';
 import { themeRegistry, refreshThemeRegistry } from '@/themes';
 
@@ -192,8 +192,8 @@ const Options = () => {
                 activeTab === 'aistudio' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted"
               )}
             >
-              <Bot className="w-4 h-4" />
-              AI Studio
+              <Settings2 className="w-4 h-4" />
+              {t('aistudioUI.title')}
             </button>
           )}
         </div>

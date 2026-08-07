@@ -23,6 +23,25 @@ export const runMigrations = async (db: any) => {
     }
   };
 
+  // Helper: ensure the _migrations metadata table exists and check/mark one-time migrations.
+  const ensureMigrationsTable = async () => {
+    await db.run(`
+      CREATE TABLE IF NOT EXISTS _migrations (
+        key TEXT PRIMARY KEY,
+        executed_at INTEGER DEFAULT (unixepoch())
+      )
+    `);
+  };
+
+  const hasMigrationRun = async (key: string): Promise<boolean> => {
+    const rows = await db.run('SELECT 1 FROM _migrations WHERE key = ?', [key]);
+    return rows.length > 0;
+  };
+
+  const markMigrationDone = async (key: string) => {
+    await db.run('INSERT OR IGNORE INTO _migrations (key) VALUES (?)', [key]);
+  };
+
   try {
 
     // These early migrations predate the `step` wrapper and ran bare inside the
@@ -461,6 +480,45 @@ export const runMigrations = async (db: any) => {
         await db.run('DELETE FROM snippet_folders WHERE id = ?', [folder.id]);
         console.log(`Worker: Migrated legacy snippet inbox ${folder.id} to ${snippetInboxId}`);
       }
+    });
+
+    // ── One-time data fix (v2.9.0): fix conversation created_at from first message ──
+    // A previous bug caused conversations.created_at to be incorrect.
+    // For existing users: set created_at = first message's timestamp (MIN(timestamp)).
+    // For conversations without messages: set created_at = NULL.
+    // New installs won't have the _migrations table row, but also won't have
+    // any data, so the UPDATE is a no-op either way.
+    await step('fix conversation created_at from first message (v2.9.0)', async () => {
+      await ensureMigrationsTable();
+
+      if (await hasMigrationRun('fix_conversation_created_at_v2.9.0')) return;
+
+      console.log('Worker: Running one-time fix for conversation created_at...');
+
+      // Set created_at to the earliest message timestamp for conversations that have messages
+      await db.run(`
+        UPDATE conversations
+        SET created_at = (
+          SELECT MIN(m.timestamp)
+          FROM messages m
+          WHERE m.conversation_id = conversations.id
+        )
+        WHERE EXISTS (
+          SELECT 1 FROM messages m WHERE m.conversation_id = conversations.id
+        )
+      `);
+
+      // Set created_at to NULL for conversations without any messages
+      await db.run(`
+        UPDATE conversations
+        SET created_at = NULL
+        WHERE NOT EXISTS (
+          SELECT 1 FROM messages m WHERE m.conversation_id = conversations.id
+        )
+      `);
+
+      await markMigrationDone('fix_conversation_created_at_v2.9.0');
+      console.log('Worker: Conversation created_at fix completed.');
     });
 
   } catch (err) {

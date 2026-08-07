@@ -827,7 +827,10 @@
     "dismiss": "fechar",
     "fillVariables": "Preencher Variáveis",
     "insert": "Inserir",
-    "promptInserted": "Prompt inserido"
+    "promptInserted": "Prompt inserido",
+    "emptyLibrary": "Nenhum prompt ainda",
+    "emptyLibraryDesc": "Crie prompts na sua biblioteca para usá-los aqui",
+    "goToPrompts": "Abrir Biblioteca de Prompts"
   },
   "filterBar": {
     "all": "Todos"

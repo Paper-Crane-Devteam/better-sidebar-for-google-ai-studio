@@ -826,7 +826,10 @@
     "dismiss": "关闭",
     "fillVariables": "填写变量",
     "insert": "插入",
-    "promptInserted": "提示词已插入"
+    "promptInserted": "提示词已插入",
+    "emptyLibrary": "暂无提示词",
+    "emptyLibraryDesc": "在提示词库中创建提示词即可在此使用",
+    "goToPrompts": "打开提示词库"
   },
   "filterBar": {
     "all": "全部"

@@ -1,5 +1,6 @@
 import { AutoHideInputFeature } from './AutoHideInputFeature';
 import { AutoHideRunSettingsFeature } from './AutoHideRunSettingsFeature';
+import { SlashCommandFeature } from './SlashCommandFeature';
 import { SaveSnippetFeature } from './SaveSnippetFeature';
 import { SnippetDragDrawer } from '@/entrypoints/overlay.content/shared/modules/snippets/components/SnippetDragFolderView';
 import { GlobalModal } from '@/shared/components/GlobalModal';
@@ -30,6 +31,7 @@ export const AIStudioEnhancedFeatures = () => {
     <>
       <AutoHideInputFeature />
       <AutoHideRunSettingsFeature />
+      <SlashCommandFeature />
       <SaveSnippetFeature />
       <SnippetDragDrawer />
       <SnippetReaderDrawer />

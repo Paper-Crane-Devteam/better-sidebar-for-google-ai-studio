@@ -92,7 +92,7 @@
     background-color: var(--popover-bg);
     border-radius: var(--popover-radius, var(--radius));
     box-shadow: var(--popover-shadow, 0 4px 12px rgba(0,0,0,0.08));
-    border: var(--popover-border, 1px solid rgb(var(--border)));
+    border: var(--popover-border, none);
   }
 
   /* Node Selection Styles */

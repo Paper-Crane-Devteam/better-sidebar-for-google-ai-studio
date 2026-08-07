@@ -119,6 +119,22 @@ export const AIStudioPlatformSettings = () => {
             />
           </div>
 
+          {/* Slash Commands */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-sm font-medium">
+                {t('aistudioUI.slashCommand')}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t('aistudioUI.slashCommandDesc')}
+              </p>
+            </div>
+            <Switch
+              checked={aistudioSettings.slashCommand ?? true}
+              onCheckedChange={(c) => setAIStudioFeature('slashCommand', c)}
+            />
+          </div>
+
           {/* Hotkey Helper */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">

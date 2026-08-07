@@ -183,10 +183,100 @@ export const usePegasusStore = create<PegasusState>()((set) => ({
 
 export const STORE_NAME = 'pegasusGlobalStore';
 
-export const initPegasusBackendStore = () =>
-  initPegasusZustandStoreBackend(STORE_NAME, usePegasusStore, {
+/**
+ * Default values for enhancedFeatures sub-objects.
+ * Used to backfill missing keys when store is rehydrated from storage
+ * (e.g. aistudio was added after a user already had gemini settings persisted).
+ */
+const DEFAULT_ENHANCED_FEATURES: PegasusState['enhancedFeatures'] = {
+  gemini: {
+    defaultModel: 'default',
+    sidebarWidth: 360,
+    chatWidth: 46,
+    inputWidth: 42,
+    hideBrand: false,
+    hideDisclaimer: false,
+    hideUpgrade: false,
+    showTopBarTag: true,
+    zenMode: false,
+    showSmartScrollbar: true,
+    autoHideInput: false,
+    showHotkeyHelper: true,
+    slashCommand: true,
+    removeWatermark: true,
+    tableAutoWidth: false,
+    selectionToolbar: {
+      enabled: true,
+      reference: true,
+      explain: true,
+      saveAsSnippet: true,
+      summarize: false,
+      copy: true,
+      saveAsPrompt: true,
+    },
+  },
+  aistudio: {
+    sidebarWidth: 320,
+    autoHideInput: false,
+    autoHideRunSettings: false,
+    showHotkeyHelper: true,
+    slashCommand: true,
+  },
+};
+
+/**
+ * Ensures enhancedFeatures has all expected platform sub-objects after rehydration.
+ * `@webext-pegasus/store-zustand` uses shallow setState which can lose nested defaults
+ * if the persisted state was created before a new platform key was introduced.
+ */
+function ensureEnhancedFeaturesDefaults() {
+  const state = usePegasusStore.getState();
+  const ef = state.enhancedFeatures;
+  let patched = false;
+  const updated = { ...ef };
+
+  for (const [key, defaults] of Object.entries(DEFAULT_ENHANCED_FEATURES)) {
+    const k = key as keyof typeof DEFAULT_ENHANCED_FEATURES;
+    const persisted = updated[k];
+
+    // Whole platform object missing — take defaults wholesale
+    if (!persisted) {
+      updated[k] = defaults as any;
+      patched = true;
+      continue;
+    }
+
+    // Platform object exists but may predate newly added feature keys.
+    // Backfill only the missing ones so user choices are preserved.
+    const merged = { ...(defaults as any) };
+    let platformPatched = false;
+    for (const featureKey of Object.keys(defaults as any)) {
+      if ((persisted as any)[featureKey] === undefined) {
+        platformPatched = true;
+      } else {
+        merged[featureKey] = (persisted as any)[featureKey];
+      }
+    }
+
+    if (platformPatched) {
+      updated[k] = merged;
+      patched = true;
+    }
+  }
+
+  if (patched) {
+    usePegasusStore.setState({ enhancedFeatures: updated });
+  }
+}
+
+export const initPegasusBackendStore = async () => {
+  await initPegasusZustandStoreBackend(STORE_NAME, usePegasusStore, {
     storageStrategy: 'local',
   });
+  ensureEnhancedFeaturesDefaults();
+};
 
-export const getPegasusStoreReady = () =>
-  pegasusZustandStoreReady(STORE_NAME, usePegasusStore);
+export const getPegasusStoreReady = async () => {
+  await pegasusZustandStoreReady(STORE_NAME, usePegasusStore);
+  ensureEnhancedFeaturesDefaults();
+};
