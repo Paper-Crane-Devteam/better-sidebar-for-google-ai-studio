@@ -245,32 +245,52 @@ export function appendCapsule(
 }
 
 /**
- * Insert multiple capsules into a cleared editor.
+ * Select the editor's whole content so the next execCommand replaces it.
+ *
+ * Deliberately not `innerHTML = ''`: wiping the DOM leaves Quill without its
+ * block structure, and a following `execCommand('insertText')` into that empty
+ * shell silently no-ops in some builds — which left the composer empty, and an
+ * empty composer means Gemini never renders the send button at all.
+ */
+function selectAllContent(editor: HTMLElement): void {
+  editor.focus();
+  const sel = window.getSelection();
+  if (!sel) return;
+  const range = document.createRange();
+  range.selectNodeContents(editor);
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+/**
+ * Replace the editor content with a set of capsules.
  * Uses execCommand('insertText') for all texts at once, then wraps each in rAF.
  *
  * @param editor - The Quill editor element
  * @param capsules - Array of { displayText, attrs }
- * @returns Promise that resolves once all capsule DOMs are created
+ * @returns Promise that resolves once the capsule DOMs are created
  */
 export function insertMultipleCapsules(
   editor: HTMLElement,
   capsules: Array<{ displayText: string; attrs: CapsuleAttrs }>,
 ): Promise<Array<HTMLElement | null>> {
-  clearEditor(editor);
-
-  // Place cursor
-  const sel = window.getSelection();
-  if (sel) {
-    const range = document.createRange();
-    range.selectNodeContents(editor);
-    range.collapse(true);
-    sel.removeAllRanges();
-    sel.addRange(range);
-  }
+  selectAllContent(editor);
 
   // Insert all texts separated by nbsp
   const fullText = capsules.map((c) => c.displayText).join('\u00A0') + '\u00A0';
-  document.execCommand('insertText', false, fullText);
+  const inserted = document.execCommand('insertText', false, fullText);
+  const textAfter = editor.textContent || '';
+
+  if (!inserted || !textAfter.includes(capsules[0]?.displayText ?? '')) {
+    console.warn('[QuillEditor] insertText did not land in the editor', {
+      execCommandReturned: inserted,
+      documentHasFocus: document.hasFocus(),
+      activeElement: describeElement(document.activeElement),
+      editorIsActive: document.activeElement === editor,
+      editorTextLength: textAfter.length,
+      editorHTML: editor.innerHTML.slice(0, 200),
+    });
+  }
 
   // Wrap each in next frame
   return new Promise((resolve) => {
@@ -279,6 +299,13 @@ export function insertMultipleCapsules(
       for (const capsuleData of capsules) {
         const el = wrapTextInCapsule(editor, capsuleData.displayText, capsuleData.attrs);
         results.push(el);
+      }
+      if (results.some((el) => el === null)) {
+        console.warn('[QuillEditor] Some capsules could not be wrapped', {
+          requested: capsules.length,
+          wrapped: results.filter(Boolean).length,
+          editorTextLength: (editor.textContent || '').length,
+        });
       }
       resolve(results);
     });
@@ -368,6 +395,10 @@ const SEND_DELAY_MAX_MS = 2000;
 const STOP_STATE_TIMEOUT_MS = 120000;
 /** Poll interval while waiting for the button to become a send button */
 const STOP_STATE_POLL_MS = 300;
+/** How long to wait for the send button to appear after content is staged */
+const SEND_BUTTON_WAIT_MS = 3000;
+/** Poll interval while waiting for the send button to appear */
+const SEND_BUTTON_POLL_MS = 100;
 
 /**
  * Gemini reuses one button for send and stop-generating. Which one it currently
@@ -378,6 +409,41 @@ export type SendButtonState = 'send' | 'stop' | 'unknown';
 
 const STOP_LABEL_RE = /stop|停止|停止生成|中止/i;
 const SEND_LABEL_RE = /send|发送|傳送/i;
+
+/** Short description of an element, for diagnostics. */
+function describeElement(el: Element | null): string | null {
+  if (!el) return null;
+  const id = el.id ? `#${el.id}` : '';
+  const cls = typeof el.className === 'string' && el.className ? `.${el.className.split(/\s+/).join('.')}` : '';
+  return `${el.tagName.toLowerCase()}${id}${cls}`;
+}
+
+/**
+ * Snapshot of the composer, logged when the send button cannot be found.
+ *
+ * The button is conditionally rendered: no content in the composer means no send
+ * button, so "not found" is usually a staging failure rather than a selector
+ * problem. This tells the two apart.
+ */
+export function describeComposer(): Record<string, unknown> {
+  const editor = getEditor();
+  const container = document.querySelector('.send-button-container');
+  return {
+    editorFound: !!editor,
+    editorTextLength: editor?.textContent?.length ?? -1,
+    editorHTML: editor?.innerHTML.slice(0, 200) ?? null,
+    resultCapsules: editor?.querySelectorAll(`.${RESULT_CAPSULE_CLASS}`).length ?? -1,
+    hasTextInputField: !!document.querySelector('.text-input-field'),
+    hasSendButtonContainer: !!container,
+    sendButtonContainerHTML: container?.outerHTML.slice(0, 400) ?? null,
+    gemIconButtons: Array.from(document.querySelectorAll('.text-input-field gem-icon-button')).map(
+      (el) => describeElement(el),
+    ),
+    matIcons: Array.from(document.querySelectorAll('.text-input-field mat-icon')).map(
+      (el) => el.getAttribute('fonticon') || el.getAttribute('data-mat-icon-name') || el.textContent?.trim(),
+    ),
+  };
+}
 
 /** Locate the send/stop button, trying the specific selector then fallbacks. */
 export function findSendButton(): HTMLButtonElement | null {
@@ -448,6 +514,25 @@ function randomSendDelay(): number {
 }
 
 /**
+ * Wait for the send button to exist.
+ *
+ * Gemini only renders it once the composer has content, and Angular needs a few
+ * frames to notice a programmatic insert, so a single synchronous lookup right
+ * after staging can miss a button that shows up milliseconds later.
+ */
+export async function waitForSendButton(
+  timeoutMs = SEND_BUTTON_WAIT_MS,
+): Promise<HTMLButtonElement | null> {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const btn = findSendButton();
+    if (btn) return btn;
+    if (Date.now() >= deadline) return null;
+    await new Promise((r) => setTimeout(r, SEND_BUTTON_POLL_MS));
+  }
+}
+
+/**
  * Wait until the button is no longer a stop button.
  * Returns false if it stayed in stop state until the timeout.
  */
@@ -487,6 +572,23 @@ export async function triggerSend(options: TriggerSendOptions = {}): Promise<boo
 
   await new Promise((r) => setTimeout(r, 150));
 
+  // The button is conditionally rendered on composer content, so wait for it
+  // before anything else — every later guard needs it to exist.
+  let button = await waitForSendButton();
+  if (!button) {
+    const editor = getEditor();
+    if (editor && (editor.textContent || '').trim()) {
+      // Content is there but Angular never reacted to it: nudge it and retry.
+      console.warn('[QuillEditor] Send button missing while composer has content, nudging');
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
+      button = await waitForSendButton(1000);
+    }
+  }
+  if (!button) {
+    console.warn('[QuillEditor] Could not find send button', describeComposer());
+    return false;
+  }
+
   if (!(await waitForSendState())) {
     console.warn('[QuillEditor] Send button stuck in stop state, not clicking');
     return false;
@@ -498,9 +600,9 @@ export async function triggerSend(options: TriggerSendOptions = {}): Promise<boo
 
   // Re-resolve and re-check: the delay above is long enough for Gemini to swap
   // the button back into stop state (e.g. the user sent something meanwhile).
-  const btn = findSendButton();
-  if (!btn) {
-    console.warn('[QuillEditor] Could not find send button');
+  const btn = findSendButton() ?? button;
+  if (!btn.isConnected) {
+    console.warn('[QuillEditor] Send button detached before click', describeComposer());
     return false;
   }
   if (getSendButtonState(btn) === 'stop') {

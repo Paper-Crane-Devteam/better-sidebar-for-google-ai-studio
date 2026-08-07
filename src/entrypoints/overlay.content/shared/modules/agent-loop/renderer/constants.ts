@@ -28,9 +28,9 @@ export function extractPromptId(text: string): string | null {
 
 /**
  * The tool call tag name used in AI responses.
- * Must match ToolCallParser's TOOL_TAG constant.
+ * Re-exported from the parser so the two can't drift apart.
  */
-export const TOOL_CALL_TAG = 'bs_agent_tool';
+export { TOOL_TAG as TOOL_CALL_TAG } from '../engine/parser/tool-schema';
 
 /**
  * The result tag name used in user messages when sending tool results back.

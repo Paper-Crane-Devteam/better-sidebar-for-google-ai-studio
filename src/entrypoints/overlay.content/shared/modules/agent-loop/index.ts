@@ -22,11 +22,21 @@ export { agentEventBus } from './event-bus';
 export type { AgentEventMap } from './event-bus';
 
 // Engine
-export { AgentLoopEngine } from './engine/AgentLoopEngine';
-export { setActiveEngine, getActiveEngine, clearActiveEngine } from './engine/engine-registry';
-export { parseToolCalls } from './engine/ToolCallParser';
-export { CircuitBreaker } from './engine/circuit-breaker';
-export type { CircuitBreakerState, LoopCheckResult, FailureCheckResult, NoProgressResult } from './engine/circuit-breaker';
+export {
+  AgentLoopEngine,
+  setActiveEngine,
+  getActiveEngine,
+  clearActiveEngine,
+  parseToolCalls,
+  TOOL_TAG,
+  CircuitBreaker,
+} from './engine';
+export type {
+  CircuitBreakerState,
+  LoopCheckResult,
+  FailureCheckResult,
+  NoProgressResult,
+} from './engine';
 
 // Tools
 export { executeToolCall } from './tools/tool-registry';
@@ -84,7 +94,6 @@ export type { ConfirmationStrategy } from './execution-policy';
 
 // Renderer
 export { ConversationOverlay, ConversationViewSwitcher, injectRendererStyles, buildPromptMarker } from './renderer';
-export { TOOL_TAG } from './engine/ToolCallParser';
 
 // ─── New Architecture: Soul + Skill + MCP ────────────────────────────────────
 

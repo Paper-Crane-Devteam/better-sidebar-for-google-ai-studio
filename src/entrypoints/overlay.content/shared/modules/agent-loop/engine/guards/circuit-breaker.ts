@@ -15,7 +15,7 @@
  * Inspired by Cline's loop-detection.ts and TaskState patterns.
  */
 
-import { agentEventBus } from '../event-bus';
+import { agentEventBus } from '../../event-bus';
 
 // ─── Thresholds ──────────────────────────────────────────────────────────────
 

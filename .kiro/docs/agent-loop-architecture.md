@@ -37,10 +37,26 @@ src/entrypoints/overlay.content/shared/
 │   │   ├── AgentCommandPopup.tsx  # `>` 弹出选择列表
 │   │   ├── adapters/              # 平台适配（gemini-adapter 等）
 │   │   ├── engine/
-│   │   │   ├── AgentLoopEngine.ts # 核心循环
+│   │   │   ├── index.ts           # ★ 对外唯一出口，别深引 stages/context
+│   │   │   ├── AgentLoopEngine.ts # 状态机 + 生命周期（start/stop/resume/continueNow）
+│   │   │   ├── context.ts         # ★ LoopContext：store/事件/abort/熔断的门面
 │   │   │   ├── engine-registry.ts # ★ 模块级 engine handle（供 Agent Tab 控制）
-│   │   │   ├── ToolCallParser.ts
-│   │   │   └── circuit-breaker.ts
+│   │   │   ├── stages/            # 一轮的四个阶段，顺序即数据流
+│   │   │   │   ├── await-response.ts   # ① 等 AI 回复（超时 → pause）
+│   │   │   │   ├── parse-response.ts   # ② 解析 tool call / 决定 nudge
+│   │   │   │   ├── execute-tools.ts    # ③ 执行 + 熔断 + 记账 + 终止信号
+│   │   │   │   └── handoff/            # ④ 结果回传（唯一碰 Quill DOM 的地方）
+│   │   │   │       ├── index.ts        #   ResultHandoff：staging → 等发送 → 成功/暂停
+│   │   │   │       ├── staging.ts      #   capsule 写入 + 落地校验 + 纯文本降级
+│   │   │   │       ├── formatter.ts    #   结果 markdown 拼装 / 切段（互为逆运算）
+│   │   │   │       └── send-watcher.ts #   观测「已发出」：MutationObserver + abort
+│   │   │   ├── guards/
+│   │   │   │   ├── circuit-breaker.ts  # 重复调用 / 连续失败 / 无进展
+│   │   │   │   └── abort.ts            # AbortToken + AbortError
+│   │   │   └── parser/
+│   │   │       ├── index.ts            # parseToolCalls
+│   │   │       ├── tool-schema.ts      # ★ SUPPORTED_TOOLS / REQUIRED_PARAMS
+│   │   │       └── fallbacks.ts        # Gemini 吞格式时的兜底解析
 │   │   ├── renderer/              # 聊天流内的定制渲染 + 工具卡片
 │   │   ├── prompts/               # soul.ts + prompt-assembler.ts
 │   │   ├── skills/                # builtin-skills + skill-registry
@@ -99,26 +115,37 @@ composeAndSend():
 AgentLoopEngine.start(20, { conversationId, title })
   setActiveEngine(engine)   ← Agent Tab 由此拿到控制权
        ↓ ────────────────────────────────────────────────┐
+① stages/await-response.ts                                │
   status = waiting_ai                                     │
   adapter.observeAIResponseComplete(60s)                  │
-       ↓ AI 回复完成                                       │
+       ↓ AI 回复完成（超时 → pause + return）              │
+② stages/parse-response.ts                                │
   status = parsing → parseToolCalls()                     │
-       ↓                                                  │
   无 tool call  → circuitBreaker.recordNoToolResponse()   │
                   nudge（前 2 次）/ pause（第 3 次）        │
-  有 tool call  → status = executing，逐个执行             │
-                  写操作 → requiresConfirmation() → 确认   │
-                  complete_task → stop('complete')        │
+       ↓ 有 tool call                                      │
+③ stages/execute-tools.ts                                 │
+  status = executing，逐个执行                             │
+    熔断：重复调用 / 连续失败 → pauseAndEnd                 │
+    写操作 → requiresConfirmation() → 确认                 │
+    complete_task / PAYWALL → finish() + return           │
        ↓                                                  │
-  handoffResults()                                        │
-    await insertMultipleCapsules() 把结果写回编辑器          │
-    status = awaiting_send  ← 正常检查点，不是故障          │
-    autoContinue ? 引擎自己 triggerSend()                  │
-                 : 等用户 Enter / Tab 的「继续」            │
+④ stages/handoff/ — ResultHandoff.deliver()               │
+  stageResults() 把结果写回编辑器（capsule，失败降级纯文本） │
+  status = awaiting_send  ← 正常检查点，不是故障            │
+  autoContinue ? 引擎自己 triggerSend()                    │
+               : 等用户 Enter / Tab 的「继续」              │
        ↓                                                  │
-  waitForUserSend() → true → nextRound() ────────────────┘
-                    → false（没发出去 / 5min 超时）→ pause
+  waitForSend() → true → ctx.advanceRound() ─────────────┘
+                → false（没发出去 / 5min 超时）→ pause
 ```
+
+阶段之间只通过 `LoopContext` 通信；**任何自己已经 pause / finish 过的阶段都返回
+一个 stop 型结果**，循环见到就直接 return，不重复判断。
+
+`ResultHandoff` 是唯一有状态的阶段：它记着「已 staged 但还没确认发出」的 payload。
+`resume()` 靠这个决定是先补发上一轮结果还是直接进下一轮 —— 少了它，Retry 会去等一个
+根本没发出去的消息的回复，表现为卡到 60s 超时。
 
 ### 发送按钮：send 与 stop 是同一个按钮
 
@@ -334,7 +361,7 @@ store 是全局单例，所以 `start()` 会记下 `sessionConversationId`。
 
 1. `mcp/providers/` 下创建 provider（schema + execute）
 2. 挂到 `mcp/builtin-mcp.ts` 的 `tools` 数组
-3. `ToolCallParser.ts` 的 `SUPPORTED_TOOLS` + `REQUIRED_PARAMS` 注册
+3. `engine/parser/tool-schema.ts` 的 `SUPPORTED_TOOLS` + `REQUIRED_PARAMS` 注册
 
 Prompt 里的工具文档由 `mcp/schema-generator.ts` 自动生成，不用手写。
 
