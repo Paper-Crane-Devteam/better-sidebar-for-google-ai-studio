@@ -1,45 +1,47 @@
 /**
  * ToolCallWidget — one card per tool call detected in a model response.
  *
- * Two rules decide whether the Run button is offered, because the engine also
- * executes these same calls automatically:
+ * The card is where you approve. When the engine reaches a call that needs the
+ * user's go-ahead it parks and publishes the call's fingerprint; the matching card
+ * lights up with the buttons, and answering resolves the engine's wait.
  *
- * 1. Position — only the latest model response is actionable. Older turns are
- *    settled history; re-running them would act on stale intent.
- * 2. Identity — a call already executed (by the engine or by an earlier click)
- *    is marked as done. Writes are then locked for good; reads can be repeated
- *    on purpose, since re-reading is harmless.
+ * It used to be the other way round: this button ran the tool *itself*, appended the
+ * result to the composer, and left the user to send it — a second execution path
+ * alongside the engine's. Keeping the two from colliding required a ledger of
+ * executed fingerprints, a disabled state whenever the engine was busy, and there
+ * was still a check-then-act race, because the engine only claimed a fingerprint
+ * after finishing. One path removes all of it.
+ *
+ * Every other card is read-only: what the AI asked for, and what became of it.
  */
 
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState } from 'react';
 import { cn } from '@/shared/lib/utils';
 import {
   Settings,
   Play,
   Loader2,
-  AlertCircle,
   ChevronRight,
   ChevronDown,
   CheckCircle2,
-  Lock,
-  RotateCcw,
+  XCircle,
+  FastForward,
+  Ban,
 } from 'lucide-react';
 import type { ParsedToolCall } from '../../types';
 import { parseToolCallFromText, extractToolInfo } from '../helpers/tool-parser';
-import { executeToolCallFn, fillResultToEditor as defaultFillResult } from '../helpers/tool-executor';
 import { useAgentLoopStore } from '../../agent-loop-store';
-import { buildToolCallFingerprint, isWriteOperation } from '../../execution-policy';
+import { buildToolCallFingerprint } from '../../execution-policy';
+import { ENGINE_ONLY_TOOLS } from '../../engine';
 
 interface ToolCallWidgetProps {
   toolName?: string;
   description?: string;
   query?: string;
   rawText: string;
-  /** Only the newest model response may run tools manually */
+  /** Only the newest model turn can hold a call the engine is still waiting on */
   isLatestResponse?: boolean;
   parseToolCall?: (text: string) => ParsedToolCall | null;
-  executeToolCall?: (parsed: ParsedToolCall) => Promise<string>;
-  fillResultToEditor?: (toolName: string, result: string) => void;
 }
 
 export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
@@ -49,12 +51,10 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
   rawText,
   isLatestResponse = false,
   parseToolCall = parseToolCallFromText,
-  executeToolCall = executeToolCallFn,
-  fillResultToEditor = defaultFillResult,
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const [executing, setExecuting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [rejecting, setRejecting] = useState(false);
+  const [reason, setReason] = useState('');
 
   const info = extractToolInfo(rawText);
   const toolName = propToolName || info.toolName;
@@ -66,140 +66,129 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
     () => (parsed ? buildToolCallFingerprint(parsed) : null),
     [parsed],
   );
-  const isWrite = parsed ? isWriteOperation(parsed) : false;
 
   const executedCall = useAgentLoopStore((s) =>
     fingerprint ? s.executedCalls[fingerprint] : undefined,
   );
+  const pendingApproval = useAgentLoopStore((s) => s.pendingApproval);
+  const currentTool = useAgentLoopStore((s) => s.currentTool);
 
-  // While the engine is mid-flight it may be about to run this very call, and it
-  // only claims the fingerprint after finishing — so a click here could double
-  // fire. Manual runs are allowed only when the loop isn't driving.
-  const engineBusy = useAgentLoopStore((s) =>
-    ['waiting_ai', 'parsing', 'executing', 'sending'].includes(s.status),
-  );
+  // Loop-control tools never take an approval: `ask_user` is answered in its own
+  // panel, `complete_task` just ends the session.
+  const engineOnly = ENGINE_ONLY_TOOLS.includes(toolName);
+  const isPending =
+    !engineOnly &&
+    isLatestResponse &&
+    fingerprint !== null &&
+    pendingApproval?.fingerprint === fingerprint;
 
-  const alreadyRan = Boolean(executedCall);
-  // A finished write is final. Reads stay repeatable.
-  const locked = alreadyRan && isWrite;
-  const canRun = isLatestResponse && !locked && !executing && !engineBusy;
+  const running = !executedCall && currentTool === toolName && isLatestResponse;
 
-  const handleRun = useCallback(
-    async (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (!canRun) return;
-
-      setError(null);
-      setExecuting(true);
-
-      try {
-        if (!parsed) {
-          setError('解析失败');
-          setTimeout(() => setError(null), 1500);
-          return;
-        }
-
-        const result = await executeToolCall(parsed);
-        fillResultToEditor(parsed.description || parsed.name, result);
-      } catch (err) {
-        console.error('[ToolCallWidget] Execute error:', err);
-        setError('执行失败');
-        setTimeout(() => setError(null), 1500);
-      } finally {
-        setExecuting(false);
-      }
-    },
-    [canRun, parsed, executeToolCall, fillResultToEditor],
-  );
+  const decide = (approved: boolean, scope: 'once' | 'round' | 'task' = 'once') => {
+    if (!pendingApproval) return;
+    pendingApproval.resolve({
+      approved,
+      scope,
+      reason: approved ? undefined : reason.trim() || undefined,
+    });
+    setRejecting(false);
+    setReason('');
+  };
 
   const previewText = query ? (query.length > 80 ? query.slice(0, 80) + '…' : query) : '';
 
-  const renderAction = () => {
-    // History: no action, just whether it ran
-    if (!isLatestResponse) {
+  const renderStatus = () => {
+    if (engineOnly) {
       return (
-        <span
-          className="ml-auto inline-flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground"
-          title="历史消息中的工具调用不可执行"
-        >
-          {alreadyRan ? (
-            <>
-              <CheckCircle2 className="h-3 w-3 text-emerald-500" /> 已执行
-            </>
-          ) : (
-            '未执行'
-          )}
+        <span className="ml-auto shrink-0 px-2 py-1 text-xs text-muted-foreground">
+          {toolName === 'ask_user' ? '等待你的回答' : '任务结束'}
         </span>
       );
     }
 
-    if (executing) {
+    if (isPending) {
       return (
-        <span className="ml-auto inline-flex items-center gap-1 rounded border border-emerald-500/30 bg-emerald-500/20 px-2 py-1 text-xs font-medium text-emerald-700 opacity-60 dark:text-emerald-300">
-          <Loader2 className="h-3 w-3 animate-spin" /> 执行中...
+        <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded border border-amber-500/40 bg-amber-500/15 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
+          等待批准
         </span>
       );
     }
 
-    if (locked) {
+    if (running) {
+      return (
+        <span className="ml-auto inline-flex shrink-0 items-center gap-1 px-2 py-1 text-xs text-muted-foreground">
+          <Loader2 className="h-3 w-3 animate-spin" /> 执行中
+        </span>
+      );
+    }
+
+    if (!executedCall) {
+      return (
+        <span className="ml-auto shrink-0 px-2 py-1 text-xs text-muted-foreground">未执行</span>
+      );
+    }
+
+    if (executedCall.rejected) {
       return (
         <span
-          className="ml-auto inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/20 px-2 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-300"
-          title="写操作已执行，不能重复执行"
+          className="ml-auto inline-flex shrink-0 items-center gap-1 px-2 py-1 text-xs text-muted-foreground"
+          title="你拒绝了这个操作"
         >
-          <Lock className="h-3 w-3" /> 已执行
+          <Ban className="h-3 w-3" /> 已拒绝
         </span>
       );
     }
 
     return (
-      <button
-        type="button"
-        onClick={handleRun}
-        disabled={!canRun}
-        className={cn(
-          'ml-auto inline-flex cursor-pointer items-center gap-1 rounded border px-2 py-1 text-xs font-medium shadow-xs transition-all',
-          error
-            ? 'border-destructive/30 bg-destructive/15 text-destructive'
-            : 'border-emerald-500/30 bg-emerald-500/20 text-emerald-700 hover:bg-emerald-500/30 dark:text-emerald-300',
-          !canRun && 'cursor-not-allowed opacity-40 hover:bg-emerald-500/20',
-        )}
-        title={
-          engineBusy
-            ? 'Agent 正在执行，请稍候'
-            : alreadyRan
-              ? '该读操作已执行过，可再执行一次'
-              : '手动执行此工具调用'
-        }
-      >
-        {error ? (
+      <span className="ml-auto inline-flex shrink-0 items-center gap-1 px-2 py-1 text-xs text-muted-foreground">
+        {executedCall.success ? (
           <>
-            <AlertCircle className="h-3 w-3" /> {error}
-          </>
-        ) : alreadyRan ? (
-          <>
-            <RotateCcw className="h-3 w-3" /> 重新执行
+            <CheckCircle2 className="h-3 w-3 text-emerald-500" /> 已执行
           </>
         ) : (
           <>
-            <Play className="h-3 w-3" /> 执行
+            <XCircle className="h-3 w-3 text-destructive" /> 执行失败
           </>
         )}
-      </button>
+      </span>
     );
   };
 
   return (
-    <div className="my-2 overflow-hidden rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-foreground shadow-sm dark:bg-emerald-950/20">
+    <div
+      className={cn(
+        'my-2 overflow-hidden rounded-lg border text-foreground shadow-sm transition-colors',
+        isPending
+          ? 'border-amber-500/50 bg-amber-500/10 dark:bg-amber-950/20'
+          : 'border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-950/20',
+      )}
+    >
       {/* Header */}
       <div
-        className="flex cursor-pointer select-none items-center gap-2 px-3 py-2 text-xs transition-colors hover:bg-emerald-500/15"
+        className={cn(
+          'flex cursor-pointer select-none items-center gap-2 px-3 py-2 text-xs transition-colors',
+          isPending ? 'hover:bg-amber-500/15' : 'hover:bg-emerald-500/15',
+        )}
         onClick={() => setExpanded(!expanded)}
       >
-        <span className="flex h-5 w-5 items-center justify-center rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+        <span
+          className={cn(
+            'flex h-5 w-5 items-center justify-center rounded',
+            isPending
+              ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+              : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+          )}
+        >
           <Settings className="h-4 w-4" />
         </span>
-        <span className="font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+        <span
+          className={cn(
+            'font-mono text-xs font-semibold',
+            isPending
+              ? 'text-amber-700 dark:text-amber-300'
+              : 'text-emerald-700 dark:text-emerald-300',
+          )}
+        >
           {toolName}
         </span>
         {description && (
@@ -213,15 +202,90 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
           </span>
         )}
 
-        {renderAction()}
+        {renderStatus()}
 
         <span className="ml-1 text-muted-foreground">
           {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         </span>
       </div>
 
+      {/* Approval — the full text is shown unfolded, since you're being asked to
+          judge it and a collapsed preview isn't enough to judge anything. */}
+      {isPending && (
+        <div className="space-y-2 border-t border-amber-500/25 bg-background/60 px-3 py-2">
+          <pre className="max-h-[200px] overflow-auto whitespace-pre-wrap break-all font-mono text-xs text-foreground">
+            {query || rawText}
+          </pre>
+
+          {rejecting ? (
+            <div className="space-y-2">
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value.slice(0, 500))}
+                placeholder="哪里不对？（可留空）"
+                rows={2}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    decide(false);
+                  }
+                }}
+                className="w-full resize-none rounded-md border border-border/50 bg-background px-2 py-1
+                           text-xs text-foreground placeholder:text-muted-foreground
+                           focus:outline-none focus:ring-1 focus:ring-primary/50"
+              />
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRejecting(false)}
+                  className="rounded px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  返回
+                </button>
+                <button
+                  type="button"
+                  onClick={() => decide(false)}
+                  className="rounded border border-destructive/40 bg-destructive/15 px-2 py-1 text-xs font-medium text-destructive"
+                >
+                  拒绝
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => decide(true)}
+                className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/20 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-500/30 dark:text-emerald-300"
+              >
+                <Play className="h-3 w-3" /> 执行
+              </button>
+              {/* Only when there is actually a rest to approve */}
+              {(pendingApproval?.remaining ?? 0) > 0 && (
+                <button
+                  type="button"
+                  onClick={() => decide(true, 'round')}
+                  className="inline-flex items-center gap-1 rounded border border-border/60 px-2 py-1 text-xs text-foreground hover:bg-muted/60"
+                >
+                  <FastForward className="h-3 w-3" />
+                  本轮全部执行（还有 {pendingApproval?.remaining}）
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setRejecting(true)}
+                className="ml-auto rounded px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+              >
+                拒绝
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Body (collapsible) */}
-      {expanded && (
+      {expanded && !isPending && (
         <div className="max-h-[300px] overflow-y-auto border-t border-emerald-500/20 bg-background/50 px-3 py-2 font-mono text-xs whitespace-pre-wrap text-muted-foreground">
           {rawText}
         </div>

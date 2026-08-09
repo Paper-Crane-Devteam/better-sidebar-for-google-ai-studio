@@ -1093,14 +1093,16 @@
       "waiting_ai": "Thinking...",
       "parsing": "Reading response...",
       "executing": "Working...",
+      "awaiting_approval": "Waiting for your approval",
       "sending": "Sending...",
       "awaiting_send": "Waiting for you",
+      "awaiting_user": "Waiting for your answer",
       "paused": "Paused",
       "error": "Error"
     },
     "header": {
       "step": "Step {{count}}",
-      "speedHint": "Write operations are auto-approved for this task"
+      "speedHint": "Nothing will be asked about for the rest of this task"
     },
     "actions": {
       "stop": "Stop",
@@ -1117,16 +1119,33 @@
       "pausedTitle": "Loop paused"
     },
     "policy": {
-      "autoReads": "Run reads automatically",
-      "autoWrites": "Auto-approve writes",
-      "autoWritesHint": "This task only"
+      "autoReads": "Run queries without asking",
+      "autoWrites": "Change data without asking",
+      "autoWritesHint": "Changes cannot be undone yet",
+      "autoContinue": "Send results automatically",
+      "autoContinueHint": "Off means you press Enter each round",
+      "taskApproved": "Approving everything for this task — click to stop"
     },
-    "confirm": {
-      "title": "Confirm changes",
-      "showFull": "Show full query",
+    "ask": {
+      "title": "The agent needs your input",
+      "placeholder": "Type your answer...",
+      "placeholderOther": "Or answer in your own words...",
+      "send": "Answer",
+      "chatHint": "You can also just reply in the chat input.",
+      "stop": "Stop task"
+    },
+    "approve": {
+      "readTitle": "Approve this query?",
+      "writeTitle": "Approve this change?",
+      "followsPlan": "This carries out the plan you approved. Each change is still confirmed.",
+      "run": "Run",
+      "runRest_one": "Run this {{count}} too",
+      "runRest_other": "Run these {{count}} too",
+      "runRest": "Run these {{count}} too",
+      "allTask": "Don't ask again for this task",
       "reject": "Reject",
-      "approve": "Approve",
-      "approveAll": "Allow all in this task"
+      "back": "Back",
+      "reasonPlaceholder": "What's wrong with it? (optional)"
     },
     "instruction": {
       "placeholder": "Add a note for the AI...",
@@ -1137,6 +1156,7 @@
     },
     "summary": {
       "done": "Task finished",
+      "infeasible": "Couldn't be done",
       "paywall": "Upgrade required",
       "stopped": "Stopped",
       "maxRounds": "Step limit reached",

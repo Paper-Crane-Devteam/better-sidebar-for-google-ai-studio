@@ -147,6 +147,8 @@ function parseNodeToMarkdown(node: Node): string {
       const code = codeElement ? codeElement.textContent : '';
       return `\n\`\`\`${lang}\n${code}\n\`\`\`\n`;
     }
+    case 'HR':
+      return '\n\n---\n\n';
     case 'PRE':
     case 'CODE':
       return childrenMarkdown;

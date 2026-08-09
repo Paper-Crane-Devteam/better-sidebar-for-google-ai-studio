@@ -34,10 +34,20 @@ export const AgentSessionSummary: React.FC = () => {
   const isPaywall = endReason === 'paywall';
   const isClean = endReason === 'complete' && failed === 0;
 
+  const finalNote =
+    endReason === 'infeasible'
+      ? [...history]
+          .reverse()
+          .flatMap((h) => [...h.results].reverse())
+          .find((r) => r.toolName === 'complete_task')?.result
+      : null;
+
   const headline = (() => {
     switch (endReason) {
       case 'complete':
         return t('agent.summary.done', { defaultValue: 'Task finished' });
+      case 'infeasible':
+        return t('agent.summary.infeasible', { defaultValue: "Couldn't be done" });
       case 'paywall':
         return t('agent.summary.paywall', { defaultValue: 'Upgrade required' });
       case 'user_stop':
@@ -77,6 +87,12 @@ export const AgentSessionSummary: React.FC = () => {
         <p className="truncate text-xs text-muted-foreground" title={sessionTitle}>
           {sessionTitle}
         </p>
+      )}
+
+      {/* For a verdict of "can't be done", the reason *is* the outcome — a step
+          count tells the user nothing about what to do next. */}
+      {finalNote && (
+        <p className="text-xs leading-relaxed text-foreground">{finalNote}</p>
       )}
 
       {isPaywall ? (

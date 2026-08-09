@@ -28,9 +28,9 @@ src/entrypoints/overlay.content/shared/
 │   │   ├── index.ts               # Public API（barrel）
 │   │   ├── types.ts               # AgentLoopStatus / ToolCallResult / AgentEndReason
 │   │   ├── agent-loop-store.ts    # 运行时状态（非持久化）
-│   │   ├── agent-policy-store.ts  # 执行策略（持久化：autoExecuteReads）
+│   │   ├── agent-policy-store.ts  # 执行策略（持久化：autoRunReads / autoRunWrites / autoContinue）
 │   │   ├── agent-config-store.ts  # 用户自定义 skill / MCP 开关（持久化）
-│   │   ├── execution-policy.ts    # requiresConfirmation / token 估算
+│   │   ├── execution-policy.ts    # requiresApproval / getToolRisk / token 估算
 │   │   ├── agent-entry.ts         # ★ `>` 列表数据源：auto 条目 + skills
 │   │   ├── event-bus.ts           # 类型安全事件总线
 │   │   ├── useAgentTrigger.ts     # `>` 前缀检测
@@ -43,8 +43,10 @@ src/entrypoints/overlay.content/shared/
 │   │   │   ├── engine-registry.ts # ★ 模块级 engine handle（供 Agent Tab 控制）
 │   │   │   ├── stages/            # 一轮的四个阶段，顺序即数据流
 │   │   │   │   ├── await-response.ts   # ① 等 AI 回复（超时 → pause）
-│   │   │   │   ├── parse-response.ts   # ② 解析 tool call / 决定 nudge
+│   │   │   │   ├── parse-response.ts   # ② 解析 tool call / nudge / 散文提问兜底
 │   │   │   │   ├── execute-tools.ts    # ③ 执行 + 熔断 + 记账 + 终止信号
+│   │   │   │   ├── approval-gate.ts    # ★ awaiting_approval：等卡片/侧边栏放行
+│   │   │   │   ├── ask-user-gate.ts    # ★ awaiting_user：三路 race（Tab / 聊天框 / abort）
 │   │   │   │   └── handoff/            # ④ 结果回传（唯一碰 Quill DOM 的地方）
 │   │   │   │       ├── index.ts        #   ResultHandoff：staging → 等发送 → 成功/暂停
 │   │   │   │       ├── staging.ts      #   capsule 写入 + 落地校验 + 纯文本降级
@@ -61,7 +63,7 @@ src/entrypoints/overlay.content/shared/
 │   │   ├── prompts/               # soul.ts + prompt-assembler.ts
 │   │   ├── skills/                # builtin-skills + skill-registry
 │   │   ├── mcp/                   # MCP registry + providers（工具真正的注册处）
-│   │   └── tools/                 # execute-sql / export / sync / complete-task
+│   │   └── tools/                 # execute-sql / export / sync / ask-user / complete-task
 │   ├── agent-tab/                 # 侧边栏 Agent Tab（UI 层）
 │   │   ├── AgentTab.tsx           # 启动器 or 会话面板（按对话隔离）
 │   │   ├── useElapsedTime.ts
@@ -70,7 +72,8 @@ src/entrypoints/overlay.content/shared/
 │   │       ├── AgentStatusPanel.tsx       # 会话态容器
 │   │       ├── AgentStatusHeader.tsx      # 状态 / 步数 / 耗时 / Stop·Retry
 │   │       ├── AgentContinuePrompt.tsx    # awaiting_send 的「继续」CTA
-│   │       ├── AgentConfirmation.tsx      # 写操作确认（SQL 折叠）
+│   │       ├── AgentUserPrompt.tsx        # ★ awaiting_user：问题 + 选项 + 自由输入
+│   │       ├── AgentApproval.tsx          # ★ 批准的侧边栏镜像（卡片够不着时的退路）
 │   │       ├── AgentInterruptNotice.tsx   # 暂停 / 报错原因
 │   │       ├── AgentSessionSummary.tsx    # 结束卡（含 paywall upsell）
 │   │       ├── AgentExecutionHistory.tsx  # 步骤条（显示 AI 的 description）
@@ -122,13 +125,24 @@ AgentLoopEngine.start(20, { conversationId, title })
 ② stages/parse-response.ts                                │
   status = parsing → parseToolCalls()                     │
   无 tool call  → circuitBreaker.recordNoToolResponse()   │
-                  nudge（前 2 次）/ pause（第 3 次）        │
+                  nudge（第 1 次，文案含 ask_user 三选一）  │
+                  截断（未闭合标签）→ 专用 nudge            │
+                  第 2 次 → 散文当问题 → ask-user-gate     │
        ↓ 有 tool call                                      │
 ③ stages/execute-tools.ts                                 │
   status = executing，逐个执行                             │
     熔断：重复调用 / 连续失败 → pauseAndEnd                 │
-    写操作 → requiresConfirmation() → 确认                 │
+    requiresApproval() → approval-gate（卡片放行）          │
+      拒绝 → CANCELLED 段落（带理由）→ 下一个 call          │
+    ask_user → 跳过其后调用 → ask-user-gate                │
     complete_task / PAYWALL → finish() + return           │
+       ↓                                                  │
+③.5 stages/ask-user-gate.ts（仅当有问题时）                │
+  status = awaiting_user，三路 race：                      │
+    Tab 回答   → 答案进 ④ 的 payload                       │
+    聊天框回答 → 已送达，跳过 ④ 直接 advanceRound          │
+    abort     → return                                    │
+  grantBonusRound()：提问不占 maxRounds                    │
        ↓                                                  │
 ④ stages/handoff/ — ResultHandoff.deliver()               │
   stageResults() 把结果写回编辑器（capsule，失败降级纯文本） │
@@ -175,16 +189,53 @@ Gemini 用同一个按钮承担「发送」和「停止生成」，class 和 dis
 
 ### 状态语义（重要）
 
-`awaiting_send` 与 `paused` 必须分开，UI 依赖这个区分：
+两个"等用户"的状态都必须和 `paused` 分开，UI 依赖这个区分：
 
 | status | 含义 | Tab 呈现 |
 |--------|------|----------|
+| `awaiting_approval` | 某个 tool call 等你放行 | 卡片高亮 + 侧边栏镜像 |
 | `awaiting_send` | 每轮正常结束，结果已在输入框待发送 | 「继续」CTA |
+| `awaiting_user` | AI 调了 `ask_user`，等一个只有人能给的决策 | 问题 + 选项 + 自由输入 |
 | `paused` | 超时 / 断点 / 熔断 / 达上限 | 原因 + Retry / Dismiss |
 | `error` | 引擎异常 | 原因 + Retry / Dismiss |
 
-会话结束时 `endReason` 记录原因（`complete` / `user_stop` / `max_rounds` /
-`circuit_breaker` / `paywall`），`AgentSessionSummary` 据此决定显示完成卡还是升级引导。
+会话结束时 `endReason` 记录原因（`complete` / `infeasible` / `user_stop` /
+`max_rounds` / `circuit_breaker` / `paywall`），`AgentSessionSummary` 据此决定显示
+完成卡、"做不到"说明还是升级引导。
+
+### 一轮回复只有三种合法结尾
+
+| 结尾 | 工具 | 引擎行为 |
+|------|------|----------|
+| 继续干活 | 任意工具 | 执行 → 结果回传 |
+| 要用户决策 | `ask_user` | `awaiting_user`，本轮不回传直到拿到答案 |
+| 结束 | `complete_task`（`status`: success / partial / infeasible） | `finish()` |
+
+其余情况都是故障，由 nudge 兜。⚠️ 尤其注意**散文提问**：AI 在回复末尾问"要执行吗？"
+而没有 tool call 时，用户根本没有回答的通道 —— nudge 文案会点名 `ask_user`，
+第二次仍不改就把那段回复整体当成问题交给用户，而不是报"AI 卡住了"。
+
+### ask_user 与写确认是两条正交的闸
+
+两者会同时存在，这是设计意图，不是重复：
+
+| | 谁发起 | 问什么 | 能否关 |
+|---|---|---|---|
+| `ask_user` | AI | 该做什么（选哪个方案） | 不能 |
+| `requiresApproval` | 宿主 | 这条操作允许落地吗 | 能（`autoRunReads` / `autoRunWrites` / `speedMode`） |
+
+⚠️ `ask_user` 对执行策略**零影响**，不设任何"已批准"标记去放行后续写操作 ——
+否则 AI 问的和实际发出的 SQL 不一致时就成了安全洞。用户觉得被问两遍时的出路是
+批准提示里的「本次任务不用再问」。`AgentApproval` 在本会话问过问题后会加一句
+说明，让两层可辨识。
+
+### 提问的预算
+
+- `ask_user` 轮**不占 `maxRounds`**（`ctx.grantBonusRound()`）：有人在环，不存在
+  失控烧 token，占额度只会让 AI 问两次就没预算干正事
+- 因此另设 `MAX_ASK_USER_PER_SESSION = 5` 作为刹车，超了工具返回 ERROR 让 AI
+  自己决断或 `complete_task('infeasible')`
+- 熔断对 `ask_user` 单独用阈值 2（通用是 3/5）：params 完全相同说明它没读用户的回答
 
 ### Agent Tab 如何控制引擎
 
@@ -198,46 +249,64 @@ getActiveEngine()?.resume();        // Tab 的 Retry（paused | error 可用）
 getActiveEngine()?.continueNow();   // Tab 的「继续」→ triggerSend()
 ```
 
+`awaiting_user` 是唯一的例外：答案通过 `pendingQuestion.resolve(answer)` 回给引擎
+（和 `pendingConfirmation` 同一套路），不走 engine 方法。但**「Stop task」按钮仍必须
+叫 `engine.stop()`** —— 只 resolve(null) 会让引擎继续跑下一轮。
+
 ⚠️ 只改 store 不叫 engine 是无效的：engine 持有自己的 abortController 和
 `waitForUserSend()` promise。历史上 Tab 的 Stop 只改 store，引擎会在后台继续跑。
 
-### 工具的两条执行路径
+### 只有一条执行路径：引擎执行，卡片批准
 
-| 路径 | 触发 | 结果去向 |
-|------|------|----------|
-| 自动（主） | 引擎解析到 tool call 立即执行 | result capsule → `awaiting_send` |
-| 手动（辅） | 点消息卡片上的「执行」 | `appendCapsule` 追加到输入框，用户自己发送 |
+**引擎是唯一执行工具的东西。** 消息卡片上的按钮不执行任何东西 —— 它是引擎那个
+`await` 的回答入口。
 
-「执行」按钮只存在于 **custom 渲染视图**（`CustomModelResponse` → `ToolCallWidget`），
-原生 DOM 从未注入过工具卡片。
+```
+execute-tools 逐个处理 tool call
+  requiresApproval(call)?
+    否 → 直接执行
+    是 → stages/approval-gate.ts
+           status = awaiting_approval
+           store.pendingApproval = { fingerprint, toolName, params, risk, remaining, resolve }
+           ↓ 等 resolve（卡片 / 侧边栏 / abort）
+         批准 → 执行
+         拒绝 → 生成 CANCELLED 段落（带用户理由）回传，继续下一个 call
+```
 
-因为两条路径会碰同一个操作，按钮受三重约束：
+卡片靠 `pendingApproval.fingerprint === 自己的 fingerprint` 判断"轮到我了"，
+所以批准就发生在你正在读的那条 SQL 旁边。
 
-1. **位置** — 只有最后一条 model response 可执行，历史消息只显示「已执行 / 未执行」
-2. **身份** — `executedCalls[fingerprint]` 记录本次会话已执行的调用
-   （`buildToolCallFingerprint` = tool name + 排序归一化后的 params）。
-   写操作命中即永久锁定；读操作允许「重新执行」
-3. **时机** — 引擎处于 `waiting_ai / parsing / executing / sending` 时按钮禁用。
-   引擎是执行**完**才写 fingerprint，busy 期间放开点击会有 check-then-act 竞态
+批准范围三档，在提问那一刻选，不是设置项：
 
-⚠️ `executedCalls` 随会话重置，不持久化。刷新页面后同一条写操作理论上能再点一次执行。
+| 范围 | 效果 | 存哪 |
+|------|------|------|
+| `once` | 只这一条 | — |
+| `round` | 本次回复剩下的都放行 | `approveRestOfRound`（`nextRound()` 清零） |
+| `task` | 本次任务全放行 | `speedMode`（会话级） |
+
+`round` 这档是必需的：一次回复经常带好几条 SELECT，一条条批是会让人干脆把整个
+保护关掉的那种摩擦。
+
+**之前是两条路径**：引擎自动执行，以及卡片上的「执行」按钮自己跑一遍工具、把结果
+`appendCapsule` 到输入框让用户手动发送。为了让两条路不撞同一个操作，需要
+`executedCalls` 指纹账本做去重、引擎 busy 时禁用按钮、而且仍有 check-then-act
+竞态（引擎是执行**完**才写指纹）。合成一条之后这些全部消失，
+`renderer/helpers/tool-executor.ts` 整个删掉。
+
+`executedCalls` 保留但降级为**纯展示** —— 卡片用它显示「已执行 / 执行失败 / 已拒绝」。
+
+⚠️ 卡片只存在于 **custom 渲染视图**，用户可以中途切回 Gemini 原生渲染。所以
+`AgentApproval` 在侧边栏留了一份镜像，同一个 `resolve`，谁先答谁算。不然切回去
+就找不到批准的地方，引擎会一直挂着。
+
+⚠️ 审批门在**引擎**里，不在工具里。以前 `execute-sql` 自己调
+`requestUserConfirmation` —— 工具去开 UI，而且请求里只有 SQL 字符串，没有任何东西
+能说清"这是哪一次调用"，所以批准只能是一个转述式的独立弹窗，没法长在卡片上。
 
 ### 会话与对话的绑定
 
 store 是全局单例，所以 `start()` 会记下 `sessionConversationId`。
 `AgentTab` 只在 session 属于当前对话时显示；离开该对话且已 idle 时自动 `reset()`。
-
-### 手动执行路径（ToolCallWidget）
-
-```
-用户在 AI 回复中点击 "执行" 按钮
-  → ToolCallWidget.handleRun()
-  → executeToolCall(parsed)
-  → fillResultToEditor(description || name, result)
-      → appendCapsule() — 追加到编辑器末尾，不覆盖已有 capsule
-用户可继续点击其他 tool 的"执行"（累加 capsule）
-用户按 Enter / 点发送 → 合并所有 result capsule 发送
-```
 
 ---
 
@@ -291,14 +360,22 @@ store 是全局单例，所以 `start()` 会记下 `sessionConversationId`。
 
 ### ConversationRenderer
 
-- `fillResultToEditor()` → 调用 `appendCapsule(editor, displayText, attrs)`
-- 优先用 `parsed.description` 作为显示文本，fallback 到 `parsed.name`
-- 显示格式: `Result: {description}` / `结果: {description}`（i18n key: `agentLoop.resultCapsulePrefix`）
+- `ToolCallWidget` 不执行任何东西，只负责显示状态和承接批准
+  （`pendingApproval.fingerprint` 匹配时亮起）
+- 结果 capsule 由引擎的 `stages/handoff/staging.ts` 写入，
+  显示格式 `Result: {description}`（i18n key: `agentLoop.resultCapsulePrefix`）
 
 
 ---
 
 ## 与现有系统的集成点
+
+### 拒绝要带理由
+
+`ask_user` 被拒时 AI 拿到的是用户的完整回答，能改方案；执行层如果只回一个
+`CANCELLED:`，AI 不知道为什么，最可能原样再试一次然后撞上 `checkRepeatedToolCall`。
+所以 `ApprovalDecision` 是 `{ approved, scope, reason? }` 而不是 boolean，
+理由会拼进回传给 AI 的 `CANCELLED:` 段落里，并附一句"不要重试同一条语句"。
 
 ### 数据库层
 - `@/shared/db` 的 `runQuery(sql)` 和 `runCommand(sql)` 通过 message passing 与 Web Worker 通信
@@ -310,20 +387,34 @@ store 是全局单例，所以 `start()` 会记下 `sessionConversationId`。
 - 引擎识别到 PAYWALL → `stop('paywall')` → `AgentSessionSummary` 显示升级引导
   （之前 endReason 被丢弃，付费拦截和正常完成在 UI 上没有区别）
 
-### 执行策略（谁需要确认）
-`execution-policy.ts` 的 `requiresConfirmation()`：
+### 执行策略（谁需要批准）
 
-| 策略 | 触发条件 | 行为 |
-|------|----------|------|
-| `speed` | `agentLoopStore.speedMode`（会话级） | 全部不问 |
-| `confirm_writes` | `agentPolicyStore.autoExecuteReads = true`（默认） | 读自动，写要确认 |
-| `confirm_all` | `autoExecuteReads = false` | 全部要确认 |
+`execution-policy.ts` 的 `requiresApproval()`，从宽到窄依次短路：
 
-两个开关的 UI 在 `AgentPolicyControls`；写确认弹窗里的「本次任务全部允许」
-就是把 `speedMode` 打开。工具级开关走 MCP（`mcpRegistry.isToolEnabled`），
-不要再引入第二套 `disabledTools`。
+```
+speedMode（本次任务全放行，会话级）
+  → approveRestOfRound（本轮全放行，每轮清零）
+    → getToolRisk(call) === 'write' ? !autoRunWrites : !autoRunReads
+```
+
+两个持久化开关，一个工具类别一个：
+
+| 开关 | 默认 | 管什么 |
+|------|------|--------|
+| `autoRunReads` | 开 | 查询不用问 |
+| `autoRunWrites` | **关** | 改数据不用问（撤销还是占位实现，所以默认关） |
+
+`getToolRisk()` 只把**修改数据的 SQL** 算作 write。`export` / `sync` 有副作用但不动
+数据库，压在写开关下面只会训练用户去打开它。
+
+之前是 `autoExecuteReads` 一个布尔加会话级 `speedMode` 硬凑三态：关掉"自动运行读操作"
+实际是**所有**操作都要确认，而 `speedMode` 会盖掉它、开关却还显示关着。
+`agent-policy-store` 有 v0→v1 迁移把老值映射过来（老的 `false` → 两个都关）。
+
+工具级开关走 MCP（`mcpRegistry.isToolEnabled`），不要再引入第二套 `disabledTools`。
 
 ### i18n
+- `agent.ask.*` — awaiting_user 的问题面板
 - `agentLoop.resultCapsulePrefix` — Result capsule 显示前缀（en: "Result", zh-CN: "结果"）
   编辑器层用 `i18n.t()` 直接访问（非 React context），import from `@/locale/i18n`
 - `agent.*` — Agent Tab 全部文案（launcher / status / continue / confirm / summary…）
@@ -362,8 +453,17 @@ store 是全局单例，所以 `start()` 会记下 `sessionConversationId`。
 1. `mcp/providers/` 下创建 provider（schema + execute）
 2. 挂到 `mcp/builtin-mcp.ts` 的 `tools` 数组
 3. `engine/parser/tool-schema.ts` 的 `SUPPORTED_TOOLS` + `REQUIRED_PARAMS` 注册
+4. 如果它是控制循环而不是干活的（像 `ask_user` / `complete_task`），加进
+   `ENGINE_ONLY_TOOLS` —— 否则消息卡片上会出现一个「执行」按钮，手动点会制造一个
+   没有引擎在等的悬空状态
 
-Prompt 里的工具文档由 `mcp/schema-generator.ts` 自动生成，不用手写。
+Prompt 里的工具文档由 `mcp/schema-generator.ts` 自动生成，不用手写。schema 的
+`description` 就是 AI 唯一读到的说明，协议约束（比如"必须是本轮最后一个调用"）
+也写在那儿。
+
+⚠️ 光加 schema 不足以让 AI 用它。真正起作用的是三层叠加：schema 文档 +
+`soul.ts` 的硬约束 + **运行时 nudge 点名**。第三层最关键 —— Gemini 对长 prompt
+尾部的遵循度不稳，但在失败当场被告知"你可以调 X"几乎必然照做。
 
 ### 新增一个内置 Skill
 
@@ -396,6 +496,7 @@ agentEventBus.emit('launcher:run-entry', { entryId, userInput, autoSend });
 1. 所有日志带 `[AgentLoop]` / `[Renderer]` / `[QuillEditor]` 前缀
 2. `useAgentLoopStore.getState()` 查看运行时状态
 3. 检查 capsule DOM: `document.querySelectorAll('.bs-prompt-capsule, .bs-agent-result-capsule')`
+3.5. 手动回答挂起的问题: `useAgentLoopStore.getState().pendingQuestion?.resolve('执行')`
 4. 验证 Quill Delta 是否同步: 在 DevTools 里对比 `.ql-editor` 的 innerHTML 和发送的实际内容
 5. 强制停止循环: `getActiveEngine()?.stop()`（只调 store 的 `stop()` 停不掉引擎）
 6. 测试 capsule 展开: 手动调用 `expandCapsules(editor, 'bs-prompt-capsule')` 看编辑器内容是否变成真实 prompt
@@ -412,6 +513,8 @@ agentEventBus.emit('launcher:run-entry', { entryId, userInput, autoSend });
 | AI Studio 支持 | 未做 | 需写 adapter + entry component |
 | 自动继续 | 已做 | `agentPolicyStore.autoContinue`（持久化，默认开）→ 引擎每轮自己点发送；关掉则停在 `awaiting_send` 等用户 |
 | `awaiting_send` 期间发普通消息 | 未处理 | result capsule 消失即视为已发送，用户此时另发消息会被当成继续 |
+| `awaiting_user` 期间在聊天框回答 | 已做 | `ask-user-gate` 观测按钮翻回 stop（主）或最后一条回复文本变化并稳定（备）；备用路径会把已完成的回复直接交给 ② 解析，因为 ① 的 baseline 会等一个已经发生过的回合 |
+| `awaiting_user` 遇到刷新 | 未处理 | `pendingQuestion` 不持久化，等待可能长达几十分钟，刷新概率比其他状态高得多；问题还在聊天记录里但引擎已死，用户答了没人接。计划：`sessionStorage` 存 `{ conversationId, round, question }`，Tab 启动时提示 |
 | `slash-command/capsule.ts` | 废弃 | 已无 import，但文件未删除 |
 | SlashCommand `data-` attr | 未加 | 需给 SlashCommandPopup 加 `data-slash-command-popup` |
 | Gemini DOM 选择器 | 可能过时 | 需跟随 Gemini UI 更新 |

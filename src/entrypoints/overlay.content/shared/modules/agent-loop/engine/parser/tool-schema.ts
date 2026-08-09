@@ -20,6 +20,7 @@ export const SUPPORTED_TOOLS = [
   'execute_sql',
   'sync_conversation_messages',
   'export',
+  'ask_user',
   'complete_task',
   'activate_skill',
 ] as const;
@@ -29,9 +30,32 @@ export const REQUIRED_PARAMS: Record<string, string[]> = {
   execute_sql: ['query'],
   sync_conversation_messages: ['conversation_ids'],
   export: ['ids', 'format'],
+  ask_user: ['question'],
   complete_task: ['summary'],
   activate_skill: ['skill_id'],
 };
+
+/**
+ * Tools whose manual "Run" button in the conversation makes no sense.
+ *
+ * Both of these drive the engine's state machine rather than doing work: running
+ * `ask_user` by hand would park a question nobody is waiting on, and
+ * `complete_task` would claim a session that isn't running.
+ */
+export const ENGINE_ONLY_TOOLS: readonly string[] = ['ask_user', 'complete_task'];
+
+/**
+ * Whether the response looks cut off mid tool call.
+ *
+ * An unclosed opening tag is the one unambiguous signal, and it needs its own
+ * branch: told "you forgot the tool format", the AI resends the whole response
+ * from the top, which wastes a round and can re-run the first half.
+ */
+export function hasUnclosedToolBlock(responseText: string): boolean {
+  const opens = responseText.split(`<${TOOL_TAG}>`).length - 1;
+  const closes = responseText.split(`</${TOOL_TAG}>`).length - 1;
+  return opens > closes;
+}
 
 export function isSupportedTool(name: string): boolean {
   return (SUPPORTED_TOOLS as readonly string[]).includes(name);

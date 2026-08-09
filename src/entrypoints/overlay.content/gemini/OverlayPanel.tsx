@@ -63,10 +63,13 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   // Anything that blocks the loop until the user acts
   const agentNeedsAttention = useAgentLoopStore(
     (s) =>
-      s.pendingConfirmation !== null ||
+      s.pendingApproval !== null ||
+      s.pendingQuestion !== null ||
       s.status === 'error' ||
       s.status === 'paused' ||
-      s.status === 'awaiting_send',
+      s.status === 'awaiting_send' ||
+      s.status === 'awaiting_user' ||
+      s.status === 'awaiting_approval',
   );
 
   const {

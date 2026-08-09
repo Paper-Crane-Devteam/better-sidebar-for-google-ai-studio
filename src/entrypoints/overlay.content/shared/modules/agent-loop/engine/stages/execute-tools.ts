@@ -9,15 +9,23 @@
  * be reported back to the AI. A silent abort would leave it guessing.
  */
 
-import type { ParsedToolCall } from '../../types';
+import type { AgentQuestion, ParsedToolCall } from '../../types';
 import type { LoopContext } from '../context';
 import { executeToolCall } from '../../tools/tool-registry';
-import { COMPLETE_TASK_SIGNAL } from '../../tools/complete-task';
-import { buildToolCallFingerprint, isWriteOperation } from '../../execution-policy';
+import { parseCompleteTaskSignal } from '../../tools/complete-task';
+import { parseAskUserSignal } from '../../tools/ask-user';
+import { buildToolCallFingerprint, getToolRisk, requiresApproval } from '../../execution-policy';
+import { AUTO_APPROVED, requestApproval } from './approval-gate';
 
 export type ExecuteOutcome =
   /** Round finished; feed these sections back to the AI */
   | { kind: 'results'; results: string[] }
+  /**
+   * The AI needs an answer before it can continue. `results` are the sections
+   * produced before the question and still owe the AI a delivery — they travel with
+   * the answer, or get carried into the next round if the user replies natively.
+   */
+  | { kind: 'awaiting-user'; question: AgentQuestion; results: string[] }
   /** Session is over (complete / paywall / circuit breaker) — already reported */
   | { kind: 'ended' };
 
@@ -30,6 +38,12 @@ function section(toolCall: ParsedToolCall, body: string): string {
   return `### ${toolCall.description || toolCall.name}\n${body}`;
 }
 
+/** What `ask_user` reports in place of its sentinel, for the AI and the step list */
+function describeQuestion(question: AgentQuestion): string {
+  const options = question.options.length > 0 ? ` Options offered: ${question.options.join(' / ')}.` : '';
+  return `Question put to the user.${options} Their answer follows under "User Response".`;
+}
+
 export async function executeTools(
   ctx: LoopContext,
   toolCalls: ParsedToolCall[],
@@ -37,7 +51,7 @@ export async function executeTools(
   ctx.setStatus('executing');
   const results: string[] = [];
 
-  for (const toolCall of toolCalls) {
+  for (const [index, toolCall] of toolCalls.entries()) {
     ctx.abort.check();
 
     // ── Guard: is the AI repeating itself? ─────────────────────────────────
@@ -54,6 +68,47 @@ export async function executeTools(
       results.push(`### ⚠️ Loop Warning\n${loopCheck.message}`);
     }
 
+    const fingerprint = buildToolCallFingerprint(toolCall);
+
+    // ── Gate: does the user have to say go? ────────────────────────────────
+    const decision = requiresApproval(toolCall)
+      ? await requestApproval(ctx, {
+          toolCall,
+          fingerprint,
+          remaining: toolCalls.length - index - 1,
+        })
+      : AUTO_APPROVED;
+
+    if (!decision.approved) {
+      // Reported as a tool result rather than aborting the round: the AI has to
+      // learn this specific call was refused, and why, or its next move is the same
+      // statement again.
+      const refusal = decision.reason
+        ? `CANCELLED: The user rejected this operation. Their reason: ${decision.reason}\n` +
+          `Do not retry it unchanged — address the objection, or use ask_user to find out what they want.`
+        : `CANCELLED: The user rejected this operation without giving a reason.\n` +
+          `Do not retry it unchanged — use ask_user to find out what they want instead.`;
+
+      console.log('[AgentLoop] Rejected by user:', toolCall.name);
+      ctx.store.addResult({
+        toolName: toolCall.name,
+        description: toolCall.description,
+        success: false,
+        result: refusal,
+        timestamp: Date.now(),
+      });
+      ctx.store.recordExecutedCall(fingerprint, {
+        toolName: toolCall.name,
+        isWrite: getToolRisk(toolCall) === 'write',
+        success: false,
+        rejected: true,
+        timestamp: Date.now(),
+        source: 'engine',
+      });
+      results.push(section(toolCall, refusal));
+      continue;
+    }
+
     // ── Execute ────────────────────────────────────────────────────────────
     ctx.store.setCurrentTool(toolCall.name);
     console.log(`[AgentLoop] Executing: ${toolCall.name}`, toolCall.params);
@@ -62,6 +117,7 @@ export async function executeTools(
     const startedAt = Date.now();
     const result = await executeToolCall(toolCall);
     const success = isSuccess(result);
+    const question = parseAskUserSignal(result);
 
     ctx.events.emit('tool:executed', {
       toolName: toolCall.name,
@@ -78,7 +134,8 @@ export async function executeTools(
       success,
       success ? undefined : result,
     );
-    let body = result;
+    // The raw sentinel would be meaningless to both the AI and the step list
+    let body = question ? describeQuestion(question) : result;
 
     if (failure) {
       // Escalating hints, so the AI stops retrying the same broken approach
@@ -103,10 +160,10 @@ export async function executeTools(
       timestamp: Date.now(),
     });
 
-    // Claim this call so the conversation's manual Run button won't repeat it
-    ctx.store.recordExecutedCall(buildToolCallFingerprint(toolCall), {
+    // Recorded so the call's card in the chat can show what became of it
+    ctx.store.recordExecutedCall(fingerprint, {
       toolName: toolCall.name,
-      isWrite: isWriteOperation(toolCall),
+      isWrite: getToolRisk(toolCall) === 'write',
       success,
       timestamp: Date.now(),
       source: 'engine',
@@ -114,19 +171,41 @@ export async function executeTools(
 
     results.push(section(toolCall, body));
 
+    // ── Round-ending signal: the AI needs the user ─────────────────────────
+    if (question) {
+      // Anything queued after the question contradicts having asked it, so it is
+      // dropped — and said out loud, since silently skipping work would leave the
+      // AI assuming it happened.
+      const skipped = toolCalls.slice(index + 1);
+      if (skipped.length > 0) {
+        console.warn(`[AgentLoop] Skipping ${skipped.length} call(s) queued after ask_user`);
+        results.push(
+          `### ⏭️ Not executed\n` +
+            `${skipped.length} tool call(s) after ask_user were skipped: ` +
+            `${skipped.map((c) => c.name).join(', ')}. ` +
+            `ask_user must be the last call in a response — re-issue them once you have the answer.`,
+        );
+      }
+
+      ctx.store.setCurrentTool(null);
+      return { kind: 'awaiting-user', question, results };
+    }
+
     // ── Session-ending signals ─────────────────────────────────────────────
-    if (result.startsWith(COMPLETE_TASK_SIGNAL)) {
-      const summary = result.slice(COMPLETE_TASK_SIGNAL.length + 1); // +1 for the colon
-      console.log('[AgentLoop] Task explicitly completed:', summary);
+    const completion = parseCompleteTaskSignal(result);
+    if (completion) {
+      console.log(`[AgentLoop] Task explicitly ended (${completion.status}):`, completion.summary);
       ctx.store.addResult({
         toolName: 'complete_task',
-        description: summary,
-        success: true,
-        result: summary,
+        description: completion.summary,
+        // "Cannot be done" is a legitimate verdict, but marking it successful would
+        // paint the summary card green for a task that delivered nothing.
+        success: completion.status !== 'infeasible',
+        result: completion.summary,
         timestamp: Date.now(),
       });
       ctx.store.setCurrentTool(null);
-      ctx.finish('complete');
+      ctx.finish(completion.status === 'infeasible' ? 'infeasible' : 'complete');
       return { kind: 'ended' };
     }
 

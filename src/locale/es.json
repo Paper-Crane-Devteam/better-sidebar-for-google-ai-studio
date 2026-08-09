@@ -1094,8 +1094,10 @@
       "waiting_ai": "Pensando...",
       "parsing": "Leyendo la respuesta...",
       "executing": "Trabajando...",
+      "awaiting_approval": "Esperando tu aprobación",
       "sending": "Enviando...",
       "awaiting_send": "Esperando tu acción",
+      "awaiting_user": "Esperando tu respuesta",
       "paused": "En pausa",
       "error": "Error"
     },
@@ -1118,14 +1120,29 @@
       "pausedTitle": "Bucle en pausa"
     },
     "policy": {
-      "autoReads": "Ejecutar lecturas automáticamente",
-      "autoWrites": "Aprobar escrituras automáticamente",
-      "autoWritesHint": "Solo en esta tarea"
+      "autoReads": "Ejecutar consultas sin preguntar",
+      "autoWrites": "Modificar datos sin preguntar",
+      "autoWritesHint": "Los cambios aún no se pueden deshacer",
+      "autoContinue": "Enviar resultados automáticamente",
+      "autoContinueHint": "Si se desactiva, tendrás que pulsar Enter en cada ronda",
+      "taskApproved": "Aprobando todo en esta tarea: haz clic para detenerlo"
+    },
+    "ask": {
+      "title": "El agente necesita tu respuesta",
+      "placeholder": "Escribe tu respuesta...",
+      "placeholderOther": "O responde con tus propias palabras...",
+      "send": "Responder",
+      "chatHint": "También puedes responder directamente en el chat.",
+      "stop": "Detener tarea"
     },
     "confirm": {
       "title": "Confirmar cambios",
+      "followsPlan": "Esto ejecuta el plan que aprobaste. Las escrituras se confirman por separado.",
       "showFull": "Ver consulta completa",
       "reject": "Rechazar",
+      "confirmReject": "Rechazar",
+      "back": "Atrás",
+      "reasonPlaceholder": "¿Qué problema tiene? (opcional)",
       "approve": "Aprobar",
       "approveAll": "Permitir todo en esta tarea"
     },
@@ -1138,6 +1155,7 @@
     },
     "summary": {
       "done": "Tarea finalizada",
+      "infeasible": "No se pudo completar",
       "paywall": "Se requiere mejorar el plan",
       "stopped": "Detenido",
       "maxRounds": "Límite de pasos alcanzado",

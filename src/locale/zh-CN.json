@@ -1093,8 +1093,10 @@
       "waiting_ai": "思考中…",
       "parsing": "读取回复…",
       "executing": "执行中…",
+      "awaiting_approval": "等你确认操作",
       "sending": "发送中…",
       "awaiting_send": "等你确认",
+      "awaiting_user": "等你回答",
       "paused": "已暂停",
       "error": "出错"
     },
@@ -1117,14 +1119,29 @@
       "pausedTitle": "循环已暂停"
     },
     "policy": {
-      "autoReads": "自动执行读操作",
-      "autoWrites": "自动批准写操作",
-      "autoWritesHint": "仅本次任务"
+      "autoReads": "查询无需询问",
+      "autoWrites": "修改数据无需询问",
+      "autoWritesHint": "修改目前还无法撤销",
+      "autoContinue": "自动发送结果",
+      "autoContinueHint": "关闭后每轮都需要你按回车",
+      "taskApproved": "本次任务已全部放行 — 点击可停止"
+    },
+    "ask": {
+      "title": "Agent 需要你的输入",
+      "placeholder": "输入你的回答…",
+      "placeholderOther": "或者用自己的话回答…",
+      "send": "回答",
+      "chatHint": "也可以直接在聊天输入框里回复。",
+      "stop": "停止任务"
     },
     "confirm": {
       "title": "确认修改",
+      "followsPlan": "这是在执行你已批准的计划。写操作会单独确认。",
       "showFull": "查看完整语句",
       "reject": "拒绝",
+      "confirmReject": "拒绝",
+      "back": "返回",
+      "reasonPlaceholder": "哪里不对？（可选）",
       "approve": "允许",
       "approveAll": "本次任务全部允许"
     },
@@ -1137,12 +1154,15 @@
     },
     "summary": {
       "done": "任务完成",
+      "infeasible": "无法完成",
       "paywall": "需要升级",
       "stopped": "已停止",
       "maxRounds": "已达步数上限",
       "stuck": "已停止 — Agent 在重复同样的操作",
       "ended": "会话结束",
       "paywallDesc": "免费版只允许 Agent 读取数据，升级后可以修改。",
+      "steps_one": "执行了 {{count}} 步",
+      "steps_other": "执行了 {{count}} 步",
       "steps": "执行了 {{count}} 步",
       "failed": "{{count}} 步失败",
       "noSteps": "没有执行任何工具。",
