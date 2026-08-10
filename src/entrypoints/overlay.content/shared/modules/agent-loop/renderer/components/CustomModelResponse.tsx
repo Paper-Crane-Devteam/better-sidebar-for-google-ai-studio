@@ -67,6 +67,7 @@ export const CustomModelResponse: React.FC<CustomModelResponseProps> = ({
           query={tc.toolCall.params.query || tc.toolCall.params.summary}
           rawText={tc.matchString}
           isLatestResponse={isLatestResponse}
+          outcome={message.toolOutcomes[idx] ?? null}
         />,
       );
     });

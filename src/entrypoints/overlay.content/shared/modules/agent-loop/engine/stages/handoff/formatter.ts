@@ -14,8 +14,17 @@
 export const RESULT_OPEN_TAG = '<bs_agent_result>';
 const RESULT_CLOSE_TAG = '</bs_agent_result>';
 
-const RESULTS_HEADER = '## Tool Execution Results';
-const SECTION_SEPARATOR = '\n\n---\n\n';
+/**
+ * Exported because the renderer has to read this format back out of the
+ * conversation DOM to tell what became of each historical tool call — a third
+ * consumer of the same grammar, and the one furthest away from this file.
+ */
+export const RESULTS_HEADER = '## Tool Execution Results';
+export const SECTION_SEPARATOR = '\n\n---\n\n';
+/** Prefix of the block `formatResults` prepends when a parse went wrong */
+export const PARSE_ERRORS_HEADER = '## Parse Errors';
+/** Prefix of the block `formatResults` prepends for a mid-round user instruction */
+export const USER_INSTRUCTION_HEADER = '## User Instruction';
 
 export interface ResultSection {
   /** Short label shown on the capsule in the editor */
@@ -42,7 +51,7 @@ export function formatResults(
   let output = '';
 
   if (userInstruction) {
-    output += `## User Instruction\n\n${userInstruction}\n\n`;
+    output += `${USER_INSTRUCTION_HEADER}\n\n${userInstruction}\n\n`;
   }
 
   // A round carrying only an instruction ran no tools, and titling it "Tool
@@ -51,7 +60,7 @@ export function formatResults(
   output += results.join(SECTION_SEPARATOR);
 
   if (errors.length > 0) {
-    output += '\n\n## Parse Errors\n\n';
+    output += `\n\n${PARSE_ERRORS_HEADER}\n\n`;
     output += errors.map((e) => `- ${e}`).join('\n');
   }
 

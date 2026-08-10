@@ -10,19 +10,18 @@ import { useState, useEffect, useCallback } from 'react';
 import { extractPromptId, RESULT_TAG, findConversationScroller } from './constants';
 import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
 import { parseAllToolCallsFromText, type ExtractedToolCall } from './helpers/tool-parser';
+import {
+  deriveToolOutcomes,
+  parseToolResults,
+  type DerivedToolOutcome,
+  type ToolResultEntry,
+} from './helpers/tool-outcomes';
 import { getAgentEntryById } from '../agent-entry';
 import { htmlToMarkdown } from '@/shared/lib/utils/utils';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-/** A single tool result section extracted from a user message */
-export interface ToolResultEntry {
-  toolName: string;
-  /** Short description from the ### header line */
-  description: string;
-  /** Full content of this tool result section */
-  content: string;
-}
+export type { ToolResultEntry, DerivedToolOutcome };
 
 export interface DisplayMessageTurn {
   id: string;
@@ -36,6 +35,13 @@ export interface DisplayMessageTurn {
   /** Parsed tool result entries (user message contains tool results sent back to AI) */
   toolResults: ToolResultEntry[];
   toolCalls: ExtractedToolCall[];
+  /**
+   * What became of each `toolCalls[i]`, recovered from the results message that
+   * followed this turn. `null` where nothing could be matched — and always null on
+   * the turn currently running, whose results haven't been sent yet. The live
+   * session's own ledger covers that case.
+   */
+  toolOutcomes: Array<DerivedToolOutcome | null>;
   isStreaming: boolean;
 }
 
@@ -94,50 +100,6 @@ function parsePromptMarker(text: string): {
   }
 
   return { promptId, promptTitle, promptContent, cleanText };
-}
-
-/**
- * Parse all <bs_agent_result> blocks from text.
- * Each block may contain multiple sections separated by "---".
- * Description = the ### header line only (up to newline).
- */
-function parseToolResults(text: string): { results: ToolResultEntry[]; cleanText: string } {
-  const tagRegex = new RegExp(`<${RESULT_TAG}>([\\s\\S]*?)<\\/${RESULT_TAG}>`, 'g');
-  const results: ToolResultEntry[] = [];
-  let match: RegExpExecArray | null;
-
-  while ((match = tagRegex.exec(text)) !== null) {
-    const inner = match[1].trim();
-    const body = inner.replace(/^## Tool Execution Results\s*\n+/, '');
-    const sections = body.split(/\n\n---\n\n/);
-
-    for (const section of sections) {
-      const trimmed = section.trim();
-      if (!trimmed) continue;
-
-      const headerMatch = trimmed.match(/^###\s+(.+)\n([\s\S]*)$/);
-      if (headerMatch) {
-        const description = headerMatch[1].trim();
-        const toolNameMatch = description.match(/^([a-zA-Z0-9_-]+)/);
-        results.push({
-          toolName: toolNameMatch ? toolNameMatch[1] : 'tool_result',
-          description,
-          content: trimmed,
-        });
-      } else {
-        const firstLineEnd = trimmed.indexOf('\n');
-        results.push({
-          toolName: 'tool_result',
-          description: firstLineEnd > 0 ? trimmed.slice(0, firstLineEnd).trim() : trimmed.slice(0, 60),
-          content: trimmed,
-        });
-      }
-    }
-  }
-
-  // Strip all result tags from text
-  const cleanText = text.replace(new RegExp(`<${RESULT_TAG}>[\\s\\S]*?<\\/${RESULT_TAG}>`, 'g'), '').trim();
-  return { results, cleanText };
 }
 
 /**
@@ -204,8 +166,17 @@ export function useConversationMessages(): DisplayMessageTurn[] {
           promptContent,
           toolResults,
           toolCalls: [],
+          toolOutcomes: [],
           isStreaming: false,
         });
+
+        // Results arrive one turn after the calls they belong to, so the model turn
+        // just behind this one is the owner. Resolved here rather than in the
+        // component, which only ever sees a single turn.
+        const previous = turns[turns.length - 2];
+        if (previous?.role === 'model' && previous.toolCalls.length > 0) {
+          previous.toolOutcomes = deriveToolOutcomes(previous.toolCalls, toolResults);
+        }
       } else {
         // aria-busy is not used by Gemini (always null). Use the send button's "stop" class
         // as streaming indicator — but only for the last model-response (earlier ones are done).
@@ -222,6 +193,7 @@ export function useConversationMessages(): DisplayMessageTurn[] {
           displayText: text,
           toolResults: [],
           toolCalls,
+          toolOutcomes: toolCalls.map(() => null),
           isStreaming: isBusy,
         });
       }

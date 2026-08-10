@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import type { ParsedToolCall } from '../../types';
 import { parseToolCallFromText, extractToolInfo } from '../helpers/tool-parser';
+import type { DerivedToolOutcome } from '../helpers/tool-outcomes';
 import { useAgentLoopStore } from '../../agent-loop-store';
 import { buildToolCallFingerprint, isControlTool } from '../../execution-policy';
 
@@ -40,6 +41,11 @@ interface ToolCallWidgetProps {
   rawText: string;
   /** Only the newest model turn can hold a call the engine is still waiting on */
   isLatestResponse?: boolean;
+  /**
+   * What became of this call according to the conversation itself, for turns the
+   * live session's ledger knows nothing about — anything from before a reload.
+   */
+  outcome?: DerivedToolOutcome | null;
   parseToolCall?: (text: string) => ParsedToolCall | null;
 }
 
@@ -49,6 +55,7 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
   query: propQuery,
   rawText,
   isLatestResponse = false,
+  outcome = null,
   parseToolCall = parseToolCallFromText,
 }) => {
   const [expanded, setExpanded] = useState(false);
@@ -72,6 +79,15 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
   const pendingApproval = useAgentLoopStore((s) => s.pendingApproval);
   const currentTool = useAgentLoopStore((s) => s.currentTool);
 
+  /**
+   * The ledger wins where it exists — it is first-hand and knows about calls whose
+   * results never made it into a message. Everywhere else the conversation answers,
+   * which is the only source left after a reload.
+   */
+  const status: { success: boolean; rejected: boolean } | null = executedCall
+    ? { success: executedCall.success, rejected: Boolean(executedCall.rejected) }
+    : outcome;
+
   // Control tools never take an approval: `complete_task` just ends the session, so
   // there is nothing to allow or refuse. The policy agrees — `requiresApproval` is
   // false for them — so this is belt-and-braces, not the enforcement point.
@@ -82,7 +98,7 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
     fingerprint !== null &&
     pendingApproval?.fingerprint === fingerprint;
 
-  const running = !executedCall && currentTool === toolName && isLatestResponse;
+  const running = !status && currentTool === toolName && isLatestResponse;
 
   const decide = (approved: boolean, scope: 'once' | 'round' | 'task' = 'once') => {
     if (!pendingApproval) return;
@@ -120,13 +136,13 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
       );
     }
 
-    if (!executedCall) {
+    if (!status) {
       return (
         <span className="ml-auto shrink-0 px-2 py-1 text-xs text-muted-foreground">未执行</span>
       );
     }
 
-    if (executedCall.rejected) {
+    if (status.rejected) {
       return (
         <span
           className="ml-auto inline-flex shrink-0 items-center gap-1 px-2 py-1 text-xs text-muted-foreground"
@@ -139,7 +155,7 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
 
     return (
       <span className="ml-auto inline-flex shrink-0 items-center gap-1 px-2 py-1 text-xs text-muted-foreground">
-        {executedCall.success ? (
+        {status.success ? (
           <>
             <CheckCircle2 className="h-3 w-3 text-emerald-500" /> 已执行
           </>
@@ -282,10 +298,21 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
         </div>
       )}
 
-      {/* Body (collapsible) */}
+      {/* Body (collapsible) — the call, and its output when the conversation still
+          carries it. Reading an old session, "what did that query return" is the
+          question the card is opened to answer. */}
       {expanded && !isPending && (
         <div className="max-h-[300px] overflow-y-auto border-t border-emerald-500/20 bg-background/50 px-3 py-2 font-mono text-xs whitespace-pre-wrap text-muted-foreground">
           {rawText}
+          {outcome?.content && (
+            <>
+              <div className="my-2 border-t border-border/40" />
+              <span className="font-sans text-[11px] uppercase tracking-wide text-muted-foreground/70">
+                输出
+              </span>
+              <div className="mt-1">{outcome.content}</div>
+            </>
+          )}
         </div>
       )}
     </div>

@@ -77,6 +77,32 @@ export class AgentLoopEngine {
     await this.run();
   }
 
+  /**
+   * Start a session by picking up an AI response that already exists on the page.
+   *
+   * Used when the AI has already replied (with tool calls) but the engine wasn't
+   * running — e.g. the user sent a follow-up message without `>` after a previous
+   * session finished, and Gemini still has the tool format in context.
+   *
+   * Skips stage ① entirely and feeds the provided element straight into ②→③→④.
+   */
+  async startFromExistingResponse(
+    responseElement: HTMLElement,
+    maxRounds: number = 20,
+    session?: { conversationId?: string | null; title?: string },
+  ): Promise<void> {
+    this.ctx.abort.renew();
+    this.ctx.breaker.reset();
+    this.handoff.reset();
+    this.unattendedStreak = 0;
+    this.ctx.store.start(maxRounds, session);
+
+    console.log('[AgentLoop] Engine started from existing response, max rounds:', maxRounds);
+    this.ctx.events.emit('loop:started', { maxRounds, timestamp: Date.now() });
+
+    await this.runFromResponse(responseElement);
+  }
+
   /** Stop the loop; the pending wait unwinds through its abort signal */
   stop(): void {
     console.log('[AgentLoop] Engine stopped by user');
@@ -147,6 +173,73 @@ export class AgentLoopEngine {
       console.error('[AgentLoop] Engine error:', e);
       this.ctx.fail((e as Error).message);
     }
+  }
+
+  /**
+   * Like `run`, but the first round skips ① and uses the given element for ②.
+   * After that first round completes normally (or the session ends), subsequent
+   * rounds proceed through the standard ①→②→③→④ loop.
+   */
+  private async runFromResponse(responseElement: HTMLElement): Promise<void> {
+    try {
+      await this.runFirstRoundFromResponse(responseElement);
+    } catch (e) {
+      if (isAbortError(e)) return;
+      console.error('[AgentLoop] Engine error:', e);
+      this.ctx.fail((e as Error).message);
+    }
+  }
+
+  private async runFirstRoundFromResponse(responseElement: HTMLElement): Promise<void> {
+    const ctx = this.ctx;
+    ctx.abort.check();
+
+    // ② Parse — skip ① since the response is already on screen
+    const parsed = parseResponse(ctx, responseElement);
+    if (parsed.kind === 'stalled') return;
+
+    if (parsed.kind === 'nudge') {
+      if (!(await this.handoff.deliver(parsed.text, isUnattendedAllowed()))) return;
+      ctx.abort.check();
+      ctx.advanceRound();
+      // From round 2 onward, fall into the normal loop
+      await this.runRounds();
+      return;
+    }
+
+    const autoSend = shouldAutoSend(parsed.toolCalls);
+
+    // ③ Execute
+    const executed = await executeTools(ctx, parsed.toolCalls);
+    if (executed.kind === 'ended') return;
+
+    if (executed.kind === 'halted') {
+      this.handoff.holdForRetry(
+        formatResults(executed.results, parsed.errors, ctx.takePendingInstruction()),
+      );
+      ctx.pauseAndEnd(executed.reason, 'circuit_breaker');
+      return;
+    }
+
+    // ④ Hand the results back
+    const payload = formatResults(
+      executed.results,
+      parsed.errors,
+      ctx.takePendingInstruction(),
+    );
+    if (!(await this.handoff.deliver(payload, autoSend))) return;
+
+    ctx.abort.check();
+    this.unattendedStreak = autoSend ? this.unattendedStreak + 1 : 0;
+    ctx.advanceRound();
+
+    if (this.unattendedStreak >= ctx.maxRounds) {
+      ctx.checkIn(this.unattendedStreak);
+      return;
+    }
+
+    // Continue with the normal loop from round 2+
+    await this.runRounds();
   }
 
   private async runRounds(): Promise<void> {

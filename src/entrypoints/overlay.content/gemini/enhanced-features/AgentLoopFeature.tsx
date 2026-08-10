@@ -26,6 +26,7 @@ import {
   agentEventBus,
 } from '@/entrypoints/overlay.content/shared/modules/agent-loop';
 import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
+import { useConversationMessages } from '@/entrypoints/overlay.content/shared/modules/agent-loop/renderer/useConversationMessages';
 import {
   createAdapterForCurrentPlatform,
   getCurrentPlatformId,
@@ -34,6 +35,7 @@ import { assembleFinalPrompt } from '@/entrypoints/overlay.content/shared/module
 import { getEnabledSkills } from '@/entrypoints/overlay.content/shared/modules/agent-loop/skills/skill-registry';
 import { initMCPRegistry } from '@/entrypoints/overlay.content/shared/modules/agent-loop/mcp/setup';
 import { getAgentEntryById } from '@/entrypoints/overlay.content/shared/modules/agent-loop/agent-entry';
+import { buildToolCallFingerprint } from '@/entrypoints/overlay.content/shared/modules/agent-loop/execution-policy';
 import type { AgentPlatformAdapter } from '@/entrypoints/overlay.content/shared/modules/agent-loop';
 import {
   useEditorIntegration,
@@ -150,6 +152,72 @@ export const AgentLoopFeature: React.FC = () => {
       if (engineRef.current) clearActiveEngine(engineRef.current);
     };
   }, []);
+
+  // ─── Auto-pickup: detect tool calls in latest response while idle ───
+
+  const messages = useConversationMessages();
+  const autoPickupFiredRef = useRef(false);
+
+  // Reset the guard when status leaves idle (session started), so a *subsequent*
+  // idle period can fire again.
+  useEffect(() => {
+    const unsub = useAgentLoopStore.subscribe((s) => {
+      if (s.status !== 'idle') autoPickupFiredRef.current = false;
+    });
+    return unsub;
+  }, []);
+
+  /**
+   * When the engine is idle but the newest AI response contains tool calls with no
+   * matching results (i.e. nothing was sent back), the user continued the
+   * conversation without re-triggering `>`. The AI is still talking in tool format
+   * because it remembers the system prompt from the previous session.
+   *
+   * Automatically start a new session using the existing response element, skipping
+   * the "wait for AI" stage that would never resolve (the answer is already there).
+   */
+  useEffect(() => {
+    if (autoPickupFiredRef.current) return;
+
+    const status = useAgentLoopStore.getState().status;
+    if (status !== 'idle') return;
+
+    // Find the last model turn
+    const lastModel = [...messages].reverse().find((m) => m.role === 'model');
+    if (!lastModel) return;
+    if (!lastModel.toolCalls || lastModel.toolCalls.length === 0) return;
+    // Still streaming — wait for it to finish
+    if (lastModel.isStreaming) return;
+
+    // If any outcome is already known (from the next user message), it's history
+    if (lastModel.toolOutcomes.some((o) => o !== null)) return;
+
+    // Also skip if the ledger already knows these calls (current live session)
+    const store = useAgentLoopStore.getState();
+    const anyKnown = lastModel.toolCalls.some((tc) => {
+      const fp = buildToolCallFingerprint(tc.toolCall);
+      return store.executedCalls[fp] !== undefined;
+    });
+    if (anyKnown) return;
+
+    // We need the actual DOM element to pass to the engine
+    const adapter = getAdapter();
+    if (!adapter) return;
+    const responseElement = adapter.getLastAIResponseElement();
+    if (!responseElement) return;
+
+    autoPickupFiredRef.current = true;
+
+    console.log('[AgentLoop] Auto-pickup: detected unexecuted tool calls in idle state, starting session');
+
+    const engine = new AgentLoopEngine(adapter);
+    engineRef.current = engine;
+    setActiveEngine(engine);
+    engine.startFromExistingResponse(responseElement, 20, {
+      conversationId: conversationIdRef.current,
+      title: 'Follow-up task',
+    });
+  }, [messages, getAdapter]);
 
   // ─── Capsule insertion (from the `>` popup) ─────────────────────────
 

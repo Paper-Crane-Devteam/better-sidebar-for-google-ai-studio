@@ -28,6 +28,7 @@ src/entrypoints/overlay.content/shared/
 │   │   ├── index.ts               # Public API（barrel）
 │   │   ├── types.ts               # AgentLoopStatus / ToolCallResult / AgentEndReason
 │   │   ├── agent-loop-store.ts    # 运行时状态（非持久化）
+│   │   ├── agent-view-store.ts    # ★ 视图 override（持久化：conversationId → 手动选择）
 │   │   ├── agent-policy-store.ts  # 执行策略（持久化：autoRunReads / autoRunWrites）
 │   │   ├── agent-config-store.ts  # 用户自定义 skill / MCP 开关（持久化）
 │   │   ├── execution-policy.ts    # requiresApproval / shouldAutoSend / getToolRisk
@@ -403,6 +404,43 @@ execute-tools 逐个处理 tool call
 
 `executedCalls` 保留但降级为**纯展示** —— 卡片用它显示「已执行 / 执行失败 / 已拒绝」。
 
+### 历史卡片的状态从对话里读回来，不落盘
+
+`executedCalls` 只认识**当前这个 tab 里正在跑的会话**：`start()` 会清空它，刷新页面也没了。
+所以以前打开旧对话，每张卡片都写着「未执行」—— 而那次调用的输出就在下面一条消息里。
+
+真正的历史记录是**结果消息本身**。④ 把结果作为一条真实的 user 消息发回给 AI
+（`<bs_agent_result>` … `### label` … body），所以对话 DOM 就是持久层。比落盘一份账本好两点：
+覆盖得到在别的浏览器里跑过、或者这个功能上线之前的会话；而且它带着真实输出而不只是一个 boolean。
+
+```
+renderer/helpers/tool-outcomes.ts   ← engine/stages/handoff/formatter.ts 的逆运算
+  parseToolResults()    拆出 ### 段落
+  deriveToolOutcomes()  把 model 轮的 tool calls 和下一条 user 消息的段落对齐
+```
+
+对齐规则：**先按 label，位置只作兜底**。label 就是 `description || name`，和
+`formatter.section()` 写 header 用的是同一个表达式，正常都能命中。但 description 是 AI 写的，
+可能重复；而且这一轮可能多出一条不属于任何 call 的 `### ⚠️ Loop Warning` 段落 ——
+纯按位置的话它后面全部错一位，所以只在**条数相等**时才信位置。
+
+对不上就是 `null`（显示「未执行」）。在一个真的跑过的调用上写「未执行」，比在一个没跑过的
+调用上写「已执行」要小的谎。
+
+卡片的取值顺序是 `executedCalls[fingerprint] ?? derivedOutcome`：账本是第一手的，而且知道
+那些结果从没进过消息的调用；其余情况由对话回答，刷新之后它是唯一的来源。
+
+⚠️ `formatResults` 的语法常量（`RESULTS_HEADER` / `SECTION_SEPARATOR` /
+`PARSE_ERRORS_HEADER` / `USER_INSTRUCTION_HEADER`）从 `formatter.ts` **import**，不要重打一遍。
+两头一漂，症状是所有卡片悄悄退回「未执行」。
+
+⚠️ `isolateSections()` 要先切掉 `## User Instruction` 前缀块和 `## Parse Errors` 尾块。
+直接对整个 payload 按分隔符 split 会把它们当成伪段落，条数一变，位置兜底就跟着错。
+
+⚠️ 成功/失败用 `body.startsWith('ERROR:' / 'CANCELLED:')` 判，不要用多行搜索 —— 查询自己的
+输出里完全可以出现 ERROR 这个词，只有第一行是判词。递进错误提示是**追加在结果后面**的，
+所以前缀不受影响。
+
 ⚠️ 卡片只存在于 **custom 渲染视图**，用户可以中途切回 Gemini 原生渲染。所以
 `AgentApproval` 在侧边栏留了一份镜像，同一个 `resolve`，谁先答谁算。不然切回去
 就找不到批准的地方，引擎会一直挂着。
@@ -415,6 +453,32 @@ execute-tools 逐个处理 tool call
 
 store 是全局单例，所以 `start()` 会记下 `sessionConversationId`。
 `AgentTab` 只在 session 属于当前对话时显示；离开该对话且已 idle 时自动 `reset()`。
+
+### 用哪个视图：推导出来的，不是记下来的
+
+`viewMode`（运行时 store）是**现在屏幕上是什么**；`agent-view-store` 的
+`overrides[conversationId]` 是**用户手动选过什么**。两者分开，因为默认值是推导的：
+
+```ts
+desired = override ?? (hasAgentContent || isRunning ? 'custom' : 'original')
+```
+
+`hasAgentContent` 直接看当前对话 DOM 里有没有 prompt marker / tool call / tool result。
+所以刷新页面、切回旧对话都会自动进 Agent 视图 —— 依据就在页面上，常见情况什么都不用记。
+
+⚠️ 以前是「conversationId 变化且 idle → 强制 original」。刷新（null → id）和打开旧对话
+走的是同一条路径，于是**每次**都得手动点一下切换按钮，哪怕页面里明摆着是 agent 对话。
+
+⚠️ 只有「用户亲手覆盖」才落盘。在一个 agent 对话上切回原生视图是关于**这个对话**的
+决定，下次刷新又跳回去会像按钮没生效。所以 override 一条一条按对话存，只在点按钮时写。
+
+⚠️ `hasAgentContent` 必须进 effect 的依赖：mount 时它是 false，DOM 解析完（一两个 tick 后）
+才变 true。
+
+⚠️ **清 override 在 `agent-loop-store.start()` 里，不在组件的 effect 里。** 之前那条
+「给我看原生 DOM」是为了读历史，现在要跑任务了，它就过期了。放在 `start()` 里是因为
+那儿本来就已经在设 `viewMode: 'custom'` —— 同一个决定放一处。写成组件里的第二个 effect
+会和「应用 override」那个 effect 抢同一帧，视图先闪一下 original 再跳回 custom。
 
 ---
 

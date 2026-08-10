@@ -3,8 +3,9 @@
  * native AI Studio conversation DOM and custom Agent rendered view.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useAgentLoopStore } from '../agent-loop-store';
+import { useAgentViewStore } from '../agent-view-store';
 import { useConversationMessages } from './useConversationMessages';
 import { Eye, Sparkles } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
@@ -59,17 +60,28 @@ export const ConversationViewSwitcher: React.FC = () => {
   const isRunning = status !== 'idle';
   const shouldShow = hasAgentContent || isRunning;
 
-  // Reset to the native view when the user actually navigates to another
-  // conversation. Keying this on `status` too used to flip the view back to
-  // native the moment a session finished, and on mount before it even started.
-  const previousConversationId = useRef(conversationId);
+  const override = useAgentViewStore((s) =>
+    conversationId ? s.overrides[conversationId] : undefined,
+  );
+  const setOverride = useAgentViewStore((s) => s.setOverride);
+
+  /**
+   * Resolve the view from the conversation instead of resetting it on navigation.
+   *
+   * The old effect forced 'original' whenever the conversation id changed while
+   * idle, which is also what happens on a reload (null → id) and on reopening an
+   * old chat. So an agent conversation always came up as raw Gemini DOM and the user
+   * had to press the toggle every single time, even though the page plainly contains
+   * agent turns.
+   *
+   * Now the presence of agent content *is* the default, and only an explicit toggle
+   * is remembered. `hasAgentContent` is in the deps for a reason: it starts false on
+   * mount and turns true once the DOM has been parsed, a tick or two later.
+   */
   useEffect(() => {
-    if (previousConversationId.current === conversationId) return;
-    previousConversationId.current = conversationId;
-    if (useAgentLoopStore.getState().status === 'idle') {
-      setViewMode('original');
-    }
-  }, [conversationId, setViewMode]);
+    const desired = override ?? (hasAgentContent || isRunning ? 'custom' : 'original');
+    if (viewMode !== desired) setViewMode(desired);
+  }, [override, hasAgentContent, isRunning, viewMode, setViewMode]);
 
   if (!shouldShow) {
     return null;
@@ -78,7 +90,9 @@ export const ConversationViewSwitcher: React.FC = () => {
   const isCustom = viewMode === 'custom';
 
   const toggleViewMode = () => {
-    setViewMode(isCustom ? 'original' : 'custom');
+    const next = isCustom ? 'original' : 'custom';
+    setViewMode(next);
+    if (conversationId) setOverride(conversationId, next);
   };
 
   return (

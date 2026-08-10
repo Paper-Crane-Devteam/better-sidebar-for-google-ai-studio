@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Pencil, X, Loader2, MessageSquarePlus } from 'lucide-react';
+import { Pencil, X, MessageSquarePlus } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { useExplorerContext } from '../../ExplorerContext';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -72,16 +72,16 @@ export const PendingEntryNode = ({ style, phase, title, dragHandle }: PendingEnt
         )}
       >
         {/* Left spacer (toggle area) */}
-        <div className="w-4 h-4 flex items-center justify-center shrink-0" />
+        {phase !== 'intercepted' && (
+          <div className="w-4 h-4 flex items-center justify-center shrink-0" />
+        )}
 
         {/* Icon */}
-        <div className="w-4 h-4 flex items-center justify-center shrink-0 text-muted-foreground">
-          {phase === 'intercepted' ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
+        {phase !== 'intercepted' && (
+          <div className="w-4 h-4 flex items-center justify-center shrink-0 text-muted-foreground">
             <MessageSquarePlus className="w-4 h-4" />
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Content area */}
         {phase === 'editing' && (
@@ -127,7 +127,7 @@ export const PendingEntryNode = ({ style, phase, title, dragHandle }: PendingEnt
             </span>
           ) : (
             <div
-              className="flex-1 h-3 rounded-full"
+              className="flex-1 h-full rounded-sm"
               style={{
                 background: 'linear-gradient(90deg, rgb(var(--muted-foreground) / 0.1) 25%, rgb(var(--muted-foreground) / 0.05) 50%, rgb(var(--muted-foreground) / 0.1) 75%)',
                 backgroundSize: '200% 100%',

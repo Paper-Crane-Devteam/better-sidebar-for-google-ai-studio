@@ -19,6 +19,16 @@ export async function handleDbAdmin(
     case 'EXECUTE_SQL': {
       try {
         const result = await rawSql.execute(message.payload.sql);
+
+        // Write operations (INSERT/UPDATE/DELETE) change data that the sidebar
+        // and other UI surfaces read from the store. Without a notification the
+        // user has to reload the page to see the effect — e.g. a new folder
+        // created by the agent loop.
+        const isWrite = !/^\s*SELECT\b/i.test(message.payload.sql);
+        if (isWrite) {
+          notifyDataUpdated().catch(() => {});
+        }
+
         return { success: true, data: result };
       } catch (e: unknown) {
         return { success: false, error: (e as Error).message };

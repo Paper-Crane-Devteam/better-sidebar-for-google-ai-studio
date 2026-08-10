@@ -5,6 +5,7 @@
  */
 
 import { create } from 'zustand';
+import { useAgentViewStore } from './agent-view-store';
 import type {
   AgentLoopStatus,
   AgentEndReason,
@@ -148,11 +149,18 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set) => ({
   setViewMode: (mode) => set({ viewMode: mode }),
   setActiveSkillId: (id) => set({ activeSkillId: id }),
 
-  start: (maxRounds, session) =>
+  start: (maxRounds, session) => {
+    // A stored "show me the native DOM" for this conversation was about reading its
+    // history; launching a task supersedes it. Dropped here rather than in the
+    // switcher so the decision sits next to the `viewMode` it contradicts — an
+    // effect doing it would race the one that applies the override.
+    if (session?.conversationId) {
+      useAgentViewStore.getState().clearOverride(session.conversationId);
+    }
+
     set({
       status: 'waiting_ai',
       // Starting a session switches the conversation area to the agent view.
-      // Without this the switcher's idle-reset leaves it on 'original' forever.
       viewMode: 'custom',
       currentRound: 1,
       maxRounds,
@@ -170,7 +178,8 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set) => ({
       sessionTitle: session?.title ?? null,
       endReason: null,
       executedCalls: {},
-    }),
+    });
+  },
 
   awaitSend: () => set({ status: 'awaiting_send', errorMessage: null }),
 
