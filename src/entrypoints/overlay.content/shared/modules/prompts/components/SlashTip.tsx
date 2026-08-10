@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
+import { DismissibleTip } from '@/shared/components/DismissibleTip';
 
 const STORAGE_KEY = 'prompts_slash_tip_dismissed';
 
@@ -34,15 +34,8 @@ export const SlashTip = () => {
   if (!visible) return null;
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 mx-2 mb-2 rounded-md bg-muted/50 text-muted-foreground text-xs border border-border/50">
-      <span className="flex-1">{t('prompts.slashTip')}</span>
-      <button
-        onClick={dismiss}
-        className="shrink-0 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-        title={t('prompts.slashTipDismiss')}
-      >
-        <X className="h-3 w-3" />
-      </button>
-    </div>
+    <DismissibleTip onDismiss={dismiss}>
+      {t('prompts.slashTip')}
+    </DismissibleTip>
   );
 };

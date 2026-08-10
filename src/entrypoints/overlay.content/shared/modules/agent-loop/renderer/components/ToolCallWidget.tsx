@@ -31,8 +31,7 @@ import {
 import type { ParsedToolCall } from '../../types';
 import { parseToolCallFromText, extractToolInfo } from '../helpers/tool-parser';
 import { useAgentLoopStore } from '../../agent-loop-store';
-import { buildToolCallFingerprint } from '../../execution-policy';
-import { ENGINE_ONLY_TOOLS } from '../../engine';
+import { buildToolCallFingerprint, isControlTool } from '../../execution-policy';
 
 interface ToolCallWidgetProps {
   toolName?: string;
@@ -73,9 +72,10 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
   const pendingApproval = useAgentLoopStore((s) => s.pendingApproval);
   const currentTool = useAgentLoopStore((s) => s.currentTool);
 
-  // Loop-control tools never take an approval: `ask_user` is answered in its own
-  // panel, `complete_task` just ends the session.
-  const engineOnly = ENGINE_ONLY_TOOLS.includes(toolName);
+  // Control tools never take an approval: `complete_task` just ends the session, so
+  // there is nothing to allow or refuse. The policy agrees — `requiresApproval` is
+  // false for them — so this is belt-and-braces, not the enforcement point.
+  const engineOnly = isControlTool(toolName);
   const isPending =
     !engineOnly &&
     isLatestResponse &&
@@ -100,9 +100,7 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
   const renderStatus = () => {
     if (engineOnly) {
       return (
-        <span className="ml-auto shrink-0 px-2 py-1 text-xs text-muted-foreground">
-          {toolName === 'ask_user' ? '等待你的回答' : '任务结束'}
-        </span>
+        <span className="ml-auto shrink-0 px-2 py-1 text-xs text-muted-foreground">任务结束</span>
       );
     }
 

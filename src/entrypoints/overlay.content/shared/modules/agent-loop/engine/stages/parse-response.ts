@@ -1,32 +1,31 @@
 /**
- * Stage ② — turn the AI's text into tool calls, or decide what to do without any.
+ * Stage ② — turn the AI's text into tool calls, or decide the session is over.
  *
  * The important rule lives here: **a response with no tool calls is not
  * completion.** The protocol ends with `complete_task`, so silence means the AI
- * either forgot the format, is waiting on the user, or is just talking. Treating it
- * as success is what once made a session announce "Task finished" on round 1 without
- * doing anything, so this stage nudges instead.
+ * either drifted into prose or lost the format. Treating it as success is what once
+ * made a session announce "Task finished" on round 1 without doing anything.
  *
- * What it does when nudging stops working changed, though. Pausing as a
- * circuit-breaker fault reported "the agent is stuck" for the commonest case by
- * far — the AI proposed something and waited for a human. So the last resort is now
- * to hand the response to the user as a question: worst case the loop ends in a
- * state a person can act on, instead of a dead end.
+ * But it isn't something to argue with either. Gemini only answers when it is sent
+ * something, and stage ④ only sends when there are results — so "do nothing and
+ * carry on" would leave stage ① waiting out its timeout on a turn that is never
+ * coming. There is exactly one honest move: end the session and say why.
+ *
+ * The one exception is a response that *tried* to call a tool and produced garbage:
+ * an unclosed block (the stream got cut) or JSON that won't parse. That is an
+ * accident rather than a decision, so the breaker grants one retry per session.
  */
 
-import type { AgentQuestion, ParsedToolCall } from '../../types';
+import type { ParsedToolCall } from '../../types';
 import type { LoopContext } from '../context';
 import { parseToolCalls, hasUnclosedToolBlock } from '../parser';
-import { buildFallbackQuestion, MAX_ASK_USER_PER_SESSION } from '../../tools/ask-user';
 
 export type ParseOutcome =
   /** Normal path — hand these to stage ③ */
   | { kind: 'tool-calls'; toolCalls: ParsedToolCall[]; errors: string[] }
-  /** No usable calls — send this text back to get the AI moving again */
+  /** A malformed block got its one retry — send this back to get a clean response */
   | { kind: 'nudge'; text: string }
-  /** It asked in prose; park on it as a question rather than dead-ending */
-  | { kind: 'ask-user'; question: AgentQuestion }
-  /** Stalled past the threshold; the loop is already paused */
+  /** Nothing to run and nothing to send; the session is already ended */
   | { kind: 'stalled' };
 
 export function parseResponse(ctx: LoopContext, responseElement: HTMLElement): ParseOutcome {
@@ -42,45 +41,36 @@ export function parseResponse(ctx: LoopContext, responseElement: HTMLElement): P
     textLength: responseText.length,
     toolCallCount: toolCalls.length,
   });
-  ctx.countTokens(responseText);
 
   if (toolCalls.length > 0) {
-    ctx.breaker.resetNoProgress();
     return { kind: 'tool-calls', toolCalls, errors };
   }
 
-  const noProgress = ctx.breaker.recordNoToolResponse();
-  // Counted either way, so repeated truncation still runs out of patience
+  // A block was attempted but came out unusable — worth one more try.
   const truncated = hasUnclosedToolBlock(responseText);
 
-  if (noProgress.action === 'stop') {
-    const question = truncated ? null : buildFallbackQuestion(responseText);
-
-    // Only while the asking budget lasts — otherwise an AI that never calls a tool
-    // would bounce the user between the same unanswerable prompt forever.
-    if (question && ctx.store.askUserCount < MAX_ASK_USER_PER_SESSION) {
-      console.log('[AgentLoop] No tool calls after nudging — treating the reply as a question');
-      return { kind: 'ask-user', question };
+  if (truncated || errors.length > 0) {
+    if (ctx.breaker.claimFormatRetry()) {
+      console.log(
+        `[AgentLoop] Malformed tool block (${truncated ? 'truncated' : 'unparseable'}), nudging once`,
+      );
+      return {
+        kind: 'nudge',
+        text: ctx.breaker.getFormatGuidance(truncated ? 'truncated' : 'unparseable', errors),
+      };
     }
 
-    console.log('[AgentLoop] No-progress threshold reached, stopping');
-    ctx.pauseAndEnd(noProgress.message, 'circuit_breaker');
+    console.log('[AgentLoop] Format retry budget spent, ending session');
+    ctx.finish('no_tool_call');
     return { kind: 'stalled' };
   }
 
-  if (truncated) {
-    console.log('[AgentLoop] Response looks truncated mid tool call');
-    return { kind: 'nudge', text: ctx.breaker.getTruncationGuidance() };
-  }
-
-  console.log('[AgentLoop] No tool calls, nudging AI');
-
-  // Blocks were present but unparseable — tell the AI exactly what broke, otherwise
-  // it has no way to know its formatting was the problem.
-  const text =
-    errors.length > 0
-      ? `${noProgress.message}\n\n## Parse Errors\n\n${errors.map((e) => `- ${e}`).join('\n')}`
-      : noProgress.message;
-
-  return { kind: 'nudge', text };
+  // Plain prose. Nothing to execute, nothing to send — end here rather than wait on
+  // a turn that cannot arrive.
+  //
+  // `finish`, not `pause`: pausing offers Retry, and retrying would re-enter stage ①
+  // to wait out its timeout on that same absent turn.
+  console.log('[AgentLoop] No tool calls in the response, ending session');
+  ctx.finish('no_tool_call');
+  return { kind: 'stalled' };
 }

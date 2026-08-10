@@ -46,7 +46,9 @@
     "newFolder": "新建文件夹",
     "imported": "收件箱",
     "conversations": "条对话",
-    "scanComplete": "扫描完成，未发现新对话"
+    "scanComplete": "扫描完成，未发现新对话",
+    "importTipText": "导入完整聊天列表以查看所有对话。",
+    "importTipAction": "立即导入"
   },
   "settings": {
     "general": "常规",
@@ -1096,13 +1098,13 @@
       "awaiting_approval": "等你确认操作",
       "sending": "发送中…",
       "awaiting_send": "等你确认",
-      "awaiting_user": "等你回答",
+      "checkIn": "等你确认是否继续",
       "paused": "已暂停",
       "error": "出错"
     },
     "header": {
       "step": "第 {{count}} 步",
-      "speedHint": "本次任务自动批准写操作"
+      "speedHint": "本次任务剩下的步骤都不会再问你"
     },
     "actions": {
       "stop": "停止",
@@ -1122,28 +1124,22 @@
       "autoReads": "查询无需询问",
       "autoWrites": "修改数据无需询问",
       "autoWritesHint": "修改目前还无法撤销",
-      "autoContinue": "自动发送结果",
-      "autoContinueHint": "关闭后每轮都需要你按回车",
+      "autoContinue": "自己往下走",
+      "autoContinueHint": "关掉后，每一步都要你按回车",
+      "sendHint": "你确认过的步骤仍会等你按回车；只有不用确认的步骤才会自动发送。",
       "taskApproved": "本次任务已全部放行 — 点击可停止"
     },
-    "ask": {
-      "title": "Agent 需要你的输入",
-      "placeholder": "输入你的回答…",
-      "placeholderOther": "或者用自己的话回答…",
-      "send": "回答",
-      "chatHint": "也可以直接在聊天输入框里回复。",
-      "stop": "停止任务"
-    },
-    "confirm": {
-      "title": "确认修改",
-      "followsPlan": "这是在执行你已批准的计划。写操作会单独确认。",
-      "showFull": "查看完整语句",
+    "approve": {
+      "readTitle": "允许执行这个查询？",
+      "writeTitle": "允许执行这个修改？",
+      "run": "执行",
+      "runRest_one": "剩下的 {{count}} 个也一起执行",
+      "runRest_other": "剩下的 {{count}} 个也一起执行",
+      "runRest": "剩下的 {{count}} 个也一起执行",
+      "allTask": "本次任务不再询问",
       "reject": "拒绝",
-      "confirmReject": "拒绝",
       "back": "返回",
-      "reasonPlaceholder": "哪里不对？（可选）",
-      "approve": "允许",
-      "approveAll": "本次任务全部允许"
+      "reasonPlaceholder": "哪里不对？（可选）"
     },
     "instruction": {
       "placeholder": "给 AI 补充说明…",
@@ -1157,8 +1153,9 @@
       "infeasible": "无法完成",
       "paywall": "需要升级",
       "stopped": "已停止",
-      "maxRounds": "已达步数上限",
       "stuck": "已停止 — Agent 在重复同样的操作",
+      "noToolCall": "已停止 — 没有执行任何操作",
+      "noToolCallDesc": "Agent 最后的回复没有执行任何操作。可以在聊天里看看内容，如果任务还需要做，重新发起一次。",
       "ended": "会话结束",
       "paywallDesc": "免费版只允许 Agent 读取数据，升级后可以修改。",
       "steps_one": "执行了 {{count}} 步",

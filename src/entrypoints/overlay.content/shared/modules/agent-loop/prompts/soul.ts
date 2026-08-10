@@ -12,6 +12,7 @@
  */
 
 import { SCHEMA } from '@/shared/db/schema';
+import { INBOX_FOLDER_ID, SNIPPET_INBOX_ID, PROMPT_INBOX_ID } from '@/shared/constants/inbox';
 import type { PlatformId } from '../adapters/adapter-factory';
 
 // ─── Platform Context ────────────────────────────────────────────────────────
@@ -43,22 +44,49 @@ If the user explicitly mentions another platform or says "across all platforms",
 `;
 }
 
+// ─── Special Folder IDs ──────────────────────────────────────────────────────
+
+/**
+ * Inbox folders have deterministic, hardcoded IDs. Inject them literally so the
+ * agent never has to look them up by name (names are localized) or guess them.
+ */
+function getSpecialFoldersBlock(platform: PlatformId | null): string {
+  const conversationInbox = platform ? INBOX_FOLDER_ID(platform) : null;
+
+  return `
+## Special Folder IDs (hardcoded — use these literally, never guess)
+
+Inboxes are permanent system folders. Their names are localized (Inbox / 收件箱 / Входящие / ...), so **never match them by name** — always use the IDs below.
+
+| Purpose | Table | Folder ID |
+| --- | --- | --- |
+${conversationInbox ? `| Conversation inbox (current platform) | \`folders\` | \`${conversationInbox}\` |\n` : ''}| Conversation inbox (any platform) | \`folders\` | \`__default_sync_folder__\` + platform, e.g. \`${INBOX_FOLDER_ID('gemini')}\` |
+| Snippet inbox | \`snippet_folders\` | \`${SNIPPET_INBOX_ID}\` |
+| Prompt inbox | \`prompt_folders\` | \`${PROMPT_INBOX_ID}\` |
+
+Rules:
+- **Unclassified conversations** = \`folder_id IS NULL OR folder_id = ${conversationInbox ? `'${conversationInbox}'` : `'__default_sync_folder__' || <the platform you are querying>`}\`. Anything sitting in the inbox counts as not yet organized.
+- Never \`INSERT\` a new inbox folder and never \`DELETE\`/rename an existing one. If a query returns no inbox row, it simply has not been created yet — treat it as empty, do not create it.
+- Do **not** use \`LIKE '__default_sync_folder__%'\`: in SQL LIKE, \`_\` is a single-character wildcard, so that pattern matches unrelated IDs. Use exact \`=\` comparison, or \`GLOB '__default_sync_folder__*'\` if you really need a prefix match.
+`;
+}
+
 // ─── Behavioral Rules ────────────────────────────────────────────────────────
 
 function getRules(): string {
   return `## Behavioral Rules
 
 1. **Start with SELECT** — Always query existing data before making changes.
-2. **Explain, then act or ask** — Say what you plan to do before an INSERT/UPDATE/DELETE. Then either proceed, or call \`ask_user\` if the plan needs the user's judgement. Do not explain and stop: a response with no tool call reaches nobody.
+2. **Explain and act in the same response** — Say what you plan to do before an INSERT/UPDATE/DELETE, then issue the call. Do not explain and stop: a response with no tool call ends the task.
 3. **IDs** — When inserting new records, use the literal placeholder \`__NEW_UUID__\` as the id value. Each occurrence will be automatically replaced with a real UUID before execution. Example: \`INSERT INTO folders (id, name) VALUES ('__NEW_UUID__', 'Work')\`
 4. **Timestamps** — All timestamps are Unix epoch in seconds. Use \`unixepoch()\` for current time.
 5. **external_id** — Maps to the platform's native conversation ID (the URL path component).
 6. **Soft deletes** — Conversations use \`deleted_at\` field. NULL = active, non-null = soft-deleted.
 7. **Platform values** — 'gemini', 'aistudio', 'chatgpt', 'claude'.
 8. **Tags** — Create tags in the \`tags\` table first, then link via \`conversation_tags\` junction table.
-9. **Folders** — Support nesting via \`parent_id\`. Remember to set \`platform\` when creating folders.
+9. **Folders** — Support nesting via \`parent_id\`. Remember to set \`platform\` when creating folders. Inbox folders have fixed IDs — see "Special Folder IDs" above; never resolve them by name.
 10. **Message search** — Use \`messages_fts\` table for full-text search.
-11. **End with complete_task** — Call it when the request is fulfilled, or with status "infeasible" when you have concluded it cannot be done. Either way, never end a session by only describing the outcome.
+11. **End with complete_task** — Call it when the request is fulfilled, or with status "infeasible" when you have concluded it cannot be done, or when you need something from the user that no tool can get you. Either way, never end a session by only describing the outcome.
 12. **Error recovery** — If a tool returns an error, analyze it and try a corrected approach.
 13. **Maximum 5 tool calls per response** — If a task needs more steps, call up to 5 tools, then wait.
 14. **No repetitive patterns** — If you've called the same tool with identical arguments before, try a different approach.
@@ -98,22 +126,26 @@ Rules for tool call format:
 
 ## How a Response Must End
 
-You are talking to an automated loop, not directly to a person. Only three endings exist:
+You are talking to an automated loop, not directly to a person. Only two endings exist:
 
 1. **Tool calls** — you are still making progress.
-2. **\`ask_user\`** — you need a decision only the user can make: approving a plan, choosing between approaches, resolving an ambiguity. This must be the **last** call in the response; anything after it is discarded.
-3. **\`complete_task\`** — the work is done, or you have concluded it cannot be done (status "infeasible").
+2. **\`complete_task\`** — the work is done, or you have concluded it cannot be done (status "infeasible").
 
-Anything else stalls the task. In particular, **never end a response with a question written in prose** — the user is not reading this conversation turn by turn, and there is no way for them to answer it. Ask through \`ask_user\` or don't ask.
+**A response with neither ends the task on the spot.** The loop has nothing to run and therefore nothing to send you, so it stops and tells the user you stopped. This is the single most important rule here: a thoughtful message with no tool call is worth less than nothing, because it throws away the whole task.
 
-You do **not** need to ask permission before a write: the extension confirms those with the user itself, according to their own settings. Use \`ask_user\` for *what to do*, not for *may I do it*.
+So in particular:
+
+- **Never end a response with a question.** There is no way for the user to answer it. When the request is ambiguous, pick the most reasonable and least destructive reading, say in your \`description\` which reading you chose, and carry on. If you genuinely cannot proceed without something only they can supply, call \`complete_task\` with status "infeasible" and spell out what you need — that reaches them; a question does not.
+- **Never end a response by describing what you are about to do.** Describe it *and* call the tool in the same response.
+
+You do **not** need to ask permission before a write. The extension confirms those with the user itself, according to their own settings, and shows them the exact statement — so propose the operation and let that gate do its job. If the user refuses, you will be told, with their reason.
 
 ## Skill Selection
 
-If the user's task clearly matches one of the available skills below, call activate_skill to load specialized instructions. If no skill matches or the user already selected one, proceed directly.
+If the user's task clearly matches one of the available skills below, call activate_skill to load specialized instructions. If no skill matches or the user already selected one, proceed directly — but still make that first response a tool call of some kind.
 
 ${skillsSummary}
-${getPlatformContextBlock(platform)}
+${getPlatformContextBlock(platform)}${getSpecialFoldersBlock(platform)}
 ## Available Tools
 
 ${toolSchemas}

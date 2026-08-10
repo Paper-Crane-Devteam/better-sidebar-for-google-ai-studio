@@ -20,7 +20,6 @@ export const SUPPORTED_TOOLS = [
   'execute_sql',
   'sync_conversation_messages',
   'export',
-  'ask_user',
   'complete_task',
   'activate_skill',
 ] as const;
@@ -30,19 +29,21 @@ export const REQUIRED_PARAMS: Record<string, string[]> = {
   execute_sql: ['query'],
   sync_conversation_messages: ['conversation_ids'],
   export: ['ids', 'format'],
-  ask_user: ['question'],
   complete_task: ['summary'],
   activate_skill: ['skill_id'],
 };
 
 /**
- * Tools whose manual "Run" button in the conversation makes no sense.
+ * Tools that steer the loop rather than doing work.
  *
- * Both of these drive the engine's state machine rather than doing work: running
- * `ask_user` by hand would park a question nobody is waiting on, and
- * `complete_task` would claim a session that isn't running.
+ * `complete_task` just ends the session; there is nothing to allow or refuse, so it
+ * is classified `control` (see `getToolRisk`) and skips the approval gate entirely
+ * instead of being filed under `read` and inheriting the auto-run-reads switch.
+ *
+ * The list lives here, in the leaf schema module, so the policy layer and the
+ * renderer can both read it without importing each other.
  */
-export const ENGINE_ONLY_TOOLS: readonly string[] = ['ask_user', 'complete_task'];
+export const CONTROL_TOOLS: readonly string[] = ['complete_task'];
 
 /**
  * Whether the response looks cut off mid tool call.

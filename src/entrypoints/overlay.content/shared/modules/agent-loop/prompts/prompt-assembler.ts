@@ -8,8 +8,27 @@
 
 import type { Skill } from '../skills/types';
 import type { PlatformId } from '../adapters/adapter-factory';
+import { getCurrentPlatformId } from '../adapters/adapter-factory';
+import { INBOX_FOLDER_ID, SNIPPET_INBOX_ID, PROMPT_INBOX_ID } from '@/shared/constants/inbox';
 import { getSoulPrompt } from './soul';
 import { generateToolSchemaPrompt } from '../mcp/schema-generator';
+
+// ─── Placeholder Resolution ──────────────────────────────────────────────────
+
+/**
+ * Skill prompts (built-in and user-authored) are static strings, so they refer
+ * to inbox folders through placeholders. Resolve them to the literal IDs here
+ * so the agent never has to guess or look an inbox up by its localized name.
+ */
+function resolveInboxPlaceholders(content: string, platform: PlatformId | null): string {
+  // Platform is always known in practice (the agent only runs on a detected
+  // platform); the fallback keeps the placeholder self-describing just in case.
+  const conversationInbox = platform ? INBOX_FOLDER_ID(platform) : `${INBOX_FOLDER_ID('')}<platform>`;
+  return content
+    .replace(/<CONVERSATION_INBOX_ID>/g, conversationInbox)
+    .replace(/<SNIPPET_INBOX_ID>/g, SNIPPET_INBOX_ID)
+    .replace(/<PROMPT_INBOX_ID>/g, PROMPT_INBOX_ID);
+}
 
 // ─── Skills Summary Generation ───────────────────────────────────────────────
 
@@ -64,7 +83,8 @@ export function assembleFinalPrompt(options: AssembleOptions): string {
 
   // Append selected skill's prompt content
   if (selectedSkill) {
-    prompt += `\n\n## Active Skill Instructions\n\n${selectedSkill.promptContent}`;
+    const skillContent = resolveInboxPlaceholders(selectedSkill.promptContent, platform);
+    prompt += `\n\n## Active Skill Instructions\n\n${skillContent}`;
   }
 
   return prompt;
@@ -77,9 +97,11 @@ export function assembleFinalPrompt(options: AssembleOptions): string {
  * Returns skill prompt content so AI gets specialized instructions.
  */
 export function assembleSkillActivation(skill: Skill): string {
+  const content = resolveInboxPlaceholders(skill.promptContent, getCurrentPlatformId());
+
   return `## Skill Activated: ${skill.title}
 
-${skill.promptContent}
+${content}
 
 You now have specialized instructions for this task. Proceed with execution using the available tools.`;
 }

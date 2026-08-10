@@ -7,8 +7,7 @@ import type { MessageSender } from '../types';
 import { notifyDataUpdated } from '../notify';
 import { triggerAutoSync } from './gdrive-sync';
 import i18n from '@/locale/i18n';
-
-const SNIPPET_INBOX_ID = '__snippet_inbox__';
+import { SNIPPET_INBOX_ID } from '@/shared/constants/inbox';
 
 /** Find or create the snippet inbox folder */
 async function resolveSnippetInbox(): Promise<string> {

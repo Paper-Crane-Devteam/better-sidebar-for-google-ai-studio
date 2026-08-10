@@ -5,7 +5,7 @@
  * lifecycle entry points the UI calls (start / stop / resume / continueNow):
  *
  *   ① stages/await-response  wait for the AI to finish answering
- *   ② stages/parse-response  extract tool calls (or decide how to nudge)
+ *   ② stages/parse-response  extract tool calls (or end the session)
  *   ③ stages/execute-tools   run them, guarded by the circuit breaker
  *   ④ stages/handoff         send the results back and confirm they left
  *
@@ -22,13 +22,12 @@
  */
 
 import type { AgentPlatformAdapter } from '../adapters/types';
-import type { AgentQuestion } from '../types';
+import { isUnattendedAllowed, shouldAutoSend } from '../execution-policy';
 import { LoopContext } from './context';
 import { isAbortError } from './guards/abort';
 import { awaitAIResponse } from './stages/await-response';
 import { parseResponse } from './stages/parse-response';
 import { executeTools } from './stages/execute-tools';
-import { waitForUserAnswer } from './stages/ask-user-gate';
 import { formatResults, ResultHandoff } from './stages/handoff';
 
 export class AgentLoopEngine {
@@ -36,11 +35,20 @@ export class AgentLoopEngine {
   private readonly handoff: ResultHandoff;
 
   /**
-   * Sections that were produced but never delivered, because the user answered the
-   * AI's question in the chat input instead of the tab. Their turn goes out ahead of
-   * ours, so these ride along with the next round's payload rather than vanishing.
+   * Rounds in a row that went out without the user touching anything.
+   *
+   * This, not the total round count, is what `maxRounds` caps — the limit exists to
+   * stop a runaway while nobody is watching, and a round the user pressed Enter on
+   * had a person in it by definition. So a hands-on session has no ceiling: the user
+   * is the brake, and making them clear a "step limit" every twenty rounds is pure
+   * friction.
+   *
+   * Derived from `shouldAutoSend` rather than from the policy switches, which is
+   * what makes `speedMode` behave: "don't ask again for this task" leaves
+   * `autoRunWrites` off while making the session fully unattended, and reading the
+   * switches would have let exactly that case run uncapped.
    */
-  private carryOver: string[] = [];
+  private unattendedStreak = 0;
 
   constructor(adapter: AgentPlatformAdapter) {
     this.ctx = new LoopContext(adapter);
@@ -60,7 +68,7 @@ export class AgentLoopEngine {
     this.ctx.abort.renew();
     this.ctx.breaker.reset();
     this.handoff.reset();
-    this.carryOver = [];
+    this.unattendedStreak = 0;
     this.ctx.store.start(maxRounds, session);
 
     console.log('[AgentLoop] Engine started, max rounds:', maxRounds);
@@ -89,6 +97,16 @@ export class AgentLoopEngine {
 
     this.ctx.store.resume();
     this.ctx.abort.renew();
+
+    // The user looked at the problem and chose to continue, so the guards start over.
+    // Without this a session paused by the breaker re-trips on its very next failure,
+    // and Retry buys exactly one tool call. `maxRounds` still bounds the session, and
+    // a human clicking Retry each time is not a runaway.
+    this.ctx.breaker.reset();
+
+    // Same reasoning for the unattended budget: continuing past the step limit is an
+    // explicit "yes, keep going", so it starts over rather than stopping again at once.
+    this.unattendedStreak = 0;
 
     if (this.handoff.hasPending()) {
       const sent = await this.handoff.resend().catch((e) => {
@@ -134,14 +152,9 @@ export class AgentLoopEngine {
   private async runRounds(): Promise<void> {
     const ctx = this.ctx;
 
-    /**
-     * A turn that arrived while we were parked on a question and had already
-     * finished before we noticed. Stage ① anchors on whatever turn exists when it
-     * starts, so it would wait out its timeout for a reply that is already on screen.
-     */
-    let observed: HTMLElement | null = null;
-
-    while (ctx.hasRoundsLeft()) {
+    // No condition here: the only ceiling is the unattended streak, checked at the
+    // bottom where the round's outcome is known.
+    for (;;) {
       ctx.abort.check();
 
       if (ctx.atBreakpoint()) {
@@ -150,118 +163,66 @@ export class AgentLoopEngine {
       }
 
       // ① Wait for the AI
-      const response = observed ?? (await awaitAIResponse(ctx));
-      observed = null;
+      const response = await awaitAIResponse(ctx);
       if (!response) return;
       ctx.abort.check();
 
-      // ② Parse
+      // ② Parse — no tool calls means the session is over, and it says so itself
       const parsed = parseResponse(ctx, response);
       if (parsed.kind === 'stalled') return;
 
-      // It asked in prose instead of calling ask_user — salvaged into a question
-      if (parsed.kind === 'ask-user') {
-        const step = await this.askUser(parsed.question, [], []);
-        if (step.stop) return;
-        observed = step.response;
-        continue;
-      }
-
-      // No usable tool calls: send a nudge and spend a round on it
+      // A malformed block spent its one retry: send the correction and try again.
+      // No round to inspect here, so only the standing preference applies.
       if (parsed.kind === 'nudge') {
-        if (!(await this.handoff.deliver(parsed.text))) return;
+        if (!(await this.handoff.deliver(parsed.text, isUnattendedAllowed()))) return;
         ctx.abort.check();
         ctx.advanceRound();
         continue;
       }
 
+      // Decided before executing: `requiresApproval` reads `approveRestOfRound`,
+      // which stage ③ can set to true partway through. Asked afterwards, a round the
+      // user was walked through would look unattended and send by itself.
+      const autoSend = shouldAutoSend(parsed.toolCalls);
+
       // ③ Execute
       const executed = await executeTools(ctx, parsed.toolCalls);
       if (executed.kind === 'ended') return;
 
-      // The AI wants a decision — park until it arrives, from either direction
-      if (executed.kind === 'awaiting-user') {
-        const step = await this.askUser(executed.question, executed.results, parsed.errors);
-        if (step.stop) return;
-        observed = step.response;
-        continue;
+      // A guard stopped the round, but the AI is still owed the report. Hold it so
+      // Retry delivers the errors and the AI gets a chance to correct itself —
+      // dropping it is what made Retry look like a no-op.
+      if (executed.kind === 'halted') {
+        this.handoff.holdForRetry(
+          formatResults(executed.results, parsed.errors, ctx.takePendingInstruction()),
+        );
+        ctx.pauseAndEnd(executed.reason, 'circuit_breaker');
+        return;
       }
 
       // ④ Hand the results back
       const payload = formatResults(
-        this.takeCarryOver(executed.results),
+        executed.results,
         parsed.errors,
         ctx.takePendingInstruction(),
       );
-      if (!(await this.handoff.deliver(payload))) return;
+      if (!(await this.handoff.deliver(payload, autoSend))) return;
 
       ctx.abort.check();
+
+      // A round the user sent themselves resets the budget — they were present for it.
+      this.unattendedStreak = autoSend ? this.unattendedStreak + 1 : 0;
+
       ctx.advanceRound();
 
-      if (!ctx.hasRoundsLeft()) {
-        console.log('[AgentLoop] Max rounds reached');
-        ctx.pauseAndEnd(
-          `Reached maximum rounds (${ctx.maxRounds}). Continue?`,
-          'max_rounds',
-          ctx.round - 1,
-        );
+      if (this.unattendedStreak >= ctx.maxRounds) {
+        console.log(`[AgentLoop] ${this.unattendedStreak} unattended rounds, pausing for a check-in`);
+        // `checkIn`, not `pause` / `pauseAndEnd`: nothing has gone wrong and nothing
+        // is finished. Announcing the session over is what made this read as a
+        // failure — the task is only waiting to hear whether it should carry on.
+        ctx.checkIn(this.unattendedStreak);
         return;
       }
     }
-  }
-
-  // ── Waiting on the user ────────────────────────────────────────────────────
-
-  /**
-   * Park on a question and act on however it gets answered.
-   *
-   * `response` comes back set when the user answered in the chat input and the AI's
-   * reply had already finished — the next round must parse that instead of waiting
-   * for a turn that has been and gone.
-   *
-   * The round is refunded either way: a round the user spent thinking is supervised
-   * by definition, so charging it against `maxRounds` would let a few questions
-   * exhaust the budget meant for actual work.
-   */
-  private async askUser(
-    question: AgentQuestion,
-    results: string[],
-    errors: string[],
-  ): Promise<{ stop: true } | { stop: false; response: HTMLElement | null }> {
-    const ctx = this.ctx;
-    const outcome = await waitForUserAnswer(ctx, question);
-
-    if (outcome.kind === 'aborted') return { stop: true };
-
-    ctx.grantBonusRound();
-
-    if (outcome.kind === 'external') {
-      // The answer reached the AI through the composer, so there is nothing to send
-      // and no send to confirm — but these sections still haven't been delivered.
-      this.carryOver.push(...results);
-      ctx.advanceRound();
-      ctx.events.emit('loop:round-started', { round: ctx.round });
-      return { stop: false, response: outcome.response };
-    }
-
-    const payload = formatResults(
-      this.takeCarryOver(results),
-      errors,
-      ctx.takePendingInstruction(),
-      outcome.answer,
-    );
-    if (!(await this.handoff.deliver(payload))) return { stop: true };
-
-    ctx.abort.check();
-    ctx.advanceRound();
-    return { stop: false, response: null };
-  }
-
-  /** Prepend anything still owed to the AI, and clear the debt */
-  private takeCarryOver(results: string[]): string[] {
-    if (this.carryOver.length === 0) return results;
-    const merged = [...this.carryOver, ...results];
-    this.carryOver = [];
-    return merged;
   }
 }

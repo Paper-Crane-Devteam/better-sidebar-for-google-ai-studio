@@ -8,13 +8,10 @@
 /**
  * Loop status.
  *
- * Two of these are checkpoints rather than faults, and the distinction from
- * `paused` is load-bearing for the UI:
- *
- * - `awaiting_send` — the normal end of every round; tool results are sitting in
- *   the editor waiting to go back to the AI.
- * - `awaiting_user` — the AI called `ask_user` and needs a decision only a human
- *   can make. Nothing is wrong; the loop is deliberately parked.
+ * `awaiting_send` is a checkpoint rather than a fault, and the distinction from
+ * `paused` is load-bearing for the UI: tool results are sitting in the editor
+ * waiting to go back to the AI, either because the engine is about to click send
+ * itself or because this round had something the user approved by hand.
  *
  * `paused` means something went wrong or the loop hit a guard (timeout,
  * breakpoint, circuit breaker, max rounds) and needs an explicit retry.
@@ -27,7 +24,6 @@ export type AgentLoopStatus =
   | 'awaiting_approval'
   | 'sending'
   | 'awaiting_send'
-  | 'awaiting_user'
   | 'paused'
   | 'error';
 
@@ -45,6 +41,10 @@ export interface ParseResult {
   errors: string[];
 }
 
+/**
+ * `timestamp` records ordering, not duration — the summary card walks history
+ * backwards to find the last `complete_task`. Nothing measures elapsed time.
+ */
 export interface ToolCallResult {
   toolName: string;
   /**
@@ -82,14 +82,27 @@ export interface ExecutedCall {
  * reason of its own, that verdict used to fall into the no-tool-call path, where
  * the nudge pushed an AI that already knew better to keep guessing.
  */
+/**
+ * Why a session ended.
+ *
+ * Note there is no `max_rounds`: hitting the step limit is a check-in, not an end.
+ * It pauses and asks whether to carry on, so it never produces an end reason —
+ * announcing the session over is what made a routine pause read as a failure.
+ */
 export type AgentEndReason =
   | 'complete'
   | 'infeasible'
-  | 'max_rounds'
   | 'user_stop'
   | 'error'
   | 'circuit_breaker'
-  | 'paywall';
+  | 'paywall'
+  /**
+   * The AI answered without calling a tool, so there is nothing to run and
+   * nothing to send back. Gemini only speaks when spoken to, so continuing the
+   * loop would mean waiting on a turn that is never coming — the session ends
+   * here instead. Not an error: it usually means the model drifted into prose.
+   */
+  | 'no_tool_call';
 
 /** How much of the request `complete_task` claims to have delivered */
 export type TaskOutcome = 'success' | 'partial' | 'infeasible';
@@ -107,8 +120,17 @@ export interface BuiltInPrompt {
 
 // ─── Approval ────────────────────────────────────────────────────────────────
 
-/** Whether a tool call touches data or only looks at it */
-export type ToolRisk = 'read' | 'write';
+/**
+ * What a tool call does, as far as the approval policy is concerned.
+ *
+ * - `read`    — looks at data
+ * - `write`   — changes data
+ * - `control` — steers the loop and touches nothing. `complete_task` is the whole
+ *   category: it ends the session and that is all. There is no operation to allow
+ *   or refuse, so it sits outside both auto-run switches rather than being filed
+ *   under `read` and inheriting a gate that has nothing to gate.
+ */
+export type ToolRisk = 'read' | 'write' | 'control';
 
 /**
  * How far an approval reaches.
@@ -148,36 +170,6 @@ export interface PendingApproval {
   /** Calls left in this response, so "approve the rest" can say how many */
   remaining: number;
   resolve: (decision: ApprovalDecision) => void;
-}
-
-// ─── Asking the user ─────────────────────────────────────────────────────────
-
-/**
- * A decision the loop cannot make on its own.
- *
- * This is a different axis from `PendingConfirmation`, and they are meant to
- * coexist: a question is about *what to do* (which the AI raises, and only the
- * user can answer), while a confirmation is about *whether this specific
- * operation may run* (which the extension raises, and the user can switch off).
- * Approving a plan therefore grants no execution permission.
- */
-export interface AgentQuestion {
-  question: string;
-  /** Preset answers rendered as buttons; empty means free text only */
-  options: string[];
-  allowFreeText: boolean;
-  /**
-   * `tool` — the AI called `ask_user`.
-   * `fallback` — it asked in prose and we salvaged the question so the round
-   * doesn't dead-end.
-   */
-  source: 'tool' | 'fallback';
-}
-
-export interface PendingQuestion extends AgentQuestion {
-  askedAt: number;
-  /** Answer text, or null when the wait was cancelled */
-  resolve: (answer: string | null) => void;
 }
 
 // ─── Settings ────────────────────────────────────────────────────────────────

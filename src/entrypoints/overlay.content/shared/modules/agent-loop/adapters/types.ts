@@ -26,23 +26,25 @@ export interface AgentPlatformAdapter {
 
   /**
    * Observe AI response completion.
-   * Resolves with the AI response DOM container element once streaming finishes.
-   * Rejects on timeout.
+   * Resolves with the AI response DOM container element once the turn has finished.
+   *
+   * `idleTimeoutMs` is a budget for **silence, not for the whole turn**: every sign
+   * that the turn is alive (output growing, the platform reporting it is generating)
+   * must reset it. An implementation that treats it as a total timeout will kill long
+   * answers mid-generation.
+   *
+   * Rejects once that silence budget runs out. It has to be able to reject: a
+   * platform that errors out never completes a turn, and DOM-based detection can
+   * stop recognising its own signals, so "wait forever" would leave the engine stuck
+   * with no explanation.
    */
-  observeAIResponseComplete(timeoutMs: number): Promise<HTMLElement>;
+  observeAIResponseComplete(idleTimeoutMs: number): Promise<HTMLElement>;
 
   /**
    * Extract plain text from an AI response DOM container.
    * Handles Markdown-rendered DOM structures.
    */
   extractResponseText(responseElement: HTMLElement): string;
-
-  /**
-   * Whether the AI is currently streaming output.
-   * Pass a response element to scope the check to that turn (preferred) —
-   * page-wide checks pick up unrelated spinners.
-   */
-  isStreaming(responseElement?: HTMLElement): boolean;
 
   /** Get the last AI response DOM container element */
   getLastAIResponseElement(): HTMLElement | null;

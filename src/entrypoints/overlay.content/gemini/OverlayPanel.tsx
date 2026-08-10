@@ -33,7 +33,6 @@ import { NotebooksTab } from '../shared/modules/notebooks/NotebooksTab';
 import { SnippetsTab } from '../shared/modules/snippets/SnippetsTab';
 import { AgentTab } from '../shared/modules/agent-tab';
 import { useAgentLoopStore } from '../shared/modules/agent-loop/agent-loop-store';
-import { FirstInstallPrompt } from '../shared/modules/whats-new/FirstInstallPrompt';
 import '@/index.scss';
 import { useAppInit } from '../shared/hooks/useAppInit';
 import { OverlayToggle } from '../shared/components/OverlayToggle';
@@ -64,11 +63,9 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const agentNeedsAttention = useAgentLoopStore(
     (s) =>
       s.pendingApproval !== null ||
-      s.pendingQuestion !== null ||
       s.status === 'error' ||
       s.status === 'paused' ||
       s.status === 'awaiting_send' ||
-      s.status === 'awaiting_user' ||
       s.status === 'awaiting_approval',
   );
 
@@ -479,7 +476,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           </div>
         )}
       </div>
-      <FirstInstallPrompt />
       {showSqlInterface && <SqlExecutor onClose={() => setShowSqlInterface(false)} />}
     </div>
   );

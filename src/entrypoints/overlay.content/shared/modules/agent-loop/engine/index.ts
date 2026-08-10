@@ -24,7 +24,7 @@ export {
   TOOL_TAG,
   SUPPORTED_TOOLS,
   REQUIRED_PARAMS,
-  ENGINE_ONLY_TOOLS,
+  CONTROL_TOOLS,
   hasUnclosedToolBlock,
 } from './parser';
 
@@ -34,7 +34,6 @@ export type {
   CircuitBreakerState,
   LoopCheckResult,
   FailureCheckResult,
-  NoProgressResult,
 } from './guards/circuit-breaker';
 export { ABORT_MESSAGE, AbortError, isAbortError } from './guards/abort';
 

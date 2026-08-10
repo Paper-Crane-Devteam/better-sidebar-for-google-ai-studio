@@ -46,7 +46,9 @@
     "newFolder": "Nueva Carpeta",
     "imported": "Bandeja de entrada",
     "conversations": "conversaciones",
-    "scanComplete": "Escaneo completado, no se encontraron nuevas conversaciones"
+    "scanComplete": "Escaneo completado, no se encontraron nuevas conversaciones",
+    "importTipText": "Importa tu lista completa de chats para ver todas las conversaciones.",
+    "importTipAction": "Importar Ahora"
   },
   "settings": {
     "general": "General",
@@ -1097,13 +1099,13 @@
       "awaiting_approval": "Esperando tu aprobación",
       "sending": "Enviando...",
       "awaiting_send": "Esperando tu acción",
-      "awaiting_user": "Esperando tu respuesta",
+      "checkIn": "Esperando tu confirmación para seguir",
       "paused": "En pausa",
       "error": "Error"
     },
     "header": {
       "step": "Paso {{count}}",
-      "speedHint": "Las operaciones de escritura se aprueban automáticamente en esta tarea"
+      "speedHint": "No se te preguntará nada durante el resto de esta tarea"
     },
     "actions": {
       "stop": "Detener",
@@ -1123,28 +1125,22 @@
       "autoReads": "Ejecutar consultas sin preguntar",
       "autoWrites": "Modificar datos sin preguntar",
       "autoWritesHint": "Los cambios aún no se pueden deshacer",
-      "autoContinue": "Enviar resultados automáticamente",
-      "autoContinueHint": "Si se desactiva, tendrás que pulsar Enter en cada ronda",
+      "autoContinue": "Continuar por su cuenta",
+      "autoContinueHint": "Si está desactivado, tendrás que pulsar Enter en cada paso",
+      "sendHint": "Un paso que apruebas sigue esperando a que pulses Enter; solo los pasos sin supervisión se envían solos.",
       "taskApproved": "Aprobando todo en esta tarea: haz clic para detenerlo"
     },
-    "ask": {
-      "title": "El agente necesita tu respuesta",
-      "placeholder": "Escribe tu respuesta...",
-      "placeholderOther": "O responde con tus propias palabras...",
-      "send": "Responder",
-      "chatHint": "También puedes responder directamente en el chat.",
-      "stop": "Detener tarea"
-    },
-    "confirm": {
-      "title": "Confirmar cambios",
-      "followsPlan": "Esto ejecuta el plan que aprobaste. Las escrituras se confirman por separado.",
-      "showFull": "Ver consulta completa",
+    "approve": {
+      "readTitle": "¿Aprobar esta consulta?",
+      "writeTitle": "¿Aprobar este cambio?",
+      "run": "Ejecutar",
+      "runRest_one": "Ejecutar también este {{count}}",
+      "runRest_other": "Ejecutar también estos {{count}}",
+      "runRest": "Ejecutar también estos {{count}}",
+      "allTask": "No volver a preguntar en esta tarea",
       "reject": "Rechazar",
-      "confirmReject": "Rechazar",
       "back": "Atrás",
-      "reasonPlaceholder": "¿Qué problema tiene? (opcional)",
-      "approve": "Aprobar",
-      "approveAll": "Permitir todo en esta tarea"
+      "reasonPlaceholder": "¿Qué problema tiene? (opcional)"
     },
     "instruction": {
       "placeholder": "Añade una nota para la IA...",
@@ -1158,8 +1154,9 @@
       "infeasible": "No se pudo completar",
       "paywall": "Se requiere mejorar el plan",
       "stopped": "Detenido",
-      "maxRounds": "Límite de pasos alcanzado",
       "stuck": "Detenido: el agente estaba en un bucle",
+      "noToolCall": "Detenido: no se realizó ninguna acción",
+      "noToolCallDesc": "La última respuesta del agente no ejecutó nada. Léela en el chat; si la tarea sigue pendiente, vuelve a empezarla.",
       "ended": "Sesión finalizada",
       "paywallDesc": "El plan gratuito permite al agente leer tus datos, pero no modificarlos. Mejora tu plan para permitir escrituras.",
       "steps_one": "{{count}} paso ejecutado",

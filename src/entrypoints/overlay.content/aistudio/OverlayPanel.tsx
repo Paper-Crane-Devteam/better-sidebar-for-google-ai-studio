@@ -25,7 +25,6 @@ import { FavoritesTab } from '../shared/modules/favorites/FavoritesTab';
 import { TagsTab } from '../shared/modules/tags/TagsTab';
 import { FeedbackTab } from '../shared/modules/feedback/FeedbackTab';
 import { SnippetsTab } from '../shared/modules/snippets/SnippetsTab';
-import { FirstInstallPrompt } from '../shared/modules/whats-new/FirstInstallPrompt';
 import '@/index.scss';
 import { useAppInit } from '../shared/hooks/useAppInit';
 import { OverlayToggle } from '../shared/components/OverlayToggle';
@@ -412,7 +411,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           </div>
         )}
       </div>
-      <FirstInstallPrompt />
 
       {showSqlInterface && <SqlExecutor onClose={() => setShowSqlInterface(false)} />}
     </div>

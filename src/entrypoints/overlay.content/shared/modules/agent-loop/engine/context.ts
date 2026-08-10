@@ -50,35 +50,12 @@ export class LoopContext {
     return this.store.maxRounds;
   }
 
-  /**
-   * The budget is `maxRounds` plus whatever was spent waiting on the user.
-   * Those rounds are supervised by definition, so they can't run away — charging
-   * them would let a couple of questions exhaust a session before the work starts.
-   */
-  get roundBudget(): number {
-    return this.maxRounds + this.store.bonusRounds;
-  }
-
-  hasRoundsLeft(): boolean {
-    return this.round <= this.roundBudget;
-  }
-
-  /** Refund the round a question consumed */
-  grantBonusRound(): void {
-    this.store.grantBonusRound();
-  }
-
   setStatus(status: AgentLoopStatus): void {
     this.store.setStatus(status);
   }
 
   editor(): HTMLElement | null {
     return this.adapter.getEditor();
-  }
-
-  /** Rough char-based token accounting for the tab's usage readout */
-  countTokens(text: string): void {
-    this.store.addTokens(Math.round(text.length * 0.25));
   }
 
   /** Read and clear the instruction the user typed while the loop was running */
@@ -119,6 +96,17 @@ export class LoopContext {
   pause(reason: string, eventReason = reason): void {
     this.store.pause(reason);
     this.events.emit('loop:paused', { reason: eventReason });
+  }
+
+  /**
+   * Stop and ask whether to carry on, after a long unattended run.
+   *
+   * Separate from `pause` because nothing is wrong: the UI shows a neutral
+   * "have a look" card instead of the fault notice, and no end reason is recorded.
+   */
+  checkIn(steps: number): void {
+    this.store.requestCheckIn(steps);
+    this.events.emit('loop:paused', { reason: 'step check-in' });
   }
 
   /** Pause *and* declare the session over — guards that shouldn't silently retry */

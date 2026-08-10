@@ -46,7 +46,10 @@
     "newFolder": "New Folder",
     "imported": "Inbox",
     "conversations": "chats",
-    "scanComplete": "Scan complete, no new chats found"
+    "scanComplete": "Scan complete, no new chats found",
+    "importTipText": "Only recent chats are listed here.",
+    "importTipAction": "Import full chat list",
+    "importTipHint": "You can also start it anytime from the ⋯ menu in the top-right corner."
   },
   "settings": {
     "general": "General",
@@ -1096,7 +1099,7 @@
       "awaiting_approval": "Waiting for your approval",
       "sending": "Sending...",
       "awaiting_send": "Waiting for you",
-      "awaiting_user": "Waiting for your answer",
+      "checkIn": "Waiting for your go-ahead",
       "paused": "Paused",
       "error": "Error"
     },
@@ -1118,26 +1121,29 @@
       "errorTitle": "Something went wrong",
       "pausedTitle": "Loop paused"
     },
+    "checkIn": {
+      "title_one": "{{count}} step done on its own",
+      "title_other": "{{count}} steps done on its own",
+      "title": "{{count}} steps done on its own",
+      "desc": "Nothing is wrong — the agent just paused so you can look over what it has done before it keeps going.",
+      "failedNote_one": "{{count}} step failed along the way. Worth a look below.",
+      "failedNote_other": "{{count}} steps failed along the way. Worth a look below.",
+      "failedNote": "{{count}} steps failed along the way. Worth a look below.",
+      "continue": "Keep going",
+      "stop": "Stop here"
+    },
     "policy": {
       "autoReads": "Run queries without asking",
       "autoWrites": "Change data without asking",
       "autoWritesHint": "Changes cannot be undone yet",
-      "autoContinue": "Send results automatically",
-      "autoContinueHint": "Off means you press Enter each round",
+      "autoContinue": "Keep going on its own",
+      "autoContinueHint": "Off means you press Enter after every step",
+      "sendHint": "A step you approve still waits for you to press Enter — only unattended steps send themselves.",
       "taskApproved": "Approving everything for this task — click to stop"
-    },
-    "ask": {
-      "title": "The agent needs your input",
-      "placeholder": "Type your answer...",
-      "placeholderOther": "Or answer in your own words...",
-      "send": "Answer",
-      "chatHint": "You can also just reply in the chat input.",
-      "stop": "Stop task"
     },
     "approve": {
       "readTitle": "Approve this query?",
       "writeTitle": "Approve this change?",
-      "followsPlan": "This carries out the plan you approved. Each change is still confirmed.",
       "run": "Run",
       "runRest_one": "Run this {{count}} too",
       "runRest_other": "Run these {{count}} too",
@@ -1159,8 +1165,9 @@
       "infeasible": "Couldn't be done",
       "paywall": "Upgrade required",
       "stopped": "Stopped",
-      "maxRounds": "Step limit reached",
       "stuck": "Stopped — the agent was looping",
+      "noToolCall": "Stopped — no action was taken",
+      "noToolCallDesc": "The agent's last reply didn't run anything. Read it in the chat — if the task still needs doing, start it again.",
       "ended": "Session ended",
       "paywallDesc": "The free plan lets the agent read your data but not change it. Upgrade to allow writes.",
       "steps_one": "{{count}} step run",

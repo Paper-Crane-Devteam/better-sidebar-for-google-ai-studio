@@ -46,7 +46,9 @@
     "newFolder": "新しいフォルダ",
     "imported": "受信トレイ",
     "conversations": "件の会話",
-    "scanComplete": "スキャン完了、新しい会話は見つかりませんでした"
+    "scanComplete": "スキャン完了、新しい会話は見つかりませんでした",
+    "importTipText": "すべての会話を表示するには、チャット一覧をインポートしてください。",
+    "importTipAction": "今すぐインポート"
   },
   "settings": {
     "general": "一般",
@@ -1097,13 +1099,13 @@
       "awaiting_approval": "承認をお待ちしています",
       "sending": "送信中…",
       "awaiting_send": "操作をお待ちしています",
-      "awaiting_user": "回答をお待ちしています",
+      "checkIn": "続行のご指示をお待ちしています",
       "paused": "一時停止中",
       "error": "エラー"
     },
     "header": {
       "step": "ステップ {{count}}",
-      "speedHint": "このタスクでは書き込み操作を自動承認します"
+      "speedHint": "このタスクの残りは確認なしで進みます"
     },
     "actions": {
       "stop": "停止",
@@ -1123,28 +1125,22 @@
       "autoReads": "確認なしでクエリを実行",
       "autoWrites": "確認なしでデータを変更",
       "autoWritesHint": "変更はまだ取り消せません",
-      "autoContinue": "結果を自動送信",
-      "autoContinueHint": "オフの場合は毎ラウンド Enter を押す必要があります",
+      "autoContinue": "自動で進める",
+      "autoContinueHint": "オフの場合、各ステップごとに Enter を押す必要があります",
+      "sendHint": "あなたが承認したステップは Enter を押すまで待ちます。承認が不要なステップだけ自動で送信されます。",
       "taskApproved": "このタスクではすべて承認中 — 停止するにはクリック"
     },
-    "ask": {
-      "title": "エージェントが入力を求めています",
-      "placeholder": "回答を入力…",
-      "placeholderOther": "または自由に記入…",
-      "send": "回答する",
-      "chatHint": "チャットの入力欄から直接返信してもかまいません。",
-      "stop": "タスクを停止"
-    },
-    "confirm": {
-      "title": "変更の確認",
-      "followsPlan": "承認済みの計画を実行します。書き込みは個別に確認します。",
-      "showFull": "クエリ全文を表示",
+    "approve": {
+      "readTitle": "このクエリを実行してもよいですか？",
+      "writeTitle": "この変更を実行してもよいですか？",
+      "run": "実行",
+      "runRest_one": "残りの {{count}} 件も実行",
+      "runRest_other": "残りの {{count}} 件も実行",
+      "runRest": "残りの {{count}} 件も実行",
+      "allTask": "このタスクでは今後確認しない",
       "reject": "拒否",
-      "confirmReject": "却下する",
       "back": "戻る",
-      "reasonPlaceholder": "どこが問題ですか？（任意）",
-      "approve": "承認",
-      "approveAll": "このタスクではすべて許可"
+      "reasonPlaceholder": "どこが問題ですか？（任意）"
     },
     "instruction": {
       "placeholder": "AI へのメモを追加…",
@@ -1158,8 +1154,9 @@
       "infeasible": "実行できませんでした",
       "paywall": "アップグレードが必要",
       "stopped": "停止しました",
-      "maxRounds": "ステップ上限に達しました",
       "stuck": "停止しました — エージェントが同じ処理を繰り返していました",
+      "noToolCall": "停止しました — 操作は実行されませんでした",
+      "noToolCallDesc": "エージェントの最後の返答では何も実行されませんでした。チャットで内容を確認し、まだ必要ならもう一度実行してください。",
       "ended": "セッション終了",
       "paywallDesc": "無料プランではエージェントはデータの読み取りのみ可能です。書き込みを許可するにはアップグレードしてください。",
       "steps_one": "{{count}} ステップ実行",

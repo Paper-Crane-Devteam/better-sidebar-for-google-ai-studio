@@ -37,6 +37,8 @@ export type ExtensionMessage = (
         type?: string;
         gem_id?: string | null;
         notebook_id?: string | null;
+        /** When set, delete all messages after this ID before inserting the new ones (regeneration) */
+        replaceAfterMessageId?: string;
         messages: {
           id?: string;
           role: 'user' | 'model';
@@ -221,6 +223,8 @@ export type ExtensionMessage = (
       payload: {
         conversationId: string;
         title?: string;
+        /** When set, delete all messages after this ID before inserting the new ones (regeneration) */
+        replaceAfterMessageId?: string;
         messages: {
           id: string;
           role: 'user' | 'model';

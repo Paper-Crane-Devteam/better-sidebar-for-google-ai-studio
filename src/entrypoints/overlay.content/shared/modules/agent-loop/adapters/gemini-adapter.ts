@@ -12,12 +12,25 @@ import {
   getSendButtonState,
 } from '@/entrypoints/overlay.content/shared/lib/quill-editor';
 
-/** How often the response is sampled while waiting for it to settle */
+/** How often the page is sampled while waiting for a response to settle */
 const RESPONSE_SAMPLE_MS = 400;
-/** Consecutive identical samples required before a response counts as finished */
-const STABLE_TICKS_REQUIRED = 3;
-/** How long `isStreaming()` may hold back an otherwise stable response */
-const STREAMING_VETO_TICKS = 8;
+
+/**
+ * Samples the text must hold still for after generation ends.
+ *
+ * The button flips back the moment the stream closes, but Gemini is still rendering
+ * markdown and code blocks — reading at the exact flip can catch a half-rendered
+ * tail, which then gets parsed as if it were the whole response.
+ */
+const SETTLE_TICKS = 2;
+
+/**
+ * Samples the text must hold still for when the button can't be read at all.
+ *
+ * Stricter than `SETTLE_TICKS` because there is no authoritative signal backing it
+ * up: mid-stream pauses of a second do happen, so this has to outlast them.
+ */
+const BLIND_SETTLE_TICKS = 5;
 
 export class GeminiAgentAdapter implements AgentPlatformAdapter {
   getEditor(): HTMLElement | null {
@@ -45,22 +58,36 @@ export class GeminiAgentAdapter implements AgentPlatformAdapter {
   }
 
   /**
-   * Resolve once the last AI response has settled.
+   * Resolve once the last AI response has finished.
    *
-   * Uses sampling rather than a debounced MutationObserver. Two failure modes
-   * killed the loop before:
+   * The primary signal is the composer button's **edge**: it reads "stop generating"
+   * while a turn is in flight, so watching it go back to "send" is watching
+   * generation end. Level, not edge, would be wrong — we start waiting right after
+   * clicking send, and the button hasn't flipped to "stop" yet at that instant, so
+   * "button says send" is true before anything has happened.
    *
-   * - Resolving on a *partial* stream. Gemini pauses for >500ms mid-answer, and
-   *   `message-actions` does not exist yet early in a turn, so the old streaming
-   *   check said "done". The half-written response contained no tool call, the
-   *   engine read that as "task complete" and ended the session on round 1.
-   * - Never resolving at all, because `isStreaming()` matched an unrelated hidden
-   *   progress bar somewhere in the page and stayed true until the 60s timeout.
+   * Text sampling is still here, but demoted to two jobs:
    *
-   * So: the text must be identical across several consecutive samples, and the
-   * streaming signal only gets to veto for a limited grace window.
+   * 1. **Guard.** The text has to differ from the turn that existed when we started,
+   *    or a fast-looking edge would hand back the previous answer.
+   * 2. **Fallback.** `getSendButtonState()` is a four-level cascade over Gemini's own
+   *    class names and can end up at `'unknown'` if they change it. Making the button
+   *    the sole signal would mean one Gemini redesign kills the feature outright, in
+   *    the worst possible shape: a promise that never settles.
+   *
+   * Two historical failure modes this has to keep avoiding:
+   *
+   * - Resolving on a *partial* stream. Gemini pauses >500ms mid-answer, so a plain
+   *   debounce said "done"; the half-written response had no tool call, and the
+   *   engine read that as task completion on round 1.
+   * - Never resolving, because a streaming heuristic latched onto a stale node.
+   *
+   * The timeout is **idle time, not total time** — see `awaitAIResponse`. Anything
+   * that proves the page is alive (text changing, button reading "stop") pushes it
+   * back, so a model that thinks for ten minutes is fine and only real silence
+   * gives up.
    */
-  observeAIResponseComplete(timeoutMs: number): Promise<HTMLElement> {
+  observeAIResponseComplete(idleTimeoutMs: number): Promise<HTMLElement> {
     return new Promise((resolve, reject) => {
       // Snapshot the response that already exists when we start waiting, so the
       // previous turn's answer is never mistaken for the new one.
@@ -72,69 +99,78 @@ export class GeminiAgentAdapter implements AgentPlatformAdapter {
       const isStaleResponse = (el: HTMLElement, text: string): boolean =>
         el === baselineElement && text === baselineText;
 
+      /** Set once the button has been seen in "stop" — i.e. this turn really started */
+      let sawGenerating = false;
       let lastText = '';
       let stableTicks = 0;
+      let deadline = Date.now() + idleTimeoutMs;
 
-      const cleanup = () => {
-        clearInterval(interval);
-        clearTimeout(timeout);
+      const cleanup = () => clearInterval(interval);
+
+      /** Any proof the turn is alive postpones giving up */
+      const keepAlive = () => {
+        deadline = Date.now() + idleTimeoutMs;
       };
 
       const tick = () => {
+        // Checked once, up front: every branch below either calls `keepAlive` or is
+        // by definition a sample where nothing happened. Settling takes ~1s from the
+        // last change, so this can't cut off a turn that was about to resolve.
+        if (Date.now() > deadline) {
+          cleanup();
+          reject(new Error('AI response timeout'));
+          return;
+        }
+
+        // ── Still generating: nothing to decide, just stay alive ──────────────
+        if (getSendButtonState() === 'stop') {
+          sawGenerating = true;
+          stableTicks = 0;
+          keepAlive();
+          return;
+        }
+
         const response = this.getLastAIResponseElement();
         if (!response) return;
 
         const text = this.extractResponseText(response).trim();
-        // Empty means the bubble exists but nothing has streamed in yet
+
+        // Empty means the bubble exists but nothing has streamed in yet; stale means
+        // we're still looking at the turn that was there before we started waiting.
         if (!text || isStaleResponse(response, text)) {
           lastText = '';
           stableTicks = 0;
           return;
         }
 
+        // Text is moving — the answer is arriving, whatever the button says.
         if (text !== lastText) {
           lastText = text;
           stableTicks = 0;
+          keepAlive();
           return;
         }
 
         stableTicks++;
 
-        // The composer button is authoritative: while it reads "stop generating"
-        // the turn is definitely unfinished, so this veto has no grace limit.
-        if (getSendButtonState() === 'stop') return;
-
-        // The DOM heuristics below can latch on stale nodes, so they only get to
-        // hold things back for a bounded window.
-        if (this.isStreaming(response) && stableTicks < STREAMING_VETO_TICKS) return;
-        if (stableTicks < STABLE_TICKS_REQUIRED) return;
-
-        cleanup();
-        resolve(response);
+        // Past the edge: we watched it generate and the button has come back, so a
+        // couple of still samples are only to let the final render land.
+        //
+        // Never having seen it generate means the button is unreadable or we started
+        // too late, so text stability is carrying this alone and has to wait longer.
+        const required = sawGenerating ? SETTLE_TICKS : BLIND_SETTLE_TICKS;
+        if (stableTicks >= required) {
+          cleanup();
+          resolve(response);
+        }
       };
 
       const interval = setInterval(tick, RESPONSE_SAMPLE_MS);
-      const timeout = setTimeout(() => {
-        cleanup();
-        reject(new Error('AI response timeout'));
-      }, timeoutMs);
     });
   }
 
   extractResponseText(responseElement: HTMLElement): string {
     return responseElement.innerText || responseElement.textContent || '';
-  }
-
-  /**
-   * Whether the given (or last) response is still streaming.
-   *
-   * The only reliable signal is the send/stop button state: when `gem-icon-button`
-   * has the `stop` class, the model is still generating. All other DOM heuristics
-   * (aria-busy, message-actions[hidden], .loading-indicator etc.) were verified to
-   * not exist in the current Gemini build and have been removed as dead code.
-   */
-  isStreaming(_responseElement?: HTMLElement): boolean {
-    return getSendButtonState() === 'stop';
   }
 
   getLastAIResponseElement(): HTMLElement | null {

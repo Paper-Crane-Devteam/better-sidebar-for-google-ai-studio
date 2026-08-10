@@ -6,11 +6,11 @@
  * 1. **Loop Detection** — Detects when AI calls the same tool with identical
  *    params repeatedly (soft warning at 3, hard stop at 5).
  *
- * 2. **Consecutive Failure Tracking** — Counts errors in a row and escalates
- *    from retry → warning → forced pause.
+ * 2. **Consecutive Failure Tracking** — Counts failing *rounds* in a row (not
+ *    individual calls) and escalates from retry → warning → forced pause.
  *
- * 3. **No-Progress Detection** — Detects when AI responds without tool calls
- *    multiple times (not making progress).
+ * 3. **Format Retry Budget** — One second chance per session for a response that
+ *    tried to call a tool and produced something unparseable.
  *
  * Inspired by Cline's loop-detection.ts and TaskState patterns.
  */
@@ -24,29 +24,30 @@ export const LOOP_SOFT_THRESHOLD = 3;
 /** Hard threshold: force stop the loop */
 export const LOOP_HARD_THRESHOLD = 5;
 
-/** Consecutive failures before escalating */
+/**
+ * Consecutive failing **rounds** before escalating.
+ *
+ * Rounds, not calls: a response may carry up to five statements, and if the AI has
+ * guessed a column name wrong they all fail together — one mistake, five errors. The
+ * AI hasn't had a chance to react to any of them yet, so counting them separately
+ * punished a single misunderstanding. Four calls in one response used to trip the
+ * hard stop on round 1.
+ *
+ * Six gives five rounds of escalating hints before giving up, so the guidance in
+ * `getProgressiveErrorGuidance` actually gets a chance to land.
+ */
 export const FAILURE_SOFT_THRESHOLD = 2;
-export const FAILURE_HARD_THRESHOLD = 4;
+export const FAILURE_HARD_THRESHOLD = 6;
 
 /**
- * Consecutive no-tool responses before giving up on nudging.
+ * How many format accidents get a second chance per session.
  *
- * Two, not three: past the threshold the loop now hands the response to the user as
- * a question instead of dead-ending, and that outcome is good enough that spending a
- * third round hoping the AI self-corrects isn't worth it.
+ * One. A response cut off mid tool call, or a tool block whose JSON won't parse, is
+ * worth re-asking for once — it is usually a truncated stream rather than a model
+ * that misunderstood. Past that, re-sending the same instruction is just burning
+ * rounds, so the session ends and the user decides.
  */
-export const NO_PROGRESS_THRESHOLD = 2;
-
-/**
- * Per-tool overrides for repeat detection.
- *
- * The generic 3/5 window is far too patient for `ask_user`: identical params mean
- * the AI ignored the answer it was given, and being asked the same question three
- * times is enough to make a user abandon the feature.
- */
-const TOOL_LOOP_THRESHOLDS: Record<string, { soft: number; hard: number }> = {
-  ask_user: { soft: 2, hard: 2 },
-};
+export const FORMAT_RETRY_BUDGET = 1;
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -56,12 +57,16 @@ export interface CircuitBreakerState {
   lastToolParams: string;
   consecutiveIdenticalCount: number;
 
-  // Failure tracking
-  consecutiveFailures: number;
+  // Failure tracking — counted per round, see FAILURE_HARD_THRESHOLD
+  /** Rounds in a row that produced at least one failing tool call */
+  consecutiveFailedRounds: number;
+  /** Every failing call, for reporting only */
   totalFailures: number;
+  /** Whether the round in progress has already been counted */
+  roundFailureCounted: boolean;
 
-  // No-progress tracking
-  consecutiveNoToolRounds: number;
+  /** Malformed tool blocks nudged about so far this session */
+  formatRetries: number;
 }
 
 function createInitialState(): CircuitBreakerState {
@@ -69,9 +74,10 @@ function createInitialState(): CircuitBreakerState {
     lastToolName: '',
     lastToolParams: '',
     consecutiveIdenticalCount: 0,
-    consecutiveFailures: 0,
+    consecutiveFailedRounds: 0,
     totalFailures: 0,
-    consecutiveNoToolRounds: 0,
+    roundFailureCounted: false,
+    formatRetries: 0,
   };
 }
 
@@ -85,10 +91,6 @@ export type LoopCheckResult =
 export type FailureCheckResult =
   | { action: 'retry'; message: string; count: number }
   | { action: 'warn'; message: string; count: number }
-  | { action: 'stop'; message: string; count: number };
-
-export type NoProgressResult =
-  | { action: 'nudge'; message: string; count: number }
   | { action: 'stop'; message: string; count: number };
 
 // ─── Circuit Breaker Class ───────────────────────────────────────────────────
@@ -126,10 +128,8 @@ export class CircuitBreaker {
     this.state.lastToolParams = signature;
 
     const count = this.state.consecutiveIdenticalCount;
-    const { soft, hard } = TOOL_LOOP_THRESHOLDS[toolName] ?? {
-      soft: LOOP_SOFT_THRESHOLD,
-      hard: LOOP_HARD_THRESHOLD,
-    };
+    const soft = LOOP_SOFT_THRESHOLD;
+    const hard = LOOP_HARD_THRESHOLD;
 
     if (count >= hard) {
       const message =
@@ -163,22 +163,39 @@ export class CircuitBreaker {
   }
 
   /**
+   * Start of a round — lets the next failure count against the budget again.
+   * Called by stage ③ before it executes anything.
+   */
+  beginRound(): void {
+    this.state.roundFailureCounted = false;
+  }
+
+  /**
    * Record a tool execution result. Call after each tool completes.
-   * Returns escalation advice if consecutive failures exceed thresholds.
+   * Returns escalation advice once consecutive failing rounds cross a threshold.
+   *
+   * Only the **first** failure of a round moves the counter. The rest of that
+   * response is the same mistake seen several times over — the AI has had no chance
+   * to read any of it yet, so charging it per call meant one wrong column name in a
+   * five-statement response could exhaust the whole budget at once.
    */
   recordToolResult(toolName: string, success: boolean, errorMessage?: string): FailureCheckResult | null {
     if (success) {
-      // Reset failure counter on success
-      this.state.consecutiveFailures = 0;
-      // Also reset no-progress counter since tool was used and succeeded
-      this.state.consecutiveNoToolRounds = 0;
+      this.state.consecutiveFailedRounds = 0;
+      // Also clears the round mark, so a later failure in this same round still
+      // registers instead of being swallowed as "already counted".
+      this.state.roundFailureCounted = false;
       return null;
     }
 
-    // Failure path
-    this.state.consecutiveFailures++;
     this.state.totalFailures++;
-    const count = this.state.consecutiveFailures;
+
+    if (!this.state.roundFailureCounted) {
+      this.state.roundFailureCounted = true;
+      this.state.consecutiveFailedRounds++;
+    }
+
+    const count = this.state.consecutiveFailedRounds;
 
     agentEventBus.emit('circuit-breaker:failure-recorded', {
       toolName,
@@ -191,8 +208,8 @@ export class CircuitBreaker {
       return {
         action: 'stop',
         message:
-          `[CIRCUIT BREAKER] ${count} consecutive failures. The AI cannot recover from this error pattern. ` +
-          `Pausing execution — please review the error and provide guidance.`,
+          `[CIRCUIT BREAKER] ${count} responses in a row have failed. The AI cannot recover from this ` +
+          `error pattern. Pausing execution — please review the error and provide guidance.`,
         count,
       };
     }
@@ -201,7 +218,7 @@ export class CircuitBreaker {
       return {
         action: 'warn',
         message:
-          `[WARNING] ${count} consecutive failures detected. ` +
+          `[WARNING] ${count} responses in a row have failed. ` +
           `You've tried this approach multiple times without success. ` +
           `Try a fundamentally different approach: check the schema with SELECT, use simpler queries, or explain the problem to the user.`,
         count,
@@ -216,72 +233,45 @@ export class CircuitBreaker {
   }
 
   /**
-   * Record a round where AI produced no tool calls.
-   * Always returns a decision: nudge first, stop once the threshold is reached.
+   * Claim one of the session's format retries. False when the budget is spent.
    *
-   * A tool-less response is never treated as success. The protocol requires the
-   * AI to end with `complete_task`, so "no tool calls" means it either forgot the
-   * format or is just talking. Returning `null` here used to make the engine call
-   * the session complete — which is why a task could report "Task finished" on its
-   * very first round without having done anything.
-   *
-   * The nudge spells out all three legal endings rather than only "use a tool".
-   * This is the layer that actually lands: a model that skipped `ask_user` in the
-   * system prompt almost always reaches for it once told at the point of failure —
-   * whereas "use a tool to continue making progress" pushed an AI waiting on a
-   * decision to guess at one instead.
+   * Only called for a response that *tried* to call a tool and produced something
+   * unusable — a block cut off mid-stream, or JSON that won't parse. A response that
+   * simply contains no tool call at all is not a format accident and gets no retry:
+   * the engine ends the session, because Gemini won't speak again unless we send
+   * something, and nudging an AI that has drifted into prose mostly teaches it to
+   * guess.
    */
-  recordNoToolResponse(): NoProgressResult {
-    this.state.consecutiveNoToolRounds++;
-    const count = this.state.consecutiveNoToolRounds;
+  claimFormatRetry(): boolean {
+    if (this.state.formatRetries >= FORMAT_RETRY_BUDGET) return false;
+    this.state.formatRetries++;
+    agentEventBus.emit('circuit-breaker:format-retry', { count: this.state.formatRetries });
+    return true;
+  }
 
-    agentEventBus.emit('circuit-breaker:no-progress', { consecutiveCount: count });
-
-    if (count >= NO_PROGRESS_THRESHOLD) {
-      return {
-        action: 'stop',
-        message:
-          `AI responded without tool calls ${count} times. ` +
-          `Task may be stuck or complete. Please review and provide direction.`,
-        count,
-      };
+  /**
+   * The nudge sent after claiming a retry.
+   *
+   * Truncation gets its own wording on purpose: told "you forgot the tool format",
+   * the AI restarts its whole response, which burns a round and can repeat work it
+   * had already emitted. Told "you were cut off", it re-sends only the tail.
+   */
+  getFormatGuidance(kind: 'truncated' | 'unparseable', errors: string[] = []): string {
+    if (kind === 'truncated') {
+      return (
+        `[System] Your last response ended inside an unclosed <bs_agent_tool> block, so it was cut off ` +
+        `before the tool call was complete. Nothing from that block was executed. ` +
+        `Re-send only the tool calls that were incomplete, and keep the response short enough to finish — ` +
+        `emit fewer calls per response if needed.`
+      );
     }
 
-    return {
-      action: 'nudge',
-      message:
-        `[System] Your last response contained no <bs_agent_tool> block. Every response must end in ` +
-        `one of three ways:\n` +
-        `1. Call a tool to keep making progress.\n` +
-        `2. Call ask_user if you need a decision from the user — a plan approved, a choice made, ` +
-        `an ambiguity resolved. A question written in prose never reaches them.\n` +
-        `3. Call complete_task with a summary — status "success" if the request is fulfilled, ` +
-        `"infeasible" if it cannot be done.`,
-      count,
-    };
-  }
+    const detail = errors.length > 0 ? `\n\n## Parse Errors\n\n${errors.map((e) => `- ${e}`).join('\n')}` : '';
 
-  /**
-   * Nudge for a response that was cut off mid tool call.
-   *
-   * Kept apart from the generic no-progress message: told it forgot the format, the
-   * AI restarts its whole response, which burns a round and can repeat work it had
-   * already emitted.
-   */
-  getTruncationGuidance(): string {
     return (
-      `[System] Your last response ended inside an unclosed <bs_agent_tool> block, so it was cut off ` +
-      `before the tool call was complete. Nothing from that block was executed. ` +
-      `Re-send only the tool calls that were incomplete, and keep the response short enough to finish — ` +
-      `emit fewer calls per response if needed.`
+      `[System] Your last response contained <bs_agent_tool> blocks that could not be parsed, so nothing ` +
+      `was executed. Re-send them as valid JSON with "name", "description" and "params" fields.${detail}`
     );
-  }
-
-  /**
-   * Reset no-progress counter (call when AI does use tools).
-   */
-  resetNoProgress(): void {
-    this.state.consecutiveNoToolRounds = 0;
   }
 
   /**
@@ -289,12 +279,12 @@ export class CircuitBreaker {
    * Useful for formatting tool error responses back to the AI.
    */
   getProgressiveErrorGuidance(baseError: string): string {
-    const count = this.state.consecutiveFailures;
+    const count = this.state.consecutiveFailedRounds;
 
     if (count >= 3) {
       return (
         `${baseError}\n\n` +
-        `CRITICAL: You have failed ${count} times in a row. You MUST change your approach:\n` +
+        `CRITICAL: ${count} of your responses in a row have failed. You MUST change your approach:\n` +
         `1. Run "SELECT name FROM sqlite_master WHERE type='table'" to verify table names\n` +
         `2. Run "PRAGMA table_info(table_name)" — wait, PRAGMA is blocked. Use "SELECT sql FROM sqlite_master WHERE name='table_name'" instead\n` +
         `3. Break your operation into smaller, simpler steps\n` +
@@ -305,7 +295,7 @@ export class CircuitBreaker {
     if (count >= 2) {
       return (
         `${baseError}\n\n` +
-        `This is your ${count}nd consecutive failure. Consider:\n` +
+        `This is the ${count}th response in a row that has failed. Consider:\n` +
         `- Are table/column names correct? Query sqlite_master to verify.\n` +
         `- Is the SQL syntax valid for SQLite?\n` +
         `- Try a simpler query first to confirm data exists.`

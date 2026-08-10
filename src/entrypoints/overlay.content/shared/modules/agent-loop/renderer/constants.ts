@@ -39,6 +39,29 @@ export { TOOL_TAG as TOOL_CALL_TAG } from '../engine/parser/tool-schema';
 export const RESULT_TAG = 'bs_agent_result';
 
 /**
+ * Tool calls that get no card in the conversation view.
+ *
+ * `complete_task` is protocol plumbing, not work: it carries no result worth
+ * reading, takes no approval, and its summary already headlines the session card
+ * in the Agent tab. Shown in the chat it reads as one more step the agent took,
+ * right at the moment the user is looking for the outcome.
+ *
+ * Hidden means the card is skipped, *not* that the block is dropped from parsing —
+ * the raw `<bs_agent_tool>` text still has to be swallowed, or it surfaces as JSON
+ * in the markdown around it.
+ *
+ * Deliberately its own list rather than an alias for `CONTROL_TOOLS`: that one
+ * answers "does this need approval", this one answers "is this worth showing", and
+ * a tool can plausibly be one without the other.
+ */
+export const HIDDEN_TOOLS: readonly string[] = ['complete_task'];
+
+/** Whether this tool call should be rendered in the conversation view */
+export function isHiddenTool(toolName: string): boolean {
+  return HIDDEN_TOOLS.includes(toolName);
+}
+
+/**
  * CSS class applied to user-query elements that contain agent prompts.
  * Used by the renderer to mark elements as already processed.
  */

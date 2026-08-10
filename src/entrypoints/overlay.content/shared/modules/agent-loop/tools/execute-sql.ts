@@ -27,12 +27,21 @@ const SELECT_PATTERN = /^\s*SELECT\b/i;
 /** Maximum rows returned for SELECT queries */
 const MAX_RESULT_ROWS = 1000;
 
-/** Placeholder that AI uses instead of generating random UUIDs */
-const UUID_PLACEHOLDER = /__NEW_UUID__|'NEW_UUID'|"NEW_UUID"|NEW_UUID/g;
+/**
+ * Placeholder the AI uses instead of inventing random UUIDs.
+ *
+ * The surrounding quote (if any) is part of the match on purpose: the model
+ * writes the placeholder both quoted (`'__NEW_UUID__'`, the documented form)
+ * and bare (`NEW_UUID`), and the replacement has to end up as a valid string
+ * literal either way. An earlier version swallowed the quotes without putting
+ * them back, which turned `VALUES ('NEW_UUID', ...)` into a bare token and
+ * made SQLite fail with `unrecognized token`.
+ */
+const UUID_PLACEHOLDER = /(['"`])?(?:__NEW_UUID__|\{\{NEW_UUID\}\}|<NEW_UUID>|NEW_UUID)\1?/g;
 
-/** Replace all UUID placeholders with real crypto UUIDs */
+/** Replace all UUID placeholders with real, properly quoted crypto UUIDs */
 function hydrateUuids(sql: string): string {
-  return sql.replace(UUID_PLACEHOLDER, () => crypto.randomUUID());
+  return sql.replace(UUID_PLACEHOLDER, () => `'${crypto.randomUUID()}'`);
 }
 
 export interface ExecuteSqlParams {

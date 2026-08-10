@@ -16,8 +16,11 @@ export const AgentInterruptNotice: React.FC = () => {
   const { t } = useI18n();
   const status = useAgentLoopStore((s) => s.status);
   const errorMessage = useAgentLoopStore((s) => s.errorMessage);
+  const checkInSteps = useAgentLoopStore((s) => s.checkInSteps);
 
   if (status !== 'paused' && status !== 'error') return null;
+  // A routine check-in is also `paused`, but it isn't a fault — AgentCheckIn has it
+  if (checkInSteps !== null) return null;
 
   const isError = status === 'error';
 

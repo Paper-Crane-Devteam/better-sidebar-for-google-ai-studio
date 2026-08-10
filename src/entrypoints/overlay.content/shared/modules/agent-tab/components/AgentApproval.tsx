@@ -8,10 +8,6 @@
  * to answer it.
  *
  * Same pending object, same resolve. Whichever is answered first wins.
- *
- * Not to be confused with AgentUserPrompt: that one is a decision the AI asked for
- * ("which of these plans?"). This one is permission for one specific operation,
- * which the user can switch off entirely.
  */
 
 import React, { useState } from 'react';
@@ -25,7 +21,6 @@ import type { ApprovalScope } from '../../agent-loop/types';
 export const AgentApproval: React.FC = () => {
   const { t } = useI18n();
   const pendingApproval = useAgentLoopStore((s) => s.pendingApproval);
-  const askUserCount = useAgentLoopStore((s) => s.askUserCount);
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState('');
 
@@ -72,16 +67,6 @@ export const AgentApproval: React.FC = () => {
             {detail}
           </pre>
         </div>
-      )}
-
-      {/* Having just agreed a plan, being asked again reads as a bug rather than a
-          second, separate gate. Naming it keeps the two legible. */}
-      {askUserCount > 0 && (
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          {t('agent.approve.followsPlan', {
-            defaultValue: 'This carries out the plan you approved. Each change is still confirmed.',
-          })}
-        </p>
       )}
 
       {rejecting ? (

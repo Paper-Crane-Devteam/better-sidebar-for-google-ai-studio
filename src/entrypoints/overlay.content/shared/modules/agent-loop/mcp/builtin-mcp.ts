@@ -2,7 +2,7 @@
  * Built-in MCP Server definition — "Better Sidebar".
  *
  * Contains all core tools: activate_skill, execute_sql,
- * sync_conversation_messages, export, ask_user, complete_task.
+ * sync_conversation_messages, export, complete_task.
  */
 
 import type { MCPServer } from './types';
@@ -10,7 +10,6 @@ import { activateSkillProvider } from './providers/activate-skill-provider';
 import { sqlProvider } from './providers/sql-provider';
 import { syncProvider } from './providers/sync-provider';
 import { exportProvider } from './providers/export-provider';
-import { askUserProvider } from './providers/ask-user-provider';
 import { taskProvider } from './providers/task-provider';
 
 export const BUILTIN_MCP: MCPServer = {
@@ -24,7 +23,6 @@ export const BUILTIN_MCP: MCPServer = {
     sqlProvider,
     syncProvider,
     exportProvider,
-    askUserProvider,
     taskProvider,
   ],
 };

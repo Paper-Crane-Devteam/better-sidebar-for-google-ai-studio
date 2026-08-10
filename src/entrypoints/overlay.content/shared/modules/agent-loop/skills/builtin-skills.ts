@@ -17,7 +17,9 @@ export const BUILTIN_SKILLS: Skill[] = [
     promptContent: `## Task: Auto-Classify Conversations
 
 Help the user organize their conversations by:
-1. First, query all conversations that are NOT yet classified — this includes conversations with folder_id IS NULL AND conversations in the Inbox folder — and NOT soft-deleted.
+1. First, query all conversations that are NOT yet classified and NOT soft-deleted. "Not yet classified" means:
+   \`WHERE deleted_at IS NULL AND (folder_id IS NULL OR folder_id = '<CONVERSATION_INBOX_ID>')\`
+   \`<CONVERSATION_INBOX_ID>\` above is already the real inbox folder ID — copy it verbatim into your SQL. Never look the inbox up by name; its name is localized.
 2. Analyze their titles to identify natural categories (e.g., coding, writing, research, casual).
 3. Check existing folders and tags to reuse them when appropriate.
 4. Propose a classification plan to the user (show which conversations go where).
@@ -28,7 +30,8 @@ Tips:
 - Use descriptive folder names.
 - Create tags for cross-cutting themes (e.g., "project-x", "learning", "work").
 - Don't move conversations that are already well-organized.
-- Conversations in the Inbox are considered unclassified and should be included in the classification.
+- Conversations in the inbox are considered unclassified and should be included in the classification.
+- Never create, rename or delete an inbox folder.
 `,
     enabled: true,
     createdAt: 0,

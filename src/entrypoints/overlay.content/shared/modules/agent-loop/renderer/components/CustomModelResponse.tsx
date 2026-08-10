@@ -9,6 +9,7 @@ import type { DisplayMessageTurn } from '../useConversationMessages';
 import { Loader2 } from 'lucide-react';
 import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { ToolCallWidget } from './ToolCallWidget';
+import { isHiddenTool } from '../constants';
 
 interface CustomModelResponseProps {
   message: DisplayMessageTurn;
@@ -33,18 +34,31 @@ export const CustomModelResponse: React.FC<CustomModelResponseProps> = ({
     const elements: React.ReactNode[] = [];
     let lastIndex = 0;
 
-    message.toolCalls.forEach((tc, idx) => {
-      // Text before tool call
-      const textBefore = message.rawText.slice(lastIndex, tc.startIndex);
-      if (textBefore.trim()) {
-        elements.push(
-          <MarkdownRenderer key={`text-${idx}`} className="leading-relaxed mb-2">
-            {textBefore}
-          </MarkdownRenderer>,
-        );
-      }
+    // Prose is buffered rather than flushed per tool call, so a hidden tool leaves
+    // no seam: the text on either side of it merges back into one markdown block
+    // instead of two with a gap where the card would have been.
+    let pending = '';
+    const flushText = (key: string, className: string) => {
+      const text = pending;
+      pending = '';
+      if (!text.trim()) return;
+      elements.push(
+        <MarkdownRenderer key={key} className={`leading-relaxed ${className}`}>
+          {text}
+        </MarkdownRenderer>,
+      );
+    };
 
-      // Tool call widget
+    message.toolCalls.forEach((tc, idx) => {
+      pending += message.rawText.slice(lastIndex, tc.startIndex);
+      lastIndex = tc.endIndex;
+
+      // A hidden tool consumes its span (so the raw block never leaks into the
+      // markdown) but contributes no card.
+      if (isHiddenTool(tc.toolCall.name)) return;
+
+      flushText(`text-${idx}`, 'mb-2');
+
       elements.push(
         <ToolCallWidget
           key={`tool-${idx}`}
@@ -55,19 +69,10 @@ export const CustomModelResponse: React.FC<CustomModelResponseProps> = ({
           isLatestResponse={isLatestResponse}
         />,
       );
-
-      lastIndex = tc.endIndex;
     });
 
-    // Text after last tool call
-    const textAfter = message.rawText.slice(lastIndex);
-    if (textAfter.trim()) {
-      elements.push(
-        <MarkdownRenderer key="text-last" className="leading-relaxed mt-2">
-          {textAfter}
-        </MarkdownRenderer>,
-      );
-    }
+    pending += message.rawText.slice(lastIndex);
+    flushText('text-last', elements.length > 0 ? 'mt-2' : '');
 
     return elements;
   };

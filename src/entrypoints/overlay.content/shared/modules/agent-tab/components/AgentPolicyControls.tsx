@@ -6,10 +6,10 @@
  * call / the rest of this response / the rest of this task), so it belongs on the
  * approval prompt, not here.
  *
- * The previous version had a single "Run reads automatically" switch that actually
- * governed both kinds — turning it off required confirmation for everything — plus a
- * separate session-scoped "auto-approve writes" that silently overrode it while
- * still reading as off.
+ * Plus "keep going on its own", which is a different axis: whether the loop may run
+ * unattended at all. It intersects with the two above rather than overriding them
+ * (see `shouldAutoSend`), so it can only ever make things more manual. The note under
+ * it spells out the part the labels don't: approving a step also hands you the send.
  */
 
 import React from 'react';
@@ -57,16 +57,27 @@ export const AgentPolicyControls: React.FC = () => {
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <label className="text-xs text-foreground">
-            {t('agent.policy.autoContinue', { defaultValue: 'Send results automatically' })}
+            {t('agent.policy.autoContinue', { defaultValue: 'Keep going on its own' })}
           </label>
           <p className="text-xs text-muted-foreground">
             {t('agent.policy.autoContinueHint', {
-              defaultValue: 'Off means you press Enter each round',
+              defaultValue: 'Off means you press Enter after every step',
             })}
           </p>
         </div>
         <Switch checked={autoContinue} onCheckedChange={setAutoContinue} />
       </div>
+
+      {/* The consequence of the switches above that isn't visible in their labels:
+          approving something also hands you the send. */}
+      {autoContinue && (
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          {t('agent.policy.sendHint', {
+            defaultValue:
+              'A step you approve still waits for you to press Enter — only unattended steps send themselves.',
+          })}
+        </p>
+      )}
 
       {/* Only surfaced once it's on, because the only way to turn it on is the
           approval prompt — this is where you take it back. */}

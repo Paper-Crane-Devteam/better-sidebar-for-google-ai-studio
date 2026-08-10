@@ -23,7 +23,7 @@ export {
   TOOL_TAG,
   SUPPORTED_TOOLS,
   REQUIRED_PARAMS,
-  ENGINE_ONLY_TOOLS,
+  CONTROL_TOOLS,
   hasUnclosedToolBlock,
 } from './tool-schema';
 

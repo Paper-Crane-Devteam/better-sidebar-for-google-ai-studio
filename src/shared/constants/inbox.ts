@@ -16,3 +16,9 @@ export function INBOX_FOLDER_ID(platform: string): string {
 export function isInboxFolder(folderId: string): boolean {
   return folderId.startsWith('__default_sync_folder__');
 }
+
+/** Deterministic ID of the snippet inbox folder (single, not platform-scoped) */
+export const SNIPPET_INBOX_ID = '__snippet_inbox__';
+
+/** Deterministic ID of the prompt inbox folder (single, not platform-scoped) */
+export const PROMPT_INBOX_ID = '__prompt_inbox__';

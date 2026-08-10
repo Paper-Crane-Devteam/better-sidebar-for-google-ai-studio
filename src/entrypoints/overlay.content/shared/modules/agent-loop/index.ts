@@ -13,8 +13,6 @@ export type {
   ApprovalDecision,
   ApprovalScope,
   ToolRisk,
-  AgentQuestion,
-  PendingQuestion,
   AgentLoopSettings,
   AgentEndReason,
   TaskOutcome,
@@ -37,12 +35,7 @@ export {
   TOOL_TAG,
   CircuitBreaker,
 } from './engine';
-export type {
-  CircuitBreakerState,
-  LoopCheckResult,
-  FailureCheckResult,
-  NoProgressResult,
-} from './engine';
+export type { CircuitBreakerState, LoopCheckResult, FailureCheckResult } from './engine';
 
 // Tools
 export { executeToolCall } from './tools/tool-registry';
@@ -52,12 +45,6 @@ export {
   COMPLETE_TASK_SIGNAL,
   parseCompleteTaskSignal,
 } from './tools/complete-task';
-export {
-  askUser,
-  ASK_USER_SIGNAL,
-  parseAskUserSignal,
-  MAX_ASK_USER_PER_SESSION,
-} from './tools/ask-user';
 
 // Prompts
 export { assembleFinalPrompt, assembleSkillActivation } from './prompts/prompt-assembler';
@@ -96,16 +83,17 @@ export type { PlatformId, PlatformInfo } from './adapters/adapter-factory';
 // UI Components
 export { AgentCommandPopup } from './AgentCommandPopup';
 
-// Execution policy (confirmation strategy + token helpers)
+// Execution policy — who needs approval, and who therefore presses send
 export { useAgentPolicyStore } from './agent-policy-store';
 export type { AgentPolicyState } from './agent-policy-store';
 export {
   requiresApproval,
+  shouldAutoSend,
+  isUnattendedAllowed,
   getToolRisk,
   isWriteOperation,
+  isControlTool,
   buildToolCallFingerprint,
-  estimateTokens,
-  formatTokenCount,
 } from './execution-policy';
 
 // Renderer

@@ -2,8 +2,14 @@
  * Stage ④ — get the round's results back to the AI.
  *
  * Three steps: stage the payload in the composer, park in `awaiting_send`, then
- * either click send (auto-continue) or wait for the user. Sending always goes
- * through the real send button so the capsule-merging interceptor runs.
+ * either click send or leave it to the user. Sending always goes through the real
+ * send button so the capsule-merging interceptor runs.
+ *
+ * Who clicks is the caller's decision, passed in as `autoSend` — it follows from
+ * whether anything this round needed approval (see `shouldAutoSend`). There used to
+ * be a persisted `autoContinue` switch here instead, which could disagree with the
+ * approval settings: approve a write by hand, and the results still went out on
+ * their own.
  *
  * Stateful, unlike the other stages: between the stage and the confirmed send there
  * is a payload in limbo, and `resume` / `continueNow` need to know about it. That
@@ -12,7 +18,6 @@
  */
 
 import { triggerSend } from '@/entrypoints/overlay.content/shared/lib/quill-editor';
-import { useAgentPolicyStore } from '../../../agent-policy-store';
 import type { LoopContext } from '../../context';
 import { isStaged, stageResults, type StagedShape } from './staging';
 import { waitForSend } from './send-watcher';
@@ -41,8 +46,12 @@ export class ResultHandoff {
    * Full stage-④ run. Returns false when the payload never made it out — the caller
    * must stop the loop then, because waiting for a reply to an undelivered message
    * is the "hangs until timeout" failure mode.
+   *
+   * `autoSend: false` stages the payload and waits: the user is already here, having
+   * just approved something, so the send is theirs. The watcher stays armed either
+   * way, so pressing Enter in the composer is picked up exactly like our own click.
    */
-  async deliver(text: string): Promise<boolean> {
+  async deliver(text: string, autoSend: boolean): Promise<boolean> {
     this.ctx.setStatus('sending');
     console.log('[AgentLoop] Inserting results into editor, length:', text.length);
 
@@ -53,10 +62,9 @@ export class ResultHandoff {
     this.ctx.store.awaitSend();
     this.ctx.events.emit('loop:paused', { reason: 'Waiting for user to send results' });
 
-    const auto = useAgentPolicyStore.getState().autoContinue;
     let clicked = true;
     const sent = await this.watchSend(async () => {
-      if (auto) clicked = await triggerSend();
+      if (autoSend) clicked = await triggerSend();
     });
 
     if (!sent) {
@@ -74,6 +82,22 @@ export class ResultHandoff {
 
     this.pending = null;
     return true;
+  }
+
+  /**
+   * Remember a payload the AI is owed, without touching the composer.
+   *
+   * Used when a guard stops the round mid-way. `pending` is what makes "Retry" send
+   * the report instead of restarting a wait for a message that never went out —
+   * `resend()` stages it at that point.
+   *
+   * Deliberately *not* written to the composer now: the loop is about to pause, and
+   * text sitting in the input box invites the user to press Enter, which would
+   * deliver it with no engine listening for the reply.
+   */
+  holdForRetry(text: string): void {
+    this.pending = text;
+    console.log('[AgentLoop] Holding undelivered results for retry, length:', text.length);
   }
 
   /**

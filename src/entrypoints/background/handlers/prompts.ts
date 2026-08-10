@@ -7,8 +7,7 @@ import type { MessageSender } from '../types';
 import { notifyDataUpdated } from '../notify';
 import { triggerAutoSync } from './gdrive-sync';
 import i18n from '@/locale/i18n';
-
-const PROMPT_INBOX_ID = '__prompt_inbox__';
+import { PROMPT_INBOX_ID } from '@/shared/constants/inbox';
 
 /** Find or create the prompt inbox folder */
 async function resolvePromptInbox(): Promise<string> {

@@ -46,7 +46,9 @@
     "newFolder": "Nova Pasta",
     "imported": "Caixa de entrada",
     "conversations": "conversas",
-    "scanComplete": "Varredura concluída, nenhuma nova conversa encontrada"
+    "scanComplete": "Varredura concluída, nenhuma nova conversa encontrada",
+    "importTipText": "Importe sua lista completa de chats para ver todas as conversas.",
+    "importTipAction": "Importar Agora"
   },
   "settings": {
     "general": "Geral",
@@ -1097,13 +1099,13 @@
       "awaiting_approval": "Aguardando sua aprovação",
       "sending": "Enviando...",
       "awaiting_send": "Aguardando você",
-      "awaiting_user": "Aguardando sua resposta",
+      "checkIn": "Aguardando seu OK para continuar",
       "paused": "Pausado",
       "error": "Erro"
     },
     "header": {
       "step": "Etapa {{count}}",
-      "speedHint": "Operações de escrita são aprovadas automaticamente nesta tarefa"
+      "speedHint": "Nada será perguntado no restante desta tarefa"
     },
     "actions": {
       "stop": "Parar",
@@ -1123,28 +1125,22 @@
       "autoReads": "Executar consultas sem perguntar",
       "autoWrites": "Alterar dados sem perguntar",
       "autoWritesHint": "As alterações ainda não podem ser desfeitas",
-      "autoContinue": "Enviar resultados automaticamente",
-      "autoContinueHint": "Se desativado, você pressiona Enter em cada rodada",
+      "autoContinue": "Seguir sozinho",
+      "autoContinueHint": "Se estiver desligado, você precisa pressionar Enter em cada etapa",
+      "sendHint": "Uma etapa que você aprova ainda espera você pressionar Enter — só as etapas sem supervisão se enviam sozinhas.",
       "taskApproved": "Aprovando tudo nesta tarefa — clique para parar"
     },
-    "ask": {
-      "title": "O agente precisa da sua resposta",
-      "placeholder": "Digite sua resposta...",
-      "placeholderOther": "Ou responda com suas próprias palavras...",
-      "send": "Responder",
-      "chatHint": "Você também pode responder direto no campo do chat.",
-      "stop": "Parar tarefa"
-    },
-    "confirm": {
-      "title": "Confirmar alterações",
-      "followsPlan": "Isso executa o plano que você aprovou. As gravações são confirmadas separadamente.",
-      "showFull": "Ver consulta completa",
+    "approve": {
+      "readTitle": "Aprovar esta consulta?",
+      "writeTitle": "Aprovar esta alteração?",
+      "run": "Executar",
+      "runRest_one": "Executar também esta {{count}}",
+      "runRest_other": "Executar também estas {{count}}",
+      "runRest": "Executar também estas {{count}}",
+      "allTask": "Não perguntar de novo nesta tarefa",
       "reject": "Rejeitar",
-      "confirmReject": "Rejeitar",
       "back": "Voltar",
-      "reasonPlaceholder": "O que está errado? (opcional)",
-      "approve": "Aprovar",
-      "approveAll": "Permitir tudo nesta tarefa"
+      "reasonPlaceholder": "O que está errado? (opcional)"
     },
     "instruction": {
       "placeholder": "Adicione uma observação para a IA...",
@@ -1158,8 +1154,9 @@
       "infeasible": "Não foi possível concluir",
       "paywall": "Upgrade necessário",
       "stopped": "Interrompido",
-      "maxRounds": "Limite de etapas atingido",
       "stuck": "Interrompido — o agente estava em loop",
+      "noToolCall": "Interrompido — nenhuma ação foi executada",
+      "noToolCallDesc": "A última resposta do agente não executou nada. Leia no chat — se a tarefa ainda precisa ser feita, comece de novo.",
       "ended": "Sessão encerrada",
       "paywallDesc": "O plano gratuito permite que o agente leia seus dados, mas não os altere. Faça upgrade para permitir escritas.",
       "steps_one": "{{count}} etapa executada",

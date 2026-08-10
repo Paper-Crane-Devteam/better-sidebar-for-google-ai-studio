@@ -15,6 +15,7 @@ import {
 } from '../../components/ui/context-menu';
 import { ExclusiveContextMenu } from '../../components/ui/exclusive-context-menu';
 import { OutlineSection } from './components/OutlineSection';
+import { ImportChatListTip, markImportChatListTriggered } from './components/ImportChatListTip';
 
 import type { ExplorerTypeFilter } from '../../types/filter';
 import { ExplorerContext } from './ExplorerContext';
@@ -446,6 +447,7 @@ export const ExplorerTab = ({
   const handleScanLibrary = () => {
     if (isScanning) return;
     setIsScanning(true);
+    markImportChatListTriggered();
     browser.runtime.sendMessage({ type: 'SCAN_LIBRARY' });
   };
 
@@ -551,6 +553,9 @@ export const ExplorerTab = ({
         </div>
       )}
       </div>
+
+      {/* Import Chat List Tip (shown if user never imported & never dismissed) */}
+      <ImportChatListTip />
 
       {/* OUTLINE Section (collapsible, at the bottom) */}
       <OutlineSection fillAvailable={!isChatsSectionExpanded} />

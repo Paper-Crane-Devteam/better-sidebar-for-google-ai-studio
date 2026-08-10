@@ -52,10 +52,10 @@ export const AgentSessionSummary: React.FC = () => {
         return t('agent.summary.paywall', { defaultValue: 'Upgrade required' });
       case 'user_stop':
         return t('agent.summary.stopped', { defaultValue: 'Stopped' });
-      case 'max_rounds':
-        return t('agent.summary.maxRounds', { defaultValue: 'Step limit reached' });
       case 'circuit_breaker':
         return t('agent.summary.stuck', { defaultValue: 'Stopped — the agent was looping' });
+      case 'no_tool_call':
+        return t('agent.summary.noToolCall', { defaultValue: 'Stopped — no action was taken' });
       default:
         return t('agent.summary.ended', { defaultValue: 'Session ended' });
     }
@@ -93,6 +93,17 @@ export const AgentSessionSummary: React.FC = () => {
           count tells the user nothing about what to do next. */}
       {finalNote && (
         <p className="text-xs leading-relaxed text-foreground">{finalNote}</p>
+      )}
+
+      {/* The last message is the whole explanation here, and it's right there in the
+          chat — so point at it instead of repeating a step count. */}
+      {endReason === 'no_tool_call' && (
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          {t('agent.summary.noToolCallDesc', {
+            defaultValue:
+              "The agent's last reply didn't run anything. Read it in the chat — if the task still needs doing, start it again.",
+          })}
+        </p>
       )}
 
       {isPaywall ? (

@@ -1,6 +1,6 @@
 /**
  * AgentStatusHeader — Top section of the status panel.
- * Shows: status indicator, step counter, active skill, elapsed time, stop/retry.
+ * Shows: status indicator, step counter, active skill, stop/retry.
  *
  * Stop / Retry act on the real engine instance (via the engine registry), not
  * just on the store — mutating the store alone left the engine running.
@@ -16,7 +16,6 @@ import { useAgentLoopStore } from '../../agent-loop/agent-loop-store';
 import { getActiveEngine } from '../../agent-loop/engine/engine-registry';
 import { getSkillById } from '../../agent-loop/skills/skill-registry';
 import type { AgentLoopStatus } from '../../agent-loop/types';
-import { useElapsedTime } from '../useElapsedTime';
 
 const STATUS_FALLBACK: Record<AgentLoopStatus, string> = {
   idle: 'Completed',
@@ -26,7 +25,6 @@ const STATUS_FALLBACK: Record<AgentLoopStatus, string> = {
   awaiting_approval: 'Waiting for your approval',
   sending: 'Sending...',
   awaiting_send: 'Waiting for you',
-  awaiting_user: 'Waiting for your answer',
   paused: 'Paused',
   error: 'Error',
 };
@@ -39,15 +37,9 @@ const STATUS_COLORS: Record<AgentLoopStatus, string> = {
   awaiting_approval: 'bg-amber-500',
   sending: 'bg-blue-500',
   awaiting_send: 'bg-primary',
-  awaiting_user: 'bg-primary',
   paused: 'bg-orange-500',
   error: 'bg-red-500',
 };
-
-function formatElapsed(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`;
-  return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
-}
 
 export const AgentStatusHeader: React.FC = () => {
   const { t } = useI18n();
@@ -56,8 +48,8 @@ export const AgentStatusHeader: React.FC = () => {
   const speedMode = useAgentLoopStore((s) => s.speedMode);
   const activeSkillId = useAgentLoopStore((s) => s.activeSkillId);
   const sessionTitle = useAgentLoopStore((s) => s.sessionTitle);
-  const sessionStartedAt = useAgentLoopStore((s) => s.sessionStartedAt);
   const currentTool = useAgentLoopStore((s) => s.currentTool);
+  const checkInSteps = useAgentLoopStore((s) => s.checkInSteps);
 
   const activeSkill = activeSkillId ? getSkillById(activeSkillId) : null;
   const isActive =
@@ -67,8 +59,6 @@ export const AgentStatusHeader: React.FC = () => {
     status === 'sending';
   const canStop = status !== 'idle';
   const canRetry = status === 'paused' || status === 'error';
-
-  const elapsed = useElapsedTime(sessionStartedAt, status !== 'idle');
 
   const handleStop = () => {
     const engine = getActiveEngine();
@@ -104,8 +94,12 @@ export const AgentStatusHeader: React.FC = () => {
             )}
           </div>
 
+          {/* A check-in is `paused` too, but labelling it "Paused" next to a neutral
+              "have a look" card reads like two different things happened. */}
           <span className="truncate text-xs font-medium text-foreground">
-            {t(`agent.status.${status}`, { defaultValue: STATUS_FALLBACK[status] })}
+            {checkInSteps !== null
+              ? t('agent.status.checkIn', { defaultValue: 'Waiting for your go-ahead' })
+              : t(`agent.status.${status}`, { defaultValue: STATUS_FALLBACK[status] })}
           </span>
 
           {speedMode && (
@@ -156,24 +150,21 @@ export const AgentStatusHeader: React.FC = () => {
         </div>
       )}
 
-      {/* Row 3: Step + skill + elapsed */}
-      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-        <div className="flex min-w-0 items-center gap-2">
-          {currentRound > 0 && (
-            <span className="shrink-0">
-              {t('agent.header.step', {
-                defaultValue: 'Step {{count}}',
-                count: currentRound,
-              })}
-            </span>
-          )}
-          {activeSkill && (
-            <span className="truncate rounded bg-primary/10 px-1 text-primary">
-              {activeSkill.title}
-            </span>
-          )}
-        </div>
-        {elapsed !== null && <span className="shrink-0">{formatElapsed(elapsed)}</span>}
+      {/* Row 3: Step + skill */}
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        {currentRound > 0 && (
+          <span className="shrink-0">
+            {t('agent.header.step', {
+              defaultValue: 'Step {{count}}',
+              count: currentRound,
+            })}
+          </span>
+        )}
+        {activeSkill && (
+          <span className="truncate rounded bg-primary/10 px-1 text-primary">
+            {activeSkill.title}
+          </span>
+        )}
       </div>
 
       {/* Row 4: Currently executing tool */}

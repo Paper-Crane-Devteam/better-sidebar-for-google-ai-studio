@@ -16,6 +16,8 @@
  *   agentEventBus.emit('tool:executed', { toolName: 'execute_sql', ... });
  */
 
+import type { ToolRisk } from './types';
+
 // ─── Event Map ───────────────────────────────────────────────────────────────
 
 export interface AgentEventMap {
@@ -27,11 +29,11 @@ export interface AgentEventMap {
     reason:
       | 'complete'
       | 'infeasible'
-      | 'max_rounds'
       | 'user_stop'
       | 'error'
       | 'circuit_breaker'
-      | 'paywall';
+      | 'paywall'
+      | 'no_tool_call';
     totalRounds: number;
   };
   'loop:paused': { reason: string };
@@ -39,7 +41,7 @@ export interface AgentEventMap {
 
   // ── Tool execution ─────────────────────────────────────────────────────
   'tool:executing': { toolName: string; params: Record<string, string> };
-  'tool:executed': { toolName: string; success: boolean; result: string; durationMs: number };
+  'tool:executed': { toolName: string; success: boolean; result: string };
   'tool:error': { toolName: string; error: string };
 
   // ── AI response ────────────────────────────────────────────────────────
@@ -50,21 +52,23 @@ export interface AgentEventMap {
   // ── Circuit breaker ────────────────────────────────────────────────────
   'circuit-breaker:loop-detected': { toolName: string; count: number; action: 'warn' | 'stop' };
   'circuit-breaker:failure-recorded': { toolName: string; consecutiveCount: number; totalCount: number; errorMessage?: string };
-  'circuit-breaker:no-progress': { consecutiveCount: number };
+  /** A malformed tool block was nudged about instead of ending the session */
+  'circuit-breaker:format-retry': { count: number };
   'circuit-breaker:reset': undefined;
 
   // ── User interaction ───────────────────────────────────────────────────
-  /** A tool call is parked waiting for the user's go-ahead */
-  'user:approval-requested': { toolName: string; risk: 'read' | 'write' };
+  /**
+   * A tool call is parked waiting for the user's go-ahead.
+   *
+   * `control` never reaches here — those calls skip the gate — but the field is
+   * typed as the full `ToolRisk` so the two can't drift.
+   */
+  'user:approval-requested': { toolName: string; risk: ToolRisk };
   'user:approval-answered': {
     toolName: string;
     approved: boolean;
     scope: 'once' | 'round' | 'task';
   };
-  /** The AI called `ask_user` (or asked in prose and we salvaged it) */
-  'user:question-asked': { question: string; optionCount: number; source: 'tool' | 'fallback' };
-  /** `chat` means the answer went straight to the AI through the composer */
-  'user:question-answered': { via: 'tab' | 'chat' };
 
   // ── Control ────────────────────────────────────────────────────────────
   'control:speed-mode-changed': { enabled: boolean };

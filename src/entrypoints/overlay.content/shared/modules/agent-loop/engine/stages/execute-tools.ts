@@ -1,19 +1,20 @@
 /**
  * Stage ③ — run the round's tool calls.
  *
- * Per call, in order: ask the circuit breaker whether this is a loop, execute,
- * record the outcome (store + fingerprint ledger + events), then check for the two
- * signals that end the session outright — `complete_task` and a paywall hit.
+ * Per call, in order: ask the circuit breaker whether this is a loop, gate it behind
+ * an approval if policy says so, execute, record the outcome (store + fingerprint
+ * ledger + events), then check for the two signals that end the session outright —
+ * `complete_task` and a paywall hit.
  *
  * Every branch still produces a markdown section, because whatever happened has to
- * be reported back to the AI. A silent abort would leave it guessing.
+ * be reported back to the AI. A silent abort would leave it guessing — a refusal in
+ * particular has to say so, or the AI's next move is the same statement again.
  */
 
-import type { AgentQuestion, ParsedToolCall } from '../../types';
+import type { ParsedToolCall } from '../../types';
 import type { LoopContext } from '../context';
 import { executeToolCall } from '../../tools/tool-registry';
 import { parseCompleteTaskSignal } from '../../tools/complete-task';
-import { parseAskUserSignal } from '../../tools/ask-user';
 import { buildToolCallFingerprint, getToolRisk, requiresApproval } from '../../execution-policy';
 import { AUTO_APPROVED, requestApproval } from './approval-gate';
 
@@ -21,12 +22,16 @@ export type ExecuteOutcome =
   /** Round finished; feed these sections back to the AI */
   | { kind: 'results'; results: string[] }
   /**
-   * The AI needs an answer before it can continue. `results` are the sections
-   * produced before the question and still owe the AI a delivery — they travel with
-   * the answer, or get carried into the next round if the user replies natively.
+   * A guard stopped the round, but the AI is still owed a report of what happened.
+   *
+   * Distinct from `ended` because these results must reach the AI eventually — the
+   * caller stages them without sending, so "Retry" delivers the errors and the AI
+   * gets a chance to correct itself. Dropping them was a dead end: the loop paused
+   * with nothing in the composer, so Retry went back to waiting for a reply to a
+   * message that was never sent, and sat there until the idle timeout.
    */
-  | { kind: 'awaiting-user'; question: AgentQuestion; results: string[] }
-  /** Session is over (complete / paywall / circuit breaker) — already reported */
+  | { kind: 'halted'; results: string[]; reason: string }
+  /** Session is genuinely over (complete_task / paywall) — nothing owed, already reported */
   | { kind: 'ended' };
 
 /** A tool result that starts with either prefix counts as a failure */
@@ -38,17 +43,14 @@ function section(toolCall: ParsedToolCall, body: string): string {
   return `### ${toolCall.description || toolCall.name}\n${body}`;
 }
 
-/** What `ask_user` reports in place of its sentinel, for the AI and the step list */
-function describeQuestion(question: AgentQuestion): string {
-  const options = question.options.length > 0 ? ` Options offered: ${question.options.join(' / ')}.` : '';
-  return `Question put to the user.${options} Their answer follows under "User Response".`;
-}
-
 export async function executeTools(
   ctx: LoopContext,
   toolCalls: ParsedToolCall[],
 ): Promise<ExecuteOutcome> {
   ctx.setStatus('executing');
+  // The failure budget is counted per round: several statements failing on the same
+  // wrong assumption is one mistake, not five.
+  ctx.breaker.beginRound();
   const results: string[] = [];
 
   for (const [index, toolCall] of toolCalls.entries()) {
@@ -60,7 +62,11 @@ export async function executeTools(
     if (loopCheck.action === 'stop') {
       console.warn('[AgentLoop] Circuit breaker: loop hard stop');
       results.push(section(toolCall, loopCheck.message));
-      return breakCircuit(ctx);
+      return halt(
+        ctx,
+        results,
+        'The agent kept issuing the same call. Review it above, then retry to tell it so.',
+      );
     }
 
     if (loopCheck.action === 'warn') {
@@ -85,9 +91,11 @@ export async function executeTools(
       // statement again.
       const refusal = decision.reason
         ? `CANCELLED: The user rejected this operation. Their reason: ${decision.reason}\n` +
-          `Do not retry it unchanged — address the objection, or use ask_user to find out what they want.`
+          `Do not retry it unchanged — address the objection, or call complete_task with status ` +
+          `"infeasible" explaining what you would need.`
         : `CANCELLED: The user rejected this operation without giving a reason.\n` +
-          `Do not retry it unchanged — use ask_user to find out what they want instead.`;
+          `Do not retry it unchanged — take the safest alternative reading of the request, or call ` +
+          `complete_task with status "infeasible".`;
 
       console.log('[AgentLoop] Rejected by user:', toolCall.name);
       ctx.store.addResult({
@@ -114,18 +122,14 @@ export async function executeTools(
     console.log(`[AgentLoop] Executing: ${toolCall.name}`, toolCall.params);
     ctx.events.emit('tool:executing', { toolName: toolCall.name, params: toolCall.params });
 
-    const startedAt = Date.now();
     const result = await executeToolCall(toolCall);
     const success = isSuccess(result);
-    const question = parseAskUserSignal(result);
 
     ctx.events.emit('tool:executed', {
       toolName: toolCall.name,
       success,
       result: result.substring(0, 200), // Truncated — events are for observers, not payloads
-      durationMs: Date.now() - startedAt,
     });
-    ctx.countTokens(result);
 
     // ── Guard: consecutive failures ────────────────────────────────────────
     // Always recorded: a success here resets the failure streak.
@@ -134,8 +138,7 @@ export async function executeTools(
       success,
       success ? undefined : result,
     );
-    // The raw sentinel would be meaningless to both the AI and the step list
-    let body = question ? describeQuestion(question) : result;
+    let body = result;
 
     if (failure) {
       // Escalating hints, so the AI stops retrying the same broken approach
@@ -144,8 +147,16 @@ export async function executeTools(
       if (failure.action === 'stop') {
         console.warn('[AgentLoop] Circuit breaker: failure hard stop');
         ctx.events.emit('tool:error', { toolName: toolCall.name, error: failure.message });
+        // Recorded before halting, so the step list shows the failure that tripped it
+        ctx.store.addResult({
+          toolName: toolCall.name,
+          description: toolCall.description,
+          success: false,
+          result: body,
+          timestamp: Date.now(),
+        });
         results.push(section(toolCall, `${body}\n\n${failure.message}`));
-        return breakCircuit(ctx);
+        return halt(ctx, results, 'Too many failures in a row. Review the errors above, then retry.');
       }
 
       if (failure.action === 'warn') body += `\n\n${failure.message}`;
@@ -170,26 +181,6 @@ export async function executeTools(
     });
 
     results.push(section(toolCall, body));
-
-    // ── Round-ending signal: the AI needs the user ─────────────────────────
-    if (question) {
-      // Anything queued after the question contradicts having asked it, so it is
-      // dropped — and said out loud, since silently skipping work would leave the
-      // AI assuming it happened.
-      const skipped = toolCalls.slice(index + 1);
-      if (skipped.length > 0) {
-        console.warn(`[AgentLoop] Skipping ${skipped.length} call(s) queued after ask_user`);
-        results.push(
-          `### ⏭️ Not executed\n` +
-            `${skipped.length} tool call(s) after ask_user were skipped: ` +
-            `${skipped.map((c) => c.name).join(', ')}. ` +
-            `ask_user must be the last call in a response — re-issue them once you have the answer.`,
-        );
-      }
-
-      ctx.store.setCurrentTool(null);
-      return { kind: 'awaiting-user', question, results };
-    }
 
     // ── Session-ending signals ─────────────────────────────────────────────
     const completion = parseCompleteTaskSignal(result);
@@ -225,11 +216,13 @@ export async function executeTools(
 }
 
 /**
- * A tripped breaker pauses rather than sending: the accumulated results stay
- * visible in the tab so the user can see what went wrong before deciding to retry.
+ * A tripped breaker stops the round but does not throw the report away.
+ *
+ * The caller stages `results` in the composer and pauses, so the user sees what went
+ * wrong and "Retry" hands the errors to the AI instead of restarting a wait for a
+ * message that was never sent.
  */
-function breakCircuit(ctx: LoopContext): ExecuteOutcome {
+function halt(ctx: LoopContext, results: string[], reason: string): ExecuteOutcome {
   ctx.store.setCurrentTool(null);
-  ctx.pauseAndEnd('Circuit breaker triggered. Please review the issue above.', 'circuit_breaker');
-  return { kind: 'ended' };
+  return { kind: 'halted', results, reason };
 }

@@ -12,8 +12,23 @@ import { assembleSkillActivation } from '../prompts/prompt-assembler';
 
 /**
  * Execute a parsed tool call and return the result string.
+ *
+ * Never throws. A tool that raises instead of returning `ERROR: ...` would otherwise
+ * unwind the whole round: the exception reaches the engine's top-level catch, the
+ * session goes to `error` with nothing staged, and Retry restarts a wait for a
+ * message that was never sent — a hang, for what should have been one failed step.
+ * Turning it into an ordinary failed result keeps the AI informed and the loop alive.
  */
 export async function executeToolCall(toolCall: ParsedToolCall): Promise<string> {
+  try {
+    return await runToolCall(toolCall);
+  } catch (e) {
+    console.error(`[AgentLoop] Tool "${toolCall.name}" threw:`, e);
+    return `ERROR: ${toolCall.name} failed unexpectedly - ${(e as Error)?.message ?? String(e)}`;
+  }
+}
+
+async function runToolCall(toolCall: ParsedToolCall): Promise<string> {
   // ── 1. Meta-tool: activate_skill ─────────────────────────────────────
   if (toolCall.name === 'activate_skill') {
     const skillId = toolCall.params.skill_id;
