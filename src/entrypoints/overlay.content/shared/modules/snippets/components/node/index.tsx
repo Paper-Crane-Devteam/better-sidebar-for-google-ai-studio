@@ -370,6 +370,7 @@ export const SnippetNode = ({
           }
         }}
         onKeyDown={(e) => {
+          if (node.isEditing) return;
           if (e.key === 'Enter' || e.key === ' ') {
             if (isBatchMode) {
               toggleSnippetsBatchSelection(node.data.id);

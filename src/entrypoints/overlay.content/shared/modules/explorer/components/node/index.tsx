@@ -269,6 +269,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (node.isEditing) return;
     if (e.key !== 'Enter' && e.key !== ' ') return;
 
     if (isBatchMode) {

@@ -55,6 +55,9 @@ export const RenameForm = ({ node, newName, setNewName }: RenameFormProps) => {
           if (e.key === 'Escape') {
             node.reset();
           }
+          // Prevent space/enter/other keys from bubbling to the parent
+          // role="button" div which would trigger navigation or toggle
+          e.stopPropagation();
         }}
       />
     </form>
