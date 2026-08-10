@@ -23,8 +23,10 @@ const STATUS_FALLBACK: Record<AgentLoopStatus, string> = {
   waiting_ai: 'Thinking...',
   parsing: 'Reading response...',
   executing: 'Working...',
+  awaiting_approval: 'Waiting for your approval',
   sending: 'Sending...',
   awaiting_send: 'Waiting for you',
+  awaiting_user: 'Waiting for your answer',
   paused: 'Paused',
   error: 'Error',
 };
@@ -34,8 +36,10 @@ const STATUS_COLORS: Record<AgentLoopStatus, string> = {
   waiting_ai: 'bg-blue-500',
   parsing: 'bg-blue-500',
   executing: 'bg-green-500',
+  awaiting_approval: 'bg-amber-500',
   sending: 'bg-blue-500',
   awaiting_send: 'bg-primary',
+  awaiting_user: 'bg-primary',
   paused: 'bg-orange-500',
   error: 'bg-red-500',
 };
@@ -107,7 +111,7 @@ export const AgentStatusHeader: React.FC = () => {
           {speedMode && (
             <SimpleTooltip
               content={t('agent.header.speedHint', {
-                defaultValue: 'Write operations are auto-approved for this task',
+                defaultValue: 'Nothing will be asked about for the rest of this task',
               })}
             >
               <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-orange-500">

@@ -9,7 +9,8 @@ import type {
   AgentLoopStatus,
   AgentEndReason,
   ToolCallResult,
-  PendingConfirmation,
+  PendingApproval,
+  PendingQuestion,
   ExecutedCall,
 } from './types';
 
@@ -30,8 +31,42 @@ export interface AgentLoopStoreState {
   errorMessage: string | null;
   /** Whether a DB snapshot was created in this session */
   snapshotCreated: boolean;
-  /** Pending write confirmation (UI renders dialog when non-null) */
-  pendingConfirmation: PendingConfirmation | null;
+/**
+   * Tool call waiting for the user's go-ahead.
+   *
+   * Rendered in two places at once: on the call's own card in the chat (where the
+   * SQL is already in front of you) and in the Agent tab. The tab copy is the
+   * fallback — cards only exist in our own conversation view, and the user can
+   * switch back to Gemini's native rendering mid-task.
+   */
+  pendingApproval: PendingApproval | null;
+
+  /**
+   * "Approve the rest of this response" — cleared on every new round.
+   *
+   * A response often carries several queries; approving each one separately is the
+   * friction that makes people turn the safety net off entirely.
+   */
+  approveRestOfRound: boolean;
+
+  /**
+   * Question the AI put to the user (UI renders the prompt when non-null).
+   * Separate from `pendingConfirmation`: this is about what to do, not about
+   * whether one specific operation may run.
+   */
+  pendingQuestion: PendingQuestion | null;
+
+  /** Questions asked so far — bounded, since asking costs no round budget */
+  askUserCount: number;
+
+  /**
+   * Rounds granted on top of `maxRounds`.
+   *
+   * A round spent waiting on the user is supervised by definition, so it can't run
+   * away and shouldn't eat the budget meant for autonomous work. Without this an
+   * AI that asks a couple of questions exhausts the session before doing the job.
+   */
+  bonusRounds: number;
 
   // ─── Control Panel Runtime Extensions ────────────────────────────────
   /** Speed mode — auto-approve everything */
@@ -76,6 +111,8 @@ export interface AgentLoopStoreState {
   start: (maxRounds: number, session?: { conversationId?: string | null; title?: string }) => void;
   /** Tool results are in the editor — waiting for the user (or auto-continue) to send */
   awaitSend: () => void;
+  /** Parked on a question from the AI — a checkpoint, not a fault */
+  awaitUser: () => void;
   /** Bind the running session to a conversation id once the platform assigns one */
   attachSessionConversation: (id: string) => void;
   /** Remember that a tool call ran, keyed by its fingerprint */
@@ -91,7 +128,13 @@ export interface AgentLoopStoreState {
   reset: () => void;
   setError: (message: string) => void;
   setSnapshotCreated: (created: boolean) => void;
-  setPendingConfirmation: (confirmation: PendingConfirmation | null) => void;
+  setPendingApproval: (approval: PendingApproval | null) => void;
+  setApproveRestOfRound: (enabled: boolean) => void;
+  setPendingQuestion: (question: PendingQuestion | null) => void;
+  /** Count a question against the session's asking budget */
+  noteAskUser: () => void;
+  /** Extend the round budget by one, for a round the user was in charge of */
+  grantBonusRound: () => void;
   setSpeedMode: (enabled: boolean) => void;
   setSpeedModeWarningShown: () => void;
   setBreakpointRound: (round: number | null) => void;
@@ -109,7 +152,11 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
   history: [],
   errorMessage: null,
   snapshotCreated: false,
-  pendingConfirmation: null,
+  pendingApproval: null,
+  approveRestOfRound: false,
+  pendingQuestion: null,
+  askUserCount: 0,
+  bonusRounds: 0,
 
   // Control Panel runtime extensions
   speedMode: false,
@@ -143,6 +190,11 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
       tokenEstimation: 0,
       speedMode: false,
       pendingInstruction: null,
+      pendingApproval: null,
+      approveRestOfRound: false,
+      pendingQuestion: null,
+      askUserCount: 0,
+      bonusRounds: 0,
       activeSkillId: null,
       sessionConversationId: session?.conversationId ?? null,
       sessionTitle: session?.title ?? null,
@@ -152,6 +204,8 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
     }),
 
   awaitSend: () => set({ status: 'awaiting_send', errorMessage: null }),
+
+  awaitUser: () => set({ status: 'awaiting_user', errorMessage: null, currentTool: null }),
 
   // A session started in a brand new chat has no conversation id yet; adopt the
   // one the platform assigns after the first message is sent.
@@ -169,6 +223,9 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
       currentRound: state.currentRound + 1,
       currentResults: [],
       currentTool: null,
+      // "Approve the rest" meant the rest of *that* response, not the whole task —
+      // that's what the task-scoped switch is for.
+      approveRestOfRound: false,
     })),
 
   setStatus: (status) => set({ status }),
@@ -203,6 +260,10 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
       currentTool: null,
       speedMode: false,
       activeSkillId: null,
+      approveRestOfRound: false,
+      // A prompt left on screen after the session ends resolves to nothing
+      pendingQuestion: null,
+      pendingApproval: null,
       endReason: endReason ?? state.endReason ?? 'user_stop',
       // Preserve history for viewing
       history:
@@ -221,7 +282,11 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
       history: [],
       errorMessage: null,
       snapshotCreated: false,
-      pendingConfirmation: null,
+      pendingApproval: null,
+      approveRestOfRound: false,
+      pendingQuestion: null,
+      askUserCount: 0,
+      bonusRounds: 0,
       speedMode: false,
       speedModeWarningShown: false,
       breakpointRound: null,
@@ -243,7 +308,15 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set, get) => ({
 
   setSnapshotCreated: (created) => set({ snapshotCreated: created }),
 
-  setPendingConfirmation: (confirmation) => set({ pendingConfirmation: confirmation }),
+  setPendingApproval: (approval) => set({ pendingApproval: approval }),
+
+  setApproveRestOfRound: (enabled) => set({ approveRestOfRound: enabled }),
+
+  setPendingQuestion: (question) => set({ pendingQuestion: question }),
+
+  noteAskUser: () => set((state) => ({ askUserCount: state.askUserCount + 1 })),
+
+  grantBonusRound: () => set((state) => ({ bonusRounds: state.bonusRounds + 1 })),
 
   // Control Panel actions
   setSpeedMode: (enabled) => set({ speedMode: enabled }),

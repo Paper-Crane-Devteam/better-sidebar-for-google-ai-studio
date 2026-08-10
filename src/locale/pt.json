@@ -1094,8 +1094,10 @@
       "waiting_ai": "Pensando...",
       "parsing": "Lendo a resposta...",
       "executing": "Trabalhando...",
+      "awaiting_approval": "Aguardando sua aprovação",
       "sending": "Enviando...",
       "awaiting_send": "Aguardando você",
+      "awaiting_user": "Aguardando sua resposta",
       "paused": "Pausado",
       "error": "Erro"
     },
@@ -1118,14 +1120,29 @@
       "pausedTitle": "Loop pausado"
     },
     "policy": {
-      "autoReads": "Executar leituras automaticamente",
-      "autoWrites": "Aprovar escritas automaticamente",
-      "autoWritesHint": "Somente nesta tarefa"
+      "autoReads": "Executar consultas sem perguntar",
+      "autoWrites": "Alterar dados sem perguntar",
+      "autoWritesHint": "As alterações ainda não podem ser desfeitas",
+      "autoContinue": "Enviar resultados automaticamente",
+      "autoContinueHint": "Se desativado, você pressiona Enter em cada rodada",
+      "taskApproved": "Aprovando tudo nesta tarefa — clique para parar"
+    },
+    "ask": {
+      "title": "O agente precisa da sua resposta",
+      "placeholder": "Digite sua resposta...",
+      "placeholderOther": "Ou responda com suas próprias palavras...",
+      "send": "Responder",
+      "chatHint": "Você também pode responder direto no campo do chat.",
+      "stop": "Parar tarefa"
     },
     "confirm": {
       "title": "Confirmar alterações",
+      "followsPlan": "Isso executa o plano que você aprovou. As gravações são confirmadas separadamente.",
       "showFull": "Ver consulta completa",
       "reject": "Rejeitar",
+      "confirmReject": "Rejeitar",
+      "back": "Voltar",
+      "reasonPlaceholder": "O que está errado? (opcional)",
       "approve": "Aprovar",
       "approveAll": "Permitir tudo nesta tarefa"
     },
@@ -1138,6 +1155,7 @@
     },
     "summary": {
       "done": "Tarefa finalizada",
+      "infeasible": "Não foi possível concluir",
       "paywall": "Upgrade necessário",
       "stopped": "Interrompido",
       "maxRounds": "Limite de etapas atingido",

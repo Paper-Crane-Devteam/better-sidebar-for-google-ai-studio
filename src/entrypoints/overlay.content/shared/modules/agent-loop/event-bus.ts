@@ -23,7 +23,17 @@ export interface AgentEventMap {
   'loop:started': { maxRounds: number; timestamp: number };
   'loop:round-started': { round: number };
   'loop:round-completed': { round: number; toolCallCount: number };
-  'loop:ended': { reason: 'complete' | 'max_rounds' | 'user_stop' | 'error' | 'circuit_breaker'; totalRounds: number };
+  'loop:ended': {
+    reason:
+      | 'complete'
+      | 'infeasible'
+      | 'max_rounds'
+      | 'user_stop'
+      | 'error'
+      | 'circuit_breaker'
+      | 'paywall';
+    totalRounds: number;
+  };
   'loop:paused': { reason: string };
   'loop:resumed': undefined;
 
@@ -44,8 +54,17 @@ export interface AgentEventMap {
   'circuit-breaker:reset': undefined;
 
   // ── User interaction ───────────────────────────────────────────────────
-  'user:confirmation-requested': { sql: string };
-  'user:confirmation-responded': { confirmed: boolean; sql: string };
+  /** A tool call is parked waiting for the user's go-ahead */
+  'user:approval-requested': { toolName: string; risk: 'read' | 'write' };
+  'user:approval-answered': {
+    toolName: string;
+    approved: boolean;
+    scope: 'once' | 'round' | 'task';
+  };
+  /** The AI called `ask_user` (or asked in prose and we salvaged it) */
+  'user:question-asked': { question: string; optionCount: number; source: 'tool' | 'fallback' };
+  /** `chat` means the answer went straight to the AI through the composer */
+  'user:question-answered': { via: 'tab' | 'chat' };
 
   // ── Control ────────────────────────────────────────────────────────────
   'control:speed-mode-changed': { enabled: boolean };

@@ -19,19 +19,6 @@ import { agentEventBus } from '../event-bus';
 import { AbortToken } from './guards/abort';
 import { CircuitBreaker } from './guards/circuit-breaker';
 
-/** Reasons the event bus accepts for `loop:ended` (narrower than AgentEndReason) */
-type EndedEventReason = 'complete' | 'max_rounds' | 'user_stop' | 'error' | 'circuit_breaker';
-
-/** `paywall` has no event of its own; it surfaces as a generic error to listeners */
-const ENDED_EVENT_REASON: Record<AgentEndReason, EndedEventReason> = {
-  complete: 'complete',
-  max_rounds: 'max_rounds',
-  user_stop: 'user_stop',
-  error: 'error',
-  circuit_breaker: 'circuit_breaker',
-  paywall: 'error',
-};
-
 export class LoopContext {
   /** Typed pub/sub — stages emit through `ctx.events.emit(...)` */
   readonly events = agentEventBus;
@@ -63,8 +50,22 @@ export class LoopContext {
     return this.store.maxRounds;
   }
 
+  /**
+   * The budget is `maxRounds` plus whatever was spent waiting on the user.
+   * Those rounds are supervised by definition, so they can't run away — charging
+   * them would let a couple of questions exhaust a session before the work starts.
+   */
+  get roundBudget(): number {
+    return this.maxRounds + this.store.bonusRounds;
+  }
+
   hasRoundsLeft(): boolean {
-    return this.round <= this.maxRounds;
+    return this.round <= this.roundBudget;
+  }
+
+  /** Refund the round a question consumed */
+  grantBonusRound(): void {
+    this.store.grantBonusRound();
   }
 
   setStatus(status: AgentLoopStatus): void {
@@ -123,19 +124,13 @@ export class LoopContext {
   /** Pause *and* declare the session over — guards that shouldn't silently retry */
   pauseAndEnd(reason: string, endReason: AgentEndReason, totalRounds = this.round): void {
     this.store.pause(reason);
-    this.events.emit('loop:ended', {
-      reason: ENDED_EVENT_REASON[endReason],
-      totalRounds,
-    });
+    this.events.emit('loop:ended', { reason: endReason, totalRounds });
   }
 
   /** Clean end of a session (complete_task, paywall, user stop) */
   finish(endReason: AgentEndReason, totalRounds = this.round): void {
     this.store.stop(endReason);
-    this.events.emit('loop:ended', {
-      reason: ENDED_EVENT_REASON[endReason],
-      totalRounds,
-    });
+    this.events.emit('loop:ended', { reason: endReason, totalRounds });
   }
 
   /** Report an engine-level exception */

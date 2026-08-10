@@ -22,16 +22,25 @@
  */
 
 import type { AgentPlatformAdapter } from '../adapters/types';
+import type { AgentQuestion } from '../types';
 import { LoopContext } from './context';
 import { isAbortError } from './guards/abort';
 import { awaitAIResponse } from './stages/await-response';
 import { parseResponse } from './stages/parse-response';
 import { executeTools } from './stages/execute-tools';
+import { waitForUserAnswer } from './stages/ask-user-gate';
 import { formatResults, ResultHandoff } from './stages/handoff';
 
 export class AgentLoopEngine {
   private readonly ctx: LoopContext;
   private readonly handoff: ResultHandoff;
+
+  /**
+   * Sections that were produced but never delivered, because the user answered the
+   * AI's question in the chat input instead of the tab. Their turn goes out ahead of
+   * ours, so these ride along with the next round's payload rather than vanishing.
+   */
+  private carryOver: string[] = [];
 
   constructor(adapter: AgentPlatformAdapter) {
     this.ctx = new LoopContext(adapter);
@@ -51,6 +60,7 @@ export class AgentLoopEngine {
     this.ctx.abort.renew();
     this.ctx.breaker.reset();
     this.handoff.reset();
+    this.carryOver = [];
     this.ctx.store.start(maxRounds, session);
 
     console.log('[AgentLoop] Engine started, max rounds:', maxRounds);
@@ -124,6 +134,13 @@ export class AgentLoopEngine {
   private async runRounds(): Promise<void> {
     const ctx = this.ctx;
 
+    /**
+     * A turn that arrived while we were parked on a question and had already
+     * finished before we noticed. Stage ① anchors on whatever turn exists when it
+     * starts, so it would wait out its timeout for a reply that is already on screen.
+     */
+    let observed: HTMLElement | null = null;
+
     while (ctx.hasRoundsLeft()) {
       ctx.abort.check();
 
@@ -133,13 +150,22 @@ export class AgentLoopEngine {
       }
 
       // ① Wait for the AI
-      const response = await awaitAIResponse(ctx);
+      const response = observed ?? (await awaitAIResponse(ctx));
+      observed = null;
       if (!response) return;
       ctx.abort.check();
 
       // ② Parse
       const parsed = parseResponse(ctx, response);
       if (parsed.kind === 'stalled') return;
+
+      // It asked in prose instead of calling ask_user — salvaged into a question
+      if (parsed.kind === 'ask-user') {
+        const step = await this.askUser(parsed.question, [], []);
+        if (step.stop) return;
+        observed = step.response;
+        continue;
+      }
 
       // No usable tool calls: send a nudge and spend a round on it
       if (parsed.kind === 'nudge') {
@@ -153,8 +179,20 @@ export class AgentLoopEngine {
       const executed = await executeTools(ctx, parsed.toolCalls);
       if (executed.kind === 'ended') return;
 
+      // The AI wants a decision — park until it arrives, from either direction
+      if (executed.kind === 'awaiting-user') {
+        const step = await this.askUser(executed.question, executed.results, parsed.errors);
+        if (step.stop) return;
+        observed = step.response;
+        continue;
+      }
+
       // ④ Hand the results back
-      const payload = formatResults(executed.results, parsed.errors, ctx.takePendingInstruction());
+      const payload = formatResults(
+        this.takeCarryOver(executed.results),
+        parsed.errors,
+        ctx.takePendingInstruction(),
+      );
       if (!(await this.handoff.deliver(payload))) return;
 
       ctx.abort.check();
@@ -165,10 +203,65 @@ export class AgentLoopEngine {
         ctx.pauseAndEnd(
           `Reached maximum rounds (${ctx.maxRounds}). Continue?`,
           'max_rounds',
-          ctx.maxRounds,
+          ctx.round - 1,
         );
         return;
       }
     }
+  }
+
+  // ── Waiting on the user ────────────────────────────────────────────────────
+
+  /**
+   * Park on a question and act on however it gets answered.
+   *
+   * `response` comes back set when the user answered in the chat input and the AI's
+   * reply had already finished — the next round must parse that instead of waiting
+   * for a turn that has been and gone.
+   *
+   * The round is refunded either way: a round the user spent thinking is supervised
+   * by definition, so charging it against `maxRounds` would let a few questions
+   * exhaust the budget meant for actual work.
+   */
+  private async askUser(
+    question: AgentQuestion,
+    results: string[],
+    errors: string[],
+  ): Promise<{ stop: true } | { stop: false; response: HTMLElement | null }> {
+    const ctx = this.ctx;
+    const outcome = await waitForUserAnswer(ctx, question);
+
+    if (outcome.kind === 'aborted') return { stop: true };
+
+    ctx.grantBonusRound();
+
+    if (outcome.kind === 'external') {
+      // The answer reached the AI through the composer, so there is nothing to send
+      // and no send to confirm — but these sections still haven't been delivered.
+      this.carryOver.push(...results);
+      ctx.advanceRound();
+      ctx.events.emit('loop:round-started', { round: ctx.round });
+      return { stop: false, response: outcome.response };
+    }
+
+    const payload = formatResults(
+      this.takeCarryOver(results),
+      errors,
+      ctx.takePendingInstruction(),
+      outcome.answer,
+    );
+    if (!(await this.handoff.deliver(payload))) return { stop: true };
+
+    ctx.abort.check();
+    ctx.advanceRound();
+    return { stop: false, response: null };
+  }
+
+  /** Prepend anything still owed to the AI, and clear the debt */
+  private takeCarryOver(results: string[]): string[] {
+    if (this.carryOver.length === 0) return results;
+    const merged = [...this.carryOver, ...results];
+    this.carryOver = [];
+    return merged;
   }
 }

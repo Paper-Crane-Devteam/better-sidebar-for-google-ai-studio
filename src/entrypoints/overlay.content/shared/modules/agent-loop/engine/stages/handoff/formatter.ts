@@ -31,12 +31,17 @@ export function wrapForAI(text: string): string {
 
 /**
  * Assemble one round's outcome into the document sent back to the AI.
- * A user instruction typed mid-round is prepended so it lands in the same turn.
+ *
+ * A user instruction typed mid-round is prepended so it lands in the same turn. An
+ * answer to `ask_user` becomes its own `###` section instead, so it survives
+ * `splitSections` as a capsule of its own rather than getting glued onto the last
+ * tool's output.
  */
 export function formatResults(
   results: string[],
   errors: string[],
   userInstruction?: string | null,
+  userAnswer?: string | null,
 ): string {
   let output = '';
 
@@ -44,8 +49,13 @@ export function formatResults(
     output += `## User Instruction\n\n${userInstruction}\n\n`;
   }
 
-  output += `${RESULTS_HEADER}\n\n`;
-  output += results.join(SECTION_SEPARATOR);
+  const sections = [...results];
+  if (userAnswer) sections.push(`### User Response\n${userAnswer}`);
+
+  // A round that only carried an answer ran no tools, and titling it "Tool
+  // Execution Results" would have the AI hunting for output that doesn't exist.
+  if (results.length > 0) output += `${RESULTS_HEADER}\n\n`;
+  output += sections.join(SECTION_SEPARATOR);
 
   if (errors.length > 0) {
     output += '\n\n## Parse Errors\n\n';

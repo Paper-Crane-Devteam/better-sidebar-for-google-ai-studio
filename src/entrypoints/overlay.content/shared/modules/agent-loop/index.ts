@@ -9,9 +9,15 @@ export type {
   ParseResult,
   ToolCallResult,
   BuiltInPrompt,
-  PendingConfirmation,
+  PendingApproval,
+  ApprovalDecision,
+  ApprovalScope,
+  ToolRisk,
+  AgentQuestion,
+  PendingQuestion,
   AgentLoopSettings,
   AgentEndReason,
+  TaskOutcome,
 } from './types';
 
 // Store
@@ -41,7 +47,17 @@ export type {
 // Tools
 export { executeToolCall } from './tools/tool-registry';
 export { executeSql } from './tools/execute-sql';
-export { completeTask, COMPLETE_TASK_SIGNAL } from './tools/complete-task';
+export {
+  completeTask,
+  COMPLETE_TASK_SIGNAL,
+  parseCompleteTaskSignal,
+} from './tools/complete-task';
+export {
+  askUser,
+  ASK_USER_SIGNAL,
+  parseAskUserSignal,
+  MAX_ASK_USER_PER_SESSION,
+} from './tools/ask-user';
 
 // Prompts
 export { assembleFinalPrompt, assembleSkillActivation } from './prompts/prompt-assembler';
@@ -84,13 +100,13 @@ export { AgentCommandPopup } from './AgentCommandPopup';
 export { useAgentPolicyStore } from './agent-policy-store';
 export type { AgentPolicyState } from './agent-policy-store';
 export {
-  requiresConfirmation,
+  requiresApproval,
+  getToolRisk,
   isWriteOperation,
-  getConfirmationStrategy,
+  buildToolCallFingerprint,
   estimateTokens,
   formatTokenCount,
 } from './execution-policy';
-export type { ConfirmationStrategy } from './execution-policy';
 
 // Renderer
 export { ConversationOverlay, ConversationViewSwitcher, injectRendererStyles, buildPromptMarker } from './renderer';

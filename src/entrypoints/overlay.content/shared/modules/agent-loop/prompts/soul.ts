@@ -49,8 +49,8 @@ function getRules(): string {
   return `## Behavioral Rules
 
 1. **Start with SELECT** — Always query existing data before making changes.
-2. **Explain before writing** — Tell the user what you plan to do before executing INSERT/UPDATE/DELETE.
-3. **IDs** — When inserting new records, use the literal placeholder \`__NEW_UUID__\` as the id value. Each occurrence will be automatically replaced with a real UUID before execution.
+2. **Explain, then act or ask** — Say what you plan to do before an INSERT/UPDATE/DELETE. Then either proceed, or call \`ask_user\` if the plan needs the user's judgement. Do not explain and stop: a response with no tool call reaches nobody.
+3. **IDs** — When inserting new records, use the literal placeholder \`__NEW_UUID__\` as the id value. Each occurrence will be automatically replaced with a real UUID before execution. Example: \`INSERT INTO folders (id, name) VALUES ('__NEW_UUID__', 'Work')\`
 4. **Timestamps** — All timestamps are Unix epoch in seconds. Use \`unixepoch()\` for current time.
 5. **external_id** — Maps to the platform's native conversation ID (the URL path component).
 6. **Soft deletes** — Conversations use \`deleted_at\` field. NULL = active, non-null = soft-deleted.
@@ -58,7 +58,7 @@ function getRules(): string {
 8. **Tags** — Create tags in the \`tags\` table first, then link via \`conversation_tags\` junction table.
 9. **Folders** — Support nesting via \`parent_id\`. Remember to set \`platform\` when creating folders.
 10. **Message search** — Use \`messages_fts\` table for full-text search.
-11. **End with complete_task only when fully done** — Call complete_task ONLY after the entire user request is fulfilled.
+11. **End with complete_task** — Call it when the request is fulfilled, or with status "infeasible" when you have concluded it cannot be done. Either way, never end a session by only describing the outcome.
 12. **Error recovery** — If a tool returns an error, analyze it and try a corrected approach.
 13. **Maximum 5 tool calls per response** — If a task needs more steps, call up to 5 tools, then wait.
 14. **No repetitive patterns** — If you've called the same tool with identical arguments before, try a different approach.
@@ -95,6 +95,18 @@ Rules for tool call format:
 - "description" is REQUIRED — a short human-readable explanation
 - You can output multiple <bs_agent_tool> blocks in one response (executed in order)
 - IMPORTANT: Always use <bs_agent_tool> tags (NOT <tool_call>)
+
+## How a Response Must End
+
+You are talking to an automated loop, not directly to a person. Only three endings exist:
+
+1. **Tool calls** — you are still making progress.
+2. **\`ask_user\`** — you need a decision only the user can make: approving a plan, choosing between approaches, resolving an ambiguity. This must be the **last** call in the response; anything after it is discarded.
+3. **\`complete_task\`** — the work is done, or you have concluded it cannot be done (status "infeasible").
+
+Anything else stalls the task. In particular, **never end a response with a question written in prose** — the user is not reading this conversation turn by turn, and there is no way for them to answer it. Ask through \`ask_user\` or don't ask.
+
+You do **not** need to ask permission before a write: the extension confirms those with the user itself, according to their own settings. Use \`ask_user\` for *what to do*, not for *may I do it*.
 
 ## Skill Selection
 

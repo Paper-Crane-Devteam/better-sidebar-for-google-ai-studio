@@ -3,15 +3,20 @@
  *
  * Executes SQL statements against the local SQLite WASM database.
  * - SELECT: direct execution, max 1000 rows
- * - DML (INSERT/UPDATE/DELETE): paywall check + optional confirmation
+ * - DML (INSERT/UPDATE/DELETE): paywall check
  * - DDL (DROP/ALTER/CREATE/PRAGMA...): blocked
  *
  * Communicates via browser.runtime.sendMessage (EXECUTE_SQL) so it works
  * correctly from content script context.
+ *
+ * Asking the user for permission is *not* done here. It used to be, which meant a
+ * tool opening a dialog, and the request carried only the SQL — so the approval
+ * couldn't be offered on the call's own card in the chat, because nothing tied it to
+ * a specific tool call. The gate now lives in `engine/stages/approval-gate.ts` and
+ * runs before this is ever called.
  */
 
 import { useLicenseStore } from '@/shared/lib/license-store';
-import { useAgentLoopStore } from '../agent-loop-store';
 
 /** Blocked SQL patterns (DDL and dangerous operations) */
 const BLOCKED_PATTERN = /^\s*(DROP|ALTER|CREATE|PRAGMA|ATTACH|DETACH|VACUUM|REINDEX)\b/i;
@@ -23,9 +28,9 @@ const SELECT_PATTERN = /^\s*SELECT\b/i;
 const MAX_RESULT_ROWS = 1000;
 
 /** Placeholder that AI uses instead of generating random UUIDs */
-const UUID_PLACEHOLDER = /__NEW_UUID__/g;
+const UUID_PLACEHOLDER = /__NEW_UUID__|'NEW_UUID'|"NEW_UUID"|NEW_UUID/g;
 
-/** Replace all __NEW_UUID__ placeholders with real crypto UUIDs */
+/** Replace all UUID placeholders with real crypto UUIDs */
 function hydrateUuids(sql: string): string {
   return sql.replace(UUID_PLACEHOLDER, () => crypto.randomUUID());
 }
@@ -79,18 +84,12 @@ export async function executeSql(params: ExecuteSqlParams): Promise<string> {
     if (!hasPowerPack) {
       return 'ERROR: PAYWALL - Writing to database requires Power Pack subscription. The user has been shown an upgrade prompt.';
     }
-
-    // 3. User confirmation (if enabled)
-    const confirmed = await requestUserConfirmation(query);
-    if (!confirmed) {
-      return 'CANCELLED: User cancelled the operation.';
-    }
   }
 
-  // 4. Hydrate UUID placeholders
+  // 3. Hydrate UUID placeholders
   const hydratedQuery = hydrateUuids(query);
 
-  // 5. Execute
+  // 4. Execute
   try {
     const result = await executeSqlViaBackground(hydratedQuery);
 
@@ -120,23 +119,4 @@ export async function executeSql(params: ExecuteSqlParams): Promise<string> {
   } catch (e) {
     return `ERROR: SQL execution failed - ${(e as Error).message}`;
   }
-}
-
-/**
- * Request user confirmation for write operations.
- * Uses the control panel's confirmation strategy.
- */
-async function requestUserConfirmation(sql: string): Promise<boolean> {
-  const { requiresConfirmation } = await import('../execution-policy');
-  const toolCall = { name: 'execute_sql', params: { query: sql } };
-
-  if (!requiresConfirmation(toolCall)) {
-    return true; // Speed mode or no confirmation needed
-  }
-
-  // The Agent tab renders the confirmation and the sidebar shows an attention
-  // badge while `pendingConfirmation` is set.
-  return new Promise((resolve) => {
-    useAgentLoopStore.getState().setPendingConfirmation({ sql, resolve });
-  });
 }

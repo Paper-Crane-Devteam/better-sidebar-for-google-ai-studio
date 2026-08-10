@@ -19,7 +19,13 @@ import type { ParsedToolCall, ParseResult } from '../../types';
 import { MAX_TOOL_CALLS, TOOL_TAG, findMissingParams, isSupportedTool } from './tool-schema';
 import { isInsideCodeBlock, tryParseJson, tryParseUnstructured } from './fallbacks';
 
-export { TOOL_TAG, SUPPORTED_TOOLS, REQUIRED_PARAMS } from './tool-schema';
+export {
+  TOOL_TAG,
+  SUPPORTED_TOOLS,
+  REQUIRED_PARAMS,
+  ENGINE_ONLY_TOOLS,
+  hasUnclosedToolBlock,
+} from './tool-schema';
 
 const TOOL_BLOCK_RE = new RegExp(`<${TOOL_TAG}>([\\s\\S]*?)<\\/${TOOL_TAG}>`, 'g');
 

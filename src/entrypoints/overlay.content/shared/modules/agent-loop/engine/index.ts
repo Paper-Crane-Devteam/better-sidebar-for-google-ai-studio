@@ -19,7 +19,14 @@ export { AgentLoopEngine } from './AgentLoopEngine';
 export { setActiveEngine, getActiveEngine, clearActiveEngine } from './engine-registry';
 
 // Parser
-export { parseToolCalls, TOOL_TAG, SUPPORTED_TOOLS, REQUIRED_PARAMS } from './parser';
+export {
+  parseToolCalls,
+  TOOL_TAG,
+  SUPPORTED_TOOLS,
+  REQUIRED_PARAMS,
+  ENGINE_ONLY_TOOLS,
+  hasUnclosedToolBlock,
+} from './parser';
 
 // Guards
 export { CircuitBreaker } from './guards/circuit-breaker';

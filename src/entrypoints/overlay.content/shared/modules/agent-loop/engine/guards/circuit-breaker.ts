@@ -28,8 +28,25 @@ export const LOOP_HARD_THRESHOLD = 5;
 export const FAILURE_SOFT_THRESHOLD = 2;
 export const FAILURE_HARD_THRESHOLD = 4;
 
-/** Consecutive no-tool responses before pausing */
-export const NO_PROGRESS_THRESHOLD = 3;
+/**
+ * Consecutive no-tool responses before giving up on nudging.
+ *
+ * Two, not three: past the threshold the loop now hands the response to the user as
+ * a question instead of dead-ending, and that outcome is good enough that spending a
+ * third round hoping the AI self-corrects isn't worth it.
+ */
+export const NO_PROGRESS_THRESHOLD = 2;
+
+/**
+ * Per-tool overrides for repeat detection.
+ *
+ * The generic 3/5 window is far too patient for `ask_user`: identical params mean
+ * the AI ignored the answer it was given, and being asked the same question three
+ * times is enough to make a user abandon the feature.
+ */
+const TOOL_LOOP_THRESHOLDS: Record<string, { soft: number; hard: number }> = {
+  ask_user: { soft: 2, hard: 2 },
+};
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -109,8 +126,12 @@ export class CircuitBreaker {
     this.state.lastToolParams = signature;
 
     const count = this.state.consecutiveIdenticalCount;
+    const { soft, hard } = TOOL_LOOP_THRESHOLDS[toolName] ?? {
+      soft: LOOP_SOFT_THRESHOLD,
+      hard: LOOP_HARD_THRESHOLD,
+    };
 
-    if (count >= LOOP_HARD_THRESHOLD) {
+    if (count >= hard) {
       const message =
         `[CIRCUIT BREAKER] Tool "${toolName}" called ${count} times with identical arguments. ` +
         `Loop detected — stopping execution. The AI appears stuck in a repetitive pattern.`;
@@ -124,7 +145,7 @@ export class CircuitBreaker {
       return { action: 'stop', message, count };
     }
 
-    if (count >= LOOP_SOFT_THRESHOLD) {
+    if (count >= soft) {
       const message =
         `[WARNING] Tool "${toolName}" has been called ${count} times with identical arguments. ` +
         `This is not making progress. Please try a different approach or different arguments.`;
@@ -203,6 +224,12 @@ export class CircuitBreaker {
    * format or is just talking. Returning `null` here used to make the engine call
    * the session complete — which is why a task could report "Task finished" on its
    * very first round without having done anything.
+   *
+   * The nudge spells out all three legal endings rather than only "use a tool".
+   * This is the layer that actually lands: a model that skipped `ask_user` in the
+   * system prompt almost always reaches for it once told at the point of failure —
+   * whereas "use a tool to continue making progress" pushed an AI waiting on a
+   * decision to guess at one instead.
    */
   recordNoToolResponse(): NoProgressResult {
     this.state.consecutiveNoToolRounds++;
@@ -223,11 +250,31 @@ export class CircuitBreaker {
     return {
       action: 'nudge',
       message:
-        `[System] Your last response contained no <bs_agent_tool> block. ` +
-        `If the task is fully done, call complete_task with a summary. ` +
-        `Otherwise use a tool to continue making progress.`,
+        `[System] Your last response contained no <bs_agent_tool> block. Every response must end in ` +
+        `one of three ways:\n` +
+        `1. Call a tool to keep making progress.\n` +
+        `2. Call ask_user if you need a decision from the user — a plan approved, a choice made, ` +
+        `an ambiguity resolved. A question written in prose never reaches them.\n` +
+        `3. Call complete_task with a summary — status "success" if the request is fulfilled, ` +
+        `"infeasible" if it cannot be done.`,
       count,
     };
+  }
+
+  /**
+   * Nudge for a response that was cut off mid tool call.
+   *
+   * Kept apart from the generic no-progress message: told it forgot the format, the
+   * AI restarts its whole response, which burns a round and can repeat work it had
+   * already emitted.
+   */
+  getTruncationGuidance(): string {
+    return (
+      `[System] Your last response ended inside an unclosed <bs_agent_tool> block, so it was cut off ` +
+      `before the tool call was complete. Nothing from that block was executed. ` +
+      `Re-send only the tool calls that were incomplete, and keep the response short enough to finish — ` +
+      `emit fewer calls per response if needed.`
+    );
   }
 
   /**

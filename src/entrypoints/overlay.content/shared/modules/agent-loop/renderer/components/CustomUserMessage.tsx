@@ -42,7 +42,7 @@ export const CustomUserMessage: React.FC<CustomUserMessageProps> = ({ message })
             {message.toolResults.map((result, i) => (
               <div
                 key={`result-${i}`}
-                className="flex items-center gap-1 text-xs text-[rgb(var(--muted-foreground))] cursor-pointer hover:text-[rgb(var(--foreground))] transition-colors py-1 px-2 rounded-md hover:bg-[rgb(var(--background)/0.5)]"
+                className="flex items-center gap-1 min-w-0 text-xs text-[rgb(var(--muted-foreground))] cursor-pointer hover:text-[rgb(var(--foreground))] transition-colors py-1 px-2 rounded-md hover:bg-[rgb(var(--background)/0.5)]"
                 onClick={() =>
                   showCapsuleDetailModal(
                     result.description,
@@ -52,7 +52,7 @@ export const CustomUserMessage: React.FC<CustomUserMessageProps> = ({ message })
                 title="点击查看完整返回结果"
               >
                 <Terminal className="h-3 w-3 shrink-0 text-emerald-500" />
-                <span className="truncate">{result.description}</span>
+                <span className="min-w-0 truncate">{result.description}</span>
               </div>
             ))}
           </div>
