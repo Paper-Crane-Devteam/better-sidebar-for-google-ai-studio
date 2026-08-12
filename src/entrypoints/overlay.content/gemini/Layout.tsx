@@ -19,12 +19,17 @@ import { initGeminiThemeSync, bindShadowRootToTheme } from '@/themes/platforms/g
 import { useExclusiveContextMenuStore } from '../shared/components/ui/exclusive-context-menu';
 import { registerPlatformDomAdapter } from '@/shared/lib/platform-dom-adapter';
 import { geminiDomAdapter } from './lib/gemini-dom-adapter';
+import { applyGeminiPageLayoutFixes } from './lib/page-layout-fixes';
 
 export async function initGeminiOverlay(mainStyles: string): Promise<void> {
   // Register Gemini DOM adapter (must be before any React tree mounts)
   registerPlatformDomAdapter(geminiDomAdapter);
 
   console.log('Better Sidebar: Overlay (Gemini) Initialized');
+
+  // Work around Gemini's own CSS defects (see page-layout-fixes for details).
+  // Injected first so it is in place before Gemini can scroll the content area.
+  applyGeminiPageLayoutFixes();
 
   TooltipHelper.getInstance().initialize(mainStyles);
 

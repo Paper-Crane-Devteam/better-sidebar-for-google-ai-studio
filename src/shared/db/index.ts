@@ -1,6 +1,44 @@
 const pendingRequests = new Map<string, { resolve: (val: any) => void; reject: (err: any) => void }>();
-let isOffscreenCreating = false;
 let localWorker: Worker | null = null;
+
+/**
+ * In-flight `offscreen.createDocument()` call, shared by every caller.
+ *
+ * Creation is not instant and `createDocument` rejects if a document already
+ * exists, so concurrent callers must await the *same* attempt instead of each
+ * probing and creating on their own.
+ */
+let offscreenCreation: Promise<void> | null = null;
+
+/**
+ * A request that never reached the worker (host torn down, message dropped,
+ * no answer in time) as opposed to one the worker answered with an error.
+ *
+ * Only these are safe to retry, and only for idempotent request types.
+ */
+class DbTransportError extends Error {}
+
+/**
+ * Request types that can be replayed without changing the outcome.
+ *
+ * INIT/SWITCH_DB open a database by name, GET_DB_NAME only reads — running any
+ * of them twice is the same as running it once. EXEC/RUN/RUN_BATCH/IMPORT are
+ * deliberately absent: replaying a write could apply it twice.
+ */
+const IDEMPOTENT_TYPES = new Set(['INIT', 'SWITCH_DB', 'GET_DB_NAME']);
+
+/**
+ * First attempt at an idempotent request gets a short leash on purpose.
+ *
+ * The failure this exists for is a freshly created offscreen document whose
+ * message listener is not registered yet: the request is silently dropped
+ * (`runtime.sendMessage` still finds a receiver — this very service worker — so
+ * it does not even throw). Waiting the full timeout for that would stall the
+ * first query after every wake-up.
+ */
+const HANDSHAKE_TIMEOUT_MS = 4000;
+const REQUEST_TIMEOUT_MS = 30000;
+const MAX_ATTEMPTS = 3;
 
 /**
  * The database this side of the bridge believes should be open.
@@ -145,60 +183,54 @@ async function ensureWorker() {
   }
 
   // Method 2: Use Offscreen API (Chrome)
-  // @ts-ignore
-  if (hasOffscreenApi) {
-      try {
-        let hasOffscreen = false;
-        // @ts-ignore
-        if (browser.runtime.getContexts) {
-          try {
-             // @ts-ignore
-             const contexts = await browser.runtime.getContexts({
-               contextTypes: ['OFFSCREEN_DOCUMENT' as any],
-             });
-             hasOffscreen = contexts.length > 0;
-          } catch (e) {
-             // Ignore error if contextTypes is invalid or API differs
-             console.warn('getContexts check failed', e);
-          }
-        } else {
-          // Fallback for browsers with offscreen API but no getContexts (rare, but safe)
-          // We assume it doesn't exist and try to create, catching the error if it does.
-          // @ts-ignore
-          const clients = await browser.runtime.sendMessage({ type: 'PING_OFFSCREEN' }).catch(() => null);
-          // If we had a ping mechanism, we could use it. But createDocument handles duplicates by throwing.
-        }
+  if (await hasOffscreenDocument()) return;
 
-        if (hasOffscreen) {
-          return;
-        }
+  // Only one attempt at a time; everyone else waits for it.
+  if (!offscreenCreation) {
+    offscreenCreation = createOffscreenDocument().finally(() => {
+      offscreenCreation = null;
+    });
+  }
+  await offscreenCreation;
+}
 
-        if (isOffscreenCreating) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-          return;
-        }
+async function hasOffscreenDocument(): Promise<boolean> {
+  // @ts-ignore - getContexts is missing from older type definitions
+  if (!browser.runtime.getContexts) return false;
+  try {
+    // @ts-ignore
+    const contexts = await browser.runtime.getContexts({
+      contextTypes: ['OFFSCREEN_DOCUMENT' as any],
+    });
+    return contexts.length > 0;
+  } catch (e) {
+    // Treat an unusable check as "not there" and let createDocument decide;
+    // it reports an existing document by throwing.
+    console.warn('getContexts check failed', e);
+    return false;
+  }
+}
 
-        isOffscreenCreating = true;
-        // @ts-ignore
-        await browser.offscreen.createDocument({
-          url: 'offscreen.html',
-          // @ts-ignore
-          reasons: [browser.offscreen.Reason.WORKERS],
-          justification: 'Run SQLite WASM in a Web Worker',
-        });
-        // Brand new document → its worker has no dbName yet
-        workerNeedsInit = true;
-      } catch (err: any) {
-        if (!err.message.startsWith('Only a single offscreen')) {
-           console.error('Failed to create offscreen document:', err);
-           // If offscreen creation fails entirely, maybe fallback to local worker?
-           // But we already decided to use offscreen if API exists.
-           throw err;
-        }
-      } finally {
-        isOffscreenCreating = false;
-      }
+async function createOffscreenDocument(): Promise<void> {
+  try {
+    // @ts-ignore
+    await browser.offscreen.createDocument({
+      url: 'offscreen.html',
+      // @ts-ignore
+      reasons: [browser.offscreen.Reason.WORKERS],
+      justification: 'Run SQLite WASM in a Web Worker',
+    });
+    // Brand new document → its worker has no dbName yet
+    workerNeedsInit = true;
+  } catch (err: any) {
+    if (err?.message?.startsWith('Only a single offscreen')) {
+      // Someone beat us to it. A document exists, which is all we needed, but
+      // we cannot tell whether it is the one we know — assume it is fresh.
+      workerNeedsInit = true;
       return;
+    }
+    console.error('Failed to create offscreen document:', err);
+    throw err;
   }
 }
 
@@ -287,40 +319,96 @@ const sendWorkerMessage = async (type: string, payload?: any): Promise<any> => {
   return rawSendWorkerMessage(type, payload);
 };
 
-/** Post a message to the worker without any ensure/re-init handling. */
+/**
+ * Post a message to the worker without any ensure/re-init handling.
+ *
+ * Retries only when the request never got an answer *and* replaying it is safe
+ * (see IDEMPOTENT_TYPES). Errors reported by the worker itself are passed
+ * straight through — they will not change on a second try.
+ */
 const rawSendWorkerMessage = async (
   type: string,
   payload?: any,
 ): Promise<any> => {
+  const retryable = IDEMPOTENT_TYPES.has(type);
+  const attempts = retryable ? MAX_ATTEMPTS : 1;
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    // Short first try for idempotent requests, full budget afterwards: the
+    // retry may be waiting on real work (migrations on a fresh open).
+    const timeoutMs =
+      retryable && attempt === 0 ? HANDSHAKE_TIMEOUT_MS : REQUEST_TIMEOUT_MS;
+
+    try {
+      return await postToWorker(type, payload, timeoutMs);
+    } catch (err) {
+      lastError = err;
+      if (!(err instanceof DbTransportError) || attempt === attempts - 1) {
+        throw err;
+      }
+      console.warn(
+        `[DB] ${type} got no answer (attempt ${attempt + 1}/${attempts}), retrying:`,
+        (err as Error).message,
+      );
+      // The host may have been torn down entirely; rebuild it before retrying.
+      await ensureWorker();
+    }
+  }
+
+  throw lastError;
+};
+
+/** Single round trip to the worker. */
+const postToWorker = (
+  type: string,
+  payload: any,
+  timeoutMs: number,
+): Promise<any> => {
   return new Promise((resolve, reject) => {
     const id = crypto.randomUUID();
-    
-    const timeoutId = setTimeout(() => {
-      if (pendingRequests.has(id)) {
-        pendingRequests.delete(id);
-        reject(new Error(`DB Request ${type} timed out after 30s`));
-      }
-    }, 30000);
 
-    pendingRequests.set(id, { 
+    const fail = (message: string) => {
+      if (!pendingRequests.delete(id)) return;
+      chunkedResponses.delete(id);
+      // We no longer know what the worker has open — the document may have been
+      // recreated mid-flight. Make the next request replay INIT rather than
+      // assume the connection survived.
+      workerNeedsInit = true;
+      reject(new DbTransportError(message));
+    };
+
+    const timeoutId = setTimeout(
+      () => fail(`DB Request ${type} timed out after ${timeoutMs}ms`),
+      timeoutMs,
+    );
+
+    pendingRequests.set(id, {
       resolve: (val) => {
         clearTimeout(timeoutId);
         resolve(val);
-      }, 
+      },
       reject: (err) => {
         clearTimeout(timeoutId);
         reject(err);
-      } 
+      },
     });
-    
+
     if (localWorker) {
       localWorker.postMessage({ id, type, payload });
-    } else {
-      browser.runtime.sendMessage({
-        type: 'DB_REQUEST',
-        payload: { id, workerType: type, payload }
-      });
+      return;
     }
+
+    browser.runtime
+      .sendMessage({
+        type: 'DB_REQUEST',
+        payload: { id, workerType: type, payload },
+      })
+      .catch((err: any) => {
+        // No receiver at all: fail now instead of burning the whole timeout.
+        clearTimeout(timeoutId);
+        fail(`DB Request ${type} could not be delivered: ${err?.message ?? err}`);
+      });
   });
 };
 

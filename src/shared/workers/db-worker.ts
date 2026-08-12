@@ -25,6 +25,51 @@ const WASM_URL = '/assets/wa-sqlite-async.wasm';
 // Request queue to ensure serial execution of DB operations
 let requestQueue = Promise.resolve();
 
+/**
+ * Errors that mean the connection is gone, not that the SQL was wrong.
+ *
+ * The storage handle behind SQLite (an OPFS sync access handle, or the IndexedDB
+ * backing store) can be revoked while this worker keeps running — the machine
+ * sleeps, the tab is discarded, the storage bucket is evicted. The handle object
+ * is still there, so nothing here notices; every statement just fails from then
+ * on. Matching these lets us throw the connection away and open a fresh one
+ * instead of failing forever.
+ *
+ * Deliberately narrow: syntax errors and constraint violations must not match,
+ * or a bad query would trigger a pointless reopen and get run twice.
+ */
+const CONNECTION_LOST_RE =
+  /(closed|closing|invalidstate|nomodificationallowed|notreadable|notfound|access handle|detached|out of memory|memory access out of bounds|disk i\/o|SQLITE_IOERR|SQLITE_MISUSE|SQLITE_READONLY|not initialized|no such file)/i;
+
+const isConnectionLost = (err: unknown): boolean => {
+  const message = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+  return CONNECTION_LOST_RE.test(message);
+};
+
+/** Cheap probe to tell a live connection from a revoked one. */
+const isConnectionAlive = async (): Promise<boolean> => {
+  if (!db) return false;
+  try {
+    await db.run('SELECT 1;');
+    return true;
+  } catch (e) {
+    console.warn('Worker: health check failed, connection is dead:', e);
+    return false;
+  }
+};
+
+/**
+ * Drop the current connection without touching it and open a new one.
+ *
+ * No `close()` here on purpose: closing a revoked handle can throw or hang, and
+ * we already know we are done with it.
+ */
+const reopenDB = async () => {
+  db = null;
+  initPromise = null;
+  await initDB();
+};
+
 const initDB = async (newDbName?: string) => {
   // If a new name is provided and differs from the current, force re-init
   if (newDbName && newDbName !== dbName) {
@@ -40,7 +85,15 @@ const initDB = async (newDbName?: string) => {
     );
   }
 
-  if (db) return true;
+  // INIT is also what the bridge replays after a wake-up, so it is the natural
+  // place to notice that an apparently open connection is no longer usable.
+  if (db) {
+    if (await isConnectionAlive()) return true;
+    console.warn(`Worker: reopening "${dbName}" after a dead connection`);
+    db = null;
+    initPromise = null;
+  }
+
   if (initPromise) return initPromise;
 
   // Pin the name for this init run so the async closures below can't observe a
@@ -51,8 +104,8 @@ const initDB = async (newDbName?: string) => {
     try {
       console.log(`Worker: Initializing database "${openingDbName}"...`);
 
-      // Add 30s timeout for DB initialization
-      const initPromise = new Promise(async (resolve, reject) => {
+      // Add 30s timeout for opening the storage handle
+      const openPromise = new Promise(async (resolve, reject) => {
         const timeoutId = setTimeout(
           () => reject(new Error('DB Initialization timed out after 30s')),
           30000,
@@ -82,7 +135,7 @@ const initDB = async (newDbName?: string) => {
         }
       });
 
-      db = await initPromise;
+      db = await openPromise;
 
       // Initialize Schema
       await db.run('PRAGMA foreign_keys = ON;');
@@ -125,7 +178,11 @@ const closeDB = async () => {
 const DB_LOG_PREFIX = '[DB]';
 
 // Helper to execute SQL with binding
-const execSql = async (sql: string, bind?: any[]) => {
+const execSql = async (
+  sql: string,
+  bind?: any[],
+  allowReopen = true,
+): Promise<any[]> => {
   if (!db) throw new Error('DB not initialized');
 
   const logSql = sql.trim().replace(/\s+/g, ' ');
@@ -135,7 +192,18 @@ const execSql = async (sql: string, bind?: any[]) => {
     bind != null && bind.length ? `bind: [${bind.join(', ')}]` : '',
   );
 
-  const result = await db.run(sql, bind);
+  let result: any[];
+  try {
+    result = await db.run(sql, bind);
+  } catch (err) {
+    if (!allowReopen || !isConnectionLost(err)) throw err;
+
+    // The statement never ran against a usable connection, so replaying it
+    // cannot duplicate a write.
+    console.warn(`${DB_LOG_PREFIX} Connection lost, reopening and retrying:`, err);
+    await reopenDB();
+    return execSql(sql, bind, false);
+  }
 
   if (result.length > 0) {
     console.log(
@@ -146,6 +214,39 @@ const execSql = async (sql: string, bind?: any[]) => {
     console.log(`${DB_LOG_PREFIX} Result: 0 rows (ok)`);
   }
   return result;
+};
+
+/**
+ * Run operations in a single transaction.
+ *
+ * If the connection dies the whole transaction is gone with it, so the batch is
+ * replayed once on a fresh connection. Statements inside run with `allowReopen`
+ * off: a mid-transaction reopen would commit half a batch.
+ */
+const runBatch = async (
+  operations: { sql: string; bind?: any[] }[],
+  allowReopen = true,
+): Promise<void> => {
+  try {
+    await db.run('BEGIN TRANSACTION;');
+    for (const op of operations) {
+      await execSql(op.sql, op.bind, false);
+    }
+    await db.run('COMMIT;');
+  } catch (e) {
+    if (allowReopen && isConnectionLost(e)) {
+      console.warn(
+        `${DB_LOG_PREFIX} Connection lost during batch, reopening and retrying:`,
+        e,
+      );
+      await reopenDB();
+      return runBatch(operations, false);
+    }
+    try {
+      await db.run('ROLLBACK;');
+    } catch (_e) {}
+    throw e;
+  }
 };
 
 // Helper to convert Base64 to Uint8Array
@@ -377,19 +478,8 @@ const processMessage = async (e: MessageEvent) => {
 
       case 'RUN_BATCH': {
         const { operations } = payload;
-        try {
-          await db.run('BEGIN TRANSACTION;');
-          for (const op of operations) {
-            await execSql(op.sql, op.bind);
-          }
-          await db.run('COMMIT;');
-          self.postMessage({ id, success: true });
-        } catch (e) {
-          try {
-            await db.run('ROLLBACK;');
-          } catch (_e) {}
-          throw e;
-        }
+        await runBatch(operations);
+        self.postMessage({ id, success: true });
         break;
       }
 

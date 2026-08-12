@@ -27,6 +27,38 @@ function redirectIfViewing(ids: string[]) {
   }
 }
 
+/** Message types fetched together to populate the sidebar, in response order. */
+const DATA_REQUESTS = [
+  'GET_FOLDERS',
+  'GET_CONVERSATIONS',
+  'GET_FAVORITES',
+  'GET_TAGS',
+  'GET_ALL_CONVERSATION_TAGS',
+  'GET_PROMPT_FOLDERS',
+  'GET_PROMPTS',
+  'GET_GEMS',
+  'GET_NOTEBOOKS',
+  'GET_SNIPPET_FOLDERS',
+  'GET_SNIPPETS',
+] as const;
+
+/**
+ * Fetch every dataset the sidebar needs.
+ *
+ * A rejected request resolves to a failure response instead of tearing down the
+ * whole batch, so one broken table cannot blank the entire sidebar.
+ */
+async function requestAllData(): Promise<{ success: boolean; data?: any }[]> {
+  return Promise.all(
+    DATA_REQUESTS.map((type) =>
+      browser.runtime.sendMessage({ type }).catch((error: unknown) => {
+        console.error(`[Store] ${type} failed:`, error);
+        return { success: false };
+      }),
+    ),
+  );
+}
+
 export function createDataActions(
   set: SetState,
   get: GetState,
@@ -58,6 +90,20 @@ export function createDataActions(
     fetchData: async (silent = false) => {
       if (!silent) set({ isLoading: true });
       try {
+        let responses = await requestAllData();
+
+        // This batch is often what wakes the service worker up, and its
+        // database may still be opening — or need reopening, if the storage
+        // handle was revoked while the machine slept. That shows up as every
+        // response failing at once, which would otherwise leave the sidebar
+        // silently empty until the user reloads the page. One retry is enough:
+        // by then the background has rebuilt the connection.
+        if (responses.every((r) => !r?.success)) {
+          console.warn('[Store] All data requests failed, retrying once...');
+          await new Promise((resolve) => setTimeout(resolve, 800));
+          responses = await requestAllData();
+        }
+
         const [
           foldersResponse,
           conversationsResponse,
@@ -70,19 +116,8 @@ export function createDataActions(
           notebooksResponse,
           snippetFoldersResponse,
           snippetsResponse,
-        ] = await Promise.all([
-          browser.runtime.sendMessage({ type: 'GET_FOLDERS' }),
-          browser.runtime.sendMessage({ type: 'GET_CONVERSATIONS' }),
-          browser.runtime.sendMessage({ type: 'GET_FAVORITES' }),
-          browser.runtime.sendMessage({ type: 'GET_TAGS' }),
-          browser.runtime.sendMessage({ type: 'GET_ALL_CONVERSATION_TAGS' }),
-          browser.runtime.sendMessage({ type: 'GET_PROMPT_FOLDERS' }),
-          browser.runtime.sendMessage({ type: 'GET_PROMPTS' }),
-          browser.runtime.sendMessage({ type: 'GET_GEMS' }),
-          browser.runtime.sendMessage({ type: 'GET_NOTEBOOKS' }),
-          browser.runtime.sendMessage({ type: 'GET_SNIPPET_FOLDERS' }),
-          browser.runtime.sendMessage({ type: 'GET_SNIPPETS' }),
-        ]);
+        ] = responses;
+
         if (foldersResponse.success) set({ folders: foldersResponse.data });
         if (conversationsResponse.success)
           set({ conversations: conversationsResponse.data });

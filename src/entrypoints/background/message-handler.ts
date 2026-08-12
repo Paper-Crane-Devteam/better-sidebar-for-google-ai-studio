@@ -3,7 +3,7 @@ import type {
   ExtensionResponse,
 } from '@/shared/types/messages';
 import type { MessageSender } from './types';
-import { dbReady } from './db';
+import { ensureDbReady } from './db';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 import { ensureDbForTab, removeTab } from './tab-profile-map';
 import {
@@ -53,12 +53,22 @@ export async function handleMessage(
   sender: MessageSender,
 ): Promise<ExtensionResponse> {
   try {
-    // Handle messages that don't need DB before waiting for dbReady
+    // The DB bridge broadcasts these to the offscreen document, and
+    // runtime.sendMessage reaches every extension context including this one.
+    // Answer immediately: they are none of our business, and queueing them
+    // behind ensureDbReady() would park them on the very thing they are
+    // initializing.
+    const type = message.type as string;
+    if (type === 'DB_REQUEST' || type === 'DB_RESPONSE') {
+      return { success: true };
+    }
+
+    // Handle messages that don't need DB before waiting for the database
     // OPEN_PERMISSION_PAGE and OPEN_URL just need to interact with browser APIs
     const miscResult = await handleMisc(message, sender);
     if (miscResult !== null) return miscResult;
 
-    await dbReady;
+    await ensureDbReady();
 
     // Detect platform from sender tab and inject into message payload if not present
     if (sender.tab?.url) {

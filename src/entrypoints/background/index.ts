@@ -2,7 +2,7 @@ import type { ExtensionMessage } from '@/shared/types/messages';
 import { handleMessage } from './message-handler';
 import { initPegasusTransport } from '@webext-pegasus/transport/background';
 import { initPegasusBackendStore } from '@/shared/lib/pegasus-store';
-import { dbReady } from './db';
+import { ensureDbReady } from './db';
 import { seedDefaultPrompts } from './seed-prompts';
 import {
   registerAutoSyncAlarm,
@@ -45,7 +45,11 @@ export default defineBackground(() => {
     if (details.reason === 'install') {
       browser.tabs.create({ url: browser.runtime.getURL('/onboarding.html') });
       // Seed default prompts after DB is ready
-      dbReady.then(() => seedDefaultPrompts());
+      ensureDbReady()
+        .then(() => seedDefaultPrompts())
+        .catch((err) =>
+          console.error('[Background] Prompt seeding skipped:', err),
+        );
     }
   });
 
@@ -71,25 +75,33 @@ export default defineBackground(() => {
   });
 
   // Register auto-sync alarm after DB is ready
-  dbReady.then(() => {
-    registerAutoSyncAlarm();
+  ensureDbReady()
+    .then(() => {
+      registerAutoSyncAlarm();
 
-    // Wire syncing state to pegasus store so UI can show loading indicator
-    onSyncingChange((syncing) => {
-      usePegasusStore.getState().setGdriveSyncing(syncing);
-    });
-  });
+      // Wire syncing state to pegasus store so UI can show loading indicator
+      onSyncingChange((syncing) => {
+        usePegasusStore.getState().setGdriveSyncing(syncing);
+      });
+    })
+    .catch((err) =>
+      console.error('[Background] Auto-sync setup skipped:', err),
+    );
 
   // Handle alarm events for periodic auto-sync.
   // Respects the gdriveAutoSync setting from pegasus store.
   browser.alarms.onAlarm.addListener((alarm) => {
-    dbReady.then(() => {
-      const { gdriveAutoSync } = usePegasusStore.getState();
-      if (!gdriveAutoSync) {
-        console.log('[Background] Auto-sync disabled, skipping alarm');
-        return;
-      }
-      handleAutoSyncAlarm(alarm, getActiveDbName, () => notifyDataUpdated());
-    });
+    ensureDbReady()
+      .then(() => {
+        const { gdriveAutoSync } = usePegasusStore.getState();
+        if (!gdriveAutoSync) {
+          console.log('[Background] Auto-sync disabled, skipping alarm');
+          return;
+        }
+        handleAutoSyncAlarm(alarm, getActiveDbName, () => notifyDataUpdated());
+      })
+      .catch((err) =>
+        console.error('[Background] Auto-sync alarm skipped:', err),
+      );
   });
 });
