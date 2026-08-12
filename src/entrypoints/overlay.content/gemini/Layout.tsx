@@ -200,17 +200,29 @@ async function mountDesktopLayout(
 
     const wrapperId = 'better-sidebar-for-google-ai-studio-sidebar-wrapper';
 
-    /** Move an element offscreen (hidden) or restore it */
+    /**
+     * Hide one of Gemini's own nav buttons while our panel is open, or restore it.
+     *
+     * Deliberately not parked at `top/left: -9999px`. An offscreen-but-visible
+     * element is still focusable, and focusing it makes the browser scroll it into
+     * view — on a page whose `html` is `overflow: hidden` that scroll cannot be
+     * undone by the user. `visibility: hidden` removes the element from the focus
+     * order entirely, so there is nothing to scroll to.
+     */
     const setOffscreen = (el: HTMLElement | null, hidden: boolean) => {
       if (!el) return;
       if (hidden) {
         el.style.position = 'absolute';
-        el.style.top = '-9999px';
-        el.style.left = '-9999px';
+        el.style.top = '0';
+        el.style.left = '0';
+        el.style.visibility = 'hidden';
+        el.style.pointerEvents = 'none';
       } else {
         el.style.position = '';
         el.style.top = '';
         el.style.left = '';
+        el.style.visibility = '';
+        el.style.pointerEvents = '';
       }
     };
 
