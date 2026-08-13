@@ -29,10 +29,10 @@ export const GlobalModal = () => {
               ref={(el) => el?.focus()}
               tabIndex={-1}
               className={cn(
-                'fixed left-[50%] top-[50%] flex w-full max-w-lg max-h-[95vh] translate-x-[-50%] translate-y-[-50%] flex-col border shadow-lg duration-200 sm:rounded-lg animate-in fade-in-0 zoom-in-95 slide-in-from-left-1/2 slide-in-from-top-48 overflow-hidden outline-none',
+                'fixed left-[50%] top-[50%] flex w-full max-w-lg max-h-[95vh] translate-x-[-50%] translate-y-[-50%] flex-col duration-200 sm:rounded-lg animate-in fade-in-0 zoom-in-95 slide-in-from-left-1/2 slide-in-from-top-48 overflow-hidden outline-none',
                 modalClassName,
               )}
-              style={{ zIndex: z + 1, backgroundColor: 'var(--panel-bg)', backdropFilter: 'var(--panel-blur)', WebkitBackdropFilter: 'var(--panel-blur)' }}
+              style={{ zIndex: z + 1, backgroundColor: 'var(--panel-bg)', boxShadow: 'var(--shadow-panel)', backdropFilter: 'var(--panel-blur)', WebkitBackdropFilter: 'var(--panel-blur)' }}
             >
               {/* Fixed header */}
               <div className="shrink-0 px-6 pt-6 pb-2 text-center sm:text-left min-w-0 border-b border-transparent">

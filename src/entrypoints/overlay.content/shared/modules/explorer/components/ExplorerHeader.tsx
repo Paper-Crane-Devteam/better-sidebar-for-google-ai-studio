@@ -92,7 +92,7 @@ const TypeFilterDropdown = ({ value, filterTypes, onChange, getTypeTitle }: Type
       </SimpleTooltip>
 
       {open && (
-        <div className="absolute top-0 left-0 z-50 flex flex-col rounded-md border border-border bg-popover shadow-md animate-in fade-in slide-in-from-top-1 duration-100">
+        <div className="absolute top-0 left-0 z-50 flex flex-col rounded-md bg-popover shadow-[shadow:var(--shadow-popover)] animate-in fade-in slide-in-from-top-1 duration-100">
           {sortedTypes.map((type) => (
             <SimpleTooltip key={type} content={getTypeLabel(type)} side="right">
               <button

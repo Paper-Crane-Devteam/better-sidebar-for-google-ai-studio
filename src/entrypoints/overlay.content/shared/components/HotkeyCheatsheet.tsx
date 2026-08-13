@@ -149,7 +149,7 @@ const HotkeyCheatsheetInner = ({
     <div className="fixed bottom-8 right-8 z-40">
       {/* Cheatsheet panel (above the icon) */}
       {isOpen && (
-        <div className="absolute bottom-12 right-0 w-[320px] rounded-lg border border-border bg-background/95 backdrop-blur-md shadow-xl p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-200">
+        <div className="absolute bottom-12 right-0 w-[320px] rounded-lg bg-popover backdrop-blur-md shadow-[shadow:var(--shadow-panel)] p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-200">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold">{t('hotkeyHelper.title')}</h3>

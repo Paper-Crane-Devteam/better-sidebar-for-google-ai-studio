@@ -113,7 +113,7 @@ export const SplitNewChatButton = ({
 
       {/* Dropdown panel — flush below, same width */}
       {open && hasDropdown && (
-        <div className="absolute left-0 right-0 top-full z-50 rounded-b bg-popover shadow-md overflow-hidden animate-in fade-in slide-in-from-top-1 duration-100">
+        <div className="absolute left-0 right-0 top-full z-50 rounded-b bg-popover shadow-[shadow:var(--shadow-popover)] overflow-hidden animate-in fade-in slide-in-from-top-1 duration-100">
           {dropdownItems.map((item, i) => (
             <SimpleTooltip key={i} content={item.tooltip} side="left">
               <button

@@ -147,7 +147,7 @@ export const CreatePromptForm = ({
               value="system"
               checked={type === 'system'}
               onChange={() => handleTypeChange('system')}
-              className="h-4 w-4 border border-input accent-primary"
+              className="h-4 w-4 border border-border/60 accent-primary"
             />
             <span className="text-sm">{t('prompts.systemPrompt')}</span>
           </label>
@@ -158,7 +158,7 @@ export const CreatePromptForm = ({
               value="normal"
               checked={type === 'normal'}
               onChange={() => handleTypeChange('normal')}
-              className="h-4 w-4 border border-input accent-primary"
+              className="h-4 w-4 border border-border/60 accent-primary"
             />
             <span className="text-sm">{t('prompts.normalPrompt')}</span>
           </label>
@@ -205,8 +205,8 @@ export const CreatePromptForm = ({
                 className={cn(
                   // No z-index override here: DropdownMenuContent already ships
                   // z-[10050] which sits above GlobalModal (10000/10001).
-                  'max-h-[280px] overflow-y-auto min-w-[200px] shadow-md rounded-md p-2',
-                  'bg-popover text-popover-foreground border border-border',
+                  'max-h-[280px] overflow-y-auto min-w-[200px] rounded-md p-2',
+                  'bg-popover text-popover-foreground shadow-[shadow:var(--shadow-popover)]',
                   '[--popover:255_255_255] [--popover-foreground:50_48_44] [--accent:228_228_226] [--accent-foreground:50_48_44] [--border:238_238_236]',
                   'dark:[--popover:31_31_31] dark:[--popover-foreground:212_212_212] dark:[--accent:42_42_42] dark:[--accent-foreground:212_212_212] dark:[--border:42_42_42]',
                 )}

@@ -133,11 +133,11 @@ export const ProfilePickerDialog: React.FC = () => {
       style={{ zIndex: Z_INDEX.MODAL }}
     >
       <div
-        className="fixed left-[50%] top-[50%] flex w-full max-w-md max-h-[80vh] translate-x-[-50%] translate-y-[-50%] flex-col border bg-background shadow-lg duration-200 sm:rounded-lg animate-in fade-in-0 zoom-in-95 overflow-hidden"
+        className="fixed left-[50%] top-[50%] flex w-full max-w-md max-h-[80vh] translate-x-[-50%] translate-y-[-50%] flex-col bg-popover shadow-[shadow:var(--shadow-panel)] duration-200 sm:rounded-lg animate-in fade-in-0 zoom-in-95 overflow-hidden"
         style={{ zIndex: Z_INDEX.MODAL + 1 }}
       >
         {/* Header */}
-        <div className="shrink-0 px-6 pt-6 pb-4 border-b">
+        <div className="shrink-0 px-6 pt-6 pb-4">
           <h2 className="text-lg font-semibold leading-tight tracking-tight">
             {t('profile.selectProfile')}
           </h2>
@@ -206,7 +206,7 @@ export const ProfilePickerDialog: React.FC = () => {
         </ScrollArea>
 
         {/* Create new profile */}
-        <div className="shrink-0 px-6 py-3 border-t">
+        <div className="shrink-0 px-6 py-3">
           {!creatingNew ? (
             <Button
               variant="outline"

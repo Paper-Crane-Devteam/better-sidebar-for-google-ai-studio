@@ -113,7 +113,7 @@ export const SnippetDragDrawer = () => {
 
   return (
     <div
-      className="fixed z-[9999] bg-background border border-border rounded-lg shadow-xl overflow-hidden flex flex-col"
+      className="fixed z-[9999] bg-popover rounded-lg shadow-[shadow:var(--shadow-panel)] overflow-hidden flex flex-col"
       style={{
         left: `${left}px`,
         width: openWidth,

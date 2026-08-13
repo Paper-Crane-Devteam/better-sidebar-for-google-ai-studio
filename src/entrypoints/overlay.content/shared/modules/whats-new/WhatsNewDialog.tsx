@@ -60,7 +60,7 @@ export const WhatsNewDialog = () => {
       <div className="min-h-full flex justify-center py-12 px-4">
         {/* The "page" — no fixed height, flows naturally */}
         <div
-          className="relative w-full max-w-3xl animate-in slide-in-from-bottom-6 duration-300"
+          className="relative w-full max-w-3xl rounded-xl shadow-[shadow:var(--shadow-panel)] animate-in slide-in-from-bottom-6 duration-300"
         >
           {/* Sticky close button — h-0 so it doesn't push content down */}
           <div className="sticky top-3 z-10 h-0 flex justify-end pr-3 pointer-events-none">
@@ -116,7 +116,7 @@ export const WhatsNewDialog = () => {
 
           {/* Content — flows like a document */}
           <div
-            className="border-x px-10 py-8 space-y-12"
+            className="px-10 py-8 space-y-12"
             style={{ backgroundColor: 'var(--panel-bg)' }}
           >
             {filteredChangelog.map((item: ChangeLogEntry, index: number) => {

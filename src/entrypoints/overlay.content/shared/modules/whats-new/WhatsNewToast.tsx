@@ -30,10 +30,11 @@ export const WhatsNewToast: React.FC = () => {
 
   return (
     <div
-      className="fixed bottom-6 right-6 flex items-center gap-3 px-4 py-3 rounded-xl border border-border shadow-2xl animate-in slide-in-from-bottom-5 fade-in duration-300"
+      className="fixed bottom-6 right-6 flex items-center gap-3 px-4 py-3 rounded-xl animate-in slide-in-from-bottom-5 fade-in duration-300"
       style={{
         zIndex: Z_INDEX.TOAST,
         backgroundColor: 'var(--panel-bg)',
+        boxShadow: 'var(--shadow-panel)',
         color: 'var(--foreground)',
       }}
     >

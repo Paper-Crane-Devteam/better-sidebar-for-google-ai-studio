@@ -306,7 +306,7 @@ export const ImportHistoryDialog = ({ isOpen, onClose }: { isOpen: boolean; onCl
       />
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className="relative w-full max-w-2xl grid gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg animate-in zoom-in-95 fade-in-0 slide-in-from-bottom-4"
+          className="relative w-full max-w-2xl grid gap-4 bg-popover p-6 shadow-[shadow:var(--shadow-panel)] duration-200 sm:rounded-lg animate-in zoom-in-95 fade-in-0 slide-in-from-bottom-4"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex flex-col space-y-2 text-center sm:text-left">

@@ -30,7 +30,7 @@ export const AgentCommandPopup: React.FC<AgentCommandPopupProps> = ({
 
   return (
     <div
-      className="fixed z-[99999] max-w-[360px] min-w-[280px] overflow-hidden rounded-lg bg-popover shadow-lg"
+      className="fixed z-[99999] max-w-[360px] min-w-[280px] overflow-hidden rounded-lg bg-popover shadow-[shadow:var(--shadow-popover)]"
       style={{
         bottom: `${position.bottom}px`,
         left: `${position.left}px`,

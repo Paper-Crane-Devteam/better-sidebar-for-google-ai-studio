@@ -114,7 +114,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
     return (
         <div className="fixed inset-0 flex items-center justify-center animate-in fade-in-0" style={{ zIndex: Z_INDEX.MODAL, backgroundColor: 'var(--overlay-bg)', backdropFilter: 'var(--overlay-blur)', WebkitBackdropFilter: 'var(--overlay-blur)' }}>
-            <div className="relative w-[800px] h-[600px] max-h-[90vh] border rounded-lg shadow-lg flex overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4" style={{ backgroundColor: 'var(--panel-bg)', backdropFilter: 'var(--panel-blur)', WebkitBackdropFilter: 'var(--panel-blur)' }}>
+            <div className="relative w-[800px] h-[600px] max-h-[90vh] rounded-lg flex overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4" style={{ backgroundColor: 'var(--panel-bg)', boxShadow: 'var(--shadow-panel)', backdropFilter: 'var(--panel-blur)', WebkitBackdropFilter: 'var(--panel-blur)' }}>
                 {/* Close Button */}
                 <Button
                     variant="ghost"
@@ -142,7 +142,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
                     <NavButton id="integrations" label={t('integrations.title')} icon={Plug} activeSection={activeSection} setActiveSection={setActiveSection} />
                     <NavButton id="agent" label="Agent" icon={Bot} activeSection={activeSection} setActiveSection={setActiveSection} />
                     
-                    <div className="h-px bg-border my-2 mx-2" />
+                    <div className="h-px bg-border/50 my-2 mx-2" />
                     
                     <NavButton id="supportpack" label={t('packs.title')} icon={PacksIcon} activeSection={activeSection} setActiveSection={setActiveSection} />
                     <NavButton id="sponsor" label={t('settings.sponsor')} icon={Share2} activeSection={activeSection} setActiveSection={setActiveSection} />

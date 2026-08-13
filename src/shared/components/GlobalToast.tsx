@@ -39,8 +39,8 @@ export const GlobalToast = () => {
         <div
           key={toast.id}
           className={cn(
-            "pointer-events-auto flex items-center gap-3 w-full p-4 rounded-md shadow-lg border animate-in slide-in-from-top-full duration-300",
-            "bg-background text-foreground", // Default fallback
+            "pointer-events-auto flex items-center gap-3 w-full p-4 rounded-md shadow-[shadow:var(--shadow-panel)] animate-in slide-in-from-top-full duration-300",
+            "bg-popover text-popover-foreground", // Default fallback
             // borderColors[toast.type],
             // bgColors[toast.type]
           )}

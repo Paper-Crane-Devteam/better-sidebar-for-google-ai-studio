@@ -42,7 +42,7 @@ export const SlashCommandPopup: React.FC<SlashCommandPopupProps> = ({
 
   return (
     <div
-      className="fixed z-[9999] min-w-[280px] max-w-[400px] rounded-lg bg-popover shadow-xl overflow-hidden"
+      className="fixed z-[9999] min-w-[280px] max-w-[400px] rounded-lg bg-popover shadow-[shadow:var(--shadow-popover)] overflow-hidden"
       style={{ bottom: position.bottom, left: position.left }}
       onMouseDown={(e) => e.preventDefault()} // Prevent input blur on popup interaction
     >

@@ -233,12 +233,13 @@ export const SqlExecutor = ({ onClose }: SqlExecutorProps) => {
   return createPortal(
     <div
       ref={elRef}
-      className="fixed flex flex-col w-[90vw] max-w-4xl h-[80vh] max-h-[700px] border rounded-lg shadow-xl overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150"
+      className="fixed flex flex-col w-[90vw] max-w-4xl h-[80vh] max-h-[700px] rounded-lg overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150"
       style={{
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        backgroundColor: 'var(--panel-bg, hsl(var(--background)))',
+        backgroundColor: 'var(--panel-bg, rgb(var(--popover)))',
+        boxShadow: 'var(--shadow-panel)',
         backdropFilter: 'var(--panel-blur)',
         WebkitBackdropFilter: 'var(--panel-blur)',
       }}

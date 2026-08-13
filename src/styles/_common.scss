@@ -17,6 +17,30 @@
     --space-10: 40px;  /* extra: hero spacing */
     --space-12: 48px;  /* max: page margins */
 
+    /* ─── Elevation System (borderless floating surfaces) ──────────────
+     * Floating layers carry no border. Separation comes from two things
+     * working together:
+     *   1. surface colour — --popover sits above --background (this is what
+     *      does the work in dark themes, where black shadows are invisible)
+     *   2. a soft two-layer shadow — wide diffuse blur for "float" plus a
+     *      tight contact blur for "grounding" (this carries light themes,
+     *      where --popover and --background are only a shade apart)
+     *
+     * --shadow-popover: dropdowns, context menus, selects, inline popups
+     * --shadow-panel:   modals, dialogs, toasts, draggable panels
+     *
+     * Declared here (not on .shadow-body) so the value resolves in every
+     * shadow root and portal container. These are literal values with no
+     * theme dependency, so there is no reason to scope them.
+     *
+     * IMPORTANT when consuming from Tailwind: `shadow-*` is an ambiguous
+     * utility (box-shadow vs box-shadow-color). Passing a bare var makes
+     * Tailwind guess "colour" and emit no box-shadow at all. Always use the
+     * explicit type hint:  shadow-[shadow:var(--shadow-popover)]
+     */
+    --shadow-popover: 0 4px 24px rgb(0 0 0 / 0.12), 0 2px 8px rgb(0 0 0 / 0.08);
+    --shadow-panel: 0 16px 48px rgb(0 0 0 / 0.2), 0 4px 12px rgb(0 0 0 / 0.1);
+
     /* ─── Z-Index System ──────────────────────────────────────────────── */
     --z-index-smart-scrollbar: 38;
     --z-index-sidebar: 999;
@@ -76,7 +100,7 @@
     --popover-blur: none;
     --popover-bg: rgb(var(--popover));
     --panel-blur: none;
-    --panel-bg: rgb(var(--background));
+    --panel-bg: rgb(var(--popover));
     --overlay-bg: rgb(var(--background) / 0.8);
     --overlay-blur: blur(4px);
   }
@@ -91,7 +115,7 @@
     -webkit-backdrop-filter: var(--popover-blur);
     background-color: var(--popover-bg);
     border-radius: var(--popover-radius, var(--radius));
-    box-shadow: var(--popover-shadow, 0 4px 12px rgba(0,0,0,0.08));
+    box-shadow: var(--popover-shadow, var(--shadow-popover));
     border: var(--popover-border, none);
   }
 

@@ -24,7 +24,7 @@ export const TourPromptDialog: React.FC<TourPromptDialogProps> = ({
       className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-8 fade-in-0"
       style={{ zIndex: Z_INDEX.MODAL }}
     >
-      <div className="relative w-full max-w-sm bg-background border rounded-xl shadow-2xl flex flex-col p-6">
+      <div className="relative w-full max-w-sm bg-popover rounded-xl shadow-[shadow:var(--shadow-panel)] flex flex-col p-6">
         <Button
           variant="ghost"
           size="icon"

@@ -108,7 +108,7 @@ export const GlobalPopoverPicker = () => {
     <div
       ref={popoverRef}
       className={cn(
-        'fixed z-[10002] rounded-lg border border-border shadow-lg overflow-hidden',
+        'fixed z-[10002] rounded-lg shadow-[shadow:var(--shadow-popover)] overflow-hidden',
         'bg-popover',
         isPositioned
           ? 'animate-in fade-in-0 zoom-in-95 slide-in-from-left-1 duration-150'
