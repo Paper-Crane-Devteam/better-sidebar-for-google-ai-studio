@@ -2,6 +2,7 @@ import { initSQLite, isOpfsSupported } from '@subframe7536/sqlite-wasm';
 import { useIdbStorage } from '@subframe7536/sqlite-wasm/idb';
 import { useOpfsStorage } from '@subframe7536/sqlite-wasm/opfs';
 import { SCHEMA } from '@/shared/db/schema';
+import { NO_DB_OPEN } from '@/shared/db/protocol';
 import { runMigrations } from './migrations';
 
 let db: any = null;
@@ -21,6 +22,15 @@ let initPromise: Promise<boolean> | null = null;
  */
 let dbName: string | null = null;
 const WASM_URL = '/assets/wa-sqlite-async.wasm';
+
+class WorkerError extends Error {
+  code?: string;
+  constructor(message: string, code?: string) {
+    super(message);
+    this.name = 'WorkerError';
+    this.code = code;
+  }
+}
 
 // Request queue to ensure serial execution of DB operations
 let requestQueue = Promise.resolve();
@@ -433,13 +443,22 @@ const processMessage = async (e: MessageEvent) => {
       return;
     }
 
-    if (!db && type !== 'INIT') {
+    // INIT and SWITCH_DB carry the database name in their own payload, so they
+    // are exactly the requests that can rescue a worker that has no name yet.
+    // Gating them behind the check below would reject the only messages capable
+    // of clearing the condition, leaving the worker permanently unusable.
+    const carriesDbName = type === 'INIT' || type === 'SWITCH_DB';
+
+    if (!db && !carriesDbName) {
       if (!dbName) {
         // The worker was (re)created without being told which DB to open.
-        // Failing here is intentional; see the `dbName` declaration.
-        throw new Error(
+        // Refusing to guess is intentional; see the `dbName` declaration.
+        // The code lets the caller recognise this and replay INIT — nothing has
+        // been executed at this point, so replaying is safe even for writes.
+        throw new WorkerError(
           `Worker: no database open and no name known (request "${type}"). ` +
             'The caller must send INIT with a dbName after (re)creating the worker.',
+          NO_DB_OPEN,
         );
       }
       await initDB();
@@ -502,7 +521,12 @@ const processMessage = async (e: MessageEvent) => {
     }
   } catch (error: any) {
     console.error('Worker: Error processing message', error);
-    self.postMessage({ id, success: false, error: error.message });
+    self.postMessage({
+      id,
+      success: false,
+      error: error.message,
+      code: error.code,
+    });
   }
 };
 

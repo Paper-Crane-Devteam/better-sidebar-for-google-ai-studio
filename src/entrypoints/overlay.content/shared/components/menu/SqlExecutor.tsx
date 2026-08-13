@@ -245,7 +245,7 @@ export const SqlExecutor = ({ onClose }: SqlExecutorProps) => {
     >
       {/* Draggable Header */}
       <div
-        className="shrink-0 flex items-center justify-between px-4 py-2 border-b cursor-grab active:cursor-grabbing select-none"
+        className="shrink-0 flex items-center justify-between px-4 py-2 cursor-grab active:cursor-grabbing select-none"
         onMouseDown={onDragStart}
       >
         <div className="flex items-center gap-2">
@@ -277,7 +277,7 @@ export const SqlExecutor = ({ onClose }: SqlExecutorProps) => {
         {/* SQL input */}
         <div className="flex gap-2">
           <textarea
-            className="flex-1 p-2 rounded-md border bg-transparent text-xs font-mono h-16 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+            className="flex-1 p-2 rounded-md border border-border/60 bg-transparent text-xs font-mono h-16 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
             value={sqlQuery}
             onChange={(e) => setSqlQuery(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -327,7 +327,7 @@ export const SqlExecutor = ({ onClose }: SqlExecutorProps) => {
                             {activeFilter === col && (
                               <input
                                 autoFocus
-                                className="mt-1 w-full px-1.5 py-0.5 text-xs rounded border bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                                className="mt-1 w-full px-1.5 py-0.5 text-xs rounded border border-border/60 bg-background focus:outline-none focus:ring-1 focus:ring-ring"
                                 placeholder={`Filter ${col}...`}
                                 value={filters[col] || ''}
                                 onChange={(e) => handleFilterChange(col, e.target.value)}
@@ -345,7 +345,7 @@ export const SqlExecutor = ({ onClose }: SqlExecutorProps) => {
                     </thead>
                     <tbody>
                       {paginatedData.map((row, i) => (
-                        <tr key={i} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                        <tr key={i} className="border-b border-border/40 last:border-0 hover:bg-muted/30 transition-colors">
                           {columns.map((col, j) => (
                             <SimpleTooltip content={String(row[col] ?? '')} key={j}>
                               <td
@@ -363,7 +363,7 @@ export const SqlExecutor = ({ onClose }: SqlExecutorProps) => {
                 </ScrollArea>
 
                 {/* Pagination footer */}
-                <div className="shrink-0 flex items-center justify-between px-3 py-1.5 border-t bg-muted/30 text-xs text-muted-foreground">
+                <div className="shrink-0 flex items-center justify-between px-3 py-2 bg-muted/40 text-xs text-muted-foreground">
                   <span>{filteredData.length} rows ({(currentPage - 1) * PAGE_SIZE + 1}-{Math.min(currentPage * PAGE_SIZE, sortedData.length)})</span>
                   <div className="flex items-center gap-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6" disabled={currentPage <= 1} onClick={() => setCurrentPage((p) => p - 1)}>

@@ -38,10 +38,10 @@ const SnippetCard = ({ snippet, isActive, onSelect, onCopy, onEdit, onNavigate, 
       ref={cardRef}
       data-snippet-id={snippet.id}
       className={cn(
-        'border rounded-lg p-5 transition-all cursor-pointer',
+        'rounded-lg p-5 transition-all cursor-pointer',
         isActive
-          ? 'border-primary/50 bg-primary/5 ring-1 ring-primary/20'
-          : 'border-border bg-card hover:border-border/80',
+          ? 'bg-primary/10 ring-1 ring-primary/30'
+          : 'bg-muted/40 hover:bg-muted/60',
       )}
       onClick={() => onSelect(snippet)}
     >
@@ -63,7 +63,7 @@ const SnippetCard = ({ snippet, isActive, onSelect, onCopy, onEdit, onNavigate, 
       )}
 
       {/* Toolbar */}
-      <div className="flex items-center gap-1 pt-3 border-t border-border/50">
+      <div className="flex items-center gap-1 pt-3">
         <Button
           variant="ghost"
           size="sm"

@@ -54,7 +54,7 @@ export const ExplorerSettings = () => {
                 {t('explorerSettings.defaultViewModeDescription')}
               </p>
             </div>
-            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border">
+            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg">
               <SimpleTooltip content={t('explorerSettings.treeView')}>
                 <Button
                   variant={viewMode === 'tree' ? 'secondary' : 'ghost'}
@@ -91,7 +91,7 @@ export const ExplorerSettings = () => {
                 {t('explorerSettings.defaultSortOrderDescription')}
               </p>
             </div>
-            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border">
+            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg">
               <Button
                 variant={sortOrder === 'date' ? 'secondary' : 'ghost'}
                 size="sm"
@@ -142,7 +142,7 @@ export const ExplorerSettings = () => {
               </p>
             </div>
             <input
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-9 w-full rounded-md border border-border/60 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
               placeholder={t('explorerSettings.ignoredFoldersPlaceholder')}
               value={localIgnored}
               onChange={(e) => setLocalIgnored(e.target.value)}

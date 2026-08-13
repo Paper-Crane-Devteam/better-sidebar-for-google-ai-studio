@@ -27,7 +27,7 @@ export const AgentCheckIn: React.FC = () => {
   const failed = history.reduce((sum, h) => sum + h.results.filter((r) => !r.success).length, 0);
 
   return (
-    <div className="space-y-2 rounded-md border border-primary/30 bg-primary/5 p-3">
+    <div className="space-y-2 rounded-md bg-primary/10 p-3">
       <div className="flex items-center gap-2">
         <Eye className="h-3 w-3 shrink-0 text-primary" />
         <span className="text-xs font-medium text-foreground">

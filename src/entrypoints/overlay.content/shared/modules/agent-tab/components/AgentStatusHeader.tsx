@@ -75,8 +75,8 @@ export const AgentStatusHeader: React.FC = () => {
   return (
     <div
       className={cn(
-        'px-3 py-2 border-b border-border/50 space-y-1',
-        speedMode && 'bg-orange-500/5 border-orange-500/20',
+        'px-3 py-2 space-y-1',
+        speedMode && 'bg-orange-500/10',
       )}
     >
       {/* Row 1: Status + Controls */}

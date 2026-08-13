@@ -354,7 +354,7 @@ export const HotkeySettings = () => {
       ))}
 
       {/* Helper text */}
-      <div className="rounded-md bg-muted/50 border p-3 space-y-1.5">
+      <div className="rounded-md bg-muted/50 p-3 space-y-1.5">
         <p className="text-xs text-muted-foreground">
           {t('hotkeys.helpRecording')}
         </p>

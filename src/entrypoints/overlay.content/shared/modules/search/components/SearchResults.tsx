@@ -85,18 +85,16 @@ const MessagePreviewContent = ({
     match.role === 'user' ? t('search.modelResponse') : t('search.userPrompt');
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {/* Main message content */}
-      <div className="max-h-[50vh] overflow-y-auto p-2">
-        <div className="flex items-center gap-2 mb-2 text-sm text-muted-foreground">
-          <span className="font-medium">
+      <div>
+        <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">
             {match.role === 'user'
               ? t('export.roleUser')
               : t('export.roleModel')}
           </span>
-          <span className="text-xs">
-            • {dayjs(match.timestamp * 1000).format('lll')}
-          </span>
+          <span>{dayjs(match.timestamp * 1000).format('lll')}</span>
         </div>
         <MarkdownRenderer
           highlight={activeQuery}
@@ -108,10 +106,10 @@ const MessagePreviewContent = ({
       </div>
 
       {/* Context section - Adjacent message */}
-      <div className="border-t pt-3">
+      <div>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center gap-2 w-full text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1 -ml-1 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground/70 hover:text-foreground transition-colors"
         >
           {isExpanded ? (
             <ChevronDown className="h-4 w-4" />
@@ -122,23 +120,25 @@ const MessagePreviewContent = ({
         </button>
 
         {isExpanded && (
-          <div className="mt-2 ml-6">
+          <div className="mt-2">
             {isLoading ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span>{t('search.loadingContext')}</span>
               </div>
             ) : adjacentMessage ? (
-              <div className="rounded-lg border bg-muted/30 p-3">
+              <div className="rounded-lg bg-muted/40 p-4">
                 <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground">
-                  <span className="font-medium">{contextLabel}</span>
+                  <span className="font-medium text-foreground">
+                    {contextLabel}
+                  </span>
                   {adjacentMessage.timestamp && (
                     <span>
-                      • {dayjs(adjacentMessage.timestamp * 1000).format('lll')}
+                      {dayjs(adjacentMessage.timestamp * 1000).format('lll')}
                     </span>
                   )}
                 </div>
-                <div className="max-h-[40vh] overflow-y-auto text-sm">
+                <div className="text-sm">
                   <MarkdownRenderer>
                     {adjacentMessage.content || ''}
                   </MarkdownRenderer>
@@ -197,7 +197,7 @@ const ResultGroup = ({
       </div>
 
       {expanded && (
-        <div className="flex flex-col ml-4 border-l pl-2">
+        <div className="flex flex-col ml-4 pl-2">
           {data.matches.map((match) => (
             <MatchItem
               key={match.id}
@@ -235,7 +235,7 @@ const MatchItem = ({
 
     const renderWrapper = (content: React.ReactNode) => (
       <div className="text-xs text-muted-foreground py-1 px-2 hover:bg-accent/30 cursor-pointer rounded">
-        <div className="font-sans text-[11px] mb-0.5 text-muted-foreground flex items-center gap-1">
+        <div className="font-sans text-[11px] mb-1 text-muted-foreground flex items-center gap-1">
           {showPlatformIcon && platform && (
             <img
               src={PLATFORM_CONFIG[platform as Platform].icon}
@@ -382,7 +382,7 @@ const MatchItem = ({
       <SimpleTooltip content={t('search.jumpToConversation')}>
         <button
           onClick={handleNavigation}
-          className="absolute top-2 right-2 p-1.5 bg-background/90 text-foreground rounded opacity-0 group-hover:opacity-100 transition-opacity border shadow-sm hover:bg-accent z-10"
+          className="absolute top-2 right-2 p-1 bg-muted text-foreground rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-accent z-10"
         >
           <ExternalLink className="h-3.5 w-3.5" />
         </button>
@@ -429,7 +429,7 @@ export const SearchResults = ({
                     {t('search.indexingInfoIntro')}
                   </p>
                   {detectPlatform() === Platform.AI_STUDIO && (
-                    <div className="rounded-md bg-secondary/40 border p-3 text-xs">
+                    <div className="rounded-md bg-secondary/40 p-3 text-xs">
                       <p className="font-medium text-foreground mb-2">
                         {t('search.indexingHowTo')}
                       </p>
@@ -472,7 +472,7 @@ export const SearchResults = ({
         isSearching && 'opacity-60',
       )}
     >
-      <div className="p-2 text-xs text-muted-foreground font-medium border-b bg-muted/10">
+      <div className="px-3 py-2 text-xs text-muted-foreground/70 font-medium">
         {t('search.resultsSummary', { count: resultCount, files: fileCount })}
       </div>
       <div className="flex-1 overflow-y-auto p-2">

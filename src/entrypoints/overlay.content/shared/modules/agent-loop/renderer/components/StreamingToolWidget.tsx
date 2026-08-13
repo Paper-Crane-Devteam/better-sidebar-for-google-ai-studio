@@ -18,7 +18,7 @@ export const StreamingToolWidget: React.FC<StreamingToolWidgetProps> = ({
   isComplete,
 }) => {
   return (
-    <div className="my-2 overflow-hidden rounded-lg border border-amber-500/30 bg-amber-500/5 transition-all duration-300">
+    <div className="my-2 overflow-hidden rounded-lg bg-amber-500/10 transition-all duration-300">
       <div className="flex items-center gap-2 px-3 py-2 text-xs">
         {!isComplete && (
           <Loader2 className="h-3 w-3 animate-spin text-amber-500" />

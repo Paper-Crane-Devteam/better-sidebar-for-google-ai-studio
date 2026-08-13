@@ -248,7 +248,7 @@ export const SnippetsHeader = ({
 
       {/* Row 3: Batch toolbar (conditional) */}
       {isBatchMode && (
-        <div className="px-3 py-2 flex items-center justify-between border-t bg-muted/30">
+        <div className="px-3 py-2 flex items-center justify-between bg-muted/40">
           <span className="text-xs text-muted-foreground">
             {selectedIds.length > 0
               ? t('batch.selectedCount', { count: selectedIds.length })

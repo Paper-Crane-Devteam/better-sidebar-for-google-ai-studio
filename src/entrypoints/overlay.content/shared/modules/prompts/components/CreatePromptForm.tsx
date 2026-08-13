@@ -75,7 +75,7 @@ export const CreatePromptForm = ({
             {t('prompts.variablePromptModalIntro')}
           </p>
           {/* Basic variable */}
-          <div className="rounded-md bg-secondary/40 border p-3 text-xs">
+          <div className="rounded-md bg-secondary/40 p-3 text-xs">
             <p className="font-medium text-foreground mb-2">
               {t('prompts.variablePromptModalExample')}
             </p>
@@ -85,7 +85,7 @@ export const CreatePromptForm = ({
             </pre>
           </div>
           {/* Dropdown variable */}
-          <div className="rounded-md bg-secondary/40 border p-3 text-xs">
+          <div className="rounded-md bg-secondary/40 p-3 text-xs">
             <p className="font-medium text-foreground mb-2">
               {t('prompts.dropdownVariableExample')}
             </p>
@@ -97,7 +97,7 @@ export const CreatePromptForm = ({
             </p>
           </div>
           {/* @import */}
-          <div className="rounded-md bg-secondary/40 border p-3 text-xs">
+          <div className="rounded-md bg-secondary/40 p-3 text-xs">
             <p className="font-medium text-foreground mb-2">
               {t('prompts.importExample')}
             </p>
@@ -203,7 +203,9 @@ export const CreatePromptForm = ({
               <DropdownMenuContent
                 align="end"
                 className={cn(
-                  'z-[100] max-h-[280px] overflow-y-auto min-w-[200px] shadow-md rounded-md p-2',
+                  // No z-index override here: DropdownMenuContent already ships
+                  // z-[10050] which sits above GlobalModal (10000/10001).
+                  'max-h-[280px] overflow-y-auto min-w-[200px] shadow-md rounded-md p-2',
                   'bg-popover text-popover-foreground border border-border',
                   '[--popover:255_255_255] [--popover-foreground:50_48_44] [--accent:228_228_226] [--accent-foreground:50_48_44] [--border:238_238_236]',
                   'dark:[--popover:31_31_31] dark:[--popover-foreground:212_212_212] dark:[--accent:42_42_42] dark:[--accent-foreground:212_212_212] dark:[--border:42_42_42]',
@@ -282,7 +284,7 @@ export const CreatePromptForm = ({
               name="content"
               required
               className={cn(
-                'flex min-h-[240px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm',
+                'flex min-h-[240px] w-full rounded-md border border-border/60 bg-transparent px-3 py-2 text-sm shadow-sm',
                 'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
                 'disabled:cursor-not-allowed disabled:opacity-50 resize-y',
               )}

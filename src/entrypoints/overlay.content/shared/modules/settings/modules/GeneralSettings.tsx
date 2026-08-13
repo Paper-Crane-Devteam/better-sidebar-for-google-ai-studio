@@ -177,7 +177,7 @@ export const GeneralSettings = () => {
                   {t('settings.newChatBehaviorDescription')}
                 </p>
               </div>
-              <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border">
+              <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg">
                 <Button
                   variant={
                     newChatBehavior === 'current-tab' ? 'secondary' : 'ghost'

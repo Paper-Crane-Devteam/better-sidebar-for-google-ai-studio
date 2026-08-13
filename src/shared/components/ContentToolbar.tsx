@@ -32,7 +32,7 @@ export const ContentToolbar = ({ content, extra }: ContentToolbarProps) => {
   };
 
   return (
-    <div className="flex items-center gap-0.5 pt-2 mt-2 border-t border-border/40">
+    <div className="flex items-center gap-1 mt-2 -ml-1">
       <SimpleTooltip content={t('search.copyAsText')}>
         <Button
           variant="ghost"

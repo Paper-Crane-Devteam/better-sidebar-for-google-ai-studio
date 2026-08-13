@@ -142,7 +142,7 @@ export const GemPickerContent = ({ lastSelectedGemId }: GemPickerContentProps) =
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t('gems.searchGems')}
-            className="flex h-8 w-full rounded-md border border-input bg-transparent px-3 pl-8 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="flex h-8 w-full rounded-md border border-border/60 bg-transparent px-3 pl-8 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           />
         </div>
       </div>

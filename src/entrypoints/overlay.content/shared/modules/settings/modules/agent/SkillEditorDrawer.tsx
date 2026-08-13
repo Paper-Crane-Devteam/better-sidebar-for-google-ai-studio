@@ -88,7 +88,7 @@ export const SkillEditorDrawer: React.FC<SkillEditorDrawerProps> = ({
   return (
     <div className="absolute inset-0 z-10 bg-background flex flex-col animate-in slide-in-from-right duration-200">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 shrink-0">
         <span className="text-sm font-semibold">
           {skill ? 'Edit Skill' : 'New Skill'}
         </span>
@@ -109,7 +109,7 @@ export const SkillEditorDrawer: React.FC<SkillEditorDrawerProps> = ({
             value={form.title}
             onChange={(e) => handleChange('title', e.target.value.slice(0, 50))}
             placeholder="e.g. Organize by Topic"
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm
+            className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm
                        placeholder:text-muted-foreground focus-visible:outline-none
                        focus-visible:ring-1 focus-visible:ring-ring"
           />
@@ -127,7 +127,7 @@ export const SkillEditorDrawer: React.FC<SkillEditorDrawerProps> = ({
             value={form.description}
             onChange={(e) => handleChange('description', e.target.value.slice(0, 200))}
             placeholder="Brief description of what this skill does"
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm
+            className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-sm
                        placeholder:text-muted-foreground focus-visible:outline-none
                        focus-visible:ring-1 focus-visible:ring-ring"
           />
@@ -147,7 +147,7 @@ export const SkillEditorDrawer: React.FC<SkillEditorDrawerProps> = ({
             onChange={(e) => handleChange('promptContent', e.target.value.slice(0, 5000))}
             placeholder={`## Task: Your task name\n\nDescribe what this skill does and how the AI should approach it.\n\nTips:\n- Start with understanding the current state\n- Explain your plan before executing\n- ...`}
             rows={12}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs
+            className="w-full rounded-md border border-border/60 bg-background px-3 py-2 text-xs
                        font-mono placeholder:text-muted-foreground focus-visible:outline-none
                        focus-visible:ring-1 focus-visible:ring-ring resize-none"
           />
@@ -159,7 +159,7 @@ export const SkillEditorDrawer: React.FC<SkillEditorDrawerProps> = ({
       </div>
 
       {/* Footer */}
-      <div className="flex justify-end gap-2 px-4 py-3 border-t border-border shrink-0">
+      <div className="flex justify-end gap-2 px-4 py-3 shrink-0">
         <Button variant="ghost" size="sm" onClick={handleClose}>
           Cancel
         </Button>

@@ -27,10 +27,8 @@ export const AgentInterruptNotice: React.FC = () => {
   return (
     <div
       className={cn(
-        'space-y-2 rounded-md border p-3',
-        isError
-          ? 'border-destructive/30 bg-destructive/5'
-          : 'border-orange-500/30 bg-orange-500/5',
+        'space-y-2 rounded-md p-3',
+        isError ? 'bg-destructive/10' : 'bg-orange-500/10',
       )}
     >
       <div className="flex items-center gap-2">

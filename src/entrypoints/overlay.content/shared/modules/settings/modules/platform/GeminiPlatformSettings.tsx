@@ -386,7 +386,7 @@ export const GeminiPlatformSettings = () => {
 
           {/* Individual toolbar actions (only show when enabled) */}
           {(geminiSettings.selectionToolbar?.enabled ?? true) && (
-            <div className="grid gap-4 pl-4 border-l-2 border-muted">
+            <div className="grid gap-4 pl-4 border-l border-border/40">
               {/* Reference */}
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">

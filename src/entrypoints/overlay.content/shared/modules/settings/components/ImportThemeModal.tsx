@@ -113,7 +113,7 @@ export function ImportThemeModalContentStateful() {
             setShowLicensePrompt(false);
           }}
           placeholder={t('themeSettings.importJsonPlaceholder')}
-          className="w-full h-64 rounded-md border border-input bg-background px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+          className="w-full h-64 rounded-md border border-border/60 bg-background px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
           spellCheck={false}
         />
       </div>
@@ -121,10 +121,10 @@ export function ImportThemeModalContentStateful() {
       {/* Validation Status */}
       {validation && (
         <div
-          className={`flex items-start gap-2 rounded-md border px-3 py-2 text-xs ${
+          className={`flex items-start gap-2 rounded-md px-3 py-2 text-xs ${
             validation.valid
-              ? 'border-green-500/50 bg-green-500/10 text-green-700 dark:text-green-300'
-              : 'border-destructive/50 bg-destructive/10 text-destructive'
+              ? 'bg-green-500/10 text-green-700 dark:text-green-300'
+              : 'bg-destructive/10 text-destructive'
           }`}
         >
           {validation.valid ? (
@@ -158,7 +158,7 @@ export function ImportThemeModalContentStateful() {
 
       {/* License Required Prompt */}
       {showLicensePrompt && (
-        <div className="flex items-center justify-between gap-2 rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-3">
+        <div className="flex items-center justify-between gap-2 rounded-lg bg-amber-500/10 px-4 py-3">
           <div className="flex items-center gap-2 min-w-0">
             <Sparkles className="h-4 w-4 text-amber-600 shrink-0" />
             <span className="text-xs text-amber-800 dark:text-amber-300">

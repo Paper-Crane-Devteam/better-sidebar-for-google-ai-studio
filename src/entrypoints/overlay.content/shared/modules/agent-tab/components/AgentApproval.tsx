@@ -39,8 +39,8 @@ export const AgentApproval: React.FC = () => {
   return (
     <div
       className={cn(
-        'space-y-2 rounded-md border p-3',
-        isWrite ? 'border-orange-500/30 bg-orange-500/5' : 'border-border/60 bg-muted/20',
+        'space-y-2 rounded-md p-3',
+        isWrite ? 'bg-orange-500/10' : 'bg-muted/40',
       )}
     >
       <div className="flex items-center gap-2">

@@ -164,10 +164,10 @@ export const ProfilePickerDialog: React.FC = () => {
                   key={profile.id}
                   disabled={disabled || loading}
                   onClick={() => handleSelectProfile(profile.id)}
-                  className={`w-full text-left rounded-lg border p-3 transition-colors ${
+                  className={`w-full text-left rounded-lg bg-muted/40 p-3 transition-colors ${
                     disabled
-                      ? 'opacity-50 cursor-not-allowed bg-muted'
-                      : 'hover:bg-accent hover:border-accent-foreground/20 cursor-pointer'
+                      ? 'opacity-50 cursor-not-allowed'
+                      : 'hover:bg-accent cursor-pointer'
                   }`}
                 >
                   <div className="font-medium text-sm">{profile.name}</div>

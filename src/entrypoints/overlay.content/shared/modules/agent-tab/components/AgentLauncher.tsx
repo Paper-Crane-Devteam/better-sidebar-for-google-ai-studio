@@ -135,8 +135,8 @@ export const AgentLauncher: React.FC = () => {
               key={entry.id}
               type="button"
               onClick={() => run(entry.id)}
-              className="flex w-full items-start gap-3 rounded-md border border-border/40 px-3 py-2
-                         text-left transition-colors hover:border-border hover:bg-accent/30"
+              className="flex w-full items-start gap-3 rounded-md bg-muted/30 px-3 py-2
+                         text-left transition-colors hover:bg-accent/40"
             >
               <UIcon icon={iconName(entry.icon)} className="mt-1 h-4 w-4 shrink-0 text-primary" />
               <div className="min-w-0 flex-1">
@@ -156,7 +156,7 @@ export const AgentLauncher: React.FC = () => {
       </div>
 
       {unavailable && (
-        <p className="mb-4 rounded-md border border-orange-500/30 bg-orange-500/5 px-3 py-2 text-xs text-muted-foreground">
+        <p className="mb-4 rounded-md bg-orange-500/10 px-3 py-2 text-xs text-muted-foreground">
           {t('agent.launcher.noEditor', {
             defaultValue: 'Open a chat first — the agent runs through the chat input.',
           })}

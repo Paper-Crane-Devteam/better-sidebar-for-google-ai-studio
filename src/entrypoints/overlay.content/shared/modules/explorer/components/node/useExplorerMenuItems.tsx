@@ -158,7 +158,7 @@ export function useExplorerMenuItems({
       title: t('node.editDescription'),
       content: (
         <textarea
-          className="w-full min-h-[80px] p-2 rounded-md border border-input bg-background text-sm resize-y"
+          className="w-full min-h-[80px] p-2 rounded-md border border-border/60 bg-background text-sm resize-y"
           defaultValue={currentDescription}
           placeholder={t('node.descriptionPlaceholder')}
           onChange={(e) => { inputValue = e.target.value; }}

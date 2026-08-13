@@ -318,7 +318,7 @@ export const ImportHistoryDialog = ({ isOpen, onClose }: { isOpen: boolean; onCl
             </div>
           </div>
 
-          <div className="rounded-md border bg-muted/40 p-3">
+          <div className="rounded-md bg-muted/40 p-3">
             <button
               type="button"
               onClick={() => setShowGuide(!showGuide)}
@@ -362,7 +362,7 @@ export const ImportHistoryDialog = ({ isOpen, onClose }: { isOpen: boolean; onCl
                   <img
                     src={openInDriveImg}
                     alt="Open in Drive"
-                    className="rounded-md border shadow-sm w-full h-auto object-contain bg-background"
+                    className="rounded-md shadow-sm w-full h-auto object-contain bg-background"
                   />
                 </div>
 
@@ -374,7 +374,7 @@ export const ImportHistoryDialog = ({ isOpen, onClose }: { isOpen: boolean; onCl
                   <img
                     src={downloadConversationsImg}
                     alt="Download"
-                    className="rounded-md border shadow-sm w-full h-auto object-contain bg-background"
+                    className="rounded-md shadow-sm w-full h-auto object-contain bg-background"
                   />
                 </div>
 
@@ -385,7 +385,7 @@ export const ImportHistoryDialog = ({ isOpen, onClose }: { isOpen: boolean; onCl
                   <p>{t('importHistory.step4Upload')}</p>
                 </div>
 
-                <div className="rounded bg-muted/50 p-3 text-xs text-muted-foreground border border-border/50">
+                <div className="rounded bg-muted/50 p-3 text-xs text-muted-foreground">
                   <p className="font-medium mb-1 text-foreground">
                     {t('importHistory.noteTitle')}
                   </p>
@@ -414,7 +414,7 @@ export const ImportHistoryDialog = ({ isOpen, onClose }: { isOpen: boolean; onCl
           {logs.length > 0 && (
             <div
               ref={logContainerRef}
-              className="max-h-32 overflow-y-auto rounded border p-2 text-xs text-muted-foreground bg-secondary/20"
+              className="max-h-32 overflow-y-auto rounded p-2 text-xs text-muted-foreground bg-secondary/20"
             >
               {logs.map((l, i) => (
                 <div key={i}>{l}</div>

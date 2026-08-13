@@ -13,13 +13,13 @@ let worker: Worker | null = null;
 
 const handleWorkerMessage = async (e: MessageEvent) => {
   // Forward result back to background script
-  const { id, success, data, error, chunk } = e.data;
+  const { id, success, data, error, code, chunk } = e.data;
 
   // If the worker already chunked it, just forward it
   if (chunk) {
     browser.runtime.sendMessage({
       type: 'DB_RESPONSE',
-      payload: { id, success, data, error, chunk },
+      payload: { id, success, data, error, code, chunk },
     });
     return;
   }
@@ -48,14 +48,18 @@ const handleWorkerMessage = async (e: MessageEvent) => {
   } else {
     browser.runtime.sendMessage({
       type: 'DB_RESPONSE',
-      payload: { id, success, data, error },
+      payload: { id, success, data, error, code },
     });
   }
 };
 
+/** How many workers this document has built; >1 means we replaced a dead one. */
+let workerCount = 0;
+
 const createWorker = (): Worker => {
   const workerUrl = browser.runtime.getURL('assets/db-worker.js');
   const created = new Worker(workerUrl);
+  workerCount++;
   created.onmessage = handleWorkerMessage;
 
   /**
@@ -73,6 +77,18 @@ const createWorker = (): Worker => {
     }
     if (worker === created) worker = null;
   };
+
+  // A replacement worker knows nothing about the database the previous one had
+  // open, and this document existing is what the bridge uses to decide it does
+  // not need to send INIT. Tell it explicitly, or the next request lands on a
+  // nameless worker and gets refused.
+  if (workerCount > 1) {
+    browser.runtime
+      .sendMessage({ type: 'DB_WORKER_REPLACED' })
+      .catch(() => {
+        // Service worker is asleep; it will re-init on its own when it wakes.
+      });
+  }
 
   console.log('[Offscreen] DB Worker created via extension URL:', workerUrl);
   return created;

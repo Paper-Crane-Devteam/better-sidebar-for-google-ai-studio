@@ -92,7 +92,7 @@ export const PowerPackPaywall = () => {
 
           {/* Feature context — which feature triggered this */}
           {featureName && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-500/5 border border-violet-500/20">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-500/10">
               <UIcon icon="fluent-color:bot-sparkle-24" width={14} height={14} className="shrink-0" />
               <p className="text-xs text-foreground">
                 <span className="font-medium">{featureName}</span>
@@ -113,7 +113,7 @@ export const PowerPackPaywall = () => {
                 </div>
                 <span className="text-sm">{t(`packs.${key}`)}</span>
                 {comingSoon && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 whitespace-nowrap">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-600 dark:text-amber-400 whitespace-nowrap">
                     {t('packs.comingSoon')}
                   </span>
                 )}

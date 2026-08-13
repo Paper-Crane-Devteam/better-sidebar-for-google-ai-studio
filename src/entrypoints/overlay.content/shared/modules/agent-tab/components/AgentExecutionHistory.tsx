@@ -68,7 +68,7 @@ const HistoryItem: React.FC<HistoryItemProps> = ({ result, isExpanded, onToggle 
       </button>
 
       {isExpanded && (
-        <div className="border-t border-border/30 bg-muted/30 px-2 py-1">
+        <div className="bg-muted/40 px-2 py-1">
           <pre className="max-h-[120px] overflow-y-auto whitespace-pre-wrap break-all font-mono text-xs text-muted-foreground">
             {result.result.length > MAX_DETAIL_CHARS
               ? result.result.slice(0, MAX_DETAIL_CHARS) + '...'

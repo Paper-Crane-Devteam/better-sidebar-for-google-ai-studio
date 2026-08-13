@@ -186,7 +186,7 @@ export const SponsorSettings = () => {
 
                     {/* WeChat QR code expand area */}
                     {isZh && showQrcode && (
-                        <div className="flex flex-col items-center gap-2 p-4 border rounded-lg">
+                        <div className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted/40">
                             <img src={qrcodeImg} alt="WeChat QR Code" className="w-40 h-40" />
                             <p className="text-xs text-muted-foreground">{t('sponsor.wechatScan')}</p>
                         </div>

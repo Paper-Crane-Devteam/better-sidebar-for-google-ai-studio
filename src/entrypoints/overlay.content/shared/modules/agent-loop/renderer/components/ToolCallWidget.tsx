@@ -122,7 +122,7 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
 
     if (isPending) {
       return (
-        <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded border border-amber-500/40 bg-amber-500/15 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
+        <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded bg-amber-500/20 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
           等待批准
         </span>
       );
@@ -171,10 +171,10 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
   return (
     <div
       className={cn(
-        'my-2 overflow-hidden rounded-lg border text-foreground shadow-sm transition-colors',
+        'my-2 overflow-hidden rounded-lg text-foreground transition-colors',
         isPending
-          ? 'border-amber-500/50 bg-amber-500/10 dark:bg-amber-950/20'
-          : 'border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-950/20',
+          ? 'bg-amber-500/10 dark:bg-amber-950/30'
+          : 'bg-emerald-500/10 dark:bg-emerald-950/30',
       )}
     >
       {/* Header */}
@@ -226,7 +226,7 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
       {/* Approval — the full text is shown unfolded, since you're being asked to
           judge it and a collapsed preview isn't enough to judge anything. */}
       {isPending && (
-        <div className="space-y-2 border-t border-amber-500/25 bg-background/60 px-3 py-2">
+        <div className="space-y-2 bg-background/60 px-3 py-2">
           <pre className="max-h-[200px] overflow-auto whitespace-pre-wrap break-all font-mono text-xs text-foreground">
             {query || rawText}
           </pre>
@@ -260,7 +260,7 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
                 <button
                   type="button"
                   onClick={() => decide(false)}
-                  className="rounded border border-destructive/40 bg-destructive/15 px-2 py-1 text-xs font-medium text-destructive"
+                  className="rounded bg-destructive/20 px-2 py-1 text-xs font-medium text-destructive"
                 >
                   拒绝
                 </button>
@@ -271,7 +271,7 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
               <button
                 type="button"
                 onClick={() => decide(true)}
-                className="inline-flex items-center gap-1 rounded border border-emerald-500/40 bg-emerald-500/20 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-500/30 dark:text-emerald-300"
+                className="inline-flex items-center gap-1 rounded bg-emerald-500/20 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-500/30 dark:text-emerald-300"
               >
                 <Play className="h-3 w-3" /> 执行
               </button>
@@ -302,7 +302,7 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
           carries it. Reading an old session, "what did that query return" is the
           question the card is opened to answer. */}
       {expanded && !isPending && (
-        <div className="max-h-[300px] overflow-y-auto border-t border-emerald-500/20 bg-background/50 px-3 py-2 font-mono text-xs whitespace-pre-wrap text-muted-foreground">
+        <div className="max-h-[300px] overflow-y-auto bg-background/50 px-3 py-2 font-mono text-xs whitespace-pre-wrap text-muted-foreground">
           {rawText}
           {outcome?.content && (
             <>

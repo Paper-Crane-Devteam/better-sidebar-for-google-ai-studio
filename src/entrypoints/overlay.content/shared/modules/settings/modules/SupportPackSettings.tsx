@@ -52,7 +52,7 @@ function ActivatedView({ t, tier }: { t: (key: string) => string; tier: LicenseT
   return (
     <div className="space-y-6">
       {/* Success card */}
-      <div className="rounded-xl border border-primary/30 bg-primary/5 p-6">
+      <div className="rounded-xl bg-primary/10 p-6">
         <div className="flex items-center gap-3 mb-3">
           <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
             <Check className="h-5 w-5 text-primary" />
@@ -75,7 +75,7 @@ function ActivatedView({ t, tier }: { t: (key: string) => string; tier: LicenseT
 
       {/* If only support pack, show upgrade prompt */}
       {tier === 'support_pack' && (
-        <div className="rounded-xl border border-dashed border-amber-500/40 bg-amber-500/5 p-5">
+        <div className="rounded-xl bg-amber-500/10 p-5">
           <div className="flex items-start gap-3">
             <UIcon icon="fluent-color:ribbon-star-24" width={20} height={20} className="shrink-0 mt-0.5" />
             <div className="space-y-2">
@@ -119,7 +119,7 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
       {/* Two-pack layout */}
       <div className="grid gap-4">
         {/* Support Pack Card */}
-        <div className="rounded-xl border bg-accent/20 p-5">
+        <div className="rounded-xl bg-accent/20 p-5">
           <div className="flex items-center gap-2 mb-3">
             <UIcon icon="fluent-color:paint-brush-24" width={24} height={24} />
             <div>
@@ -157,14 +157,14 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
         </div>
 
         {/* Power Pack Card — featured/highlighted with bold gradient */}
-        <div className="rounded-xl border-2 border-violet-500/50 bg-gradient-to-br from-violet-500/10 via-purple-500/5 to-fuchsia-500/10 p-5 relative overflow-hidden">
+        <div className="rounded-xl bg-gradient-to-br from-violet-500/20 via-purple-500/10 to-fuchsia-500/20 p-5 relative overflow-hidden">
           {/* Decorative glow */}
           <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-violet-500/10 blur-2xl pointer-events-none" />
           <div className="absolute -bottom-8 -left-8 h-24 w-24 rounded-full bg-fuchsia-500/10 blur-2xl pointer-events-none" />
 
           {/* Popular badge */}
           <div className="absolute top-3 right-3">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-500/20 text-violet-600 dark:text-violet-300 border border-violet-500/30">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-500/20 text-violet-600 dark:text-violet-300">
               <UIcon icon="fluent-color:star-24" width={10} height={10} />
               {t('packs.popular')}
             </span>
@@ -330,7 +330,7 @@ function ActivationInput({ t }: { t: (key: string) => string }) {
             setSuccess(false);
           }}
           placeholder={t('supportPack.tokenPlaceholder')}
-          className="flex-1 h-9 rounded-md border border-input bg-background px-3 text-sm font-mono placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="flex-1 h-9 rounded-md border border-border/60 bg-background px-3 text-sm font-mono placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleActivate();
           }}
@@ -368,7 +368,7 @@ function FeatureItem({ icon, text, badge }: { icon: React.ReactNode; text: strin
       <div className="shrink-0">{icon}</div>
       <span className="text-xs">{text}</span>
       {badge && (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 whitespace-nowrap">
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-600 dark:text-amber-400 whitespace-nowrap">
           {badge}
         </span>
       )}

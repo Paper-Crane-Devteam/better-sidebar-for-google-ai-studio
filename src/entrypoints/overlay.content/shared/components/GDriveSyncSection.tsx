@@ -164,7 +164,7 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
         </>
       )}
       <div
-        className={`p-4 border rounded-lg bg-muted/10 space-y-3 ${hideTitle ? '' : 'mt-3'}`}
+        className={`p-4 rounded-lg bg-muted/40 space-y-3 ${hideTitle ? '' : 'mt-3'}`}
       >
         {/* Connection status */}
         <div className="flex items-center justify-between">
@@ -249,7 +249,7 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
 
             {/* Divergence notice — automatic uploads are frozen until resolved */}
             {gdriveStatus.hasConflict && (
-              <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+              <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 p-3">
                 <AlertTriangle className="h-4 w-4 mt-1 shrink-0 text-amber-600 dark:text-amber-400" />
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-amber-700 dark:text-amber-300">

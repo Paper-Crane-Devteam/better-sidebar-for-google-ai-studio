@@ -319,7 +319,7 @@ export const DataSettings = () => {
 
         {/* Active profile card */}
         {activeProfile && (
-          <div className="mt-3 p-4 border rounded-lg bg-muted/10 space-y-3">
+          <div className="mt-3 p-4 rounded-lg bg-muted/40 space-y-3">
             {/* Header row */}
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
@@ -428,7 +428,7 @@ export const DataSettings = () => {
                 </Button>
               </div>
               {/* Reset */}
-              <div className="flex items-center justify-between mt-1 p-3 border rounded-md bg-destructive/5">
+              <div className="flex items-center justify-between mt-1 p-3 rounded-md bg-destructive/10">
                 <div className="space-y-0.5">
                   <span className="text-sm font-medium text-destructive">
                     {t('data.resetDatabase')}
@@ -470,7 +470,7 @@ export const DataSettings = () => {
                 return (
                   <div
                     key={profile.id}
-                    className="group relative flex items-center gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors"
+                    className="group relative flex items-center gap-3 p-3 rounded-lg bg-muted/20 hover:bg-accent/50 transition-colors"
                   >
                     <User className="h-4 w-4 text-muted-foreground shrink-0" />
                     <div className="flex-1 min-w-0">

@@ -34,7 +34,7 @@ export const AgentInstructionInput: React.FC = () => {
   };
 
   return (
-    <div className="border-t border-border/50 px-3 py-2">
+    <div className="px-3 py-2">
       <div className="relative">
         <textarea
           value={value}
@@ -44,7 +44,7 @@ export const AgentInstructionInput: React.FC = () => {
             defaultValue: 'Add a note for the AI...',
           })}
           rows={1}
-          className="w-full resize-none rounded-md border border-border/50 bg-muted/30 px-2 py-1
+          className="w-full resize-none rounded-md border border-border/60 bg-muted/30 px-2 py-1
                      text-xs text-foreground placeholder:text-muted-foreground
                      transition-colors focus:outline-none focus:ring-1 focus:ring-primary/50"
         />

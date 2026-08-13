@@ -85,7 +85,7 @@ export const AgentPolicyControls: React.FC = () => {
         <button
           type="button"
           onClick={() => setSpeedMode(false)}
-          className="flex w-full items-center gap-1 rounded border border-orange-500/30 bg-orange-500/5 px-2 py-1 text-xs text-orange-600 dark:text-orange-400"
+          className="flex w-full items-center gap-1 rounded bg-orange-500/10 px-2 py-1 text-xs text-orange-600 dark:text-orange-400"
         >
           <Zap className="h-3 w-3 shrink-0" />
           <span className="min-w-0 truncate">

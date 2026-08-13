@@ -330,7 +330,7 @@ export const ThemeSettings = () => {
                 {t('settings.themeDescription')}
               </p>
             </div>
-            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border">
+            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg">
               <SimpleTooltip content={t('settings.light')}>
                 <Button
                   variant={theme === 'light' ? 'secondary' : 'ghost'}
@@ -428,7 +428,7 @@ export const ThemeSettings = () => {
 /** Preview banner — tells user the theme will revert in 5 min, with a purchase CTA */
 function PreviewBanner({ t }: { t: (key: string) => string }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-2.5">
+    <div className="flex items-center justify-between gap-2 rounded-lg bg-amber-500/10 px-4 py-3">
       <div className="flex items-center gap-2 min-w-0">
         <Eye className="h-4 w-4 text-amber-600 shrink-0" />
         <span className="text-xs text-amber-800 dark:text-amber-300 truncate">
@@ -658,9 +658,9 @@ function ThemeCard({
     <button
       onClick={onClick}
       className={`
-        relative flex flex-col rounded-lg border p-3 text-left transition-all
-        hover:shadow-md hover:border-primary/50
-        ${isActive ? 'border-primary ring-2 ring-primary/20' : 'border-border'}
+        relative flex flex-col rounded-lg p-3 text-left transition-all
+        hover:shadow-md
+        ${isActive ? 'bg-primary/10 ring-2 ring-primary' : 'bg-muted/40 hover:bg-muted/60'}
       `}
     >
       {/* Active indicator */}

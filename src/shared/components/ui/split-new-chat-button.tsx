@@ -119,7 +119,7 @@ export const SplitNewChatButton = ({
               <button
                 className={cn(
                   'w-full flex items-center gap-2 px-3 py-1.5 text-density font-medium text-foreground/80 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer border-none bg-transparent text-left',
-                  i < dropdownItems.length - 1 && 'border-b border-border/30',
+                  i < dropdownItems.length - 1 && 'mb-1',
                 )}
                 onClick={(e) => {
                   item.onClick(e);

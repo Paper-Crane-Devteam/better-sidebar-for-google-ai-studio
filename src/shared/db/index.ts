@@ -1,3 +1,5 @@
+import { NO_DB_OPEN } from './protocol';
+
 const pendingRequests = new Map<string, { resolve: (val: any) => void; reject: (err: any) => void }>();
 let localWorker: Worker | null = null;
 
@@ -92,15 +94,31 @@ function runExclusive<T>(fn: () => Promise<T>): Promise<T> {
 // Helper to handle partial chunks
 const chunkedResponses = new Map<string, { chunks: string[]; received: number; total: number }>();
 
+/** Rebuild a worker-side error, preserving the code so callers can react to it. */
+const toWorkerError = (message: string, code?: string): Error => {
+  const err = new Error(message) as Error & { code?: string };
+  if (code) err.code = code;
+  return err;
+};
+
 // Listen for responses from Offscreen document
 browser.runtime.onMessage.addListener((message) => {
+  // The host document tells us when it had to build a replacement worker. That
+  // worker has no database open, and since the document still exists nothing
+  // else would make us notice.
+  if (message.type === 'DB_WORKER_REPLACED') {
+    console.warn('[DB] Worker was replaced, INIT will be replayed');
+    workerNeedsInit = true;
+    return;
+  }
+
   if (message.type === 'DB_RESPONSE') {
-    const { id, success, data, error, chunk } = message.payload;
+    const { id, success, data, error, code, chunk } = message.payload;
     const request = pendingRequests.get(id);
     
     if (request) {
       if (!success) {
-        request.reject(new Error(error));
+        request.reject(toWorkerError(error, code));
         pendingRequests.delete(id);
         return;
       }
@@ -147,11 +165,11 @@ async function ensureWorker() {
     localWorker = new DbWorker();
     workerNeedsInit = true;
     localWorker.onmessage = (e) => {
-      const { id, success, data, error, chunk } = e.data;
+      const { id, success, data, error, code, chunk } = e.data;
       const request = pendingRequests.get(id);
       if (request) {
         if (!success) {
-          request.reject(new Error(error));
+          request.reject(toWorkerError(error, code));
           pendingRequests.delete(id);
           return;
         }
@@ -287,6 +305,11 @@ export const withDbSession = async <T>(
     if (current !== dbName) {
       console.log(`[DB] Session pinning "${dbName}" (was "${current}")`);
       await rawSwitchDB(dbName);
+    } else {
+      // Already on the right database, but requests inside `fn` may still have
+      // to replay INIT if the worker gets replaced mid-session. Point the replay
+      // at this session's database so recovery cannot open a different profile.
+      desiredDbName = dbName;
     }
     return fn();
   });
@@ -305,18 +328,39 @@ export const getWorkerDbName = async (): Promise<string | null> => {
   return sendWorkerMessage('GET_DB_NAME');
 };
 
+/**
+ * Replay INIT if the worker is known to have nothing open.
+ *
+ * A freshly (re)created worker has no dbName and refuses to guess one, so this
+ * has to happen before any other request.
+ */
+const replayInitIfNeeded = async () => {
+  if (!workerNeedsInit || !desiredDbName) return;
+  console.log(`[DB] Worker needs init, opening "${desiredDbName}"`);
+  await rawSendWorkerMessage('INIT', { dbName: desiredDbName });
+  workerNeedsInit = false;
+};
+
 const sendWorkerMessage = async (type: string, payload?: any): Promise<any> => {
   await ensureWorker();
+  await replayInitIfNeeded();
 
-  // A freshly (re)created worker has no dbName. Replay INIT before anything
-  // else so the request lands on the intended database rather than failing.
-  if (workerNeedsInit && desiredDbName) {
-    console.log(`[DB] Worker was recreated, re-initializing "${desiredDbName}"`);
-    await rawSendWorkerMessage('INIT', { dbName: desiredDbName });
-    workerNeedsInit = false;
+  try {
+    return await rawSendWorkerMessage(type, payload);
+  } catch (err: any) {
+    // The worker turned out to have no database open — it was replaced while we
+    // believed the connection was still good. Recover instead of surfacing it:
+    // the worker refuses this case *before* executing anything, so replaying is
+    // safe even for writes.
+    if (err?.code !== NO_DB_OPEN || !desiredDbName) throw err;
+
+    console.warn(
+      `[DB] Worker lost its database; reopening "${desiredDbName}" and retrying ${type}`,
+    );
+    workerNeedsInit = true;
+    await replayInitIfNeeded();
+    return rawSendWorkerMessage(type, payload);
   }
-
-  return rawSendWorkerMessage(type, payload);
 };
 
 /**
@@ -371,10 +415,9 @@ const postToWorker = (
     const fail = (message: string) => {
       if (!pendingRequests.delete(id)) return;
       chunkedResponses.delete(id);
-      // We no longer know what the worker has open — the document may have been
-      // recreated mid-flight. Make the next request replay INIT rather than
-      // assume the connection survived.
-      workerNeedsInit = true;
+      // No need to force an INIT replay here: a worker that lost its database
+      // says so (NO_DB_OPEN) and a host that vanished is rebuilt by
+      // ensureWorker, which flags the replay itself.
       reject(new DbTransportError(message));
     };
 

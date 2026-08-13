@@ -17,7 +17,7 @@ export const SnippetPreviewContent = ({ snippet }: SnippetPreviewContentProps) =
   return (
     <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto">
       {snippet.content && (
-        <div className="rounded-md border bg-muted/30 p-3">
+        <div className="rounded-md bg-muted/40 p-3">
           <pre className="whitespace-pre-wrap text-sm font-mono break-words">
             {snippet.content}
           </pre>

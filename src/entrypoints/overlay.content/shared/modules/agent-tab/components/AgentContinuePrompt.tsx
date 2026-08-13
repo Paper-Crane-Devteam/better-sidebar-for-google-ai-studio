@@ -39,7 +39,7 @@ export const AgentContinuePrompt: React.FC = () => {
   };
 
   return (
-    <div className="space-y-2 rounded-md border border-primary/30 bg-primary/5 p-3">
+    <div className="space-y-2 rounded-md bg-primary/10 p-3">
       <p className="text-xs text-foreground">
         {t('agent.continue.title', {
           defaultValue: 'Results ready. Continue to the next step?',

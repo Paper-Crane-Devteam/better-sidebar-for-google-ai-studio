@@ -76,7 +76,7 @@ export const WhatsNewDialog = () => {
 
           {/* Header */}
           <div
-            className="rounded-t-xl border border-b-0 px-10 pt-10 pb-8"
+            className="rounded-t-xl px-10 pt-10 pb-8"
             style={{ backgroundColor: 'var(--panel-bg)' }}
           >
             <div className="flex items-center gap-4">
@@ -160,7 +160,7 @@ export const WhatsNewDialog = () => {
                     <img
                       src={snippetDemoGif}
                       alt="Snippet Demo"
-                      className="rounded-md border border-border/50 shadow-sm w-full h-auto object-contain mt-4"
+                      className="rounded-md shadow-sm w-full h-auto object-contain mt-4"
                       loading="lazy"
                     />
                   )}
@@ -176,7 +176,7 @@ export const WhatsNewDialog = () => {
 
           {/* Footer */}
           <div
-            className="rounded-b-xl border border-t-0 px-10 py-6 flex items-center justify-between"
+            className="rounded-b-xl px-10 py-6 flex items-center justify-between"
             style={{ backgroundColor: 'var(--panel-bg)' }}
           >
             <span className="text-xs text-muted-foreground">
