@@ -6,7 +6,7 @@
 import React, { useEffect } from 'react';
 import { useAgentLoopStore } from '../agent-loop-store';
 import { useAgentViewStore } from '../agent-view-store';
-import { useConversationMessages } from './useConversationMessages';
+import { useAgentViewState } from './useAgentViewState';
 import { Eye, Sparkles } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
@@ -44,20 +44,13 @@ function useSidebarOffset(defaultOffset = 16) {
 export const ConversationViewSwitcher: React.FC = () => {
   const viewMode = useAgentLoopStore((s) => s.viewMode);
   const setViewMode = useAgentLoopStore((s) => s.setViewMode);
-  const status = useAgentLoopStore((s) => s.status);
   const currentRound = useAgentLoopStore((s) => s.currentRound);
-  const messages = useConversationMessages();
+  const { hasAgentContent, isRunning } = useAgentViewState();
   const leftPx = useSidebarOffset(16);
   const conversationId = useCurrentConversationId();
 
-  const hasAgentContent = messages.some(
-    (m) =>
-      Boolean(m.promptId) ||
-      (m.toolCalls && m.toolCalls.length > 0) ||
-      m.toolResults.length > 0,
-  );
-
-  const isRunning = status !== 'idle';
+  // Nothing to switch between on a plain conversation: the overlay has nothing to
+  // render there, so a toggle would just blank the chat out.
   const shouldShow = hasAgentContent || isRunning;
 
   const override = useAgentViewStore((s) =>
@@ -122,7 +115,7 @@ export const ConversationViewSwitcher: React.FC = () => {
         )}
         <span>{!isCustom ? 'Agent 渲染' : '原生视图'}</span>
 
-        {status !== 'idle' ? (
+        {isRunning ? (
           <span className="ml-1 inline-flex items-center justify-center rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300">
             R{currentRound}
           </span>

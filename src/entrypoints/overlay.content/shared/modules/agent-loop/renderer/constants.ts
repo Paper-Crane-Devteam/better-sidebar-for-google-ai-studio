@@ -101,11 +101,24 @@ const SCROLLER_SELECTORS = [
   '.conversation-container', // last resort — a single turn
 ] as const;
 
-/** Find the conversation scroll container for the current platform. */
+/** On screen, as opposed to a detached/hidden leftover of a previous conversation. */
+function isRendered(el: HTMLElement): boolean {
+  return el.isConnected && el.offsetHeight > 0 && el.offsetWidth > 0;
+}
+
+/**
+ * Find the conversation scroll container for the current platform.
+ *
+ * Within one selector we take the first *rendered* match, not simply the first:
+ * Gemini can leave the previous conversation's scroller in the document during
+ * SPA navigation, and document order puts it ahead of the live one. Picking it
+ * left the overlay and the view toggle reading a chat the user had already left.
+ */
 export function findConversationScroller(): HTMLElement | null {
   for (const selector of SCROLLER_SELECTORS) {
-    const el = document.querySelector<HTMLElement>(selector);
-    if (el) return el;
+    const candidates = Array.from(document.querySelectorAll<HTMLElement>(selector));
+    if (candidates.length === 0) continue;
+    return candidates.find(isRendered) ?? candidates[0];
   }
   return null;
 }

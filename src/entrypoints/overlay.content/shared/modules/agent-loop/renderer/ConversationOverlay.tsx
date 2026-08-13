@@ -10,7 +10,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAgentLoopStore } from '../agent-loop-store';
 import { findConversationScroller } from './constants';
-import { useConversationMessages } from './useConversationMessages';
+import { useAgentViewState } from './useAgentViewState';
 import { CustomUserMessage } from './components/CustomUserMessage';
 import { CustomModelResponse } from './components/CustomModelResponse';
 import { ArrowDown } from 'lucide-react';
@@ -22,12 +22,12 @@ import { useSettingsStore } from '@/shared/lib/settings-store';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 
 export const ConversationOverlay: React.FC = () => {
-  const viewMode = useAgentLoopStore((s) => s.viewMode);
-  const status = useAgentLoopStore((s) => s.status);
-  const messages = useConversationMessages();
+  const { messages, isActive: isCustomActive } = useAgentViewState();
+  const setAgentViewActive = useAgentLoopStore((s) => s.setAgentViewActive);
   const chatWidth = usePegasusStore((s) => s.enhancedFeatures.gemini?.chatWidth ?? 46);
 
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  const [nativeScroller, setNativeScroller] = useState<HTMLElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false);
 
@@ -37,8 +37,11 @@ export const ConversationOverlay: React.FC = () => {
       const el = findConversationScroller();
       if (!el) {
         setPortalTarget(null);
+        setNativeScroller(null);
         return;
       }
+
+      setNativeScroller((prev) => (prev === el ? prev : el));
 
       if (window.getComputedStyle(el).position === 'static') {
         el.style.position = 'relative';
@@ -121,15 +124,62 @@ export const ConversationOverlay: React.FC = () => {
   // Manual tool execution is only offered on the newest model turn
   const latestModelMessageId = [...messages].reverse().find((m) => m.role === 'model')?.id;
 
-  const hasAgentContent = messages.some(
-    (m) =>
-      Boolean(m.promptId) ||
-      (m.toolCalls && m.toolCalls.length > 0) ||
-      m.toolResults.length > 0,
-  );
+  /**
+   * Only blank out / take over the native conversation once we can actually render a
+   * replacement. Otherwise a selector regression leaves the user staring at an empty
+   * chat area with no way back.
+   */
+  const canReplaceNative = isCustomActive && !!portalTarget && messages.length > 0;
 
-  const isCustomActive =
-    viewMode === 'custom' && (hasAgentContent || status !== 'idle');
+  // Let the rest of the UI know the conversation area is ours (see the smart scrollbar)
+  useEffect(() => {
+    setAgentViewActive(canReplaceNative);
+    return () => setAgentViewActive(false);
+  }, [canReplaceNative, setAgentViewActive]);
+
+  /**
+   * Park the native scroller at the top for as long as we're covering it.
+   *
+   * The overlay is an absolutely positioned child of that scroller, so it is
+   * viewport-*sized* but content-*anchored*: it sits at scroll offset 0 and slides
+   * out of sight along with the turns it replaces. Switch over while the native
+   * view was scrolled down and you'd be looking at the empty space below our panel.
+   *
+   * Pinning instead of tracking `scrollTop`, because a moving `top` would visibly
+   * lag the scroll. The listener is not paranoia: Gemini keeps auto-scrolling to
+   * the newest turn while a response streams in, and `overflow: hidden` doesn't
+   * stop programmatic scrolling.
+   *
+   * On the way out we hand the user back the position they came from — or the
+   * bottom, if that's where they were, since the conversation has usually grown
+   * while the agent was working.
+   */
+  useEffect(() => {
+    // Gated on canReplaceNative, not on isCustomActive: while the native turns are
+    // still visible they have to stay scrollable.
+    if (!canReplaceNative || !nativeScroller) return;
+
+    const previousScrollTop = nativeScroller.scrollTop;
+    const wasAtBottom =
+      nativeScroller.scrollHeight - previousScrollTop - nativeScroller.clientHeight < 80;
+    const previousOverflowY = nativeScroller.style.overflowY;
+
+    nativeScroller.style.overflowY = 'hidden';
+
+    const pin = () => {
+      if (nativeScroller.scrollTop !== 0) nativeScroller.scrollTop = 0;
+    };
+    pin();
+    nativeScroller.addEventListener('scroll', pin, { passive: true });
+
+    return () => {
+      nativeScroller.removeEventListener('scroll', pin);
+      nativeScroller.style.overflowY = previousOverflowY;
+      nativeScroller.scrollTop = wasAtBottom
+        ? nativeScroller.scrollHeight
+        : previousScrollTop;
+    };
+  }, [canReplaceNative, nativeScroller]);
 
   // Manage inner shadowBody display & hide native conversation elements during custom view mode
   useEffect(() => {
@@ -137,11 +187,6 @@ export const ConversationOverlay: React.FC = () => {
       portalTarget.style.display = isCustomActive ? 'block' : 'none';
       portalTarget.style.pointerEvents = isCustomActive ? 'auto' : 'none';
     }
-
-    // Only blank out the native conversation once we can actually render a
-    // replacement. Otherwise a selector regression leaves the user staring at
-    // an empty chat area with no way back.
-    const canReplaceNative = isCustomActive && !!portalTarget && messages.length > 0;
 
     const styleId = 'better-sidebar-hide-native-conversation-style';
     let styleEl = document.getElementById(styleId) as HTMLStyleElement | null;
@@ -167,7 +212,7 @@ export const ConversationOverlay: React.FC = () => {
       const el = document.getElementById(styleId);
       if (el) el.remove();
     };
-  }, [isCustomActive, portalTarget, messages.length]);
+  }, [isCustomActive, portalTarget, canReplaceNative]);
 
   // Handle auto-scroll
   const scrollToBottom = () => {
@@ -179,14 +224,29 @@ export const ConversationOverlay: React.FC = () => {
     }
   };
 
+  // Our list is shorter than the native one, so "where you were" doesn't translate.
+  // Landing at the newest turn is the one position that always makes sense.
+  const pendingJumpToBottomRef = useRef(false);
+  const wasActiveRef = useRef(false);
+  if (isCustomActive && !wasActiveRef.current) pendingJumpToBottomRef.current = true;
+  wasActiveRef.current = isCustomActive;
+
   useEffect(() => {
-    if (isCustomActive && scrollRef.current) {
-      const el = scrollRef.current;
-      const isNearBottom =
-        el.scrollHeight - el.scrollTop - el.clientHeight < 150;
-      if (isNearBottom) {
-        scrollToBottom();
-      }
+    if (!isCustomActive) return;
+    const el = scrollRef.current;
+    if (!el) return;
+
+    if (pendingJumpToBottomRef.current) {
+      // Turns are still being parsed on the first pass after activation
+      if (messages.length === 0) return;
+      pendingJumpToBottomRef.current = false;
+      el.scrollTop = el.scrollHeight;
+      return;
+    }
+
+    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+    if (isNearBottom) {
+      scrollToBottom();
     }
   }, [messages, isCustomActive]);
 
@@ -207,7 +267,9 @@ export const ConversationOverlay: React.FC = () => {
       ref={scrollRef}
       onScroll={handleScroll}
       className="absolute inset-0 z-40 overflow-y-auto bg-background p-4 pt-14 text-foreground shadow-inner transition-opacity duration-200"
-      style={{ minHeight: '100%', fontSize: '17px' }}
+      // overscrollBehavior: reaching our end must not hand the wheel to the native
+      // scroller underneath, which would drag this panel off screen.
+      style={{ height: '100%', fontSize: '17px', overscrollBehavior: 'contain' }}
     >
       {/* List Content */}
       <div className="mx-auto pb-16" style={{ maxWidth: `${chatWidth}%`, minWidth: '724px' }}>

@@ -71,6 +71,17 @@ export interface AgentLoopStoreState {
   /** View rendering mode: 'custom' (our overlay) or 'original' (native DOM) */
   viewMode: 'custom' | 'original';
 
+  /**
+   * Whether the overlay is actually covering the conversation area right now.
+   *
+   * Not the same question as `viewMode`: 'custom' is only honoured on a
+   * conversation that has agent content to render. Written by ConversationOverlay
+   * (the one component that knows), read by anything that has to get out of the
+   * way — the smart scrollbar maps to native turn positions and means nothing
+   * once the native DOM is hidden.
+   */
+  isAgentViewActive: boolean;
+
   /** Currently activated skill ID in this loop session */
   activeSkillId: string | null;
 
@@ -92,6 +103,7 @@ export interface AgentLoopStoreState {
 
   // Actions
   setViewMode: (mode: 'custom' | 'original') => void;
+  setAgentViewActive: (active: boolean) => void;
   setActiveSkillId: (id: string | null) => void;
   start: (maxRounds: number, session?: { conversationId?: string | null; title?: string }) => void;
   /** Tool results are in the editor — waiting for the send to go through */
@@ -140,6 +152,7 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set) => ({
   breakpointRound: null,
   pendingInstruction: null,
   viewMode: 'custom',
+  isAgentViewActive: false,
   activeSkillId: null,
   sessionConversationId: null,
   sessionTitle: null,
@@ -147,6 +160,10 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set) => ({
   executedCalls: {},
 
   setViewMode: (mode) => set({ viewMode: mode }),
+  // Deliberately absent from start/stop/reset: this mirrors what is on screen, and
+  // only the overlay can tell. A lifecycle action clearing it would leave the flag
+  // lying about a still-visible overlay until the next re-render.
+  setAgentViewActive: (active) => set({ isAgentViewActive: active }),
   setActiveSkillId: (id) => set({ activeSkillId: id }),
 
   start: (maxRounds, session) => {

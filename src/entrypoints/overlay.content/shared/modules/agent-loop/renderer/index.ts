@@ -1,6 +1,8 @@
 export { ConversationOverlay } from './ConversationOverlay';
 export { ConversationViewSwitcher } from './ConversationViewSwitcher';
 export { useConversationMessages } from './useConversationMessages';
+export { useAgentViewState } from './useAgentViewState';
+export type { AgentViewState } from './useAgentViewState';
 export { injectRendererStyles } from './renderer-styles';
 export {
   buildPromptMarker,
