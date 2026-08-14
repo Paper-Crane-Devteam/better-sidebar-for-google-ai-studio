@@ -17,9 +17,13 @@ import { getActiveEngine } from '../../agent-loop/engine/engine-registry';
 export const AgentContinuePrompt: React.FC = () => {
   const { t } = useI18n();
   const status = useAgentLoopStore((s) => s.status);
+  const awaitingUserSend = useAgentLoopStore((s) => s.awaitingUserSend);
   const [sending, setSending] = useState(false);
 
-  if (status !== 'awaiting_send') return null;
+  // The engine passes through `awaiting_send` on every round, including the ones it
+  // sends itself — asking for a keypress it's about to perform would flash this card
+  // once per round through an entire unattended run.
+  if (status !== 'awaiting_send' || !awaitingUserSend) return null;
 
   const handleContinue = async () => {
     const engine = getActiveEngine();
@@ -36,6 +40,7 @@ export const AgentContinuePrompt: React.FC = () => {
     const engine = getActiveEngine();
     if (engine) engine.stop();
     else useAgentLoopStore.getState().stop();
+    useAgentLoopStore.getState().reset();
   };
 
   return (

@@ -67,6 +67,7 @@ export const AgentInterruptNotice: React.FC = () => {
             const engine = getActiveEngine();
             if (engine) engine.stop();
             else useAgentLoopStore.getState().stop();
+            useAgentLoopStore.getState().reset();
           }}
         >
           {t('agent.actions.dismiss', { defaultValue: 'Dismiss' })}

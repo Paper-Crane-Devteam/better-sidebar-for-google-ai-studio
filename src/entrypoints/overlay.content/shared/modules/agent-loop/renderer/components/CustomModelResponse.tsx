@@ -6,7 +6,7 @@
 
 import React from 'react';
 import type { DisplayMessageTurn } from '../useConversationMessages';
-import { Loader2 } from 'lucide-react';
+
 import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { ToolCallWidget } from './ToolCallWidget';
 import { isHiddenTool } from '../constants';
@@ -80,15 +80,8 @@ export const CustomModelResponse: React.FC<CustomModelResponseProps> = ({
 
   return (
     <div className="my-6 w-full">
-      {/* Streaming indicator */}
-      {message.isStreaming && (
-        <div className="mb-2">
-          <span className="inline-flex items-center gap-1 rounded-full bg-[rgb(var(--highlight)/0.12)] px-2 py-0.5 text-xs font-medium text-[rgb(var(--highlight))]">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            生成中...
-          </span>
-        </div>
-      )}
+      {/* Streaming indicator — removed: the dock pill already shows "Thinking…"
+          and the spinning dot, so the per-turn tag was redundant visual noise. */}
 
       {/* Content — full-width, no bubble */}
       <div className="text-[rgb(var(--foreground))]">

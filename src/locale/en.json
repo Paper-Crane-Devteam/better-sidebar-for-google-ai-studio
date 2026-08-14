@@ -1094,12 +1094,13 @@
       "skills": "Or start with a skill",
       "stageHint": "Adds it to the chat input so you can add details before sending.",
       "noEditor": "Open a chat first — the agent runs through the chat input.",
+      "busy": "A task is running. Progress is in the chat, and anything it needs from you shows up next to the chat input.",
       "safety": "Only your local database is touched. Changes are confirmed before they run.",
       "freeTier": "Free plan is read-only. Upgrade to let the agent make changes.",
       "manage": "Manage skills & tools"
     },
     "status": {
-      "idle": "Completed",
+      "idle": "Finished",
       "waiting_ai": "Thinking...",
       "parsing": "Reading response...",
       "executing": "Working...",
@@ -1110,9 +1111,11 @@
       "paused": "Paused",
       "error": "Error"
     },
-    "header": {
-      "step": "Step {{count}}",
-      "speedHint": "Nothing will be asked about for the rest of this task"
+    "dock": {
+      "speedOff": "Approving everything for this task — click to stop",
+      "settings": "What it may do",
+      "collapse": "Collapse",
+      "expand": "Expand"
     },
     "actions": {
       "stop": "Stop",
@@ -1133,9 +1136,9 @@
       "title_other": "{{count}} steps done on its own",
       "title": "{{count}} steps done on its own",
       "desc": "Nothing is wrong — the agent just paused so you can look over what it has done before it keeps going.",
-      "failedNote_one": "{{count}} step failed along the way. Worth a look below.",
-      "failedNote_other": "{{count}} steps failed along the way. Worth a look below.",
-      "failedNote": "{{count}} steps failed along the way. Worth a look below.",
+      "failedNote_one": "{{count}} step failed along the way — worth a look in the chat.",
+      "failedNote_other": "{{count}} steps failed along the way — worth a look in the chat.",
+      "failedNote": "{{count}} steps failed along the way — worth a look in the chat.",
       "continue": "Keep going",
       "stop": "Stop here"
     },
@@ -1145,8 +1148,7 @@
       "autoWritesHint": "Changes cannot be undone yet",
       "autoContinue": "Keep going on its own",
       "autoContinueHint": "Off means you press Enter after every step",
-      "sendHint": "A step you approve still waits for you to press Enter — only unattended steps send themselves.",
-      "taskApproved": "Approving everything for this task — click to stop"
+      "sendHint": "A step you approve still waits for you to press Enter — only unattended steps send themselves."
     },
     "approve": {
       "readTitle": "Approve this query?",
@@ -1163,9 +1165,6 @@
     "instruction": {
       "placeholder": "Add a note for the AI...",
       "sent": "Note sent"
-    },
-    "history": {
-      "title": "Steps"
     },
     "summary": {
       "done": "Task finished",

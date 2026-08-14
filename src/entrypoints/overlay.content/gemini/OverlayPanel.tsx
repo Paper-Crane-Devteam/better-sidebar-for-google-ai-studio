@@ -34,7 +34,6 @@ import { NotebooksTab } from '../shared/modules/notebooks/NotebooksTab';
 import { SnippetsTab } from '../shared/modules/snippets/SnippetsTab';
 import { SparkTab, isSparkAvailable } from '../shared/modules/spark/SparkTab';
 import { AgentTab } from '../shared/modules/agent-tab';
-import { useAgentLoopStore } from '../shared/modules/agent-loop/agent-loop-store';
 import '@/index.scss';
 import { useAppInit } from '../shared/hooks/useAppInit';
 import { OverlayToggle } from '../shared/components/OverlayToggle';
@@ -62,15 +61,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const shortcuts = useSettingsStore((state) => state.shortcuts);
   const sparkAvailable = isSparkAvailable();
   const hasSettingsBadge = useBadgeStore((s) => s.isGroupVisible('settings.'));
-  // Anything that blocks the loop until the user acts
-  const agentNeedsAttention = useAgentLoopStore(
-    (s) =>
-      s.pendingApproval !== null ||
-      s.status === 'error' ||
-      s.status === 'paused' ||
-      s.status === 'awaiting_send' ||
-      s.status === 'awaiting_approval',
-  );
 
   const {
     fetchData,
@@ -300,7 +290,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
               data-tour-id="tour-agent"
             >
               <Bot className="sidebar-icon" />
-              <BadgeDot visible={agentNeedsAttention} className="absolute top-1.5 right-1.5" />
             </Button>
           </SimpleTooltip>
           <SimpleTooltip content={t('tabs.tags')}>

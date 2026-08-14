@@ -225,7 +225,7 @@ export class AgentLoopEngine {
       return;
     }
 
-    const autoSend = shouldAutoSend(parsed.toolCalls);
+    const preAutoSend = shouldAutoSend(parsed.toolCalls);
 
     // ③ Execute
     const executed = await executeTools(ctx, parsed.toolCalls);
@@ -245,10 +245,11 @@ export class AgentLoopEngine {
       parsed.errors,
       ctx.takePendingInstruction(),
     );
+    const autoSend = preAutoSend || isUnattendedAllowed();
     if (!(await this.handoff.deliver(payload, autoSend))) return;
 
     ctx.abort.check();
-    this.unattendedStreak = autoSend ? this.unattendedStreak + 1 : 0;
+    this.unattendedStreak = preAutoSend ? this.unattendedStreak + 1 : 0;
     ctx.advanceRound();
 
     if (this.unattendedStreak >= ctx.maxRounds) {
@@ -299,7 +300,11 @@ export class AgentLoopEngine {
       // Decided before executing: `requiresApproval` reads `approveRestOfRound`,
       // which stage ③ can set to true partway through. Asked afterwards, a round the
       // user was walked through would look unattended and send by itself.
-      const autoSend = shouldAutoSend(parsed.toolCalls);
+      //
+      // However, once the user has approved all calls (meaning they attended), the
+      // send should go out by itself if `autoContinue` is on — making them also press
+      // Enter after manually approving a write is redundant friction.
+      const preAutoSend = shouldAutoSend(parsed.toolCalls);
 
       // ③ Execute
       const executed = await executeTools(ctx, parsed.toolCalls);
@@ -322,12 +327,21 @@ export class AgentLoopEngine {
         parsed.errors,
         ctx.takePendingInstruction(),
       );
+
+      // Post-execution decision: if the user approved calls manually this round,
+      // they've already attended — so `autoContinue` alone is enough to auto-send.
+      // Only when nothing needed approval at all does the pre-computed value apply
+      // (it's already true in that case via `shouldAutoSend`).
+      const autoSend = preAutoSend || isUnattendedAllowed();
+
       if (!(await this.handoff.deliver(payload, autoSend))) return;
 
       ctx.abort.check();
 
-      // A round the user sent themselves resets the budget — they were present for it.
-      this.unattendedStreak = autoSend ? this.unattendedStreak + 1 : 0;
+      // A round the user approved manually resets the budget — they were present for it.
+      // `preAutoSend` reflects whether NO approval was needed at all; only truly
+      // unattended rounds count toward the step limit.
+      this.unattendedStreak = preAutoSend ? this.unattendedStreak + 1 : 0;
 
       ctx.advanceRound();
 

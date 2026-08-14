@@ -45,10 +45,13 @@ export const AgentCheckIn: React.FC = () => {
         })}
       </p>
 
+      {/* Points at the chat, not at a list here: the step list this used to say
+          "below" was removed — the tool cards in the conversation say the same thing
+          with the actual output attached. */}
       {failed > 0 && (
         <p className="text-xs leading-relaxed text-muted-foreground">
           {t('agent.checkIn.failedNote', {
-            defaultValue: '{{count}} steps failed along the way. Worth a look below.',
+            defaultValue: '{{count}} steps failed along the way — worth a look in the chat.',
             count: failed,
           })}
         </p>
@@ -74,6 +77,7 @@ export const AgentCheckIn: React.FC = () => {
             const engine = getActiveEngine();
             if (engine) engine.stop();
             else useAgentLoopStore.getState().stop();
+            useAgentLoopStore.getState().reset();
           }}
         >
           <Square className="h-3 w-3" />

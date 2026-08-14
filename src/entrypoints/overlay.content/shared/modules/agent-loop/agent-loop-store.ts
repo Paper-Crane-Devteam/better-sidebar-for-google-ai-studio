@@ -38,6 +38,14 @@ export interface AgentLoopStoreState {
    * broke". Non-null always carries the count, so the UI never has to reconstruct it.
    */
   checkInSteps: number | null;
+  /**
+   * Whether the current `awaiting_send` is actually waiting for the user.
+   *
+   * False when the engine is about to click send itself. Only meaningful while the
+   * status is `awaiting_send`; nothing bothers to clear it afterwards.
+   */
+  awaitingUserSend: boolean;
+
   /** Whether a DB snapshot was created in this session */
   snapshotCreated: boolean;
   /**
@@ -106,8 +114,15 @@ export interface AgentLoopStoreState {
   setAgentViewActive: (active: boolean) => void;
   setActiveSkillId: (id: string | null) => void;
   start: (maxRounds: number, session?: { conversationId?: string | null; title?: string }) => void;
-  /** Tool results are in the editor — waiting for the send to go through */
-  awaitSend: () => void;
+  /**
+   * Tool results are in the editor — waiting for the send to go through.
+   *
+   * `waitsForUser` is the difference between a checkpoint and a formality. The engine
+   * passes through this state on *every* round, including the ones it sends itself, so
+   * UI that treats the status alone as "you're needed" flashes a Continue prompt once
+   * per round in an unattended run.
+   */
+  awaitSend: (waitsForUser: boolean) => void;
   /** Stop and ask whether to carry on, after running this many steps unattended */
   requestCheckIn: (steps: number) => void;
   /** Bind the running session to a conversation id once the platform assigns one */
@@ -142,6 +157,7 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set) => ({
   history: [],
   errorMessage: null,
   checkInSteps: null,
+  awaitingUserSend: false,
   snapshotCreated: false,
   pendingApproval: null,
   approveRestOfRound: false,
@@ -186,6 +202,7 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set) => ({
       history: [],
       errorMessage: null,
       checkInSteps: null,
+      awaitingUserSend: false,
       speedMode: false,
       pendingInstruction: null,
       pendingApproval: null,
@@ -198,7 +215,8 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set) => ({
     });
   },
 
-  awaitSend: () => set({ status: 'awaiting_send', errorMessage: null }),
+  awaitSend: (waitsForUser) =>
+    set({ status: 'awaiting_send', errorMessage: null, awaitingUserSend: waitsForUser }),
 
   requestCheckIn: (steps) =>
     // No `errorMessage`: the check-in card carries its own copy, and leaving a
@@ -283,6 +301,7 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set) => ({
       history: [],
       errorMessage: null,
       checkInSteps: null,
+      awaitingUserSend: false,
       snapshotCreated: false,
       pendingApproval: null,
       approveRestOfRound: false,

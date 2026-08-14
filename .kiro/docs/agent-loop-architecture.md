@@ -9,10 +9,18 @@
 | 位置 | 角色 | 内容 |
 |------|------|------|
 | 设置 → Agent | 装备库 | Skills CRUD、MCP 开关（低频、跨会话） |
-| Agent Tab（侧边栏） | 驾驶舱 | 启动任务、当前进度、需要用户决策的事 |
+| Agent Tab（侧边栏） | 起点 | **只有**「怎么开始一个任务」：技能卡 + 自由描述 |
+| Agent Dock（贴输入框） | 决策 | 状态一行 + Stop、批准、继续、check-in、中断、结束卡 |
 | 聊天流内（renderer） | 内容 | 工具卡片、结果详情、Agent 定制视图 |
 
-判断准则：**聊天流回答"发生了什么"，Agent Tab 回答"我现在要做什么"。**
+判断准则：**聊天流回答"发生了什么"，Dock 回答"我现在要你做什么"，Tab 回答"怎么开始"。**
+
+⚠️ **Agent Tab 永远是同一个样子。** 以前它在「启动器」和「运行状态面板」之间切换，
+于是所有决策都藏在两个前提后面：侧边栏是开的 **且** 停在 Agent tab 上。侧边栏一关，
+批准请求压根没有可见的出口，引擎就在后台永远挂着等一个用户看不见的按钮。
+
+Tab 唯一对运行中的让步是**启动器变灰**：`start()` 会清空 store，再点一张技能卡等于
+把正在跑的会话无声顶掉。以前靠「整个面板被状态面板替换」挡住了，现在必须显式拒绝。
 
 ```
 src/entrypoints/overlay.content/shared/
@@ -65,29 +73,35 @@ src/entrypoints/overlay.content/shared/
 │   │   ├── skills/                # builtin-skills + skill-registry
 │   │   ├── mcp/                   # MCP registry + providers（工具真正的注册处）
 │   │   └── tools/                 # execute-sql / export / sync / complete-task
-│   ├── agent-tab/                 # 侧边栏 Agent Tab（UI 层）
-│   │   ├── AgentTab.tsx           # 启动器 or 会话面板（按对话隔离）
+│   ├── agent-tab/                 # 侧边栏 Agent Tab —— 只有启动器，永不变样
+│   │   ├── AgentTab.tsx           # 就是 <AgentLauncher />
 │   │   └── components/
-│   │       ├── AgentLauncher.tsx          # 空闲态：技能卡 + 自由描述任务
-│   │       ├── AgentStatusPanel.tsx       # 会话态容器
-│   │       ├── AgentStatusHeader.tsx      # 状态 / 步数 / Stop·Retry
+│   │       └── AgentLauncher.tsx          # 技能卡 + 自由描述任务（运行中变灰）
+│   ├── agent-dock/                # ★ 贴在输入框右上角的决策浮层（页面级）
+│   │   ├── AgentDock.tsx          # 可见性 / 自动展开 / 会话与对话绑定
+│   │   ├── useComposerAnchor.ts   # 轮询输入框 rect（Angular 会换掉节点）
+│   │   └── components/
+│   │       ├── AgentDockPill.tsx          # ★ 常驻一行：状态 + Stop + speedMode 撤回
+│   │       ├── AgentApproval.tsx          # ★ 批准的第二入口（卡片是主场）
 │   │       ├── AgentContinuePrompt.tsx    # awaiting_send 的「继续」CTA
 │   │       ├── AgentCheckIn.tsx           # ★ 无人值守 20 轮后的例行 check-in（中性，非故障）
-│   │       ├── AgentApproval.tsx          # ★ 批准的侧边栏镜像（卡片够不着时的退路）
-│   │       ├── AgentInterruptNotice.tsx   # 暂停 / 报错原因
+│   │       ├── AgentInterruptNotice.tsx   # 暂停 / 报错原因 + Retry
 │   │       ├── AgentSessionSummary.tsx    # 结束卡（含 paywall upsell）
-│   │       ├── AgentExecutionHistory.tsx  # 步骤条（显示 AI 的 description）
-│   │       ├── AgentPolicyControls.tsx    # 读自动 / 写自动开关
+│   │       ├── AgentPolicyControls.tsx    # 读自动 / 写自动 / 自动继续（齿轮里，默认折叠）
 │   │       └── AgentInstructionInput.tsx  # 中途给 AI 补充说明
 │   └── slash-command/             # `/` snippets（与 `>` 互斥）
 ```
 
 入口组件：
 ```
-src/entrypoints/overlay.content/gemini/enhanced-features/AgentLoopFeature.tsx
+src/entrypoints/overlay.content/gemini/enhanced-features/AgentLoopFeature.tsx  # 渲染 <AgentDock />
 src/entrypoints/overlay.content/gemini/enhanced-features/SlashCommandFeature.tsx
 src/entrypoints/overlay.content/gemini/OverlayPanel.tsx   # 渲染 <AgentTab />
 ```
+
+⚠️ `<AgentDock />` 挂在 **AgentLoopFeature**（页面级 shadow DOM）而不是侧边栏里 ——
+它得在侧边栏关掉时也在。`hidden={triggerState.isOpen}`：`>` 弹窗锚在输入框的同一个角，
+两个浮层抢一个位置比暂时看不见 dock 更糟，而输入 `>` 只发生在空闲态，藏起来是安全的。
 
 ### 触发符
 
@@ -142,7 +156,7 @@ AgentLoopEngine.start(20, { conversationId, title })
        ↓                                                  │
 ④ stages/handoff/ — ResultHandoff.deliver(payload, auto)   │
   stageResults() 把结果写回编辑器（capsule，失败降级纯文本） │
-  status = awaiting_send  ← 正常检查点，不是故障            │
+  store.awaitSend(!autoSend)  ← 正常检查点，不是故障         │
   autoSend ? 引擎自己 triggerSend()   ← autoContinue ∩ 无待批准 │
            : 等用户 Enter / Tab 的「继续」                  │
        ↓                                                  │
@@ -186,7 +200,7 @@ if (this.unattendedStreak >= ctx.maxRounds) {
 |------|------|
 | `AgentCheckIn` | 中性配色 + 眼睛图标 +「跑了 N 步」+「继续 / 就停这」 |
 | `AgentInterruptNotice` | `checkInSteps !== null` 时**不渲染**，否则两张卡会叠在一起 |
-| `AgentStatusHeader` | 状态文案换成「等你确认」，而不是「已暂停」 |
+| `AgentDockPill` | 状态文案换成「等你确认」，而不是「已暂停」 |
 
 ⚠️ 一个字段兼两个职责（是不是 check-in + 跑了几步）是故意的：check-in 一定带步数，
 拆成 `pauseKind` + `steps` 两个字段只会多一种它们不一致的状态。
@@ -370,12 +384,16 @@ Gemini 用同一个按钮承担「发送」和「停止生成」，class 和 dis
 
 ### 状态语义（重要）
 
-`awaiting_send` 必须和 `paused` 分开，UI 依赖这个区分：
+`awaiting_send` 必须和 `paused` 分开，UI 依赖这个区分。
+另外 `awaitingUserSend` 把 `awaiting_send` 又切成两半 —— **每一轮都会经过这个状态**，
+包括引擎自己发的那些，所以只看 status 的 UI 会在无人值守的整个跑动过程中每轮闪一次
+「要你按回车」：
 
-| status | 含义 | Tab 呈现 |
+| status | 含义 | Dock 呈现 |
 |--------|------|----------|
-| `awaiting_approval` | 某个 tool call 等你放行 | 卡片高亮 + 侧边栏镜像 |
-| `awaiting_send` | 每轮正常结束，结果已在输入框待发送 | 「继续」CTA |
+| `awaiting_approval` | 某个 tool call 等你放行 | 卡片高亮 + Dock 里一份 |
+| `awaiting_send` + `awaitingUserSend` | 每轮正常结束，结果在输入框等**你**发 | 「继续」CTA |
+| `awaiting_send` + `!awaitingUserSend` | 同上，但引擎马上自己点发送 | **什么都不显示** |
 | `paused` + `checkInSteps !== null` | 无人值守跑够 20 轮，例行 check-in | 中性卡 + 继续 / 就停这 |
 | `paused` | 超时 / 断点 / 熔断 | 原因 + Retry / Dismiss |
 | `error` | 引擎异常 | 原因 + Retry / Dismiss |
@@ -418,23 +436,50 @@ Gemini 用同一个按钮承担「发送」和「停止生成」，class 和 dis
 ⚠️ 别顺手删 `ToolCallResult.timestamp` / `ExecutedCall.timestamp` —— 那两个是**记录
 顺序**用的，`AgentSessionSummary` 靠 history 顺序倒着找最后一条 `complete_task`。
 
-### Agent Tab 如何控制引擎
+### UI 如何控制引擎
 
-engine 实例在 `AgentLoopFeature` 里创建，但 Stop / Retry / 继续 的按钮在侧边栏。
+engine 实例在 `AgentLoopFeature` 里创建，Stop / Retry / 继续 的按钮在 Dock 里。
 两者通过 `engine/engine-registry.ts` 的模块级 handle 连接：
 
 ```ts
 setActiveEngine(engine);            // AgentLoopFeature 创建时
-getActiveEngine()?.stop();          // Tab 的 Stop
-getActiveEngine()?.resume();        // Tab 的 Retry（paused | error 可用）
-getActiveEngine()?.continueNow();   // Tab 的「继续」→ triggerSend()
+getActiveEngine()?.stop();          // Dock 的 Stop
+getActiveEngine()?.resume();        // Dock 的 Retry（paused | error 可用）
+getActiveEngine()?.continueNow();   // Dock 的「继续」→ triggerSend()
 ```
 
 批准是唯一的例外：决定通过 `pendingApproval.resolve(decision)` 回给引擎，不走
 engine 方法。
 
 ⚠️ 只改 store 不叫 engine 是无效的：engine 持有自己的 abortController 和
-`waitForUserSend()` promise。历史上 Tab 的 Stop 只改 store，引擎会在后台继续跑。
+`waitForUserSend()` promise。历史上 Stop 只改 store，引擎会在后台继续跑。
+
+### Dock 什么时候出现、什么时候自己展开
+
+```
+可见 = (status !== 'idle' || endReason !== null)   ← 有会话
+       且 会话属于当前对话
+       且 不在 `>` 弹窗打开时
+展开 = 有待决策 ? 用户没手动折叠 : 齿轮打开
+```
+
+⚠️ 箭头按钮的行为跟着上面这条分叉：有决策时它折叠决策，没有决策时它开关那组开关。
+两种情况都接 `collapsed` 的话，整个跑动过程里它是个死控件 —— 没有待决策，点几次都不出东西。
+
+⚠️ **不能做成「只有待决策才出现」。** `speedMode`（「本次任务别再问了」）一开，就再也
+不会有任何东西需要决策 —— 那 Stop 和「撤回 speedMode」的入口会一起消失，跑飞了没法刹车。
+所以常驻一行 `AgentDockPill`，Stop 和那个闪电图标都在上面，不在折叠区里。
+
+⚠️ **自动展开靠 `decisionKey` 而不是布尔量。** 用布尔量的话：批准完一个写操作、下一个
+接着问，dock 仍然是折叠的，一个活着的问题被藏在收起的箭头后面。key 里带上
+`pendingApproval.fingerprint` / `checkInSteps`，换了一个决策就重新展开。
+
+⚠️ **dock 在两次会话之间是 `return null` 而不是卸载**，所以 `settingsOpen` / `collapsed`
+得自己清，否则下一个任务开场就带着上一次拉开的抽屉。
+
+⚠️ 步骤列表（原 `AgentExecutionHistory`）**已删除**。它和聊天流里的工具卡片是同一份信息，
+而卡片长在那条 SQL 旁边、带真实输出、刷新还在（`tool-outcomes.ts` 从对话里读回来），
+侧边栏那份是内存里的、刷新就没。`AgentCheckIn` 里原来写「往下看看」的文案也跟着改成指向聊天流。
 
 ### 只有一条执行路径：引擎执行，卡片批准
 
@@ -512,9 +557,12 @@ renderer/helpers/tool-outcomes.ts   ← engine/stages/handoff/formatter.ts 的�
 输出里完全可以出现 ERROR 这个词，只有第一行是判词。递进错误提示是**追加在结果后面**的，
 所以前缀不受影响。
 
-⚠️ 卡片只存在于 **custom 渲染视图**，用户可以中途切回 Gemini 原生渲染。所以
-`AgentApproval` 在侧边栏留了一份镜像，同一个 `resolve`，谁先答谁算。不然切回去
-就找不到批准的地方，引擎会一直挂着。
+⚠️ 卡片只存在于 **custom 渲染视图**，用户可以中途切回 Gemini 原生渲染；而且长回复里
+卡片会被滚出屏幕。所以 `AgentApproval` 在 Dock 里留了第二份，同一个 `resolve`，谁先答
+谁算。不然切回原生视图就找不到批准的地方，引擎会一直挂着。
+
+⚠️ 这一份**曾经在侧边栏**，那是最差的位置：侧边栏可以整个关掉，也可能停在别的 tab 上，
+两种情况下批准都无处可答。Dock 贴着输入框，永远在。
 
 ⚠️ 审批门在**引擎**里，不在工具里。以前 `execute-sql` 自己调
 `requestUserConfirmation` —— 工具去开 UI，而且请求里只有 SQL 字符串，没有任何东西
@@ -523,7 +571,10 @@ renderer/helpers/tool-outcomes.ts   ← engine/stages/handoff/formatter.ts 的�
 ### 会话与对话的绑定
 
 store 是全局单例，所以 `start()` 会记下 `sessionConversationId`。
-`AgentTab` 只在 session 属于当前对话时显示；离开该对话且已 idle 时自动 `reset()`。
+`AgentDock` 只在 session 属于当前对话时显示；离开该对话且已 idle 时自动 `reset()`。
+新对话里启动的会话一开始没有 id（`null` 视为属于当前对话），发出第一条消息拿到 id 后
+由 `attachSessionConversation()` 认领 —— 结束之后也要认领，否则一个没绑定的会话会
+跟着用户出现在每个对话里。
 
 ### 用哪个视图：推导出来的，不是记下来的
 
@@ -786,7 +837,7 @@ Prompt 里的工具文档由 `mcp/schema-generator.ts` 自动生成，不用手�
 1. 在 `skills/builtin-skills.ts` 追加一条 `Skill`
 2. 自动出现在 `>` 弹窗、Agent Tab 启动器卡片、设置里的 Skills 列表
 
-### 新增一个 Agent Tab 的启动入口
+### 新增一个启动入口
 
 emit 事件即可，不要直接操作编辑器：
 
@@ -825,7 +876,7 @@ agentEventBus.emit('launcher:run-entry', { entryId, userInput, autoSend });
 |------|------|------|
 | DB Snapshot / 撤销 | 占位 | `snapshot-manager.ts` 全部返回 false；撤销 UI 已移除，等实现后再加回 |
 | sync_conversation_messages | 占位 | 需实现页面导航 + 滚动抓取 |
-| settings UI | 未做 | 需在设置面板加 agentLoop 独立开关（现复用 slashCommand） |
+| settings UI | 未做 | 需在设置面板加 agentLoop 独立开关（现复用 slashCommand）；`AgentPolicyControls` 那三个持久开关按理也该搬过去，现在暂居 Dock 的齿轮里 |
 | AI Studio 支持 | 未做 | 需写 adapter + entry component |
 | 自动继续 | 已做 | `autoContinue` 开关（默认开）∩ 本轮批准情况，见 `shouldAutoSend()` |
 | `awaiting_send` 期间发普通消息 | 未处理 | capsule 消失 + 出现新的 user 轮次即视为已发送，用户此时另发消息会被当成继续 |

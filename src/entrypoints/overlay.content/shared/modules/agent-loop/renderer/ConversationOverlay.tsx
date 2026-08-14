@@ -13,6 +13,7 @@ import { findConversationScroller } from './constants';
 import { useAgentViewState } from './useAgentViewState';
 import { CustomUserMessage } from './components/CustomUserMessage';
 import { CustomModelResponse } from './components/CustomModelResponse';
+import { SessionEndCard } from './components/SessionEndCard';
 import { ArrowDown } from 'lucide-react';
 import mainStyles from '@/index.scss?inline';
 import { applyShadowStyles } from '@/shared/lib/utils';
@@ -24,6 +25,8 @@ import { detectPlatform, Platform } from '@/shared/types/platform';
 export const ConversationOverlay: React.FC = () => {
   const { messages, isActive: isCustomActive } = useAgentViewState();
   const setAgentViewActive = useAgentLoopStore((s) => s.setAgentViewActive);
+  const endReason = useAgentLoopStore((s) => s.endReason);
+  const status = useAgentLoopStore((s) => s.status);
   const chatWidth = usePegasusStore((s) => s.enhancedFeatures.gemini?.chatWidth ?? 46);
 
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
@@ -294,6 +297,11 @@ export const ConversationOverlay: React.FC = () => {
               />
             ),
           )
+        )}
+
+        {/* Session end indicator — shown in the conversation so it's clear the task is done */}
+        {status === 'idle' && endReason && messages.length > 0 && (
+          <SessionEndCard endReason={endReason} />
         )}
       </div>
 

@@ -1089,6 +1089,7 @@
       "skills": "Ou comece com uma habilidade",
       "stageHint": "Adiciona ao campo do chat para você complementar antes de enviar.",
       "noEditor": "Abra um chat primeiro — o agente funciona pelo campo de entrada.",
+      "busy": "Uma tarefa está em andamento. O progresso aparece no chat, e tudo o que ela precisar de você aparece ao lado do campo de entrada.",
       "safety": "Apenas o seu banco de dados local é alterado. As mudanças são confirmadas antes de rodar.",
       "freeTier": "O plano gratuito é somente leitura. Faça upgrade para o agente poder alterar dados.",
       "manage": "Gerenciar habilidades e ferramentas"

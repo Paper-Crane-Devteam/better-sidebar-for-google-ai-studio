@@ -81,8 +81,10 @@ export class ResultHandoff {
     this.pending = text;
     this.shape = await stageResults(this.ctx.adapter, text);
 
-    // A normal checkpoint, not a fault — hence its own status.
-    this.ctx.store.awaitSend();
+    // A normal checkpoint, not a fault — hence its own status. The flag says whether
+    // it's the user's send or ours, so the UI doesn't ask for a keypress it's about to
+    // perform itself.
+    this.ctx.store.awaitSend(!autoSend);
     this.ctx.events.emit('loop:paused', { reason: 'Waiting for user to send results' });
 
     let clicked = true;

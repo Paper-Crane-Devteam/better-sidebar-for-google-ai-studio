@@ -25,6 +25,7 @@ import {
   clearActiveEngine,
   agentEventBus,
 } from '@/entrypoints/overlay.content/shared/modules/agent-loop';
+import { AgentDock } from '@/entrypoints/overlay.content/shared/modules/agent-dock';
 import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
 import { useConversationMessages } from '@/entrypoints/overlay.content/shared/modules/agent-loop/renderer/useConversationMessages';
 import {
@@ -311,7 +312,6 @@ export const AgentLoopFeature: React.FC = () => {
     enabled: slashCommandEnabled,
     triggerChar: '>',
     onInput: (text, cursorPos) => {
-      if (useAgentLoopStore.getState().status !== 'idle') return;
       handleInput(text, cursorPos);
     },
     getPopupState: () => triggerStateRef.current as any,
@@ -387,6 +387,10 @@ export const AgentLoopFeature: React.FC = () => {
     <>
       <ConversationViewSwitcher />
       <ConversationOverlay />
+
+      {/* Everything the running loop needs from the user, docked to the composer.
+          Hidden while the `>` popup is up — both anchor to the same corner. */}
+      <AgentDock hidden={triggerState.isOpen} />
 
       {/* Agent entry popup (>) — auto entry first, then skills */}
       {triggerState.isOpen && (
