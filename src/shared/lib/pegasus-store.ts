@@ -280,3 +280,63 @@ export const getPegasusStoreReady = async () => {
   await pegasusZustandStoreReady(STORE_NAME, usePegasusStore);
   ensureEnhancedFeaturesDefaults();
 };
+
+/** Storage key used by @webext-pegasus/store to persist this store. */
+const STORE_STORAGE_KEY = `pegasus-store/${STORE_NAME}`;
+
+/**
+ * Hydrate the store straight from `storage.local`, without talking to the
+ * background service worker.
+ *
+ * `getPegasusStoreReady()` needs the MV3 service worker to be alive and to have
+ * finished registering its RPC bridge. On the first click after the worker has
+ * idled out that costs a full worker cold start, so any UI that awaits it before
+ * rendering appears frozen. Reading the persisted snapshot directly is a single
+ * storage hit (single-digit ms) and gives us the exact same values the worker
+ * would have handed back.
+ */
+export const hydratePegasusStoreFromCache = async () => {
+  try {
+    const { [STORE_STORAGE_KEY]: raw } =
+      await browser.storage.local.get(STORE_STORAGE_KEY);
+    if (typeof raw === 'string') {
+      const cached = JSON.parse(raw);
+      if (cached && typeof cached === 'object') {
+        usePegasusStore.setState(cached);
+      }
+    }
+  } catch (err) {
+    console.warn('[PegasusStore] Cache hydration failed:', err);
+  }
+  ensureEnhancedFeaturesDefaults();
+};
+
+let syncPromise: Promise<void> | null = null;
+
+/**
+ * Start (once) the real handshake with the background store. Returns a promise
+ * that resolves when writes are safe to make, i.e. when local `setState` calls
+ * are forwarded to the background and persisted.
+ *
+ * The promise never rejects and gives up after 5s so a broken/unreachable
+ * worker cannot freeze the UI forever.
+ */
+export const startPegasusStoreSync = (): Promise<void> => {
+  syncPromise ??= new Promise<void>((resolve) => {
+    const timer = setTimeout(() => {
+      console.warn('[PegasusStore] Background sync timed out after 5s');
+      resolve();
+    }, 5000);
+    getPegasusStoreReady()
+      .catch((err) => console.error('[PegasusStore] Sync failed:', err))
+      .finally(() => {
+        clearTimeout(timer);
+        resolve();
+      });
+  });
+  return syncPromise;
+};
+
+/** Await the background handshake before writing to the store. */
+export const whenPegasusStoreReady = (): Promise<void> =>
+  syncPromise ?? startPegasusStoreSync();

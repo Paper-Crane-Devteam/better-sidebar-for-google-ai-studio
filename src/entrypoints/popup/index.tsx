@@ -1,10 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom/client';
-import '@/shared/lib/iconify-bundle';
 import '@/index.scss';
-import '@/locale/i18n';
 import { initPegasusTransport } from '@webext-pegasus/transport/popup';
-import { getPegasusStoreReady, usePegasusStore } from '@/shared/lib/pegasus-store';
+import {
+  hydratePegasusStoreFromCache,
+  startPegasusStoreSync,
+  usePegasusStore,
+  whenPegasusStoreReady,
+} from '@/shared/lib/pegasus-store';
+import { initI18nLite } from '@/locale/i18n-lite';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { Switch } from '@/shared/components/ui/switch';
 import { Label } from '@/shared/components/ui/label';
@@ -17,7 +21,11 @@ import {
 import { cn } from '@/shared/lib/utils/utils';
 import { SlidersHorizontal, Settings2, Globe2 } from 'lucide-react';
 import { browser } from 'wxt/browser';
-import { themeRegistry, refreshThemeRegistry } from '@/themes';
+import { applyCachedPopupTheme, applyPopupTheme } from './theme-boot';
+
+// Replay the cached theme synchronously, before anything is painted.
+// Must stay above any `await` so it lands in the first frame.
+applyCachedPopupTheme();
 
 type Tab = 'platforms' | 'gemini' | 'aistudio';
 
@@ -28,6 +36,22 @@ function useDebouncedCallback<T extends (...args: any[]) => any>(fn: T, delay: n
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => fn(...args), delay);
   }, [fn, delay]) as T;
+}
+
+/**
+ * Wraps a store setter so it only runs once the background handshake is done.
+ *
+ * The UI paints from the cached snapshot before the service worker is up; a
+ * write made in that window would not be forwarded to the background (and would
+ * be overwritten once the handshake completes), so we hold it until then.
+ */
+function useSyncedSetter<T extends (...args: any[]) => void>(setter: T): T {
+  return useCallback(
+    ((...args: Parameters<T>) => {
+      void whenPegasusStoreReady().then(() => setter(...args));
+    }) as T,
+    [setter],
+  );
 }
 
 // Slider with local state + debounced store write
@@ -54,90 +78,83 @@ function DebouncedSlider({ value, min, max, step = 1, onChange }: {
   );
 }
 
-const Options = () => {
+interface OptionsProps {
+  initialEnabledState: PlatformEnabledState;
+  detectedPlatform: Platform;
+}
+
+const Options = ({ initialEnabledState, detectedPlatform }: OptionsProps) => {
   const { t } = useI18n();
-  const [enabledState, setEnabledState] = useState<PlatformEnabledState | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>('platforms');
-  const [detectedPlatform, setDetectedPlatform] = useState<Platform>(Platform.UNKNOWN);
+  const [enabledState, setEnabledState] =
+    useState<PlatformEnabledState>(initialEnabledState);
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    if (detectedPlatform === Platform.GEMINI) return 'gemini';
+    if (detectedPlatform === Platform.AI_STUDIO) return 'aistudio';
+    return 'platforms';
+  });
 
   const theme = usePegasusStore((state) => state.theme);
   const customTheme = usePegasusStore((state) => state.customTheme);
 
+  // Drop the static boot shell once the real UI is committed to the DOM
+  useEffect(() => {
+    document.getElementById('boot')?.remove();
+  }, []);
+
   const geminiSettings = usePegasusStore((s) => s.enhancedFeatures.gemini);
   const aistudioSettings = usePegasusStore((s) => s.enhancedFeatures.aistudio);
-  const setGeminiFeature = usePegasusStore((s) => s.setGeminiEnhancedFeature);
-  const setAIStudioFeature = usePegasusStore((s) => s.setAIStudioEnhancedFeature);
+  const setGeminiFeature = useSyncedSetter(
+    usePegasusStore((s) => s.setGeminiEnhancedFeature),
+  );
+  const setAIStudioFeature = useSyncedSetter(
+    usePegasusStore((s) => s.setAIStudioEnhancedFeature),
+  );
 
-  // Apply theme: base platform theme class + dark mode + custom theme overrides
+  // Resolve the real theme and refresh the boot cache.
+  // The `theme-gemini` class and (usually) the correct dark/light state are
+  // already applied by applyCachedPopupTheme() above, so this normally results
+  // in no visual change at all.
   useEffect(() => {
-    const root = document.documentElement;
-
-    // Always apply the platform base theme class so default CSS variables are available
-    root.classList.add('theme-gemini');
-
-    refreshThemeRegistry();
-
-    if (customTheme && themeRegistry[customTheme]) {
-      const preset = themeRegistry[customTheme];
-      // Force dark/light based on the custom theme's preferred mode
-      if (preset.preferredMode === 'dark') {
-        root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
-      }
-      // Apply sidebarVariables (same ones used for the overlay panel)
-      if (preset.sidebarVariables) {
-        for (const v of preset.sidebarVariables) {
-          root.style.setProperty(v.property, v.value);
-        }
-      }
-    } else {
-      // No custom theme �?clear any previously set variable overrides
-      root.style.cssText = '';
-      // Fall back to user's light/dark preference
-      const isDark =
-        theme === 'dark' ||
-        (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      if (isDark) root.classList.add('dark');
-      else root.classList.remove('dark');
+    if (!customTheme) {
+      applyPopupTheme({ mode: theme, vars: [] });
+      return;
     }
+
+    // The theme registry pulls in every preset, so keep it off the popup's
+    // critical path and load it only when a custom theme is actually selected.
+    let cancelled = false;
+    import('@/themes')
+      .then(({ themeRegistry, refreshThemeRegistry }) => {
+        if (cancelled) return;
+        refreshThemeRegistry();
+        const preset = themeRegistry[customTheme];
+        if (!preset) {
+          applyPopupTheme({ mode: theme, vars: [] });
+          return;
+        }
+        applyPopupTheme({
+          // Custom themes force their own light/dark mode
+          mode: preset.preferredMode === 'dark' ? 'dark' : 'light',
+          // Same variables the overlay panel uses
+          vars: (preset.sidebarVariables ?? []).map(
+            (v) => [v.property, v.value] as [string, string],
+          ),
+        });
+      })
+      .catch((err) => {
+        console.warn('[Popup] Failed to load theme registry:', err);
+        if (!cancelled) applyPopupTheme({ mode: theme, vars: [] });
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [theme, customTheme]);
 
-  useEffect(() => {
-    getPlatformEnabledState().then(setEnabledState);
-  }, []);
-
-  useEffect(() => {
-    browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
-      const url = tabs[0]?.url;
-      if (url) {
-        try {
-          const hostname = new URL(url).hostname;
-          const detected = detectPlatform(hostname);
-          setDetectedPlatform(detected);
-          if (detected === Platform.GEMINI) {
-            setActiveTab('gemini');
-          } else if (detected === Platform.AI_STUDIO) {
-            setActiveTab('aistudio');
-          }
-        } catch (e) {}
-      }
-    });
-  }, []);
-
   const togglePlatform = async (platform: Platform, enabled: boolean) => {
-    if (!enabledState) return;
-    setEnabledState((prev) => (prev ? { ...prev, [platform]: enabled } : null));
+    setEnabledState((prev) => ({ ...prev, [platform]: enabled }));
     await setPlatformEnabled(platform, enabled);
   };
-
-  if (!enabledState) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-foreground animate-pulse">
-        {t('common.loading')}
-      </div>
-    );
-  }
 
   const platformsToConfigure = [Platform.AI_STUDIO, Platform.GEMINI];
 
@@ -461,12 +478,50 @@ const Options = () => {
   );
 };
 
-// Initialize Pegasus transport and wait for store sync before rendering
-initPegasusTransport();
-getPegasusStoreReady().then(() => {
+const detectActivePlatform = async (): Promise<Platform> => {
+  try {
+    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    const url = tabs[0]?.url;
+    if (!url) return Platform.UNKNOWN;
+    return detectPlatform(new URL(url).hostname);
+  } catch {
+    return Platform.UNKNOWN;
+  }
+};
+
+/**
+ * Boot the popup off local storage only.
+ *
+ * Previously this awaited `getPegasusStoreReady()`, which needs the MV3 service
+ * worker to be running. On the first click after the worker idled out that meant
+ * waiting for a full worker cold start (which also races the sqlite/WASM init)
+ * before anything was rendered — the popup looked unresponsive. Now every value
+ * needed for the first paint comes from `storage.local`, and the background
+ * handshake happens in parallel, only gating writes.
+ */
+const bootstrap = async () => {
+  initPegasusTransport();
+
+  const enabledStatePromise = getPlatformEnabledState();
+  const platformPromise = detectActivePlatform();
+
+  await hydratePegasusStoreFromCache();
+  // Started after hydration on purpose: the proxy store snapshots local state
+  // when it is created, and seeding it with the cached values (instead of the
+  // hardcoded defaults) keeps the handshake from repainting the UI.
+  startPegasusStoreSync();
+  await initI18nLite(usePegasusStore.getState().language);
+
+  const [enabledState, detected] = await Promise.all([
+    enabledStatePromise,
+    platformPromise,
+  ]);
+
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-      <Options />
+      <Options initialEnabledState={enabledState} detectedPlatform={detected} />
     </React.StrictMode>,
   );
-});
+};
+
+bootstrap();

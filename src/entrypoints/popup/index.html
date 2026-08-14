@@ -1,12 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="theme-gemini">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Better Sidebar for Gemini & AI Studio - Options</title>
+    <!--
+      Boot shell: gives the popup window its final size and something to paint
+      before any JS runs, so clicking the toolbar icon feels instant.
+      `.theme-ready` is added by the app once the real theme is resolved.
+    -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        width: 420px;
+        height: 600px;
+        overflow: hidden;
+      }
+      @media (prefers-color-scheme: dark) {
+        html:not(.theme-ready) {
+          --background: 3 3 3;
+          --foreground: 227 227 227;
+        }
+      }
+      #boot {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #boot span {
+        display: block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgb(128 128 128 / 0.25);
+        border-top-color: rgb(128 128 128 / 0.7);
+        border-radius: 50%;
+        /* Held invisible for 250ms: a normal open never shows the spinner at
+           all, so there is no blink between shell and UI. */
+        opacity: 0;
+        animation:
+          boot-spin 0.7s linear infinite,
+          boot-appear 0.15s ease-out 0.25s forwards;
+      }
+      @keyframes boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes boot-appear {
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <div id="boot" aria-hidden="true"><span></span></div>
     <script type="module" src="./index.tsx"></script>
   </body>
 </html>

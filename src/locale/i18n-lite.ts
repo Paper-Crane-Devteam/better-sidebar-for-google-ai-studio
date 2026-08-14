@@ -55,20 +55,20 @@ const loadBundle = async (lng: SupportedLanguage) => {
 export const initI18nLite = async (language?: string) => {
   const lng = language && isSupported(language) ? language : 'en';
 
-  const [{ default: translation }] = await Promise.all([
+  const [primary, fallback] = await Promise.all([
     LOCALE_LOADERS[lng](),
-    lng === 'en' ? Promise.resolve(null) : LOCALE_LOADERS.en(),
-  ]).then(async ([primary, fallback]) => {
-    if (fallback) {
-      i18n.addResourceBundle?.('en', 'translation', fallback.default, true, true);
-    }
-    return [primary] as const;
-  });
+    lng === 'en' ? null : LOCALE_LOADERS.en(),
+  ]);
+
+  const resources: Record<string, { translation: Record<string, unknown> }> = {
+    [lng]: { translation: primary.default },
+  };
+  if (fallback) {
+    resources.en = { translation: fallback.default };
+  }
 
   await i18n.use(initReactI18next).init({
-    resources: {
-      [lng]: { translation },
-    },
+    resources,
     lng,
     fallbackLng: 'en',
     interpolation: {
