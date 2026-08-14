@@ -82,7 +82,12 @@ export interface AgentEventMap {
    */
   'launcher:run-entry': { entryId: string; userInput?: string; autoSend: boolean };
   'launcher:staged': { entryId: string; autoSend: boolean };
-  'launcher:failed': { reason: 'no-editor' | 'unknown-entry' };
+  /**
+   * `composer-busy`: a running session has its tool results staged in the chat
+   * input, so appending a capsule would send it along with them. Distinct from
+   * `no-editor` because the fix is different — wait a moment rather than open a chat.
+   */
+  'launcher:failed': { reason: 'no-editor' | 'unknown-entry' | 'composer-busy' };
 
   // ── Generic ────────────────────────────────────────────────────────────
   'debug:log': { level: 'info' | 'warn' | 'error'; message: string; data?: unknown };

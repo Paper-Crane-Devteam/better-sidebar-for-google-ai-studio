@@ -1094,6 +1094,13 @@
       "freeTier": "免費版只能讀取。升級後 Agent 才能修改資料。",
       "manage": "管理技能與工具"
     },
+    "view": {
+      "label": "對話檢視",
+      "agent": "Agent",
+      "agentHint": "把 Agent 的步驟和結果重新排版，讀起來更清楚",
+      "original": "原始",
+      "originalHint": "網站原本呈現的對話內容"
+    },
     "status": {
       "idle": "已完成",
       "waiting_ai": "思考中…",
@@ -1143,7 +1150,18 @@
       "allTask": "本次任務不再詢問",
       "reject": "拒絕",
       "back": "返回",
-      "reasonPlaceholder": "哪裡不對？（選填）"
+      "reasonPlaceholder": "哪裡不對？（選填）",
+      "showDetail": "檢視將要執行的操作",
+      "hideDetail": "收起將要執行的操作"
+    },
+    "tool": {
+      "dataRead": "正在查看你的資料",
+      "dataWrite": "正在修改你的資料",
+      "sync": "正在取得對話內容",
+      "export": "正在匯出",
+      "complete": "正在收尾",
+      "generic": "正在執行一個步驟",
+      "nameLabel": "操作"
     },
     "instruction": {
       "placeholder": "給 AI 補充說明…",
@@ -1168,7 +1186,7 @@
       "failed": "{{count}} 步失敗",
       "noSteps": "沒有執行任何工具。",
       "upgrade": "查看方案",
-      "again": "新任務",
+      "dismiss": "關閉",
       "clear": "清除"
     },
     "checkIn": {
@@ -1181,6 +1199,18 @@
       "failedNote": "過程中有 {{count}} 步失敗了，可以在下面看看。",
       "continue": "繼續",
       "stop": "就此停止"
+    },
+    "undo": {
+      "action": "復原變更",
+      "working": "正在復原…",
+      "title": "要復原 Agent 的變更嗎？",
+      "body": "會把 {{tables}} 還原到任務開始時的狀態。這段期間對它們做的其他改動也會一起回退。",
+      "confirm": "復原變更",
+      "done_one": "已回退 {{count}} 筆記錄",
+      "done_other": "已回退 {{count}} 筆記錄",
+      "done": "已回退 {{count}} 筆記錄",
+      "failed": "復原失敗：{{message}}",
+      "unavailable": "這些變更無法自動復原。原因：{{reason}}"
     }
   },
   "backup": {

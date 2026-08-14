@@ -3,7 +3,7 @@
  *
  * The runtime store's `executedCalls` ledger only knows about the session running
  * in this tab: it is wiped by `start()` and by a page reload. Reopen an old chat and
- * every card reported "未执行" — for calls whose output is sitting right there on
+ * every card reported "not run" — for calls whose output is sitting right there on
  * screen, one message below.
  *
  * The results *are* the history. Stage ④ sends them back to the AI as a real user
@@ -14,7 +14,7 @@
  *
  * This file is the inverse of `engine/stages/handoff/formatter.ts`. The grammar
  * constants come from there rather than being retyped, because a drift between the
- * two ends shows up as every card silently going back to "未执行".
+ * two ends shows up as every card silently going back to "not run".
  */
 
 import {
@@ -157,8 +157,8 @@ function readOutcome(entry: ToolResultEntry): DerivedToolOutcome {
  * alone would then be off by one for everything after it, so it is only trusted when
  * the counts agree.
  *
- * `null` rather than a guess: "未执行" on a call that did run is a smaller lie than
- * "已执行" on one that didn't.
+ * `null` rather than a guess: "not run" on a call that did run is a smaller lie than
+ * "done" on one that didn't.
  */
 export function deriveToolOutcomes(
   calls: ExtractedToolCall[],

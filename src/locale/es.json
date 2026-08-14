@@ -1094,6 +1094,13 @@
       "freeTier": "El plan gratuito es de solo lectura. Mejora tu plan para que el agente pueda hacer cambios.",
       "manage": "Gestionar habilidades y herramientas"
     },
+    "view": {
+      "label": "Vista de la conversación",
+      "agent": "Agente",
+      "agentHint": "Los pasos y resultados del agente, presentados para que se lean bien",
+      "original": "Original",
+      "originalHint": "La conversación tal como la muestra el sitio"
+    },
     "status": {
       "idle": "Completado",
       "waiting_ai": "Pensando...",
@@ -1143,7 +1150,18 @@
       "allTask": "No volver a preguntar en esta tarea",
       "reject": "Rechazar",
       "back": "Atrás",
-      "reasonPlaceholder": "¿Qué problema tiene? (opcional)"
+      "reasonPlaceholder": "¿Qué problema tiene? (opcional)",
+      "showDetail": "Ver qué se va a ejecutar",
+      "hideDetail": "Ocultar qué se va a ejecutar"
+    },
+    "tool": {
+      "dataRead": "Consultando tus datos",
+      "dataWrite": "Modificando tus datos",
+      "sync": "Obteniendo el contenido de la conversación",
+      "export": "Exportando",
+      "complete": "Finalizando",
+      "generic": "Ejecutando un paso",
+      "nameLabel": "Acción"
     },
     "instruction": {
       "placeholder": "Añade una nota para la IA...",
@@ -1168,7 +1186,7 @@
       "failed": "{{count}} con error",
       "noSteps": "No se ejecutó ninguna herramienta.",
       "upgrade": "Ver planes",
-      "again": "Nueva tarea",
+      "dismiss": "Descartar",
       "clear": "Limpiar"
     },
     "checkIn": {
@@ -1181,6 +1199,18 @@
       "failedNote": "{{count}} pasos fallaron por el camino. Merecen un vistazo abajo.",
       "continue": "Continuar",
       "stop": "Parar aquí"
+    },
+    "undo": {
+      "action": "Deshacer cambios",
+      "working": "Deshaciendo…",
+      "title": "¿Deshacer los cambios del agente?",
+      "body": "Esto restaura {{tables}} al estado en que estaba cuando empezó la tarea. También se revertirá cualquier otro cambio hecho desde entonces.",
+      "confirm": "Deshacer cambios",
+      "done_one": "Se revirtió {{count}} fila",
+      "done_other": "Se revirtieron {{count}} filas",
+      "done": "Se revirtieron {{count}} filas",
+      "failed": "No se pudo deshacer: {{message}}",
+      "unavailable": "Estos cambios no se pueden deshacer automáticamente. Motivo: {{reason}}"
     }
   },
   "backup": {

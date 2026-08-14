@@ -34,7 +34,8 @@ export const AgentLauncher: React.FC = () => {
   const canWrite = tier === 'power_pack' || tier === 'pro' || tier === 'support_pack';
 
   const [task, setTask] = useState('');
-  const [unavailable, setUnavailable] = useState(false);
+  /** null = fine; otherwise why the last attempt didn't reach the chat input */
+  const [unavailable, setUnavailable] = useState<'no-editor' | 'composer-busy' | null>(null);
 
   const entries = getAgentEntries();
   const autoEntry = entries.find((e) => e.id === AGENT_AUTO_ID);
@@ -46,15 +47,15 @@ export const AgentLauncher: React.FC = () => {
    * turned off) — say so instead of failing silently.
    */
   const run = (entryId: string, userInput?: string, autoSend = false) => {
-    setUnavailable(false);
+    setUnavailable(null);
 
     let settled = false;
     const offStaged = agentEventBus.once('launcher:staged', () => {
       settled = true;
     });
-    const offFailed = agentEventBus.once('launcher:failed', () => {
+    const offFailed = agentEventBus.once('launcher:failed', ({ reason }) => {
       settled = true;
-      setUnavailable(true);
+      setUnavailable(reason === 'composer-busy' ? 'composer-busy' : 'no-editor');
     });
 
     agentEventBus.emit('launcher:run-entry', { entryId, userInput, autoSend });
@@ -62,7 +63,7 @@ export const AgentLauncher: React.FC = () => {
     setTimeout(() => {
       offStaged();
       offFailed();
-      if (!settled) setUnavailable(true);
+      if (!settled) setUnavailable('no-editor');
     }, 1200);
   };
 
@@ -157,9 +158,14 @@ export const AgentLauncher: React.FC = () => {
 
       {unavailable && (
         <p className="mb-4 rounded-md bg-orange-500/10 px-3 py-2 text-xs text-muted-foreground">
-          {t('agent.launcher.noEditor', {
-            defaultValue: 'Open a chat first — the agent runs through the chat input.',
-          })}
+          {unavailable === 'composer-busy'
+            ? t('agent.launcher.composerBusy', {
+                defaultValue:
+                  'The running task has results waiting in the chat input. Send those first, then try again.',
+              })
+            : t('agent.launcher.noEditor', {
+                defaultValue: 'Open a chat first — the agent runs through the chat input.',
+              })}
         </p>
       )}
 

@@ -8,12 +8,19 @@
  */
 
 import React from 'react';
-import { CheckCircle2, AlertTriangle, Lock, RotateCcw, X } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Lock, Undo2, X } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
 import { useAgentLoopStore } from '../../agent-loop/agent-loop-store';
+import {
+  discardSnapshots,
+  useUndoAvailable,
+  useUndoBlockedReason,
+  useUndoWasUndone,
+  useUndoAction,
+} from '../../agent-loop/undo';
 
 export const AgentSessionSummary: React.FC = () => {
   const { t } = useI18n();
@@ -22,6 +29,21 @@ export const AgentSessionSummary: React.FC = () => {
   const history = useAgentLoopStore((s) => s.history);
   const sessionTitle = useAgentLoopStore((s) => s.sessionTitle);
   const setSettingsOpen = useAppStore((s) => s.setSettingsOpen);
+
+  const undoAvailable = useUndoAvailable();
+  const undoBlocked = useUndoBlockedReason();
+  const undone = useUndoWasUndone();
+  const { undoing, runUndo } = useUndoAction();
+
+  /**
+   * Closing this card is the decision to keep the changes, so the snapshot goes with
+   * it. Otherwise it lingers in memory with nothing able to reach it, until the next
+   * task quietly overwrites it — a state that can only produce confusion.
+   */
+  const handleDismiss = () => {
+    discardSnapshots();
+    useAgentLoopStore.getState().reset();
+  };
 
   if (status !== 'idle') return null;
 
@@ -32,7 +54,8 @@ export const AgentSessionSummary: React.FC = () => {
   );
 
   const isPaywall = endReason === 'paywall';
-  const isClean = endReason === 'complete' && failed === 0;
+  // A reverted run is not a green "all done" — the work it reported no longer exists.
+  const isClean = endReason === 'complete' && failed === 0 && !undone;
 
   const finalNote =
     endReason === 'infeasible'
@@ -43,6 +66,10 @@ export const AgentSessionSummary: React.FC = () => {
       : null;
 
   const headline = (() => {
+    // Outranks the end reason: what the user needs to know now is that the changes
+    // are gone, not how the task originally finished.
+    if (undone) return t('agent.undo.reverted', { defaultValue: 'Changes reverted' });
+
     switch (endReason) {
       case 'complete':
         return t('agent.summary.done', { defaultValue: 'Task finished' });
@@ -123,21 +150,54 @@ export const AgentSessionSummary: React.FC = () => {
         </p>
       )}
 
+      {/* Only worth saying when the agent actually changed something and cannot
+          offer to take it back — silence would look like undo simply doesn't exist. */}
+      {undoBlocked && steps > 0 && (
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          {t('agent.undo.unavailable', {
+            defaultValue: 'These changes can’t be undone automatically. Reason: {{reason}}',
+            reason: undoBlocked,
+          })}
+        </p>
+      )}
+
       <div className="flex items-center gap-2">
         {isPaywall ? (
           <Button size="sm" className="h-7 text-xs" onClick={() => setSettingsOpen(true)}>
             {t('agent.summary.upgrade', { defaultValue: 'See plans' })}
           </Button>
         ) : (
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-7 gap-1 text-xs"
-            onClick={() => useAgentLoopStore.getState().reset()}
-          >
-            <RotateCcw className="h-3 w-3" />
-            {t('agent.summary.again', { defaultValue: 'New task' })}
-          </Button>
+          <>
+            {undoAvailable && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 gap-1 text-xs"
+                disabled={undoing}
+                onClick={runUndo}
+              >
+                <Undo2 className="h-3 w-3" />
+                {undoing
+                  ? t('agent.undo.working', { defaultValue: 'Undoing…' })
+                  : t('agent.undo.action', { defaultValue: 'Undo changes' })}
+              </Button>
+            )}
+            {/* Labelled for what it does. It used to say "New task", which starts
+                nothing — clicking it just made the dock vanish, so it read as a dead
+                button. With an undo on offer it says "Keep changes" instead, because
+                that is the consequence: dismissing gives up the ability to revert. */}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 gap-1 text-xs"
+              onClick={handleDismiss}
+            >
+              <X className="h-3 w-3" />
+              {undoAvailable
+                ? t('agent.summary.keepChanges', { defaultValue: 'Keep changes' })
+                : t('agent.summary.dismiss', { defaultValue: 'Dismiss' })}
+            </Button>
+          </>
         )}
         {isPaywall && (
           <Button

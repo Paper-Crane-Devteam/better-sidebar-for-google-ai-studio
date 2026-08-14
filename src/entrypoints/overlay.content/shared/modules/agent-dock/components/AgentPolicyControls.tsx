@@ -49,7 +49,10 @@ export const AgentPolicyControls: React.FC = () => {
             {t('agent.policy.autoWrites', { defaultValue: 'Change data without asking' })}
           </label>
           <p className="text-xs text-muted-foreground">
-            {t('agent.policy.autoWritesHint', { defaultValue: 'Changes cannot be undone yet' })}
+            {t('agent.policy.autoWritesHint', {
+              defaultValue:
+                "You can undo a task's changes afterwards, but only until the next one starts",
+            })}
           </p>
         </div>
         <Switch checked={autoRunWrites} onCheckedChange={setAutoRunWrites} />
@@ -69,13 +72,14 @@ export const AgentPolicyControls: React.FC = () => {
         <Switch checked={autoContinue} onCheckedChange={setAutoContinue} />
       </div>
 
-      {/* The consequence of the switches above that isn't visible in their labels:
-          approving something also hands you the send. */}
+      {/* Spells out what "keep going" now covers. Approving a step used to still
+          leave the send to the user; it no longer does, and a stale hint here is
+          worse than none. */}
       {autoContinue && (
         <p className="text-xs leading-relaxed text-muted-foreground">
           {t('agent.policy.sendHint', {
             defaultValue:
-              'A step you approve still waits for you to press Enter — only unattended steps send themselves.',
+              'Steps you approve are sent on automatically. Turn this off to press Enter yourself each time.',
           })}
         </p>
       )}

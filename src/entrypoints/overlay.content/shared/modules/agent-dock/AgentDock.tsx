@@ -23,6 +23,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAgentLoopStore } from '../agent-loop/agent-loop-store';
+import { useUndoAvailable, useUndoWasUndone } from '../agent-loop/undo';
 import { useCurrentConversationId } from '../../hooks/useCurrentConversationId';
 import { useComposerAnchor } from './useComposerAnchor';
 import { AgentDockPill } from './components/AgentDockPill';
@@ -54,6 +55,9 @@ export const AgentDock: React.FC<AgentDockProps> = ({ hidden }) => {
   const checkInSteps = useAgentLoopStore((s) => s.checkInSteps);
   const awaitingUserSend = useAgentLoopStore((s) => s.awaitingUserSend);
   const sessionConversationId = useAgentLoopStore((s) => s.sessionConversationId);
+  const history = useAgentLoopStore((s) => s.history);
+  const undoAvailable = useUndoAvailable();
+  const undone = useUndoWasUndone();
   const conversationId = useCurrentConversationId();
 
   const [collapsed, setCollapsed] = useState(false);
@@ -88,17 +92,33 @@ export const AgentDock: React.FC<AgentDockProps> = ({ hidden }) => {
     }
   }, [isRunning, endReason, belongsToCurrent]);
 
-  // Auto-dismiss the dock when a session ends. The conversation overlay already
-  // shows an inline SessionEndCard, so lingering here with a summary is redundant.
-  // User-stop resets synchronously in the stop handler; natural ends (complete,
-  // infeasible, etc.) reset here after a brief flash so the pill transition doesn't
-  // look like a glitch.
+  /**
+   * A clean finish dismisses itself; anything the user has to act on stays.
+   *
+   * An earlier version auto-reset *every* ended session after a moment, which threw
+   * away the two cases that exist to be acted upon: `paywall` (whose card carries the
+   * upgrade button) and a run with failed steps. It also cleared `endReason`, and with
+   * it the inline completion card in the conversation, which reads that field.
+   *
+   * `undoAvailable` holds it open too — offering to revert the changes is pointless
+   * if the offer disappears on its own a second later. So does `undone`: a completed
+   * restore means the transcript above now describes changes that no longer exist,
+   * and that mismatch is worth leaving on screen until the user closes it.
+   */
   useEffect(() => {
-    if (!isRunning && endReason !== null && belongsToCurrent) {
-      const timer = setTimeout(() => useAgentLoopStore.getState().reset(), 800);
-      return () => clearTimeout(timer);
-    }
-  }, [isRunning, endReason, belongsToCurrent]);
+    if (isRunning || endReason === null || !belongsToCurrent) return;
+
+    const failedSteps = history.reduce(
+      (sum, h) => sum + h.results.filter((r) => !r.success).length,
+      0,
+    );
+    const needsAttention =
+      endReason !== 'complete' || failedSteps > 0 || undoAvailable || undone;
+    if (needsAttention) return;
+
+    const timer = setTimeout(() => useAgentLoopStore.getState().reset(), 4000);
+    return () => clearTimeout(timer);
+  }, [isRunning, endReason, belongsToCurrent, history, undoAvailable]);
 
   /**
    * Identifies *which* decision is currently pending, so a new one can re-open a dock

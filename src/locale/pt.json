@@ -1094,6 +1094,13 @@
       "freeTier": "O plano gratuito é somente leitura. Faça upgrade para o agente poder alterar dados.",
       "manage": "Gerenciar habilidades e ferramentas"
     },
+    "view": {
+      "label": "Visualização da conversa",
+      "agent": "Agente",
+      "agentHint": "Os passos e resultados do agente, organizados para facilitar a leitura",
+      "original": "Original",
+      "originalHint": "A conversa exatamente como o site exibe"
+    },
     "status": {
       "idle": "Concluído",
       "waiting_ai": "Pensando...",
@@ -1143,7 +1150,18 @@
       "allTask": "Não perguntar de novo nesta tarefa",
       "reject": "Rejeitar",
       "back": "Voltar",
-      "reasonPlaceholder": "O que está errado? (opcional)"
+      "reasonPlaceholder": "O que está errado? (opcional)",
+      "showDetail": "Mostrar o que será executado",
+      "hideDetail": "Ocultar o que será executado"
+    },
+    "tool": {
+      "dataRead": "Consultando seus dados",
+      "dataWrite": "Alterando seus dados",
+      "sync": "Buscando o conteúdo da conversa",
+      "export": "Exportando",
+      "complete": "Finalizando",
+      "generic": "Executando uma etapa",
+      "nameLabel": "Ação"
     },
     "instruction": {
       "placeholder": "Adicione uma observação para a IA...",
@@ -1168,7 +1186,7 @@
       "failed": "{{count}} com falha",
       "noSteps": "Nenhuma ferramenta foi executada.",
       "upgrade": "Ver planos",
-      "again": "Nova tarefa",
+      "dismiss": "Dispensar",
       "clear": "Limpar"
     },
     "checkIn": {
@@ -1181,6 +1199,18 @@
       "failedNote": "{{count}} etapas falharam no caminho. Vale conferir abaixo.",
       "continue": "Continuar",
       "stop": "Parar aqui"
+    },
+    "undo": {
+      "action": "Desfazer alterações",
+      "working": "Desfazendo…",
+      "title": "Desfazer as alterações do agente?",
+      "body": "Isso restaura {{tables}} para como estava quando a tarefa começou. Qualquer outra alteração feita nelas desde então também será revertida.",
+      "confirm": "Desfazer alterações",
+      "done_one": "{{count}} linha revertida",
+      "done_other": "{{count}} linhas revertidas",
+      "done": "{{count}} linhas revertidas",
+      "failed": "Falha ao desfazer: {{message}}",
+      "unavailable": "Estas alterações não podem ser desfeitas automaticamente. Motivo: {{reason}}"
     }
   },
   "backup": {

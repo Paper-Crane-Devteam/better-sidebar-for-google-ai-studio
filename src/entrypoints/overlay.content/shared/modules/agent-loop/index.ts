@@ -40,6 +40,18 @@ export type { CircuitBreakerState, LoopCheckResult, FailureCheckResult } from '.
 // Tools
 export { executeToolCall } from './tools/tool-registry';
 export { executeSql } from './tools/execute-sql';
+
+// Undo — table snapshots, one undo point per session
+export {
+  undoAgentWrites,
+  describeUndo,
+  canUndo,
+  undoBlockedReason,
+  affectedTables,
+  resetSnapshots,
+  subscribeUndoState,
+} from './undo';
+export type { UndoResult } from './undo';
 export {
   completeTask,
   COMPLETE_TASK_SIGNAL,

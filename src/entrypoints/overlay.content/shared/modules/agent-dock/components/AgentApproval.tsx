@@ -1,11 +1,11 @@
 /**
  * AgentApproval — the fallback place to approve a tool call.
  *
- * The primary place is the call's own card in the chat, where the SQL is already in
- * front of you. This copy exists because those cards only render in our own
- * conversation view, and the user can switch back to Gemini's native rendering
- * mid-task — without a mirror here, the engine would be parked with no reachable way
- * to answer it.
+ * The primary place is the call's own card in the chat. This copy exists because
+ * those cards only render in our own conversation view, and the user can switch back
+ * to Gemini's native rendering mid-task — without a mirror here, the engine would be
+ * parked with no reachable way to answer it. The two are kept deliberately alike,
+ * down to folding the statement away, so answering from either reads the same.
  *
  * Same pending object, same resolve. Whichever is answered first wins.
  */
@@ -16,6 +16,7 @@ import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAgentLoopStore } from '../../agent-loop/agent-loop-store';
+import { getToolLabel } from '../../agent-loop/tool-labels';
 import type { ApprovalScope } from '../../agent-loop/types';
 
 export const AgentApproval: React.FC = () => {
@@ -23,12 +24,15 @@ export const AgentApproval: React.FC = () => {
   const pendingApproval = useAgentLoopStore((s) => s.pendingApproval);
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState('');
+  const [showDetail, setShowDetail] = useState(false);
 
   if (!pendingApproval) return null;
 
   const { toolName, description, params, risk, remaining, resolve } = pendingApproval;
   const isWrite = risk === 'write';
   const detail = params.query || params.summary || params.ids || '';
+  /** What the AI said it's doing, falling back to a label when it said nothing. */
+  const summary = description || getToolLabel(toolName, t, params.query);
 
   const decide = (approved: boolean, scope: ApprovalScope = 'once') => {
     resolve({ approved, scope, reason: approved ? undefined : reason.trim() || undefined });
@@ -49,23 +53,37 @@ export const AgentApproval: React.FC = () => {
         ) : (
           <Search className="h-3 w-3 shrink-0 text-muted-foreground" />
         )}
-        <span className="text-xs font-medium text-foreground">
+        <span className="text-xs font-medium text-muted-foreground">
           {isWrite
             ? t('agent.approve.writeTitle', { defaultValue: 'Approve this change?' })
             : t('agent.approve.readTitle', { defaultValue: 'Approve this query?' })}
         </span>
-        <span className="ml-auto shrink-0 font-mono text-xs text-muted-foreground">{toolName}</span>
       </div>
 
-      {description && <p className="text-xs leading-relaxed text-foreground">{description}</p>}
+      {/* What you're actually deciding on, in words. */}
+      <p className="text-sm font-medium leading-relaxed text-foreground">{summary}</p>
 
-      {/* Shown unfolded: you're being asked to judge this, and a collapsed preview
-          isn't enough to judge anything. */}
+      {/* The statement itself is folded away: it's SQL, and being shown SQL you can't
+          read is no help in deciding. Still one click away, because a write you can't
+          inspect is worse. */}
       {detail && (
-        <div className="max-h-[160px] overflow-auto rounded border border-border/50 bg-background/60 p-2">
-          <pre className="whitespace-pre-wrap break-all font-mono text-xs text-foreground">
-            {detail}
-          </pre>
+        <div className="space-y-1.5">
+          <button
+            type="button"
+            onClick={() => setShowDetail(!showDetail)}
+            className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            {showDetail
+              ? t('agent.approve.hideDetail', { defaultValue: 'Hide what will run' })
+              : t('agent.approve.showDetail', { defaultValue: 'Show what will run' })}
+          </button>
+          {showDetail && (
+            <div className="max-h-[160px] overflow-auto rounded border border-border/50 bg-background/60 p-2">
+              <pre className="whitespace-pre-wrap break-all font-mono text-xs text-foreground">
+                {detail}
+              </pre>
+            </div>
+          )}
         </div>
       )}
 

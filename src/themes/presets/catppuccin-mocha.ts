@@ -168,6 +168,10 @@ body.bs-theme--catppuccin-mocha *:not(.material-symbols-outlined):not(.material-
     { property: '--sidebar-icon-color', value: '186 194 222' },
     { property: '--highlight', value: '250 179 135' },          // #fab387 - peach
     { property: '--highlight-foreground', value: '30 30 46' },
+    { property: '--success', value: '166 227 161' },            // #a6e3a1 - green
+    { property: '--success-foreground', value: '30 30 46' },
+    { property: '--warning', value: '249 226 175' },            // #f9e2af - yellow
+    { property: '--warning-foreground', value: '30 30 46' },
     { property: '--font-sans', value: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif' },
     { property: '--gem-sys-color--primary-container', value: '#3b3d5e' },
     { property: '--gem-sys-color--on-primary-container', value: '#b4befe' },

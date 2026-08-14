@@ -64,10 +64,12 @@ export const AgentInterruptNotice: React.FC = () => {
           variant="ghost"
           className="h-7 text-xs"
           onClick={() => {
+            // Ends the session rather than clearing the dock: the summary that
+            // replaces this notice is where the undo offer appears, and a run that
+            // failed part-way is exactly when it matters.
             const engine = getActiveEngine();
             if (engine) engine.stop();
             else useAgentLoopStore.getState().stop();
-            useAgentLoopStore.getState().reset();
           }}
         >
           {t('agent.actions.dismiss', { defaultValue: 'Dismiss' })}

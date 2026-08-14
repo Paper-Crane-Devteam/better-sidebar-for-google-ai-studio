@@ -55,6 +55,25 @@ export interface DisplayMessageTurn {
  * Extract markdown text from any conversation element (user-query or model-response).
  * Strips accessibility-only elements before conversion.
  */
+/**
+ * Zero-width spaces and BOMs, stripped on the way in.
+ *
+ * These are our own doing: staging a multi-line payload into Quill needs a
+ * placeholder in otherwise-empty `<p>`s (see `replaceAllContent`), and it survives
+ * the round trip through Gemini into the markdown we read back here.
+ *
+ * `String#trim` does not treat U+200B as whitespace, so a result section that began
+ * with one stopped matching `/^###/` — every result after the first rendered as a
+ * blank row with a tall empty line above its body, and `readOutcome` failed to strip
+ * the header, so `ERROR:` bodies were read as successes.
+ *
+ * Fixed here rather than at the writer, which still needs the placeholder, and which
+ * couldn't help the messages already sitting in people's conversations. U+200C/D are
+ * deliberately left alone: they carry meaning in emoji sequences and in Arabic and
+ * Persian text.
+ */
+const ZERO_WIDTH_RE = /[\u200B\uFEFF]/g;
+
 function extractMarkdown(el: Element): string {
   // Find the most specific content container
   const contentEl =
@@ -65,7 +84,7 @@ function extractMarkdown(el: Element): string {
   const clone = contentEl.cloneNode(true) as HTMLElement;
   clone.querySelectorAll('.cdk-visually-hidden').forEach((h) => h.remove());
 
-  return htmlToMarkdown(clone);
+  return htmlToMarkdown(clone).replace(ZERO_WIDTH_RE, '');
 }
 
 // ─── Parsing Helpers ─────────────────────────────────────────────────────────

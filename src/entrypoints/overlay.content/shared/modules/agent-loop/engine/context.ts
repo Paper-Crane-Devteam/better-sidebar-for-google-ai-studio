@@ -92,8 +92,16 @@ export class LoopContext {
   /**
    * Stop and wait for the user. Recoverable: the Agent tab offers Retry, which
    * calls `engine.resume()`.
+   *
+   * Ignored once the run has been aborted. Stopping is not instantaneous — the abort
+   * unwinds asynchronously, and stage ④ reaches a `pause` on its way out (the send
+   * watcher returns "not sent", because the abort is precisely why it wasn't). Left
+   * unguarded that writes `paused` plus a "results were not sent" notice *after* the
+   * user already ended the session, so the dock reappears reporting a fault that is
+   * really just the stop they asked for.
    */
   pause(reason: string, eventReason = reason): void {
+    if (this.abort.aborted) return;
     this.store.pause(reason);
     this.events.emit('loop:paused', { reason: eventReason });
   }
@@ -105,6 +113,9 @@ export class LoopContext {
    * "have a look" card instead of the fault notice, and no end reason is recorded.
    */
   checkIn(steps: number): void {
+    // Same reasoning as `pause`: a stopped session must not be reopened by a
+    // check-in the unwinding loop happened to reach.
+    if (this.abort.aborted) return;
     this.store.requestCheckIn(steps);
     this.events.emit('loop:paused', { reason: 'step check-in' });
   }

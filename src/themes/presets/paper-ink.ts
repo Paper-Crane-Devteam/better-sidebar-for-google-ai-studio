@@ -169,6 +169,10 @@ body.bs-theme--paper-ink .message-content {
     { property: '--sidebar-icon-color', value: '61 61 61' },  // #3d3d3d
     { property: '--highlight', value: '183 110 44' },           // #b76e2c - sepia brown
     { property: '--highlight-foreground', value: '255 255 255' },
+    { property: '--success', value: '63 107 63' },              // #3f6b3f - muted ink green
+    { property: '--success-foreground', value: '255 255 255' },
+    { property: '--warning', value: '138 106 31' },             // #8a6a1f - sepia ochre
+    { property: '--warning-foreground', value: '255 255 255' },
     { property: '--font-sans', value: '"Literata", "Source Serif 4", Georgia, "Noto Serif SC", "Source Han Serif SC", serif' },
     { property: '--gem-sys-color--primary-container', value: '#e8ecf4' },
     { property: '--gem-sys-color--on-primary-container', value: '#1a2540' },

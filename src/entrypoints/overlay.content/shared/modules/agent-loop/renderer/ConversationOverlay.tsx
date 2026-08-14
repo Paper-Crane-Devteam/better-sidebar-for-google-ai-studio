@@ -20,9 +20,11 @@ import { applyShadowStyles } from '@/shared/lib/utils';
 import { bindShadowRootToTheme, bindAiStudioShadowRootToTheme } from '@/themes';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
+import { useI18n } from '@/shared/hooks/useI18n';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 
 export const ConversationOverlay: React.FC = () => {
+  const { t } = useI18n();
   const { messages, isActive: isCustomActive } = useAgentViewState();
   const setAgentViewActive = useAgentLoopStore((s) => s.setAgentViewActive);
   const endReason = useAgentLoopStore((s) => s.endReason);
@@ -280,9 +282,13 @@ export const ConversationOverlay: React.FC = () => {
       <div className="mx-auto pb-16" style={{ maxWidth: `${chatWidth}%`, minWidth: '724px' }}>
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
-            <p className="text-sm font-medium">Agent 视图</p>
+            <p className="text-sm font-medium">
+              {t('agent.overlay.emptyTitle', { defaultValue: 'Agent view' })}
+            </p>
             <p className="text-xs text-muted-foreground/70 mt-1">
-              在下方对话框中输入消息或选择 Agent 提示词
+              {t('agent.overlay.emptyHint', {
+                defaultValue: 'Type below, or pick an agent prompt to get started',
+              })}
             </p>
           </div>
         ) : (
@@ -311,7 +317,7 @@ export const ConversationOverlay: React.FC = () => {
           type="button"
           onClick={scrollToBottom}
           className="fixed bottom-24 right-8 z-50 flex h-9 w-9 items-center justify-center rounded-full bg-[rgb(var(--primary))] text-[rgb(var(--primary-foreground))] shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer"
-          title="回到底部"
+          title={t('agent.overlay.scrollToBottom', { defaultValue: 'Back to bottom' })}
         >
           <ArrowDown className="h-4 w-4" />
         </button>

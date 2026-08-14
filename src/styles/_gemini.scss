@@ -42,6 +42,13 @@
     --highlight: 217 119 6; /* #d97706 - Amber Gold complementary accent */
     --highlight-foreground: 255 255 255;
 
+    /* Status colors — success/warning complete the set alongside --destructive */
+    --success: 4 120 87; /* #047857 - readable as text on light surfaces */
+    --success-foreground: 255 255 255;
+
+    --warning: 180 83 9; /* #b45309 */
+    --warning-foreground: 255 255 255;
+
     --radius: 16px;
 
     /* Custom Gemini Colors */
@@ -89,6 +96,13 @@
 
     --highlight: 251 191 36; /* #fbbf24 - Amber Gold for dark mode */
     --highlight-foreground: 15 23 42;
+
+    /* Status colors */
+    --success: 110 231 183; /* #6ee7b7 */
+    --success-foreground: 6 78 59; /* #064e3b */
+
+    --warning: 252 211 77; /* #fcd34d */
+    --warning-foreground: 69 26 3; /* #451a03 */
 
     /* Custom Gemini Colors */
     --gem-sys-color--primary-container: #1f3760;

@@ -1094,6 +1094,13 @@
       "freeTier": "無料プランは読み取り専用です。アップグレードするとエージェントが変更できるようになります。",
       "manage": "スキルとツールを管理"
     },
+    "view": {
+      "label": "会話の表示",
+      "agent": "エージェント",
+      "agentHint": "エージェントの手順と結果を読みやすく整えて表示します",
+      "original": "オリジナル",
+      "originalHint": "サイトが表示するそのままの会話です"
+    },
     "status": {
       "idle": "完了",
       "waiting_ai": "考えています…",
@@ -1143,7 +1150,18 @@
       "allTask": "このタスクでは今後確認しない",
       "reject": "拒否",
       "back": "戻る",
-      "reasonPlaceholder": "どこが問題ですか？（任意）"
+      "reasonPlaceholder": "どこが問題ですか？（任意）",
+      "showDetail": "実行内容を表示",
+      "hideDetail": "実行内容を隠す"
+    },
+    "tool": {
+      "dataRead": "データを確認しています",
+      "dataWrite": "データを変更しています",
+      "sync": "会話の内容を取得しています",
+      "export": "エクスポートしています",
+      "complete": "仕上げています",
+      "generic": "ステップを実行しています",
+      "nameLabel": "操作"
     },
     "instruction": {
       "placeholder": "AI へのメモを追加…",
@@ -1168,7 +1186,7 @@
       "failed": "{{count}} 件失敗",
       "noSteps": "ツールは実行されませんでした。",
       "upgrade": "プランを見る",
-      "again": "新しいタスク",
+      "dismiss": "閉じる",
       "clear": "クリア"
     },
     "checkIn": {
@@ -1181,6 +1199,18 @@
       "failedNote": "途中で {{count}} 件のステップが失敗しました。下で確認してください。",
       "continue": "続行",
       "stop": "ここで停止"
+    },
+    "undo": {
+      "action": "変更を取り消す",
+      "working": "取り消し中…",
+      "title": "エージェントの変更を取り消しますか？",
+      "body": "{{tables}} をタスク開始時の状態に戻します。その後に加えられた他の変更も一緒に取り消されます。",
+      "confirm": "変更を取り消す",
+      "done_one": "{{count}} 件のレコードを元に戻しました",
+      "done_other": "{{count}} 件のレコードを元に戻しました",
+      "done": "{{count}} 件のレコードを元に戻しました",
+      "failed": "取り消しに失敗しました: {{message}}",
+      "unavailable": "これらの変更は自動では取り消せません。理由: {{reason}}"
     }
   },
   "backup": {

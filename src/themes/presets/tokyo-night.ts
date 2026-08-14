@@ -169,6 +169,10 @@ body.bs-theme--tokyo-night *:not(.material-symbols-outlined):not(.material-symbo
     { property: '--sidebar-icon-color', value: '154 165 206' },
     { property: '--highlight', value: '187 154 247' },          // #bb9af7 - purple
     { property: '--highlight-foreground', value: '26 27 38' },
+    { property: '--success', value: '158 206 106' },            // #9ece6a - tokyo green
+    { property: '--success-foreground', value: '26 27 38' },
+    { property: '--warning', value: '224 175 104' },            // #e0af68 - tokyo orange
+    { property: '--warning-foreground', value: '26 27 38' },
     { property: '--font-sans', value: '"JetBrains Mono", "SF Mono", "Fira Code", monospace' },
     { property: '--gem-sys-color--primary-container', value: '#283457' },
     { property: '--gem-sys-color--on-primary-container', value: '#7aa2f7' },

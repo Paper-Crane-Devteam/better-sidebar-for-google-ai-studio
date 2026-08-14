@@ -23,6 +23,7 @@
 
 import type { AgentPlatformAdapter } from '../adapters/types';
 import { isUnattendedAllowed, shouldAutoSend } from '../execution-policy';
+import { resetSnapshots } from '../undo';
 import { LoopContext } from './context';
 import { isAbortError } from './guards/abort';
 import { awaitAIResponse } from './stages/await-response';
@@ -69,6 +70,9 @@ export class AgentLoopEngine {
     this.ctx.breaker.reset();
     this.handoff.reset();
     this.unattendedStreak = 0;
+    // Undo covers one task: the previous session's snapshot is no longer something
+    // the user could meaningfully revert to once a new task starts changing things.
+    resetSnapshots();
     this.ctx.store.start(maxRounds, session);
 
     console.log('[AgentLoop] Engine started, max rounds:', maxRounds);
@@ -95,6 +99,7 @@ export class AgentLoopEngine {
     this.ctx.breaker.reset();
     this.handoff.reset();
     this.unattendedStreak = 0;
+    resetSnapshots();
     this.ctx.store.start(maxRounds, session);
 
     console.log('[AgentLoop] Engine started from existing response, max rounds:', maxRounds);
@@ -225,7 +230,8 @@ export class AgentLoopEngine {
       return;
     }
 
-    const preAutoSend = shouldAutoSend(parsed.toolCalls);
+    // Feeds the unattended budget only; see runRounds for why it is read up front.
+    const wasUnattended = shouldAutoSend(parsed.toolCalls);
 
     // ③ Execute
     const executed = await executeTools(ctx, parsed.toolCalls);
@@ -245,11 +251,11 @@ export class AgentLoopEngine {
       parsed.errors,
       ctx.takePendingInstruction(),
     );
-    const autoSend = preAutoSend || isUnattendedAllowed();
+    const autoSend = isUnattendedAllowed();
     if (!(await this.handoff.deliver(payload, autoSend))) return;
 
     ctx.abort.check();
-    this.unattendedStreak = preAutoSend ? this.unattendedStreak + 1 : 0;
+    this.unattendedStreak = wasUnattended ? this.unattendedStreak + 1 : 0;
     ctx.advanceRound();
 
     if (this.unattendedStreak >= ctx.maxRounds) {
@@ -297,14 +303,15 @@ export class AgentLoopEngine {
         continue;
       }
 
-      // Decided before executing: `requiresApproval` reads `approveRestOfRound`,
-      // which stage ③ can set to true partway through. Asked afterwards, a round the
-      // user was walked through would look unattended and send by itself.
-      //
-      // However, once the user has approved all calls (meaning they attended), the
-      // send should go out by itself if `autoContinue` is on — making them also press
-      // Enter after manually approving a write is redundant friction.
-      const preAutoSend = shouldAutoSend(parsed.toolCalls);
+      /**
+       * Was this round fully hands-off?
+       *
+       * Not what decides the send (see below) — this only feeds the unattended
+       * budget. Computed *before* executing because `requiresApproval` reads
+       * `approveRestOfRound`, which stage ③ can flip partway through; asked
+       * afterwards, a round the user was walked through would look unattended.
+       */
+      const wasUnattended = shouldAutoSend(parsed.toolCalls);
 
       // ③ Execute
       const executed = await executeTools(ctx, parsed.toolCalls);
@@ -328,20 +335,30 @@ export class AgentLoopEngine {
         ctx.takePendingInstruction(),
       );
 
-      // Post-execution decision: if the user approved calls manually this round,
-      // they've already attended — so `autoContinue` alone is enough to auto-send.
-      // Only when nothing needed approval at all does the pre-computed value apply
-      // (it's already true in that case via `shouldAutoSend`).
-      const autoSend = preAutoSend || isUnattendedAllowed();
+      /**
+       * Who presses send: the standing preference, and nothing else.
+       *
+       * Approving a step no longer also hands the user the send. Having to approve a
+       * write *and then* press Enter is two confirmations of one decision, and the
+       * second one taught people to switch the approval gate off entirely.
+       *
+       * (This deliberately does not intersect with `wasUnattended` — `A && B || A`
+       * is just `A`, so writing it that way only looked like a trade-off.)
+       */
+      const autoSend = isUnattendedAllowed();
 
       if (!(await this.handoff.deliver(payload, autoSend))) return;
 
       ctx.abort.check();
 
-      // A round the user approved manually resets the budget — they were present for it.
-      // `preAutoSend` reflects whether NO approval was needed at all; only truly
-      // unattended rounds count toward the step limit.
-      this.unattendedStreak = preAutoSend ? this.unattendedStreak + 1 : 0;
+      /**
+       * Only hands-off rounds count toward the step limit.
+       *
+       * The limit exists to stop a runaway while nobody is watching, and a round the
+       * user approved something in had a person in it by definition — so an
+       * approval-heavy session is bounded by that person, not by a counter.
+       */
+      this.unattendedStreak = wasUnattended ? this.unattendedStreak + 1 : 0;
 
       ctx.advanceRound();
 

@@ -70,14 +70,17 @@ export const AgentDockPill: React.FC<AgentDockPillProps> = ({
     status === 'executing' ||
     status === 'sending';
 
+  /**
+   * Stop, but leave the summary up.
+   *
+   * Not reset: someone who stops a task part-way is the most likely person to want
+   * the changes reverted, and the undo button lives on that summary card.
+   */
   const handleStop = () => {
     const engine = getActiveEngine();
     if (engine) engine.stop();
+    // Fallback so the UI never gets stuck if the engine handle is gone
     else useAgentLoopStore.getState().stop();
-    // User clicked stop — the session is over. Reset immediately so the dock
-    // disappears rather than showing a summary card with a "New task" button that
-    // does the same thing (vanish). The conversation content is already in the chat.
-    useAgentLoopStore.getState().reset();
   };
 
   // A check-in is `paused` too, but calling it "Paused" next to a neutral "have a

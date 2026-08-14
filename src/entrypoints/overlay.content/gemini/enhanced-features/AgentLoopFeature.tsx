@@ -11,6 +11,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
+import { useI18n } from '@/shared/hooks/useI18n';
 import { showCapsuleDetailModal } from '@/entrypoints/overlay.content/shared/lib/capsule-modal';
 import {
   AgentCommandPopup,
@@ -26,6 +27,9 @@ import {
   agentEventBus,
 } from '@/entrypoints/overlay.content/shared/modules/agent-loop';
 import { AgentDock } from '@/entrypoints/overlay.content/shared/modules/agent-dock';
+import { canUndo, runUndoFlow } from '@/entrypoints/overlay.content/shared/modules/agent-loop/undo';
+import { toast } from '@/shared/lib/toast';
+import i18n from '@/locale/i18n';
 import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
 import { useConversationMessages } from '@/entrypoints/overlay.content/shared/modules/agent-loop/renderer/useConversationMessages';
 import {
@@ -56,7 +60,23 @@ import {
 
 const MAX_MESSAGE_LENGTH = 30000;
 
+/**
+ * Whether the engine currently owns the chat input.
+ *
+ * True exactly while stage ④ has a payload staged there: `sending` (about to click
+ * send itself) and `awaiting_send` (waiting for the user to press Enter). Both are
+ * states where anything the user adds gets sent as part of the tool results.
+ *
+ * Other running states — `waiting_ai`, `executing`, `awaiting_approval` — leave the
+ * composer empty and free to use.
+ */
+function isComposerHeldByEngine(): boolean {
+  const status = useAgentLoopStore.getState().status;
+  return status === 'sending' || status === 'awaiting_send';
+}
+
 export const AgentLoopFeature: React.FC = () => {
+  const { t } = useI18n();
   const slashCommandEnabled = usePegasusStore(
     (s) => s.enhancedFeatures.gemini.slashCommand,
   );
@@ -88,8 +108,8 @@ export const AgentLoopFeature: React.FC = () => {
   } = useAgentTrigger(isSlashCommandActive);
 
   const handleCapsuleClick = useCallback((info: CapsuleClickInfo) => {
-    showCapsuleDetailModal('Prompt Content', info.content);
-  }, []);
+    showCapsuleDetailModal(t('agent.tool.promptTitle', { defaultValue: 'Prompt content' }), info.content);
+  }, [t]);
 
   const triggerStateRef = useRef(triggerState);
   triggerStateRef.current = triggerState;
@@ -104,6 +124,29 @@ export const AgentLoopFeature: React.FC = () => {
     installSendButtonInterceptor();
   }, []);
 
+  // ─── Undo prompt when a session ends having changed data ────────────
+
+  /**
+   * Third entry point for undo, and the only one that finds the user rather than
+   * waiting to be found.
+   *
+   * The other two live in the conversation and in the dock, both of which assume the
+   * user is looking at this tab's chat area. Plenty of the time they are in the
+   * sidebar checking what the agent actually did to their folders — this reaches them
+   * there. Times out on its own, because an offer nobody took is not a problem.
+   */
+  useEffect(() => {
+    return agentEventBus.on('loop:ended', () => {
+      if (!canUndo()) return;
+      toast.withAction(
+        i18n.t('agent.undo.toastPrompt'),
+        'info',
+        { label: i18n.t('agent.undo.action'), onClick: () => void runUndoFlow() },
+        20000,
+      );
+    });
+  }, []);
+
   // ─── Result capsule click handler (shows content in modal) ──────────
 
   useEffect(() => {
@@ -115,7 +158,7 @@ export const AgentLoopFeature: React.FC = () => {
       e.stopPropagation();
 
       const content = target.getAttribute('data-result-content') || '';
-      showCapsuleDetailModal('Tool Results', content);
+      showCapsuleDetailModal(t('agent.tool.resultsTitle', { defaultValue: 'Tool results' }), content);
     };
 
     document.addEventListener('click', handleResultCapsuleClick);
@@ -256,6 +299,23 @@ export const AgentLoopFeature: React.FC = () => {
       const capsule = editor.querySelector(`.${CAPSULE_CLASS}[data-trigger=">"]`);
       if (!capsule) return false;
 
+      /**
+       * A session is already running — do not take over this send.
+       *
+       * Taking over means `insertText` overwrites whatever is in the composer (which
+       * may be the running engine's staged tool results) and `startAgentEngine`
+       * builds a second engine. `setActiveEngine` then replaces the handle the UI
+       * uses to stop the first one, and `store.start()` wipes its state, so the
+       * original keeps looping with nothing able to reach it.
+       *
+       * Returning false lets the message go out as an ordinary chat message, which
+       * is both harmless and roughly what the user asked for.
+       */
+      if (useAgentLoopStore.getState().status !== 'idle') {
+        console.warn('[AgentLoop] A task is already running — sending as a plain message');
+        return false;
+      }
+
       const entryId = capsule.getAttribute(CAPSULE_ATTR_ID) || '';
       const capsuleContent = capsule.getAttribute(CAPSULE_ATTR_CONTENT) || '';
       if (!entryId) return false;
@@ -312,6 +372,14 @@ export const AgentLoopFeature: React.FC = () => {
     enabled: slashCommandEnabled,
     triggerChar: '>',
     onInput: (text, cursorPos) => {
+      // Suppressed only while the engine's tool results are sitting in the composer.
+      // Inserting a capsule there would ride along with the payload on the next send,
+      // and the send interceptor would hijack it into a second session.
+      //
+      // Every other running state leaves the composer alone (waiting on the AI,
+      // executing, waiting for approval), so `>` stays available — picking up a new
+      // skill mid-conversation is a reasonable thing to want.
+      if (isComposerHeldByEngine()) return;
       handleInput(text, cursorPos);
     },
     getPopupState: () => triggerStateRef.current as any,
@@ -334,6 +402,13 @@ export const AgentLoopFeature: React.FC = () => {
       const editor = adapter?.getEditor();
       if (!editor) {
         agentEventBus.emit('launcher:failed', { reason: 'no-editor' });
+        return;
+      }
+
+      // Same reasoning as the `>` trigger: appending to a composer that holds the
+      // engine's staged results would send the capsule along with them.
+      if (isComposerHeldByEngine()) {
+        agentEventBus.emit('launcher:failed', { reason: 'composer-busy' });
         return;
       }
 

@@ -168,6 +168,10 @@ body.bs-theme--rose-pine *:not(.material-symbols-outlined):not(.material-symbols
     { property: '--sidebar-icon-color', value: '196 192 224' },
     { property: '--highlight', value: '246 193 119' },          // #f6c177 - warm gold
     { property: '--highlight-foreground', value: '25 23 36' },
+    { property: '--success', value: '110 168 127' },            // #6ea87f - muted pine green
+    { property: '--success-foreground', value: '25 23 36' },
+    { property: '--warning', value: '246 193 119' },            // #f6c177 - gold
+    { property: '--warning-foreground', value: '25 23 36' },
     { property: '--font-sans', value: '"Nunito Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif' },
     { property: '--gem-sys-color--primary-container', value: '#4a3230' },
     { property: '--gem-sys-color--on-primary-container', value: '#ebbcba' },

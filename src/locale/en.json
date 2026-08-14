@@ -1094,10 +1094,17 @@
       "skills": "Or start with a skill",
       "stageHint": "Adds it to the chat input so you can add details before sending.",
       "noEditor": "Open a chat first — the agent runs through the chat input.",
-      "busy": "A task is running. Progress is in the chat, and anything it needs from you shows up next to the chat input.",
+      "composerBusy": "The running task has results waiting in the chat input. Send those first, then try again.",
       "safety": "Only your local database is touched. Changes are confirmed before they run.",
       "freeTier": "Free plan is read-only. Upgrade to let the agent make changes.",
       "manage": "Manage skills & tools"
+    },
+    "view": {
+      "label": "Conversation view",
+      "agent": "Agent",
+      "agentHint": "The agent's steps and results, laid out to be readable",
+      "original": "Original",
+      "originalHint": "The conversation exactly as the site renders it"
     },
     "status": {
       "idle": "Finished",
@@ -1145,10 +1152,10 @@
     "policy": {
       "autoReads": "Run queries without asking",
       "autoWrites": "Change data without asking",
-      "autoWritesHint": "Changes cannot be undone yet",
+      "autoWritesHint": "You can undo a task's changes afterwards, but only until the next one starts",
       "autoContinue": "Keep going on its own",
       "autoContinueHint": "Off means you press Enter after every step",
-      "sendHint": "A step you approve still waits for you to press Enter — only unattended steps send themselves."
+      "sendHint": "Steps you approve are sent on automatically. Turn this off to press Enter yourself each time."
     },
     "approve": {
       "readTitle": "Approve this query?",
@@ -1160,7 +1167,38 @@
       "allTask": "Don't ask again for this task",
       "reject": "Reject",
       "back": "Back",
-      "reasonPlaceholder": "What's wrong with it? (optional)"
+      "reasonPlaceholder": "What's wrong with it? (optional)",
+      "showDetail": "Show what will run",
+      "hideDetail": "Hide what will run"
+    },
+    "tool": {
+      "dataRead": "Looking through your data",
+      "dataWrite": "Changing your data",
+      "sync": "Fetching conversation content",
+      "export": "Exporting",
+      "complete": "Wrapping up",
+      "generic": "Running a step",
+      "nameLabel": "Action",
+      "waiting": "Waiting for you",
+      "running": "Running",
+      "notRun": "Not run",
+      "rejected": "Rejected",
+      "rejectedTitle": "You turned this one down",
+      "done": "Done",
+      "failed": "Failed",
+      "output": "Output",
+      "streaming": "Writing it out...",
+      "streamDone": "Ready",
+      "viewResult": "Click to see the full result",
+      "viewPrompt": "Click to see the full prompt",
+      "systemPrompt": "System prompt",
+      "resultsTitle": "Tool results",
+      "promptTitle": "Prompt content"
+    },
+    "overlay": {
+      "emptyTitle": "Agent view",
+      "emptyHint": "Type below, or pick an agent prompt to get started",
+      "scrollToBottom": "Back to bottom"
     },
     "instruction": {
       "placeholder": "Add a note for the AI...",
@@ -1182,8 +1220,25 @@
       "failed": "{{count}} failed",
       "noSteps": "No tools were run.",
       "upgrade": "See plans",
-      "again": "New task",
+      "dismiss": "Dismiss",
+      "keepChanges": "Keep changes",
       "clear": "Clear"
+    },
+    "undo": {
+      "action": "Undo changes",
+      "working": "Undoing…",
+      "title": "Undo the agent's changes?",
+      "body": "This restores {{tables}} to how they were when the task started. Any other changes made to them since will also be reverted.",
+      "confirm": "Undo changes",
+      "done_one": "Reverted {{count}} row",
+      "done_other": "Reverted {{count}} rows",
+      "done": "Reverted {{count}} rows",
+      "aiUnaware": "The AI doesn't know about this — tell it before you continue the conversation.",
+      "reverted": "Changes reverted",
+      "toastPrompt": "The agent changed your data.",
+      "expired": "There's nothing left to undo — a new task has started, or the changes were kept.",
+      "failed": "Undo failed: {{message}}",
+      "unavailable": "These changes can't be undone automatically. Reason: {{reason}}"
     }
   },
   "backup": {

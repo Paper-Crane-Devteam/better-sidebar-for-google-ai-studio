@@ -56,6 +56,14 @@ export default {
           DEFAULT: "rgb(var(--highlight) / <alpha-value>)",
           foreground: "rgb(var(--highlight-foreground) / <alpha-value>)",
         },
+        success: {
+          DEFAULT: "rgb(var(--success) / <alpha-value>)",
+          foreground: "rgb(var(--success-foreground) / <alpha-value>)",
+        },
+        warning: {
+          DEFAULT: "rgb(var(--warning) / <alpha-value>)",
+          foreground: "rgb(var(--warning-foreground) / <alpha-value>)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

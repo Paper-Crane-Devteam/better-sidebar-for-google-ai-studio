@@ -228,6 +228,10 @@ body.bs-theme--grimoire h3 {
     { property: '--sidebar-icon-color', value: '92 74 56' },  // #5c4a38
     { property: '--highlight', value: '139 105 20' },           // #8b6914 - antique gold
     { property: '--highlight-foreground', value: '255 248 232' },
+    { property: '--success', value: '61 92 46' },               // #3d5c2e - moss green on parchment
+    { property: '--success-foreground', value: '255 248 240' },
+    { property: '--warning', value: '160 106 16' },             // #a06a10 - aged gold
+    { property: '--warning-foreground', value: '255 248 240' },
     { property: '--font-sans', value: '"STKaiti", "KaiTi", "Noto Serif SC", "Source Han Serif SC", "Merriweather", Georgia, "Times New Roman", serif' },
     { property: '--gem-sys-color--primary-container', value: '#f5d5c8' },
     { property: '--gem-sys-color--on-primary-container', value: '#5c1010' },

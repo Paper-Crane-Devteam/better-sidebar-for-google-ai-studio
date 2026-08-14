@@ -17,6 +17,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { cn } from '@/shared/lib/utils';
+import { useI18n } from '@/shared/hooks/useI18n';
 import {
   Settings,
   Play,
@@ -33,6 +34,7 @@ import { parseToolCallFromText, extractToolInfo } from '../helpers/tool-parser';
 import type { DerivedToolOutcome } from '../helpers/tool-outcomes';
 import { useAgentLoopStore } from '../../agent-loop-store';
 import { buildToolCallFingerprint, isControlTool } from '../../execution-policy';
+import { getToolLabel } from '../../tool-labels';
 
 interface ToolCallWidgetProps {
   toolName?: string;
@@ -58,14 +60,23 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
   outcome = null,
   parseToolCall = parseToolCallFromText,
 }) => {
+  const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState('');
+  const [showDetail, setShowDetail] = useState(false);
 
   const info = extractToolInfo(rawText);
   const toolName = propToolName || info.toolName;
   const description = propDescription || info.description;
   const query = propQuery || info.query;
+
+  /**
+   * The card's headline. The AI's own description reads as an intent ("find chats
+   * older than a year"); the tool name reads as an implementation detail, so it
+   * only stands in when there's no description at all.
+   */
+  const summary = description || getToolLabel(toolName, t, query);
 
   const parsed = useMemo(() => parseToolCall(rawText), [rawText, parseToolCall]);
   const fingerprint = useMemo(
@@ -111,19 +122,19 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
     setReason('');
   };
 
-  const previewText = query ? (query.length > 80 ? query.slice(0, 80) + '…' : query) : '';
-
   const renderStatus = () => {
     if (engineOnly) {
       return (
-        <span className="ml-auto shrink-0 px-2 py-1 text-xs text-muted-foreground">任务结束</span>
+        <span className="ml-auto shrink-0 px-2 py-1 text-xs text-muted-foreground">
+          {t('agent.summary.done', { defaultValue: 'Task finished' })}
+        </span>
       );
     }
 
     if (isPending) {
       return (
-        <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded bg-amber-500/20 px-2 py-1 text-xs font-medium text-amber-700 dark:text-amber-300">
-          等待批准
+        <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded bg-warning/20 px-2 py-1 text-xs font-medium text-warning">
+          {t('agent.tool.waiting', { defaultValue: 'Waiting for you' })}
         </span>
       );
     }
@@ -131,14 +142,17 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
     if (running) {
       return (
         <span className="ml-auto inline-flex shrink-0 items-center gap-1 px-2 py-1 text-xs text-muted-foreground">
-          <Loader2 className="h-3 w-3 animate-spin" /> 执行中
+          <Loader2 className="h-3 w-3 animate-spin" />{' '}
+          {t('agent.tool.running', { defaultValue: 'Running' })}
         </span>
       );
     }
 
     if (!status) {
       return (
-        <span className="ml-auto shrink-0 px-2 py-1 text-xs text-muted-foreground">未执行</span>
+        <span className="ml-auto shrink-0 px-2 py-1 text-xs text-muted-foreground">
+          {t('agent.tool.notRun', { defaultValue: 'Not run' })}
+        </span>
       );
     }
 
@@ -146,9 +160,9 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
       return (
         <span
           className="ml-auto inline-flex shrink-0 items-center gap-1 px-2 py-1 text-xs text-muted-foreground"
-          title="你拒绝了这个操作"
+          title={t('agent.tool.rejectedTitle', { defaultValue: 'You turned this one down' })}
         >
-          <Ban className="h-3 w-3" /> 已拒绝
+          <Ban className="h-3 w-3" /> {t('agent.tool.rejected', { defaultValue: 'Rejected' })}
         </span>
       );
     }
@@ -157,11 +171,13 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
       <span className="ml-auto inline-flex shrink-0 items-center gap-1 px-2 py-1 text-xs text-muted-foreground">
         {status.success ? (
           <>
-            <CheckCircle2 className="h-3 w-3 text-emerald-500" /> 已执行
+            <CheckCircle2 className="h-3 w-3 text-success" />{' '}
+            {t('agent.tool.done', { defaultValue: 'Done' })}
           </>
         ) : (
           <>
-            <XCircle className="h-3 w-3 text-destructive" /> 执行失败
+            <XCircle className="h-3 w-3 text-destructive" />{' '}
+            {t('agent.tool.failed', { defaultValue: 'Failed' })}
           </>
         )}
       </span>
@@ -172,49 +188,36 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
     <div
       className={cn(
         'my-2 overflow-hidden rounded-lg text-foreground transition-colors',
-        isPending
-          ? 'bg-amber-500/10 dark:bg-amber-950/30'
-          : 'bg-emerald-500/10 dark:bg-emerald-950/30',
+        isPending ? 'bg-warning/10' : 'bg-success/10',
       )}
     >
       {/* Header */}
       <div
         className={cn(
           'flex cursor-pointer select-none items-center gap-2 px-3 py-2 text-xs transition-colors',
-          isPending ? 'hover:bg-amber-500/15' : 'hover:bg-emerald-500/15',
+          isPending ? 'hover:bg-warning/15' : 'hover:bg-success/15',
         )}
         onClick={() => setExpanded(!expanded)}
       >
         <span
           className={cn(
             'flex h-5 w-5 items-center justify-center rounded',
-            isPending
-              ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
-              : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+            isPending ? 'bg-warning/20 text-warning' : 'bg-success/20 text-success',
           )}
         >
           <Settings className="h-4 w-4" />
         </span>
+        {/* `min-w-0 flex-1` rather than a fixed max-width: the old cap ellipsised at
+            280px no matter how much room was actually left on the row. */}
         <span
           className={cn(
-            'font-mono text-xs font-semibold',
-            isPending
-              ? 'text-amber-700 dark:text-amber-300'
-              : 'text-emerald-700 dark:text-emerald-300',
+            'min-w-0 flex-1 truncate text-[13px] font-medium',
+            isPending ? 'text-warning' : 'text-success',
           )}
+          title={summary}
         >
-          {toolName}
+          {summary}
         </span>
-        {description && (
-          <span className="ml-1 max-w-[280px] truncate text-xs text-muted-foreground">
-            {description}
-          </span>
-        )}
-        {!description && previewText && (
-          <span className="ml-1 max-w-[240px] truncate font-mono text-xs text-muted-foreground">
-            {previewText}
-          </span>
-        )}
 
         {renderStatus()}
 
@@ -223,20 +226,35 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
         </span>
       </div>
 
-      {/* Approval — the full text is shown unfolded, since you're being asked to
-          judge it and a collapsed preview isn't enough to judge anything. */}
+      {/* Approval. The statement stays folded, matching AgentApproval in the dock:
+          the headline above already says what this does in words, and SQL you can't
+          read doesn't help you decide. One click away rather than gone, because a
+          write you can't inspect is the worse failure. */}
       {isPending && (
         <div className="space-y-2 bg-background/60 px-3 py-2">
-          <pre className="max-h-[200px] overflow-auto whitespace-pre-wrap break-all font-mono text-xs text-foreground">
-            {query || rawText}
-          </pre>
+          <button
+            type="button"
+            onClick={() => setShowDetail(!showDetail)}
+            className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            {showDetail
+              ? t('agent.approve.hideDetail', { defaultValue: 'Hide what will run' })
+              : t('agent.approve.showDetail', { defaultValue: 'Show what will run' })}
+          </button>
+          {showDetail && (
+            <pre className="max-h-[200px] overflow-auto whitespace-pre-wrap break-all rounded border border-border/50 bg-background/60 p-2 font-mono text-xs text-foreground">
+              {query || rawText}
+            </pre>
+          )}
 
           {rejecting ? (
             <div className="space-y-2">
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value.slice(0, 500))}
-                placeholder="哪里不对？（可留空）"
+                placeholder={t('agent.approve.reasonPlaceholder', {
+                  defaultValue: "What's wrong with it? (optional)",
+                })}
                 rows={2}
                 autoFocus
                 onKeyDown={(e) => {
@@ -255,14 +273,14 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
                   onClick={() => setRejecting(false)}
                   className="rounded px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
                 >
-                  返回
+                  {t('agent.approve.back', { defaultValue: 'Back' })}
                 </button>
                 <button
                   type="button"
                   onClick={() => decide(false)}
                   className="rounded bg-destructive/20 px-2 py-1 text-xs font-medium text-destructive"
                 >
-                  拒绝
+                  {t('agent.approve.reject', { defaultValue: 'Reject' })}
                 </button>
               </div>
             </div>
@@ -271,9 +289,9 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
               <button
                 type="button"
                 onClick={() => decide(true)}
-                className="inline-flex items-center gap-1 rounded bg-emerald-500/20 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-500/30 dark:text-emerald-300"
+                className="inline-flex items-center gap-1 rounded bg-success/20 px-2 py-1 text-xs font-medium text-success hover:bg-success/30"
               >
-                <Play className="h-3 w-3" /> 执行
+                <Play className="h-3 w-3" /> {t('agent.approve.run', { defaultValue: 'Run' })}
               </button>
               {/* Only when there is actually a rest to approve */}
               {(pendingApproval?.remaining ?? 0) > 0 && (
@@ -283,7 +301,10 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
                   className="inline-flex items-center gap-1 rounded border border-border/60 px-2 py-1 text-xs text-foreground hover:bg-muted/60"
                 >
                   <FastForward className="h-3 w-3" />
-                  本轮全部执行（还有 {pendingApproval?.remaining}）
+                  {t('agent.approve.runRest', {
+                    defaultValue: 'Run these {{count}} too',
+                    count: pendingApproval?.remaining ?? 0,
+                  })}
                 </button>
               )}
               <button
@@ -291,7 +312,7 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
                 onClick={() => setRejecting(true)}
                 className="ml-auto rounded px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
               >
-                拒绝
+                {t('agent.approve.reject', { defaultValue: 'Reject' })}
               </button>
             </div>
           )}
@@ -303,12 +324,17 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
           question the card is opened to answer. */}
       {expanded && !isPending && (
         <div className="max-h-[300px] overflow-y-auto bg-background/50 px-3 py-2 font-mono text-xs whitespace-pre-wrap text-muted-foreground">
+          {/* The tool name lives down here now — it's a detail for whoever opens the
+              card, not the first thing everyone else has to read past. */}
+          <div className="mb-1.5 font-sans text-[11px] uppercase tracking-wide text-muted-foreground/70">
+            {t('agent.tool.nameLabel', { defaultValue: 'Action' })} · {toolName}
+          </div>
           {rawText}
           {outcome?.content && (
             <>
               <div className="my-2 border-t border-border/40" />
               <span className="font-sans text-[11px] uppercase tracking-wide text-muted-foreground/70">
-                输出
+                {t('agent.tool.output', { defaultValue: 'Output' })}
               </span>
               <div className="mt-1">{outcome.content}</div>
             </>

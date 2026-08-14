@@ -13,6 +13,7 @@
 import React from 'react';
 import type { DisplayMessageTurn } from '../useConversationMessages';
 import { Sparkles, Terminal } from 'lucide-react';
+import { useI18n } from '@/shared/hooks/useI18n';
 import { showCapsuleDetailModal } from '@/entrypoints/overlay.content/shared/lib/capsule-modal';
 
 interface CustomUserMessageProps {
@@ -20,6 +21,7 @@ interface CustomUserMessageProps {
 }
 
 export const CustomUserMessage: React.FC<CustomUserMessageProps> = ({ message }) => {
+  const { t } = useI18n();
   const hasToolResults = message.toolResults.length > 0;
   const hasPrompt = Boolean(message.promptId);
   const hasUserText = Boolean(message.displayText?.trim());
@@ -49,9 +51,11 @@ export const CustomUserMessage: React.FC<CustomUserMessageProps> = ({ message })
                     result.content,
                   )
                 }
-                title="点击查看完整返回结果"
+                title={t('agent.tool.viewResult', {
+                  defaultValue: 'Click to see the full result',
+                })}
               >
-                <Terminal className="h-3 w-3 shrink-0 text-emerald-500" />
+                <Terminal className="h-3 w-3 shrink-0 text-success" />
                 <span className="min-w-0 truncate">{result.description}</span>
               </div>
             ))}
@@ -70,11 +74,12 @@ export const CustomUserMessage: React.FC<CustomUserMessageProps> = ({ message })
           className="max-w-[80%] rounded-2xl rounded-tr-md bg-[rgb(var(--muted))] px-4 py-2 cursor-pointer hover:bg-[rgb(var(--muted)/0.8)] transition-colors"
           onClick={() =>
             showCapsuleDetailModal(
-              message.promptTitle || 'System Prompt',
+              message.promptTitle ||
+                t('agent.tool.systemPrompt', { defaultValue: 'System prompt' }),
               message.promptContent || message.rawText,
             )
           }
-          title="点击查看完整 Prompt"
+          title={t('agent.tool.viewPrompt', { defaultValue: 'Click to see the full prompt' })}
         >
           <div className="flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5 shrink-0 text-[rgb(var(--highlight))]" />

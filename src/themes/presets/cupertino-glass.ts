@@ -237,6 +237,10 @@ body.bs-theme--cupertino-glass *:not(.material-symbols-outlined):not(.material-s
     { property: '--sidebar-icon-color', value: '72 72 74' },  // #48484a
     { property: '--highlight', value: '255 149 0' },            // #ff9500 - iOS orange
     { property: '--highlight-foreground', value: '255 255 255' },
+    { property: '--success', value: '36 138 61' },              // #248a3d - iOS green, darkened for light bg
+    { property: '--success-foreground', value: '255 255 255' },
+    { property: '--warning', value: '178 80 0' },               // #b25000 - iOS orange, darkened for light bg
+    { property: '--warning-foreground', value: '255 255 255' },
     { property: '--font-sans', value: '-apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", "Helvetica Neue", "Microsoft YaHei", "PingFang SC", sans-serif' },
     { property: '--gem-sys-color--primary-container', value: '#e3f2ff' },
     { property: '--gem-sys-color--on-primary-container', value: '#003a7a' },

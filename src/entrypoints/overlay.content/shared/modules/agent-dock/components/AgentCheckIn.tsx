@@ -74,10 +74,10 @@ export const AgentCheckIn: React.FC = () => {
           variant="ghost"
           className="h-7 gap-1 text-xs text-muted-foreground"
           onClick={() => {
+            // Summary card stays: it carries the undo offer for what already ran.
             const engine = getActiveEngine();
             if (engine) engine.stop();
             else useAgentLoopStore.getState().stop();
-            useAgentLoopStore.getState().reset();
           }}
         >
           <Square className="h-3 w-3" />

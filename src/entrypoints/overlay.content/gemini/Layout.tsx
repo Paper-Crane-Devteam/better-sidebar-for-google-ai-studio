@@ -218,8 +218,8 @@ async function mountDesktopLayout(
       if (!el) return;
       if (hidden) {
         el.style.position = 'absolute';
-        el.style.top = '0';
-        el.style.left = '0';
+        el.style.top = '-9999px';
+        el.style.left = '-9999px';
         el.style.visibility = 'hidden';
         el.style.pointerEvents = 'none';
       } else {

@@ -25,6 +25,8 @@ const SIDEBAR_VARIABLE_PROPS = [
   '--panel-blur', '--panel-bg', '--overlay-bg', '--overlay-blur',
   '--shadow-popover', '--shadow-panel',
   '--highlight', '--highlight-foreground',
+  '--success', '--success-foreground',
+  '--warning', '--warning-foreground',
 ] as const;
 
 /** Direct CSS style properties that sidebar themes may set. */

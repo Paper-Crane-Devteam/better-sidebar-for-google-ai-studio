@@ -3,7 +3,7 @@
  *
  * Executes SQL statements against the local SQLite WASM database.
  * - SELECT: direct execution, max 1000 rows
- * - DML (INSERT/UPDATE/DELETE): paywall check
+ * - DML (INSERT/UPDATE/DELETE): paywall check + undo capture
  * - DDL (DROP/ALTER/CREATE/PRAGMA...): blocked
  *
  * Communicates via browser.runtime.sendMessage (EXECUTE_SQL) so it works
@@ -17,6 +17,7 @@
  */
 
 import { useLicenseStore } from '@/shared/lib/license-store';
+import { captureBeforeWrite } from '../undo';
 
 /** Blocked SQL patterns (DDL and dangerous operations) */
 const BLOCKED_PATTERN = /^\s*(DROP|ALTER|CREATE|PRAGMA|ATTACH|DETACH|VACUUM|REINDEX)\b/i;
@@ -98,7 +99,14 @@ export async function executeSql(params: ExecuteSqlParams): Promise<string> {
   // 3. Hydrate UUID placeholders
   const hydratedQuery = hydrateUuids(query);
 
-  // 4. Execute
+  // 4. Snapshot whatever this is about to change, so it can be undone.
+  //    Swallows its own failures (downgrades to "no undo this session") — a write
+  //    must not be blocked because its safety net could not be set up.
+  if (!isSelect) {
+    await captureBeforeWrite(hydratedQuery);
+  }
+
+  // 5. Execute
   try {
     const result = await executeSqlViaBackground(hydratedQuery);
 
@@ -129,3 +137,4 @@ export async function executeSql(params: ExecuteSqlParams): Promise<string> {
     return `ERROR: SQL execution failed - ${(e as Error).message}`;
   }
 }
+

@@ -49,6 +49,13 @@
     --highlight: 16 163 127; /* #10a37f - ChatGPT primary accent */
     --highlight-foreground: 255 255 255;
 
+    /* Status colors — success/warning complete the set alongside --destructive */
+    --success: 4 120 87; /* #047857 - readable as text on light surfaces */
+    --success-foreground: 255 255 255;
+
+    --warning: 180 83 9; /* #b45309 */
+    --warning-foreground: 255 255 255;
+
     --radius: 12px;
 
     /* ChatGPT Font */
@@ -98,6 +105,13 @@
 
     --highlight: 16 163 127; /* #10a37f - ChatGPT primary accent for dark mode */
     --highlight-foreground: 255 255 255;
+
+    /* Status colors */
+    --success: 110 231 183; /* #6ee7b7 */
+    --success-foreground: 6 78 59; /* #064e3b */
+
+    --warning: 252 211 77; /* #fcd34d */
+    --warning-foreground: 69 26 3; /* #451a03 */
   }
 
 }

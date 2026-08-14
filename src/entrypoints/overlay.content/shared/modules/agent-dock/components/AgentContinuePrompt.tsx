@@ -36,11 +36,11 @@ export const AgentContinuePrompt: React.FC = () => {
     }
   };
 
+  // Leaves the summary card up on purpose — that is where "Undo changes" lives.
   const handleStop = () => {
     const engine = getActiveEngine();
     if (engine) engine.stop();
     else useAgentLoopStore.getState().stop();
-    useAgentLoopStore.getState().reset();
   };
 
   return (

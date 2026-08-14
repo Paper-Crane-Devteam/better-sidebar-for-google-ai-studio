@@ -1,18 +1,27 @@
 /**
- * ConversationViewSwitcher — Top-left toggle control for switching between
- * native AI Studio conversation DOM and custom Agent rendered view.
+ * ConversationViewSwitcher — top-left control for choosing between the site's own
+ * conversation DOM and the agent's rendered view.
+ *
+ * Deliberately a two-segment control rather than a single action button. The old
+ * button labelled itself with the view you would *get* by pressing it while colouring
+ * itself like a status badge, so "Agent 渲染" in green meant "you are currently NOT in
+ * the agent view" — the exact opposite of how it read. Showing both views at once and
+ * highlighting the active one removes the guesswork; the round counter and the pulsing
+ * dot are gone too, since the dock already reports what the loop is doing.
  */
 
 import React, { useEffect } from 'react';
 import { useAgentLoopStore } from '../agent-loop-store';
 import { useAgentViewStore } from '../agent-view-store';
 import { useAgentViewState } from './useAgentViewState';
-import { Eye, Sparkles } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
+import { useI18n } from '@/shared/hooks/useI18n';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useAppStore } from '@/shared/lib/store';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
+
+type ViewMode = 'custom' | 'original';
 
 /**
  * Hook to compute dynamic left offset for elements placed beside the sidebar.
@@ -42,9 +51,9 @@ function useSidebarOffset(defaultOffset = 16) {
 }
 
 export const ConversationViewSwitcher: React.FC = () => {
+  const { t } = useI18n();
   const viewMode = useAgentLoopStore((s) => s.viewMode);
   const setViewMode = useAgentLoopStore((s) => s.setViewMode);
-  const currentRound = useAgentLoopStore((s) => s.currentRound);
   const { hasAgentContent, isRunning } = useAgentViewState();
   const leftPx = useSidebarOffset(16);
   const conversationId = useCurrentConversationId();
@@ -80,53 +89,62 @@ export const ConversationViewSwitcher: React.FC = () => {
     return null;
   }
 
-  const isCustom = viewMode === 'custom';
+  const active: ViewMode = viewMode === 'custom' ? 'custom' : 'original';
 
-  const toggleViewMode = () => {
-    const next = isCustom ? 'original' : 'custom';
+  const selectView = (next: ViewMode) => {
+    if (next === active) return;
     setViewMode(next);
     if (conversationId) setOverride(conversationId, next);
   };
 
+  const options: { mode: ViewMode; label: string; hint: string }[] = [
+    {
+      mode: 'custom',
+      label: t('agent.view.agent', { defaultValue: 'Agent' }),
+      hint: t('agent.view.agentHint', {
+        defaultValue: "The agent's steps and results, laid out to be readable",
+      }),
+    },
+    {
+      mode: 'original',
+      label: t('agent.view.original', { defaultValue: 'Original' }),
+      hint: t('agent.view.originalHint', {
+        defaultValue: 'The conversation exactly as the site renders it',
+      }),
+    },
+  ];
+
   return (
     <div
-      className="fixed top-3 z-[60] flex items-center transition-[left] duration-200 ease-out"
+      className="fixed top-3 z-[60] transition-[left] duration-200 ease-out"
       style={{ left: `${leftPx}px` }}
     >
-      <button
-        type="button"
-        onClick={toggleViewMode}
-        className={cn(
-          'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-md shadow-md transition-all duration-200 cursor-pointer select-none',
-          !isCustom
-            ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 dark:bg-emerald-500/20 dark:text-emerald-400 dark:hover:bg-emerald-500/30'
-            : 'border-border/60 bg-background/85 text-muted-foreground hover:text-foreground hover:bg-muted/60',
-        )}
-        title={
-          isCustom
-            ? '切换至 AI Studio 原生 DOM 视图'
-            : '切换至 Agent 定制渲染视图'
-        }
+      <div
+        role="group"
+        aria-label={t('agent.view.label', { defaultValue: 'Conversation view' })}
+        className="flex items-center gap-1 rounded-full border border-border/60 bg-background/85 p-1 shadow-md backdrop-blur-md"
       >
-        {!isCustom ? (
-          <Sparkles className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
-        ) : (
-          <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-        )}
-        <span>{!isCustom ? 'Agent 渲染' : '原生视图'}</span>
-
-        {isRunning ? (
-          <span className="ml-1 inline-flex items-center justify-center rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-300">
-            R{currentRound}
-          </span>
-        ) : hasAgentContent ? (
-          <span
-            className="ml-0.5 h-2 w-2 rounded-full bg-emerald-500 animate-pulse"
-            title="检测到 Agent 历史记录"
-          />
-        ) : null}
-      </button>
+        {options.map((option) => {
+          const isActive = option.mode === active;
+          return (
+            <button
+              key={option.mode}
+              type="button"
+              onClick={() => selectView(option.mode)}
+              title={option.hint}
+              aria-pressed={isActive}
+              className={cn(
+                'cursor-pointer select-none rounded-full px-3 py-1 text-xs font-medium leading-4 transition-colors',
+                isActive
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
-

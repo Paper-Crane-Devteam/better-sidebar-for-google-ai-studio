@@ -1093,6 +1093,13 @@
       "freeTier": "免费版只能读取。升级后 Agent 才能修改数据。",
       "manage": "管理技能与工具"
     },
+    "view": {
+      "label": "对话视图",
+      "agent": "Agent",
+      "agentHint": "把 Agent 的步骤和结果重新排版，读起来更清楚",
+      "original": "原始",
+      "originalHint": "网站原本呈现的对话内容"
+    },
     "status": {
       "idle": "已完成",
       "waiting_ai": "思考中…",
@@ -1142,7 +1149,18 @@
       "allTask": "本次任务不再询问",
       "reject": "拒绝",
       "back": "返回",
-      "reasonPlaceholder": "哪里不对？（可选）"
+      "reasonPlaceholder": "哪里不对？（可选）",
+      "showDetail": "查看将要执行的操作",
+      "hideDetail": "收起将要执行的操作"
+    },
+    "tool": {
+      "dataRead": "正在查看你的数据",
+      "dataWrite": "正在修改你的数据",
+      "sync": "正在获取对话内容",
+      "export": "正在导出",
+      "complete": "正在收尾",
+      "generic": "正在执行一个步骤",
+      "nameLabel": "操作"
     },
     "instruction": {
       "placeholder": "给 AI 补充说明…",
@@ -1167,7 +1185,7 @@
       "failed": "{{count}} 步失败",
       "noSteps": "没有执行任何工具。",
       "upgrade": "查看方案",
-      "again": "新任务",
+      "dismiss": "关闭",
       "clear": "清除"
     },
     "checkIn": {
@@ -1180,6 +1198,18 @@
       "failedNote": "过程中有 {{count}} 步失败了，可以在下面看看。",
       "continue": "继续",
       "stop": "就此停止"
+    },
+    "undo": {
+      "action": "撤销更改",
+      "working": "正在撤销…",
+      "title": "要撤销 Agent 的更改吗？",
+      "body": "会把 {{tables}} 恢复到任务开始时的状态。这期间对它们做的其他改动也会一起回退。",
+      "confirm": "撤销更改",
+      "done_one": "已回退 {{count}} 条记录",
+      "done_other": "已回退 {{count}} 条记录",
+      "done": "已回退 {{count}} 条记录",
+      "failed": "撤销失败：{{message}}",
+      "unavailable": "这些更改无法自动撤销。原因：{{reason}}"
     }
   },
   "backup": {
