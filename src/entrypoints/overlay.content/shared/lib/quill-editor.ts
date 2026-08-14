@@ -404,8 +404,22 @@ const SEND_BUTTON_POLL_MS = 100;
  * Gemini reuses one button for send and stop-generating. Which one it currently
  * is has to be read off the icon / label — the class and disabled state are the
  * same for both.
+ *
+ * `absent` and `unknown` mean opposite things and must not be merged:
+ *
+ * - **absent** — no button in the DOM. Gemini only renders it when the composer has
+ *   content or a turn is in flight, so this is an authoritative reading of the page:
+ *   nothing is generating and nobody is typing. Measured behaviour, and the send
+ *   button never disappears in the gap after a click either — it flips straight to
+ *   `stop`, even on a slow connection.
+ * - **unknown** — a button was found but none of the four cascades could classify
+ *   it, i.e. our selectors are lost. Nothing about the button can be trusted here.
+ *
+ * Collapsing them into one value is what made a page that was provably idle look
+ * identical to a broken selector, and the loop reported "the AI went silent" for
+ * messages that had never left the composer.
  */
-export type SendButtonState = 'send' | 'stop' | 'unknown';
+export type SendButtonState = 'send' | 'stop' | 'absent' | 'unknown';
 
 const STOP_LABEL_RE = /stop|停止|停止生成|中止/i;
 const SEND_LABEL_RE = /send|发送|傳送/i;
@@ -479,10 +493,13 @@ export function findSendButton(): HTMLButtonElement | null {
  *
  * Primary signal: the parent `gem-icon-button` element gains a `stop` class
  * while streaming. This is language-agnostic and the most reliable indicator.
+ *
+ * No button at all is `'absent'`, not `'unknown'` — see the type. It is a state of
+ * the page (idle composer), and the agent loop reads it as such.
  */
 export function getSendButtonState(button?: HTMLButtonElement | null): SendButtonState {
   const btn = button ?? findSendButton();
-  if (!btn) return 'unknown';
+  if (!btn) return 'absent';
 
   // Primary: gem-icon-button adds "stop" class during generation
   const gemIconButton = btn.closest('gem-icon-button');

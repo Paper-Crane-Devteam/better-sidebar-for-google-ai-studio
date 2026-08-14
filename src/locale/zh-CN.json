@@ -28,7 +28,8 @@
     "settings": "设置",
     "gems": "Gems",
     "notebooks": "笔记本",
-    "snippets": "片段"
+    "snippets": "片段",
+    "spark": "Spark"
   },
   "sidebar": {
     "newConversation": "新建对话",
@@ -48,7 +49,8 @@
     "conversations": "条对话",
     "scanComplete": "扫描完成，未发现新对话",
     "importTipText": "导入完整聊天列表以查看所有对话。",
-    "importTipAction": "立即导入"
+    "importTipAction": "立即导入",
+    "importTipHint": "你也可以随时从右上角的 ⋯ 菜单里启动它。"
   },
   "settings": {
     "general": "常规",
@@ -1166,6 +1168,17 @@
       "upgrade": "查看方案",
       "again": "新任务",
       "clear": "清除"
+    },
+    "checkIn": {
+      "title_one": "已自动执行 {{count}} 步",
+      "title_other": "已自动执行 {{count}} 步",
+      "title": "已自动执行 {{count}} 步",
+      "desc": "没出问题——只是先停一下，让你看看它已经做了什么，再决定是否继续。",
+      "failedNote_one": "过程中有 {{count}} 步失败了，可以在下面看看。",
+      "failedNote_other": "过程中有 {{count}} 步失败了，可以在下面看看。",
+      "failedNote": "过程中有 {{count}} 步失败了，可以在下面看看。",
+      "continue": "继续",
+      "stop": "就此停止"
     }
   },
   "backup": {
@@ -1199,5 +1212,11 @@
     "reasonPreSync": "同步前",
     "reasonPreMergeDelete": "批量删除前",
     "reasonPreRestore": "还原前"
+  },
+  "spark": {
+    "tasks": "任务",
+    "schedules": "定时任务",
+    "skills": "技能",
+    "apps": "已连接应用"
   }
 }

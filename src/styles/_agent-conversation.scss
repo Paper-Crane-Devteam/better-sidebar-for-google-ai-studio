@@ -1,0 +1,40 @@
+/**
+ * Agent conversation surface — makes our overlay indistinguishable from the
+ * native Gemini conversation it covers.
+ *
+ * The overlay lives in a shadow root but visually occupies Gemini's own
+ * conversation column, so it reads the host page's surface token directly
+ * instead of our theme's `--background` (those two are close but not equal,
+ * which is exactly the seam that showed). Custom themes already override the
+ * lumi tokens, so they keep working; AI Studio has no lumi tokens at all and
+ * falls back to our theme.
+ *
+ * Typography mirrors the native turns, including the Google Sans Flex variable
+ * axes (`wdth` 92 is the visible one — without it the text renders wider than
+ * Gemini's).
+ */
+@layer components {
+  .bs-agent-conversation {
+    background: var(--lumi-sys-color--surface, rgb(var(--background)));
+
+    font-family: var(--font-sans);
+    font-size: 17px;
+    font-weight: 400;
+    font-variant-ligatures: none;
+    font-variation-settings: 'ROND' 0, 'slnt' 0, 'wdth' 92, 'wght' 400;
+    line-height: 1.6;
+  }
+
+  /* `prose-sm` pins 14px, which fights the 17px surface. Inherit instead so the
+     markdown body matches the native turns and headings scale off it. */
+  .bs-agent-conversation .prose {
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  /* The variable axes are meaningless for a mono face and can trip up fallback
+     fonts, so code opts out. Its size still comes from `text-sm`. */
+  .bs-agent-conversation :is(code, pre) {
+    font-variation-settings: normal;
+  }
+}

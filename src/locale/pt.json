@@ -28,7 +28,8 @@
     "settings": "Configurações",
     "gems": "Gems",
     "notebooks": "Notebooks",
-    "snippets": "Trechos"
+    "snippets": "Trechos",
+    "spark": "Spark"
   },
   "sidebar": {
     "newConversation": "Nova Conversa",
@@ -48,7 +49,8 @@
     "conversations": "conversas",
     "scanComplete": "Varredura concluída, nenhuma nova conversa encontrada",
     "importTipText": "Importe sua lista completa de chats para ver todas as conversas.",
-    "importTipAction": "Importar Agora"
+    "importTipAction": "Importar Agora",
+    "importTipHint": "Você também pode iniciar a qualquer momento pelo menu ⋯ no canto superior direito."
   },
   "settings": {
     "general": "Geral",
@@ -1167,6 +1169,17 @@
       "upgrade": "Ver planos",
       "again": "Nova tarefa",
       "clear": "Limpar"
+    },
+    "checkIn": {
+      "title_one": "{{count}} etapa concluída por conta própria",
+      "title_other": "{{count}} etapas concluídas por conta própria",
+      "title": "{{count}} etapas concluídas por conta própria",
+      "desc": "Nada de errado — o agente apenas pausou para você revisar o que ele fez antes de continuar.",
+      "failedNote_one": "{{count}} etapa falhou no caminho. Vale conferir abaixo.",
+      "failedNote_other": "{{count}} etapas falharam no caminho. Vale conferir abaixo.",
+      "failedNote": "{{count}} etapas falharam no caminho. Vale conferir abaixo.",
+      "continue": "Continuar",
+      "stop": "Parar aqui"
     }
   },
   "backup": {
@@ -1200,5 +1213,11 @@
     "reasonPreSync": "Antes da sincronização",
     "reasonPreMergeDelete": "Antes da exclusão em massa",
     "reasonPreRestore": "Antes da restauração"
+  },
+  "spark": {
+    "tasks": "Tarefas",
+    "schedules": "Agendamentos",
+    "skills": "Habilidades",
+    "apps": "Apps conectados"
   }
 }

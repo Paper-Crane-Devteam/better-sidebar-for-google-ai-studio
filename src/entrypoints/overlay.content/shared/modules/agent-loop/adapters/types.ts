@@ -37,8 +37,24 @@ export interface AgentPlatformAdapter {
    * platform that errors out never completes a turn, and DOM-based detection can
    * stop recognising its own signals, so "wait forever" would leave the engine stuck
    * with no explanation.
+   *
+   * Rejects with `ResponseWaitError` so the caller can tell "went quiet" from "the
+   * message never got there" — the second one must not wait out the whole budget,
+   * and must not be reported as the AI being slow.
    */
   observeAIResponseComplete(idleTimeoutMs: number): Promise<HTMLElement>;
+
+  /**
+   * How many user turns the conversation currently holds.
+   *
+   * The only positive proof that a message was accepted. Everything else about
+   * sending is inferred from the composer emptying, which is also what happens when
+   * a message is silently dropped — and treating that as success is what left the
+   * loop waiting for an answer to something the model never received. A turn in the
+   * transcript, by contrast, only ever appears because a message landed, and it
+   * stays there.
+   */
+  countUserTurns(): number;
 
   /**
    * Extract plain text from an AI response DOM container.

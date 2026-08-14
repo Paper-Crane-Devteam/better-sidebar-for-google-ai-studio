@@ -20,7 +20,7 @@
 import { triggerSend } from '@/entrypoints/overlay.content/shared/lib/quill-editor';
 import type { LoopContext } from '../../context';
 import { isStaged, stageResults, type StagedShape } from './staging';
-import { waitForSend } from './send-watcher';
+import { waitForSend, type SendOutcome } from './send-watcher';
 
 export { formatResults, wrapForAI, RESULT_OPEN_TAG } from './formatter';
 
@@ -30,11 +30,34 @@ export class ResultHandoff {
   /** Staged but not yet confirmed sent — kept so a retry can re-stage it */
   private pending: string | null = null;
 
+  /**
+   * The last payload that *was* confirmed delivered.
+   *
+   * Kept because delivery being confirmed still doesn't guarantee the model answers:
+   * Gemini can accept a message and then produce nothing (rate limit, an error toast).
+   * When stage ① finds the page idle with no turn to wait for, this is what makes
+   * Retry re-send the report instead of re-entering the same empty wait.
+   */
+  private lastDelivered: string | null = null;
+
   constructor(private readonly ctx: LoopContext) {}
 
   /** Whether a payload is still waiting to reach the AI */
   hasPending(): boolean {
     return this.pending !== null;
+  }
+
+  /**
+   * Queue the last delivered payload for another attempt, for when a message landed
+   * but the model never took its turn. Returns false when there is nothing to re-send
+   * — round 1 follows the user's own prompt, which the handoff never saw.
+   */
+  rearmLastDelivered(): boolean {
+    if (this.pending !== null) return true;
+    if (this.lastDelivered === null) return false;
+    this.pending = this.lastDelivered;
+    console.log('[AgentLoop] Re-arming the last delivered results for another attempt');
+    return true;
   }
 
   /** Whether the payload is still sitting in the composer */
@@ -63,24 +86,18 @@ export class ResultHandoff {
     this.ctx.events.emit('loop:paused', { reason: 'Waiting for user to send results' });
 
     let clicked = true;
-    const sent = await this.watchSend(async () => {
+    const outcome = await this.watchSend(async () => {
       if (autoSend) clicked = await triggerSend();
     });
 
-    if (!sent) {
-      // A refused click means the button was still "stop generating"; pausing is
-      // right, because clicking anyway would have aborted the AI's answer.
-      console.warn('[AgentLoop] Results were never sent, pausing');
-      this.ctx.pause(
-        clicked
-          ? 'Tool results were not sent. Click "Continue" to send them.'
-          : 'Could not send while the AI was still generating. Click "Continue" to retry.',
-        'Results not sent',
-      );
+    if (outcome !== 'sent') {
+      console.warn('[AgentLoop] Results were never confirmed as sent, pausing:', outcome);
+      this.ctx.pause(describeMiss(outcome, clicked), 'Results not sent');
       return false;
     }
 
     this.pending = null;
+    this.lastDelivered = text;
     return true;
   }
 
@@ -112,9 +129,12 @@ export class ResultHandoff {
       this.shape = await stageResults(this.ctx.adapter, this.pending);
     }
 
-    const sent = await this.watchSend(() => triggerSend({ humanDelay: false }));
-    if (sent) this.pending = null;
-    return sent;
+    const outcome = await this.watchSend(() => triggerSend({ humanDelay: false }));
+    if (outcome !== 'sent') return false;
+
+    this.lastDelivered = this.pending;
+    this.pending = null;
+    return true;
   }
 
   /**
@@ -135,6 +155,7 @@ export class ResultHandoff {
   /** Forget the pending payload (new session) */
   reset(): void {
     this.pending = null;
+    this.lastDelivered = null;
     this.shape = 'capsule';
   }
 
@@ -142,7 +163,7 @@ export class ResultHandoff {
    * Arm the watcher *before* running `action`, so a send that completes fast can't
    * slip through between the click and the start of observation.
    */
-  private async watchSend(action: () => Promise<unknown>): Promise<boolean> {
+  private async watchSend(action: () => Promise<unknown>): Promise<SendOutcome> {
     const watcher = waitForSend({
       adapter: this.ctx.adapter,
       shape: this.shape,
@@ -151,4 +172,19 @@ export class ResultHandoff {
     await action();
     return watcher;
   }
+}
+
+/**
+ * Why the payload didn't make it, in words the user can act on. All three end at the
+ * same button — a paused loop offers Retry, which re-stages and re-sends.
+ */
+function describeMiss(outcome: SendOutcome, clicked: boolean): string {
+  if (outcome === 'unconfirmed') {
+    return 'The chat input was cleared, but Gemini never started a turn — the results most likely never went out. Click "Retry" to send them again.';
+  }
+  // A refused click means the button was still "stop generating"; not clicking was
+  // right, because clicking anyway would have aborted the AI's answer.
+  return clicked
+    ? 'Tool results were not sent. Click "Retry" to send them.'
+    : 'Could not send while the AI was still generating. Click "Retry" to try again.';
 }

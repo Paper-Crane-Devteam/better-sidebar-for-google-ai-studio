@@ -28,7 +28,14 @@
     "settings": "Settings",
     "gems": "Gems",
     "notebooks": "Notebooks",
-    "snippets": "Snippets"
+    "snippets": "Snippets",
+    "spark": "Spark"
+  },
+  "spark": {
+    "tasks": "Tasks",
+    "schedules": "Schedules",
+    "skills": "Skills",
+    "apps": "Connected Apps"
   },
   "sidebar": {
     "newConversation": "New Chat",

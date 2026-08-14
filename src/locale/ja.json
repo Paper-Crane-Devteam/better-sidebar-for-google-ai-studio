@@ -28,7 +28,8 @@
     "settings": "設定",
     "gems": "Gems",
     "notebooks": "ノートブック",
-    "snippets": "スニペット"
+    "snippets": "スニペット",
+    "spark": "Spark"
   },
   "sidebar": {
     "newConversation": "新しい会話",
@@ -48,7 +49,8 @@
     "conversations": "件の会話",
     "scanComplete": "スキャン完了、新しい会話は見つかりませんでした",
     "importTipText": "すべての会話を表示するには、チャット一覧をインポートしてください。",
-    "importTipAction": "今すぐインポート"
+    "importTipAction": "今すぐインポート",
+    "importTipHint": "右上の ⋯ メニューからいつでも開始できます。"
   },
   "settings": {
     "general": "一般",
@@ -1167,6 +1169,17 @@
       "upgrade": "プランを見る",
       "again": "新しいタスク",
       "clear": "クリア"
+    },
+    "checkIn": {
+      "title_one": "{{count}} 件のステップを自動で実行しました",
+      "title_other": "{{count}} 件のステップを自動で実行しました",
+      "title": "{{count}} 件のステップを自動で実行しました",
+      "desc": "問題はありません。続行する前に実行内容を確認できるよう、エージェントが一時停止しました。",
+      "failedNote_one": "途中で {{count}} 件のステップが失敗しました。下で確認してください。",
+      "failedNote_other": "途中で {{count}} 件のステップが失敗しました。下で確認してください。",
+      "failedNote": "途中で {{count}} 件のステップが失敗しました。下で確認してください。",
+      "continue": "続行",
+      "stop": "ここで停止"
     }
   },
   "backup": {
@@ -1200,5 +1213,11 @@
     "reasonPreSync": "同期前",
     "reasonPreMergeDelete": "一括削除前",
     "reasonPreRestore": "復元前"
+  },
+  "spark": {
+    "tasks": "タスク",
+    "schedules": "スケジュール",
+    "skills": "スキル",
+    "apps": "連携アプリ"
   }
 }

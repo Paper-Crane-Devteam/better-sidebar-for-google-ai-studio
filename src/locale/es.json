@@ -28,7 +28,8 @@
     "settings": "Configuración",
     "gems": "Gems",
     "notebooks": "Notebooks",
-    "snippets": "Fragmentos"
+    "snippets": "Fragmentos",
+    "spark": "Spark"
   },
   "sidebar": {
     "newConversation": "Nueva Conversación",
@@ -48,7 +49,8 @@
     "conversations": "conversaciones",
     "scanComplete": "Escaneo completado, no se encontraron nuevas conversaciones",
     "importTipText": "Importa tu lista completa de chats para ver todas las conversaciones.",
-    "importTipAction": "Importar Ahora"
+    "importTipAction": "Importar Ahora",
+    "importTipHint": "También puedes iniciarlo en cualquier momento desde el menú ⋯ de la esquina superior derecha."
   },
   "settings": {
     "general": "General",
@@ -1167,6 +1169,17 @@
       "upgrade": "Ver planes",
       "again": "Nueva tarea",
       "clear": "Limpiar"
+    },
+    "checkIn": {
+      "title_one": "{{count}} paso realizado por su cuenta",
+      "title_other": "{{count}} pasos realizados por su cuenta",
+      "title": "{{count}} pasos realizados por su cuenta",
+      "desc": "No pasa nada: el agente solo se detuvo para que revises lo que ha hecho antes de continuar.",
+      "failedNote_one": "{{count}} paso falló por el camino. Merece un vistazo abajo.",
+      "failedNote_other": "{{count}} pasos fallaron por el camino. Merecen un vistazo abajo.",
+      "failedNote": "{{count}} pasos fallaron por el camino. Merecen un vistazo abajo.",
+      "continue": "Continuar",
+      "stop": "Parar aquí"
     }
   },
   "backup": {
@@ -1200,5 +1213,11 @@
     "reasonPreSync": "Antes de sincronizar",
     "reasonPreMergeDelete": "Antes de eliminación masiva",
     "reasonPreRestore": "Antes de restaurar"
+  },
+  "spark": {
+    "tasks": "Tareas",
+    "schedules": "Programaciones",
+    "skills": "Habilidades",
+    "apps": "Apps conectadas"
   }
 }

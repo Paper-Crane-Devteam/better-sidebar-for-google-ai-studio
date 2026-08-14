@@ -162,6 +162,24 @@ export class AgentLoopEngine {
     }
   }
 
+  /**
+   * Stage ① found an idle page with no turn to wait for: the message never got
+   * through, or Gemini took it and produced nothing (rate limit, error toast).
+   *
+   * Re-arming the last delivered payload is what makes Retry mean something here.
+   * Without it, Retry re-enters the same wait against the same silence, which is the
+   * "I clicked Retry and nothing happened" report.
+   */
+  private reportUndelivered(): void {
+    const canResend = this.handoff.rearmLastDelivered();
+    this.ctx.pause(
+      canResend
+        ? 'The AI never took its turn, so the last message probably did not get through. Click "Retry" to send it again.'
+        : 'The AI never took its turn — the message did not get through. Send it again from the chat input.',
+      'Message not delivered',
+    );
+  }
+
   // ── The loop ───────────────────────────────────────────────────────────────
 
   /** Wrap `runRounds` so an abort ends the session quietly and anything else reports */
@@ -256,8 +274,13 @@ export class AgentLoopEngine {
       }
 
       // ① Wait for the AI
-      const response = await awaitAIResponse(ctx);
-      if (!response) return;
+      const awaited = await awaitAIResponse(ctx);
+      if (awaited.kind === 'stalled') return;
+      if (awaited.kind === 'undelivered') {
+        this.reportUndelivered();
+        return;
+      }
+      const response = awaited.element;
       ctx.abort.check();
 
       // ② Parse — no tool calls means the session is over, and it says so itself

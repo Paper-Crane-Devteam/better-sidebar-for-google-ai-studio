@@ -5,6 +5,7 @@
  * the timeout policy and the status/event bookkeeping around it.
  */
 
+import { responseWaitFailureOf } from '../../adapters/response-wait';
 import type { LoopContext } from '../context';
 
 /**
@@ -28,24 +29,41 @@ import type { LoopContext } from '../context';
 export const RESPONSE_IDLE_TIMEOUT_MS = 30000;
 
 /**
- * Resolve with the response element, or null when it timed out — in which case
- * the loop is already paused with a reason and the caller should just return.
+ * - `response` — the finished turn, ready for stage ②.
+ * - `stalled` — already paused with a reason; the caller just returns.
+ * - `undelivered` — there is nothing to wait for, because the message never reached
+ *   the model. **Not** paused here: only the engine knows whether it still holds a
+ *   payload it can re-send, and that decides both what to say and what Retry does.
  */
-export async function awaitAIResponse(ctx: LoopContext): Promise<HTMLElement | null> {
+export type AwaitOutcome =
+  | { kind: 'response'; element: HTMLElement }
+  | { kind: 'stalled' }
+  | { kind: 'undelivered' };
+
+export async function awaitAIResponse(ctx: LoopContext): Promise<AwaitOutcome> {
   ctx.setStatus('waiting_ai');
   ctx.events.emit('ai:response-waiting', undefined);
   ctx.events.emit('loop:round-started', { round: ctx.round });
   console.log(`[AgentLoop] Round ${ctx.round}: Waiting for AI response...`);
 
   try {
-    return await ctx.adapter.observeAIResponseComplete(RESPONSE_IDLE_TIMEOUT_MS);
-  } catch {
+    const element = await ctx.adapter.observeAIResponseComplete(RESPONSE_IDLE_TIMEOUT_MS);
+    return { kind: 'response', element };
+  } catch (e) {
+    // An idle page with no turn in it is a different failure from a slow one, and
+    // saying "no response for 30s" about a message that never arrived sent users
+    // looking for a problem at Gemini's end.
+    if (responseWaitFailureOf(e) === 'not_delivered') {
+      console.warn('[AgentLoop] Nothing to wait for — the message never reached the AI');
+      return { kind: 'undelivered' };
+    }
+
     console.warn('[AgentLoop] AI response went silent');
     ctx.events.emit('ai:response-timeout', { timeoutMs: RESPONSE_IDLE_TIMEOUT_MS });
     ctx.pause(
       `No response from the AI for ${RESPONSE_IDLE_TIMEOUT_MS / 1000}s. Click "Retry" to try again.`,
       'AI response timeout',
     );
-    return null;
+    return { kind: 'stalled' };
   }
 }

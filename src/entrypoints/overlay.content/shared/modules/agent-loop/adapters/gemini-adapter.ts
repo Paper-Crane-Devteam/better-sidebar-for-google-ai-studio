@@ -4,6 +4,7 @@
  */
 
 import type { AgentPlatformAdapter } from './types';
+import { ResponseWaitError } from './response-wait';
 import {
   getEditor as quillGetEditor,
   getCursorPosition as quillGetCursorPosition,
@@ -31,6 +32,21 @@ const SETTLE_TICKS = 2;
  * up: mid-stream pauses of a second do happen, so this has to outlast them.
  */
 const BLIND_SETTLE_TICKS = 5;
+
+/**
+ * How long a completely idle page is given before we call the message undelivered.
+ *
+ * "Idle" here is specific: no send button in the DOM (Gemini removes it when the
+ * composer is empty and nothing is generating) *and* no new turn since we started
+ * waiting. Nothing is in flight and nothing arrived, so no amount of extra waiting
+ * will change the outcome.
+ *
+ * A grace period is still kept, but only out of caution — measured behaviour is that
+ * the button flips to `stop` the instant a send is accepted, even on a throttled
+ * connection, so this window never has to cover "sent but not started yet". It
+ * covers the tail of our own click and Angular's re-render, which is far shorter.
+ */
+const IDLE_DELIVERY_GRACE_MS = 5000;
 
 export class GeminiAgentAdapter implements AgentPlatformAdapter {
   getEditor(): HTMLElement | null {
@@ -104,6 +120,7 @@ export class GeminiAgentAdapter implements AgentPlatformAdapter {
       let lastText = '';
       let stableTicks = 0;
       let deadline = Date.now() + idleTimeoutMs;
+      const startedAt = Date.now();
 
       const cleanup = () => clearInterval(interval);
 
@@ -118,12 +135,14 @@ export class GeminiAgentAdapter implements AgentPlatformAdapter {
         // last change, so this can't cut off a turn that was about to resolve.
         if (Date.now() > deadline) {
           cleanup();
-          reject(new Error('AI response timeout'));
+          reject(new ResponseWaitError('timeout', 'AI response timeout'));
           return;
         }
 
+        const buttonState = getSendButtonState();
+
         // ── Still generating: nothing to decide, just stay alive ──────────────
-        if (getSendButtonState() === 'stop') {
+        if (buttonState === 'stop') {
           sawGenerating = true;
           stableTicks = 0;
           keepAlive();
@@ -131,13 +150,34 @@ export class GeminiAgentAdapter implements AgentPlatformAdapter {
         }
 
         const response = this.getLastAIResponseElement();
-        if (!response) return;
-
-        const text = this.extractResponseText(response).trim();
+        const text = response ? this.extractResponseText(response).trim() : '';
 
         // Empty means the bubble exists but nothing has streamed in yet; stale means
         // we're still looking at the turn that was there before we started waiting.
-        if (!text || isStaleResponse(response, text)) {
+        const hasNewTurn = !!response && !!text && !isStaleResponse(response, text);
+
+        // ── Nothing in flight and nothing arrived ─────────────────────────────
+        // No button means Gemini's composer is idle. Combined with "no turn started
+        // since we began waiting", there is nothing that could still produce an
+        // answer, so waiting out the full silence budget only delays a wrong verdict:
+        // the message never reached the model.
+        if (
+          !hasNewTurn &&
+          !sawGenerating &&
+          buttonState === 'absent' &&
+          Date.now() - startedAt > IDLE_DELIVERY_GRACE_MS
+        ) {
+          cleanup();
+          reject(
+            new ResponseWaitError(
+              'not_delivered',
+              'The page is idle and no new turn started — the message was never delivered',
+            ),
+          );
+          return;
+        }
+
+        if (!response || !hasNewTurn) {
           lastText = '';
           stableTicks = 0;
           return;
@@ -156,9 +196,15 @@ export class GeminiAgentAdapter implements AgentPlatformAdapter {
         // Past the edge: we watched it generate and the button has come back, so a
         // couple of still samples are only to let the final render land.
         //
-        // Never having seen it generate means the button is unreadable or we started
-        // too late, so text stability is carrying this alone and has to wait longer.
-        const required = sawGenerating ? SETTLE_TICKS : BLIND_SETTLE_TICKS;
+        // A missing button counts as the same evidence: Gemini removes it once the
+        // composer is empty and nothing is generating, so with a new turn on screen
+        // it says the turn is over just as well as watching the flip does. That
+        // covers the case where we started waiting too late to catch `stop`.
+        //
+        // Neither of those means the button is unreadable, so text stability is
+        // carrying this alone and has to outlast a mid-stream pause.
+        const settled = sawGenerating || buttonState === 'absent';
+        const required = settled ? SETTLE_TICKS : BLIND_SETTLE_TICKS;
         if (stableTicks >= required) {
           cleanup();
           resolve(response);
@@ -167,6 +213,18 @@ export class GeminiAgentAdapter implements AgentPlatformAdapter {
 
       const interval = setInterval(tick, RESPONSE_SAMPLE_MS);
     });
+  }
+
+  /**
+   * Gemini renders one `<user-query>` per user turn, and only after the message has
+   * actually been accepted — which is what makes it usable as delivery proof.
+   *
+   * Queried document-wide rather than inside the scroll container: the container gets
+   * swapped on SPA navigation, and a lookup miss here would read as "no turns", i.e.
+   * as evidence of a failure that didn't happen.
+   */
+  countUserTurns(): number {
+    return document.querySelectorAll('user-query').length;
   }
 
   extractResponseText(responseElement: HTMLElement): string {

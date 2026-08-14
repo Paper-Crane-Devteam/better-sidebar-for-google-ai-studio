@@ -19,6 +19,7 @@ import {
   SquarePen,
   ScrollText,
   Bot,
+  Sparkles,
 } from 'lucide-react';
 import { UIcon } from '@/shared/components/ui/icon';
 import { SqlExecutor } from '../shared/components/menu/SqlExecutor';
@@ -31,6 +32,7 @@ import { FeedbackTab } from '../shared/modules/feedback/FeedbackTab';
 import { GemsTab } from '../shared/modules/gems/GemsTab';
 import { NotebooksTab } from '../shared/modules/notebooks/NotebooksTab';
 import { SnippetsTab } from '../shared/modules/snippets/SnippetsTab';
+import { SparkTab, isSparkAvailable } from '../shared/modules/spark/SparkTab';
 import { AgentTab } from '../shared/modules/agent-tab';
 import { useAgentLoopStore } from '../shared/modules/agent-loop/agent-loop-store';
 import '@/index.scss';
@@ -58,6 +60,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const { path } = useUrl();
 
   const shortcuts = useSettingsStore((state) => state.shortcuts);
+  const sparkAvailable = isSparkAvailable();
   const hasSettingsBadge = useBadgeStore((s) => s.isGroupVisible('settings.'));
   // Anything that blocks the loop until the user acts
   const agentNeedsAttention = useAgentLoopStore(
@@ -167,7 +170,8 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       | 'gems'
       | 'notebooks'
       | 'snippets'
-      | 'agent',
+      | 'agent'
+      | 'spark',
   ) => {
     if (tab === 'settings') {
       setIsSettingsOpen(true);
@@ -368,6 +372,20 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             </SimpleTooltip>
           )}
 
+          {sparkAvailable && (
+            <SimpleTooltip content={t('tabs.spark')}>
+              <Button
+                variant={activeTab === 'spark' ? 'secondary' : 'ghost'}
+                size="icon"
+                onClick={() => handleTabChange('spark')}
+                className="sidebar-btn transition-all"
+                data-tour-id="tour-spark"
+              >
+                <Sparkles className="sidebar-icon" />
+              </Button>
+            </SimpleTooltip>
+          )}
+
           {(shortcuts?.myStuff ?? true) && (
             <SimpleTooltip content={t('shortcuts.myStuff')}>
               <Button
@@ -466,6 +484,8 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           <NotebooksTab menuActions={moduleConfig.general.menuActions} />
         ) : activeTab === 'snippets' ? (
           <SnippetsTab menuActions={moduleConfig.general.menuActions} />
+        ) : activeTab === 'spark' ? (
+          <SparkTab />
         ) : activeTab === 'agent' ? (
           <AgentTab />
         ) : activeTab === 'feedback' ? (

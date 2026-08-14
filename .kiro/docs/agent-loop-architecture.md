@@ -37,13 +37,14 @@ src/entrypoints/overlay.content/shared/
 │   │   ├── useAgentTrigger.ts     # `>` 前缀检测
 │   │   ├── AgentCommandPopup.tsx  # `>` 弹出选择列表
 │   │   ├── adapters/              # 平台适配（gemini-adapter 等）
+│   │   │   └── response-wait.ts   # ★ ResponseWaitError：timeout / not_delivered
 │   │   ├── engine/
 │   │   │   ├── index.ts           # ★ 对外唯一出口，别深引 stages/context
 │   │   │   ├── AgentLoopEngine.ts # 状态机 + 生命周期（start/stop/resume/continueNow）
 │   │   │   ├── context.ts         # ★ LoopContext：store/事件/abort/熔断的门面
 │   │   │   ├── engine-registry.ts # ★ 模块级 engine handle（供 Agent Tab 控制）
 │   │   │   ├── stages/            # 一轮的四个阶段，顺序即数据流
-│   │   │   │   ├── await-response.ts   # ① 等 AI 回复（超时 → pause）
+│   │   │   │   ├── await-response.ts   # ① 等 AI 回复（静默超时 / 没送到 → 两种结局）
 │   │   │   │   ├── parse-response.ts   # ② 解析 tool call / 格式事故 nudge / 无 tool 则结束
 │   │   │   │   ├── execute-tools.ts    # ③ 执行 + 熔断 + 记账 + 终止信号
 │   │   │   │   ├── approval-gate.ts    # ★ awaiting_approval：等卡片/侧边栏放行
@@ -51,7 +52,7 @@ src/entrypoints/overlay.content/shared/
 │   │   │   │       ├── index.ts        #   ResultHandoff：staging → 等发送 → 成功/暂停
 │   │   │   │       ├── staging.ts      #   capsule 写入 + 落地校验 + 纯文本降级
 │   │   │   │       ├── formatter.ts    #   结果 markdown 拼装 / 切段（互为逆运算）
-│   │   │   │       └── send-watcher.ts #   观测「已发出」：MutationObserver + abort
+│   │   │   │       └── send-watcher.ts #   ★ 两步确认送达：离开输入框 + 送达正证据
 │   │   │   ├── guards/
 │   │   │   │   ├── circuit-breaker.ts  # 重复调用 / 连续失败 / 无进展
 │   │   │   │   └── abort.ts            # AbortToken + AbortError
@@ -145,8 +146,9 @@ AgentLoopEngine.start(20, { conversationId, title })
   autoSend ? 引擎自己 triggerSend()   ← autoContinue ∩ 无待批准 │
            : 等用户 Enter / Tab 的「继续」                  │
        ↓                                                  │
-  waitForSend() → true → unattendedStreak 记账 → advanceRound() ┘
-                → false（没发出去 / 5min 超时）→ pause
+  waitForSend() → 'sent' → unattendedStreak 记账 → advanceRound() ┘
+                → 'still-staged'（没发出去 / 5min 超时）→ pause
+                → 'unconfirmed'（输入框空了但没有任何送达迹象）→ pause
 ```
 
 ### 20 轮上限只管无人值守的轮次
@@ -228,14 +230,18 @@ Gemini 是被动的：不给它发消息，它永远不会再说话。而 ④ �
 
 ```
 每 400ms 采样一次
-  按钮 === 'stop'        → sawGenerating = true，续命，return
-  没有回复元素            → return
-  文本为空 or === baseline → 归零，return（还在看开始等待前的那一轮）
-  文本变了                → 归零，续命，return
-  文本没变                → stableTicks++
-                            够 SETTLE_TICKS(2) / BLIND_SETTLE_TICKS(5) → resolve
-tick 开头统一查一次 deadline，超了 reject
+  按钮 === 'stop'         → sawGenerating = true，续命，return
+  没有新一轮 且 没见过 stop 且 按钮 'absent' 且 已过 5s
+                          → reject('not_delivered')  ← 压根没送到，等下去没意义
+  没有新一轮               → 归零，return（还在看开始等待前的那一轮）
+  文本变了                 → 归零，续命，return
+  文本没变                 → stableTicks++
+                             SETTLE_TICKS(2)：见过 stop，或按钮已消失
+                             BLIND_SETTLE_TICKS(5)：按钮读不出来，纯靠文本
+tick 开头统一查一次 deadline，超了 reject('timeout')
 ```
+
+「新一轮」= 存在回复元素 且 文本非空 且 (元素 ≠ baseline 或 文本 ≠ baseline)。
 
 **为什么必须是边沿而不是电平**:引擎是点完发送之后才开始等的,那一瞬间 Gemini 还没把
 按钮翻成 stop。所以"按钮读到 send"在任何事情发生之前就是 true —— 按电平判断会立刻
@@ -247,6 +253,43 @@ resolve,拿到**上一轮**的回复。
 |------|--------|
 | 防拿到上一轮 | `baselineElement` / `baselineText`,文本必须和开始等待时不同 |
 | 按钮失灵时兜底 | `getSendButtonState()` 是四级降级(`gem-icon-button.stop` → `mat-icon[fonticon]` → `aria-label`/`mattooltip` → 容器 class),Gemini 改一次可能全落空返回 `'unknown'`。这时 `sawGenerating` 一直是 false,判定退化成纯文本稳定,阈值从 2 提到 5(约 2 秒),因为没有权威信号背书,得熬过流式输出中途的停顿 |
+
+### `absent` ≠ `unknown`
+
+`SendButtonState` 有四个值，其中这两个含义**相反**，早期版本把它们并成一个 `'unknown'`：
+
+| 值 | 含义 | 可信度 |
+|----|------|--------|
+| `stop` | 正在生成 | 权威 |
+| `send` | 输入框里有内容，可以发 | 权威 |
+| `absent` | DOM 里压根没有这个按钮 | **权威**：Gemini 只在输入框有内容或有回合在跑时才渲染它，所以「没有」= 没在生成 且 没人在输入 |
+| `unknown` | 找到按钮了但四级降级全认不出 | **完全不可信**：选择器丢了 |
+
+⚠️ 实测：发送被接受的那一瞬间按钮**直接翻成 stop**，慢网速下也一样，不存在「点完之后按钮短暂消失」的空窗。所以 `absent` 不需要为「刚点完还没起来」留额外的宽限；5 秒的 `IDLE_DELIVERY_GRACE_MS` 只是为了盖住我们自己那次点击和 Angular 的重渲染。
+
+`absent` 在 ① 里有两个用途：
+
+- **加速完成判定**：有新一轮 + 按钮消失 = 回合结束，`stableTicks` 阈值走 2 而不是 5。这条覆盖「我们开始等的时候已经错过 stop 边沿」。
+- **判定没送到**：没有新一轮 + 从没见过 stop + 按钮消失 → `reject('not_delivered')`。见下。
+
+### 「AI 没回复」和「消息没送到」是两回事
+
+`observeAIResponseComplete` 用 `ResponseWaitError` 带一个 `kind` 拒绝
+（`adapters/response-wait.ts`）：
+
+| kind | 现实 | 文案 / 行为 |
+|------|------|------------|
+| `timeout` | 有回合在跑（或读不出来），然后静默烧完预算 | 「AI 30 秒没回复」+ Retry |
+| `not_delivered` | 页面明确静止且这一轮压根没开始 | 「消息没送到」+ Retry **重发** |
+
+`awaitAIResponse` 返回 `AwaitOutcome`（`response` / `stalled` / `undelivered`），
+`not_delivered` **故意不在阶段里 pause** —— 只有引擎知道自己手上还有没有可以重发的
+payload，而这决定了话该怎么说、Retry 又该干什么（`engine.reportUndelivered()` →
+`handoff.rearmLastDelivered()` → pause）。
+
+⚠️ 别把 `not_delivered` 也说成「AI 没回复」。用户会去 Gemini 那边找问题，而实际上消息
+根本没离开输入框；更糟的是 Retry 会重新进 ①，等的还是那个不存在的回复，看起来就是
+「点 Retry 没反应」。
 
 边沿之后还要等 2 个采样,是因为**按钮翻转 ≠ 渲染完成**:按钮跟的是流式请求结束,而
 Gemini 还要渲染 markdown 和代码块。在翻转那一刻读文本可能拿到没渲染完的尾巴,
@@ -296,6 +339,34 @@ Gemini 用同一个按钮承担「发送」和「停止生成」，class 和 dis
 
 ⚠️ 「无 tool call」不等于任务完成。协议要求以 `complete_task` 结束，所以没有工具调用
 只说明 AI 忘了格式或在闲聊 —— 早期版本把它当成 complete，导致任务第一轮就报「Task finished」。
+
+### 怎么确认「消息真的送到了」——两步，不是一步
+
+`send-watcher.ts` 的 `waitForSend()` 返回 `SendOutcome`：
+
+```
+① 等 payload 离开输入框     MutationObserver（编辑器 + 父节点，SPA 会换掉编辑器）
+     ↓ 没离开 → 'still-staged'
+② 等送达的正证据（最多 4s）  按钮读到 'stop'  或  user-query 条数变多
+     ↓ 都没有 → 'unconfirmed'
+   'sent'
+```
+
+⚠️ **只有第①步是不够的**，这是历史上最贵的一个 bug。输入框变空**也是**消息被悄悄丢掉
+时的样子：staging 自己打自己、SPA 导航重建编辑器、Gemini 报错清空输入。只看第①步会把
+这些全判成成功，`pending` 被清掉、轮次照常推进，然后 ① 去等一个不存在的回复，30 秒后
+报「AI 没回复」，而 Retry 会再等 30 秒。
+
+⚠️ **两个证据里 `countUserTurns()` 更硬。** 按钮的 `stop` 是瞬时的，回合结束就没了；
+而 `<user-query>` 只可能因为消息真的落地才出现，而且**不会消失**。所以它对「答得太快，
+我们看的时候已经结束了」同样成立。`adapter.countUserTurns()` 是接口方法，用
+`document.querySelectorAll('user-query')` 而不是在滚动容器里查 —— 容器会被 SPA 换掉，
+查不到会被读成「零条」，也就是一次不存在的失败。
+
+⚠️ **送达 ≠ 会有回答。** Gemini 可以收下消息然后什么都不产出（限流、错误 toast）。
+所以 `ResultHandoff` 除了 `pending` 还留了一份 `lastDelivered`，`rearmLastDelivered()`
+把它放回 `pending`，这才让「没送到」那一档的 Retry 真的会重发。第 1 轮没有这份东西
+（那是用户自己发的 prompt，handoff 没见过），文案会退化成「自己在输入框重发一次」。
 
 ### 状态语义（重要）
 
@@ -685,8 +756,10 @@ export function shouldAutoSend(toolCalls: ParsedToolCall[]): boolean {
 | 编辑器 | `rich-textarea .ql-editor[contenteditable="true"]` |
 | 发送按钮 | `.text-input-field .send-button-container>gem-icon-button>button` |
 | AI 回复容器 | `model-response .model-response-text` |
+| 用户消息轮次 | `user-query`（送达证据，见「两步确认送达」） |
 | 对话容器 | `infinite-scroller.chat-history` |
 | 生成中 | `gem-icon-button.send-button.stop`（`aria-busy` / `message-actions[hidden]` 在当前版本不存在，已删） |
+| 静止（没在生成、输入框空） | 发送按钮**整个不在 DOM 里** → `getSendButtonState() === 'absent'` |
 | 暗色主题 | `localStorage: Bard-Color-Theme === 'Bard-Dark-Theme'` |
 
 ---
@@ -755,7 +828,8 @@ agentEventBus.emit('launcher:run-entry', { entryId, userInput, autoSend });
 | settings UI | 未做 | 需在设置面板加 agentLoop 独立开关（现复用 slashCommand） |
 | AI Studio 支持 | 未做 | 需写 adapter + entry component |
 | 自动继续 | 已做 | `autoContinue` 开关（默认开）∩ 本轮批准情况，见 `shouldAutoSend()` |
-| `awaiting_send` 期间发普通消息 | 未处理 | result capsule 消失即视为已发送，用户此时另发消息会被当成继续 |
+| `awaiting_send` 期间发普通消息 | 未处理 | capsule 消失 + 出现新的 user 轮次即视为已发送，用户此时另发消息会被当成继续 |
+| 送达确认 | 已做 | 两步：离开输入框 + `stop` 按钮或 `user-query` 增加，见上文 |
 | 手动发送等待 5min 上限 | 未处理 | `autoSend: false` 时 `waitForSend()` 仍有 5 分钟超时，用户离开太久会 pause（可 Retry 补发，不丢数据） |
 | ① 的超时 | 已做 | 改成 30s **静默**超时（原来是 60s 整轮硬超时，会误杀长回复）。见下文 |
 | `slash-command/capsule.ts` | 废弃 | 已无 import，但文件未删除 |

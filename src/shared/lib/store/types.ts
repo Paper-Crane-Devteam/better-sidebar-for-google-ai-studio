@@ -53,7 +53,8 @@ export interface UIState {
       | 'gems'
       | 'notebooks'
       | 'snippets'
-      | 'agent';
+      | 'agent'
+      | 'spark';
     isSettingsOpen: boolean;
     isScanning: boolean;
     showSqlInterface: boolean;
@@ -210,7 +211,8 @@ export interface AppState {
       | 'gems'
       | 'notebooks'
       | 'snippets'
-      | 'agent',
+      | 'agent'
+      | 'spark',
   ) => void;
   setIsScanning: (isScanning: boolean) => void;
   setShowSqlInterface: (show: boolean) => void;

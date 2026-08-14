@@ -266,10 +266,12 @@ export const ConversationOverlay: React.FC = () => {
     <div
       ref={scrollRef}
       onScroll={handleScroll}
-      className="absolute inset-0 z-40 overflow-y-auto bg-background p-4 pt-14 text-foreground shadow-inner transition-opacity duration-200"
+      // bs-agent-conversation carries the native surface color + Google Sans Flex
+      // axes so this panel matches the turns it replaces (see _agent-conversation.scss).
+      className="bs-agent-conversation absolute inset-0 z-40 overflow-y-auto p-4 pt-14 text-foreground shadow-inner transition-opacity duration-200"
       // overscrollBehavior: reaching our end must not hand the wheel to the native
       // scroller underneath, which would drag this panel off screen.
-      style={{ height: '100%', fontSize: '17px', overscrollBehavior: 'contain' }}
+      style={{ height: '100%', overscrollBehavior: 'contain' }}
     >
       {/* List Content */}
       <div className="mx-auto pb-16" style={{ maxWidth: `${chatWidth}%`, minWidth: '724px' }}>
