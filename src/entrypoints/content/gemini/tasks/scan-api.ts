@@ -45,6 +45,22 @@ export class ApiScanner {
     setOnNewItems(cb: (() => void) | null) {
         this.onNewItems = cb;
     }
+
+    /**
+     * Temporarily stop notifying the listener, returning a restore function.
+     *
+     * A full library scan needs this: otherwise the incremental sync flush
+     * saves every batch as it arrives, and by the time the scan diffs its
+     * results against the DB nothing looks new — so the "imported N" toast
+     * always reported 0.
+     */
+    pauseNotifications(): () => void {
+        const previous = this.onNewItems;
+        this.onNewItems = null;
+        return () => {
+            this.onNewItems = previous;
+        };
+    }
 }
 
 export const apiScanner = new ApiScanner();

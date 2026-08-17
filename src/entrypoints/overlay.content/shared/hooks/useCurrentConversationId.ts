@@ -1,22 +1,43 @@
 import { useUrl } from '@/shared/hooks/useUrl';
-import { detectPlatform, PLATFORM_CONFIG, Platform } from '@/shared/types/platform';
+import { detectPlatform, Platform } from '@/shared/types/platform';
 
-/** Matches /gem/{gemId}/{convoId} — captures the convoId */
-const GEMINI_GEM_CONVO_RE = /\/gem\/[^/]+\/([a-zA-Z0-9_-]+)/;
+/**
+ * Google prefixes the path with `/u/{n}` once more than one account is signed in.
+ */
+const ACCOUNT_PREFIX = String.raw`(?:/u/\d+)?`;
+
+/**
+ * pathname → conversation id, per platform.
+ *
+ * Matched against the pathname instead of the whole URL. The previous version built
+ * its regex by interpolating `promptUrlTemplate()` — an absolute URL — so anything
+ * sitting between the host and the known segment broke the match: on
+ * `gemini.google.com/u/1/app/{id}` every caller got `null`, which silently disables
+ * per-conversation state (the view-mode override, session scoping, the active row in
+ * the sidebar) rather than failing visibly.
+ */
+const CONVERSATION_PATH_PATTERNS: Partial<Record<Platform, RegExp[]>> = {
+  // /gem/{gemId}/{convoId} first: the second segment is the conversation, not the Gem
+  [Platform.GEMINI]: [
+    new RegExp(`^${ACCOUNT_PREFIX}/gem/[^/]+/([a-zA-Z0-9_-]+)`),
+    new RegExp(`^${ACCOUNT_PREFIX}/app/([a-zA-Z0-9_-]+)`),
+  ],
+  [Platform.AI_STUDIO]: [
+    new RegExp(`^${ACCOUNT_PREFIX}(?:/app)?/prompts/([a-zA-Z0-9_-]+)`),
+  ],
+  [Platform.CHATGPT]: [new RegExp(`^${ACCOUNT_PREFIX}/c/([a-zA-Z0-9_-]+)`)],
+  [Platform.CLAUDE]: [new RegExp(`^${ACCOUNT_PREFIX}/chat/([a-zA-Z0-9_-]+)`)],
+};
 
 export const useCurrentConversationId = () => {
-  const { url } = useUrl();
-  
+  const { path } = useUrl();
+
   const platform = detectPlatform();
 
-  // For Gemini, also check the /gem/:gemId/:convoId pattern
-  if (platform === Platform.GEMINI) {
-    const gemMatch = GEMINI_GEM_CONVO_RE.exec(url);
-    if (gemMatch) return gemMatch[1];
+  for (const pattern of CONVERSATION_PATH_PATTERNS[platform] ?? []) {
+    const match = pattern.exec(path);
+    if (match) return match[1];
   }
 
-  const chatUrlTemplate = PLATFORM_CONFIG[platform].promptUrlTemplate();
-  const regex = new RegExp(`${chatUrlTemplate}([a-zA-Z0-9_-]+)`);
-  const match = regex.exec(url);
-  return match?.[1] || null;
+  return null;
 };

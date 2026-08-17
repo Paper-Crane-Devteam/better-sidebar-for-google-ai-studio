@@ -1,113 +1,68 @@
 import { Platform } from '@/shared/types/platform';
 import { apiScanner } from './scan-api';
+import { scrollHistoryToEnd, waitForHistoryScroller } from './history-scroller';
 import i18n from '@/locale/i18n';
 
-function waitForElement(selector: string, timeout = 10000): Promise<Element | null> {
-  return new Promise((resolve) => {
-    const el = document.querySelector(selector);
-    if (el) return resolve(el);
-
-    const observer = new MutationObserver((_mutations, obs) => {
-      const element = document.querySelector(selector);
-      if (element) {
-        obs.disconnect();
-        resolve(element);
-      }
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-
-    setTimeout(() => {
-      observer.disconnect();
-      resolve(null);
-    }, timeout);
-  });
-}
-
-function waitForContentChange(targetNode: Node, timeout = 3000): Promise<boolean> {
-  return new Promise((resolve) => {
-    let hasChanged = false;
-    const observer = new MutationObserver(() => {
-      hasChanged = true;
-      observer.disconnect();
-      resolve(true);
-    });
-
-    observer.observe(targetNode, { childList: true, subtree: true });
-
-    setTimeout(() => {
-      observer.disconnect();
-      resolve(hasChanged);
-    }, timeout);
-  });
-}
-
+/**
+ * Full library scan for Gemini.
+ *
+ * Used to run on the `/search` history page, but that page stopped
+ * lazy-loading more conversations on scroll. The native sidebar's
+ * `infinite-scroller` is the only surface that still pages through history, so
+ * the scan drives that instead and lets the API scanner collect whatever
+ * Gemini requests along the way.
+ */
 export async function scanLibrary() {
   console.log('Starting Gemini library scan...');
-  
+
   // Ensure scanner is listening (idempotent check inside start)
   apiScanner.start();
 
+  // Hold back the incremental sync flush for the whole scan. If it saves the
+  // batches as they arrive, the DB diff in SAVE_SCANNED_ITEMS finds nothing new
+  // and the "imported N conversations" toast always reports 0.
+  const resumeNotifications = apiScanner.pauseNotifications();
+
   try {
-    // 2. Find Container
-    console.log('Waiting for .recent-conversations-container...');
-    const container = (await waitForElement(
-      '.recent-conversations-container',
-      10000
-    )) as HTMLElement;
+    return await runScan();
+  } finally {
+    resumeNotifications();
+  }
+}
 
-    if (!container) {
-      console.error('Gemini Scan: Could not find .recent-conversations-container');
-      // Even if we can't scroll, we might have captured some initial items if the page loaded them.
+async function runScan() {
+  try {
+    const scroller = await waitForHistoryScroller(10000);
+
+    if (!scroller) {
+      console.error(
+        'Gemini Scan: sidebar history scroller not found — keeping whatever was already captured.',
+      );
     } else {
-        // 3. Scroll Loop
-        console.log('Found container, starting scroll loop...');
-        let consecutiveNoLoad = 0;
-
-        while (true) {
-            const { scrollTop, scrollHeight, clientHeight } = container;
-            const currentScrollBottom = scrollTop + clientHeight;
-
-            // Check if we are close to the bottom
-            if (Math.abs(scrollHeight - currentScrollBottom) < 50) {
-                if (consecutiveNoLoad > 2) {
-                    console.log('Gemini Scan: Reached end of list.');
-                    break;
-                }
-            }
-
-            // Scroll to bottom
-            container.scrollTop = scrollHeight;
-
-            // Wait for content change or timeout
-            const changed = await waitForContentChange(container, 2000);
-            
-            if (changed) {
-                consecutiveNoLoad = 0;
-                // Tiny buffer
-                await new Promise(r => setTimeout(r, 500));
-            } else {
-                consecutiveNoLoad++;
-                // If no change, wait a bit longer just in case network is slow
-                await new Promise(r => setTimeout(r, 1000));
-            }
-        }
+      const before = apiScanner.getItems().length;
+      await scrollHistoryToEnd(scroller, {
+        logPrefix: 'Gemini Scan',
+        onBatchLoaded: () => {
+          console.log(
+            `Gemini Scan: captured ${apiScanner.getItems().length} raw items so far`,
+          );
+        },
+      });
+      console.log(
+        `Gemini Scan: scroll finished, raw items ${before} → ${apiScanner.getItems().length}`,
+      );
     }
-    
+
     // Wait a bit more for any final pending requests
     await new Promise((r) => setTimeout(r, 2000));
-
   } catch (err) {
-      console.error('Gemini Scan: Error during scan', err);
+    console.error('Gemini Scan: Error during scan', err);
   }
 
-  // 4. Process and Send
+  // Process and Send
   const items = apiScanner.getItems();
   console.log(`Gemini Scan: Collected ${items.length} raw items.`);
-  
+
   const uniqueItems = new Map<string, any>();
   for (const item of items) {
       if (item && item.id) {

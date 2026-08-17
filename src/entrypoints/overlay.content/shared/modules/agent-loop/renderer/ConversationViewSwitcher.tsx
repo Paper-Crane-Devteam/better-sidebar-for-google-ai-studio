@@ -10,7 +10,7 @@
  * dot are gone too, since the dock already reports what the loop is doing.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAgentLoopStore } from '../agent-loop-store';
 import { useAgentViewStore } from '../agent-view-store';
 import { useAgentViewState } from './useAgentViewState';
@@ -68,6 +68,48 @@ export const ConversationViewSwitcher: React.FC = () => {
   const setOverride = useAgentViewStore((s) => s.setOverride);
 
   /**
+   * The pick that was just made, held here as well as in the persisted store.
+   *
+   * The store can only key by conversation id, and there isn't always one: a chat
+   * whose id hasn't appeared in the URL yet has none, and neither does one whose URL
+   * shape we fail to read. `setOverride` then quietly does nothing, the effect below
+   * re-derives 'custom' from the agent turns on the page, and the button reads as
+   * dead — the click did land, it was just undone in the same commit.
+   *
+   * Scoped to the conversation it was made in, so it doesn't follow you elsewhere.
+   */
+  const manualRef = useRef<{ conversationId: string | null; mode: ViewMode } | null>(null);
+
+  /**
+   * Starting a task supersedes the pick, matching what `start()` does to the stored
+   * override: "show me the raw DOM" was about reading history.
+   *
+   * Keyed off the idle → running transition rather than `isRunning`, so a pick made
+   * *during* a run survives — watching the native turns stream in while the agent
+   * works is a reasonable thing to want.
+   */
+  useEffect(() => {
+    let wasIdle = useAgentLoopStore.getState().status === 'idle';
+    return useAgentLoopStore.subscribe((s) => {
+      const idle = s.status === 'idle';
+      if (wasIdle && !idle) manualRef.current = null;
+      wasIdle = idle;
+    });
+  }, []);
+
+  /**
+   * A pick made in a brand new chat belongs to whatever id the platform then hands
+   * it, the same adoption `attachSessionConversation` does for the session. Declared
+   * above the reconcile effect so the two agree within the same commit.
+   */
+  useEffect(() => {
+    const pending = manualRef.current;
+    if (!conversationId || !pending || pending.conversationId !== null) return;
+    manualRef.current = { conversationId, mode: pending.mode };
+    setOverride(conversationId, pending.mode);
+  }, [conversationId, setOverride]);
+
+  /**
    * Resolve the view from the conversation instead of resetting it on navigation.
    *
    * The old effect forced 'original' whenever the conversation id changed while
@@ -81,9 +123,14 @@ export const ConversationViewSwitcher: React.FC = () => {
    * mount and turns true once the DOM has been parsed, a tick or two later.
    */
   useEffect(() => {
-    const desired = override ?? (hasAgentContent || isRunning ? 'custom' : 'original');
+    const manual =
+      manualRef.current?.conversationId === conversationId
+        ? manualRef.current?.mode
+        : undefined;
+    const desired =
+      manual ?? override ?? (hasAgentContent || isRunning ? 'custom' : 'original');
     if (viewMode !== desired) setViewMode(desired);
-  }, [override, hasAgentContent, isRunning, viewMode, setViewMode]);
+  }, [override, hasAgentContent, isRunning, viewMode, setViewMode, conversationId]);
 
   if (!shouldShow) {
     return null;
@@ -93,7 +140,9 @@ export const ConversationViewSwitcher: React.FC = () => {
 
   const selectView = (next: ViewMode) => {
     if (next === active) return;
+    manualRef.current = { conversationId, mode: next };
     setViewMode(next);
+    // Only the persisted half needs an id — the pick itself always takes effect
     if (conversationId) setOverride(conversationId, next);
   };
 

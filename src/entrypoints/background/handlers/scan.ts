@@ -43,35 +43,49 @@ export async function handleScan(
     }
     case 'SCAN_LIBRARY': {
       const platform = message.platform || 'aistudio';
+      // Gemini's `/search` history page no longer lazy-loads on scroll, so its
+      // scan drives the native sidebar in place — no navigation needed.
       const url =
         platform === Platform.GEMINI
-          ? 'https://gemini.google.com/search'
+          ? null
           : platform === Platform.CHATGPT
           ? 'https://chatgpt.com/'
           : 'https://aistudio.google.com/library';
+
+      console.log(
+        `[BS Scan] SCAN_LIBRARY platform=${platform} navigateTo=${url ?? '(stay on current page)'}`,
+      );
 
       // Always scan in the tab that initiated the request so that
       // isScanning UI state and SCAN_COMPLETE stay on the same tab.
       const originTabId = sender.tab?.id;
       if (originTabId != null) {
         scanOriginTabId = originTabId;
-        await browser.scripting.executeScript({
-          target: { tabId: originTabId },
-          func: navigate,
-          args: [url],
-          world: 'MAIN',
-        });
-        setTimeout(() => {
-          browser.tabs
-            .sendMessage(originTabId, { type: 'START_LIBRARY_SCAN' })
-            .catch((e) => console.error('Failed to start library scan:', e));
-        }, 2000);
+        if (url) {
+          await browser.scripting.executeScript({
+            target: { tabId: originTabId },
+            func: navigate,
+            args: [url],
+            world: 'MAIN',
+          });
+        }
+        setTimeout(
+          () => {
+            browser.tabs
+              .sendMessage(originTabId, { type: 'START_LIBRARY_SCAN' })
+              .catch((e) => console.error('Failed to start library scan:', e));
+          },
+          url ? 2000 : 0,
+        );
         return { success: true };
       }
 
       // Fallback: no sender tab (e.g. triggered from popup) — open a new tab
       scanOriginTabId = null;
-      const tab = await browser.tabs.create({ url, active: true });
+      const tab = await browser.tabs.create({
+        url: url ?? 'https://gemini.google.com/app',
+        active: true,
+      });
       const listener = (tabId: number, changeInfo: { status?: string }) => {
         if (tabId === tab.id && changeInfo.status === 'complete') {
           browser.tabs.onUpdated.removeListener(listener);
@@ -125,6 +139,11 @@ export async function handleScan(
         const allExisting = await conversationRepo.getAll(platform);
         const existingMap = new Map(allExisting.map((c) => [c.external_id, c]));
         newCount = items.filter((item) => !existingMap.has(item.external_id)).length;
+        console.log(
+          `[BS Scan] SAVE_SCANNED_ITEMS platform=${platform} scanned=${items.length} alreadyInDb=${
+            items.length - newCount
+          } new=${newCount}`,
+        );
 
         const conversationsToSave = await Promise.all(
           items.map(async (item) => {
