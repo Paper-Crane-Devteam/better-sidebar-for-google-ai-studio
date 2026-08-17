@@ -4,7 +4,7 @@ import { useWhatsNew } from './useWhatsNew';
 import { getChangelog, CURRENT_VERSION, getEntryMarkdown, isMajorVersion } from './changelog';
 import type { ChangeLogEntry } from './changelog';
 import { X, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
-import { Button } from '../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { useI18n } from '@/shared/hooks/useI18n';
 import snippetDemoGif from '@/assets/images/snippet-demo.gif';

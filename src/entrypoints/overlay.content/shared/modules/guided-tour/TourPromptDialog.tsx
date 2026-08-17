@@ -1,6 +1,6 @@
 import React from 'react';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { Button } from '@/entrypoints/overlay.content/shared/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Compass, X } from 'lucide-react';
 import { Z_INDEX } from '@/shared/lib/z-index';
 

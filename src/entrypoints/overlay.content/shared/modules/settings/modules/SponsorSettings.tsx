@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Separator } from '../../../components/ui/separator';
-import { Button } from '../../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Heart, Star, Share2, Link, Check } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { toast } from '@/shared/lib/toast';

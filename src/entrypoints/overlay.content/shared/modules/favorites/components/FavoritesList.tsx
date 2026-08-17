@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useAppStore } from '@/shared/lib/store';
 import { Star, Image as ImageIcon, MessageSquare } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { navigate } from '@/shared/lib/navigation';
 import { cn } from '@/shared/lib/utils/utils';

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '@/shared/lib/store';
-import { Button } from '../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Plus } from 'lucide-react';
 import { TagItem } from './TagItem';

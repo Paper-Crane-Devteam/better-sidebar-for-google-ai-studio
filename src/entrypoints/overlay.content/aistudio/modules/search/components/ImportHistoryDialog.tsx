@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import JSZip from 'jszip';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { Button } from '@/entrypoints/overlay.content/shared/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/entrypoints/overlay.content/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Loader2, CheckCircle, AlertCircle, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';

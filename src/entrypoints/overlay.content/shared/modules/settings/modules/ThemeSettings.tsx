@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { Button } from '../../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Separator } from '../../../components/ui/separator';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { Moon, Sun, Monitor, Check, Sparkles, Eye, ShoppingCart, Wand2, Download, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';

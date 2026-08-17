@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/shared/lib/store';
-import { Button } from '../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { RefreshCw, Loader2, FolderPlus } from 'lucide-react';
 import { ExplorerHeader } from './components/ExplorerHeader';
 import { ArboristTree, ArboristTreeHandle } from './components/ArboristTree';

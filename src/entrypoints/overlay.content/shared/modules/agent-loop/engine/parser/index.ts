@@ -17,7 +17,12 @@
 
 import type { ParsedToolCall, ParseResult } from '../../types';
 import { MAX_TOOL_CALLS, TOOL_TAG, findMissingParams, isSupportedTool } from './tool-schema';
-import { isInsideCodeBlock, tryParseJson, tryParseUnstructured } from './fallbacks';
+import {
+  describeJsonFault,
+  isInsideCodeBlock,
+  tryParseJson,
+  tryParseUnstructured,
+} from './fallbacks';
 
 export {
   TOOL_TAG,
@@ -50,7 +55,12 @@ export function parseToolCalls(responseText: string): ParseResult {
     const parsed = tryParseJson(block) || tryParseUnstructured(block);
 
     if (!parsed) {
-      errors.push(`Failed to parse tool call content: ${block.substring(0, 100)}...`);
+      // The fault, when we can name it, is the whole value of this message: the AI's
+      // one format retry is wasted if all it's told is "that didn't parse".
+      const fault = describeJsonFault(block);
+      errors.push(
+        `Failed to parse tool call content${fault ? ` — ${fault}` : ''}: ${block.substring(0, 100)}...`,
+      );
       continue;
     }
 

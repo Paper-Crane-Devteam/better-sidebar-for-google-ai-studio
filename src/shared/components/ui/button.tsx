@@ -9,8 +9,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // No border on a solid fill: `--border` is a surface line colour, so on
+        // top of `--primary` it lands as a stray ring of a foreign value in
+        // every theme (near-white in AI Studio light, near-black in dark).
+        // Hover deepens the same colour rather than swapping it for flat
+        // `--accent` grey, which read as the button going disabled.
         default:
-          "bg-primary text-primary-foreground shadow border border-border/60 hover:bg-accent hover:text-accent-foreground",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
@@ -18,7 +23,9 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary-foreground underline-offset-4 hover:underline",
+        // `text-primary`, not `text-primary-foreground` — a link has no fill
+        // behind it, so the on-fill colour would be invisible against the page.
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2",

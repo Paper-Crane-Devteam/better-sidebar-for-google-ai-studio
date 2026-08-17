@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Separator } from '../../../components/ui/separator';
-import { Button } from '../../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import {
   Check,
   Loader2,

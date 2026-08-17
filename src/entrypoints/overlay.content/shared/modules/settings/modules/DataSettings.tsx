@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Separator } from '../../../components/ui/separator';
-import { Button } from '../../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import {
   Trash2,

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Separator } from '../../../components/ui/separator';
-import { Button } from '../../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { RotateCcw } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import {

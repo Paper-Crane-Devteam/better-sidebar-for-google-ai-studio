@@ -19,7 +19,7 @@
 import type { ParsedToolCall, ToolRisk } from './types';
 import { useAgentLoopStore } from './agent-loop-store';
 import { useAgentPolicyStore } from './agent-policy-store';
-import { CONTROL_TOOLS } from './engine/parser/tool-schema';
+import { CONTROL_TOOLS, isHandoffTool } from './engine/parser/tool-schema';
 
 // ─── Approval ────────────────────────────────────────────────────────────────
 
@@ -38,10 +38,14 @@ export function isControlTool(toolName: string): boolean {
  *   `complete_task` under `read` meant "don't auto-run queries" also meant "ask me
  *   before finishing", which is a gate over an operation with no downside and no
  *   alternative: refusing it just makes the AI say the same thing again next round.
- * - `write`   — SQL that modifies data. Only that: `export` and
- *   `sync_conversation_messages` produce output but leave the database alone, so
- *   gating them behind the write switch would train people to turn it on.
+ * - `write`   — SQL that modifies data. Only that: `export` produces output but leaves
+ *   the database alone, so gating it behind the write switch would train people to
+ *   turn it on.
  * - `read`    — everything else.
+ *
+ * `sync_conversation_messages` sits awkwardly across this: it records messages, but
+ * through the extension's normal capture path rather than SQL the user could read
+ * first. It is handled by name in `requiresApproval` instead — see there.
  */
 export function getToolRisk(toolCall: ParsedToolCall): ToolRisk {
   if (isControlTool(toolCall.name)) return 'control';
@@ -63,6 +67,11 @@ export function requiresApproval(toolCall: ParsedToolCall): boolean {
 
   const { speedMode, approveRestOfRound } = useAgentLoopStore.getState();
   if (speedMode || approveRestOfRound) return false;
+
+  // A handoff takes the tab away for minutes and ends the session (see HANDOFF_TOOLS).
+  // Neither switch fits: it isn't a SQL write, and the read switch is on by default,
+  // which would let the browser wander off mid-sentence with no click involved.
+  if (isHandoffTool(toolCall.name)) return true;
 
   const { autoRunReads, autoRunWrites } = useAgentPolicyStore.getState();
   return risk === 'write' ? !autoRunWrites : !autoRunReads;

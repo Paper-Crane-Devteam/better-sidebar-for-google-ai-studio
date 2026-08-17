@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '@/shared/lib/store';
 import { useModalStore } from '@/shared/lib/modal';
-import { Button } from '../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Loader2, FolderPlus, Plus } from 'lucide-react';
 import { PromptsHeader } from './components/PromptsHeader';
 import { FilterBar } from '../../components/FilterBar';

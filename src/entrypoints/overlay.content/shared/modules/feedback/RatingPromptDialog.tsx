@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRatingStore } from '@/shared/lib/rating-store';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { Button } from '@/entrypoints/overlay.content/shared/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import {
   Star,
   MessageSquare,

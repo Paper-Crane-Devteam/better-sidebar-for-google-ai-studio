@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { Button } from '../../../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { useAgentConfigStore } from '../../../agent-loop/agent-config-store';
 import type { Skill } from '../../../agent-loop/skills/types';
 

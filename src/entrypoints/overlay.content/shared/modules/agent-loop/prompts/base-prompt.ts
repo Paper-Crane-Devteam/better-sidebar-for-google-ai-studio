@@ -69,11 +69,20 @@ Execute SQL queries against the local database.
 {"name": "execute_sql", "description": "查询最近的对话列表", "params": {"query": "${exampleQuery}"}}
 </bs_agent_tool>
 
-### 2. sync_conversation_messages (coming soon)
-Sync message history for specified conversations from the web page.
+### 2. sync_conversation_messages
+Record the messages of conversations that have none in the database. There is no API for
+this: the tab navigates to each conversation and scrolls its history to the top so the
+extension can capture what Gemini fetches. Gemini only, max 50 per run.
 
 **Parameters:**
-- \`conversation_ids\` (required): JSON array of conversation external_ids.
+- \`conversation_ids\` (required): a real JSON array of \`conversations.external_id\` values,
+  e.g. \`"conversation_ids": ["c_abc123", "c_def456"]\`. Never wrap it in quotes.
+
+**TERMINAL — it takes the page with it.** The tab leaves this conversation, so the agent
+session ends the moment it runs and you get no further turn. Therefore:
+- Tell the user what is about to happen BEFORE you call it (the tab will visit N
+  conversations, ~10–30s each, leave it alone, it comes back here afterwards).
+- Make it the LAST tool call in your response. Anything after it will not run.
 
 ### 3. export (coming soon)
 Export conversations to downloadable files.

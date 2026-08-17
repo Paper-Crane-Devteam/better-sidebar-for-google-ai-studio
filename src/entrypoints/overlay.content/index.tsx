@@ -47,6 +47,14 @@ export default defineContentScript({
       case Platform.GEMINI: {
         const { initGeminiOverlay } = await import('./gemini/Layout');
         await initGeminiOverlay(mainStyles);
+        // A message-sync run drives the tab from page to page, so every step lands
+        // back here. Picks up an unfinished run, or reports one that just finished.
+        const { resumeSyncRun } = await import(
+          './shared/modules/agent-loop/tools/sync'
+        );
+        resumeSyncRun().catch((e) =>
+          console.error('Better Sidebar: sync run resume failed', e),
+        );
         break;
       }
       // case Platform.CHATGPT: {

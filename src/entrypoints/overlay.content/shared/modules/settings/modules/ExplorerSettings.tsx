@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Separator } from '../../../components/ui/separator';
-import { Button } from '../../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { FolderTree, List, ArrowDownAZ, Calendar } from 'lucide-react';
 import { Switch } from '@/shared/components/ui/switch';

@@ -169,6 +169,7 @@ Rules for tool call format:
 - The outer \`<bs_agent_tool>\` wrapper is REQUIRED
 - Inside must be a valid JSON object with "name", "description", and "params" fields
 - "description" is REQUIRED — a short human-readable explanation
+- A param that takes a list is a real JSON array: \`"ids": ["a", "b"]\`. Never a quoted string \`"ids": "[...]"\` — the inner quotes come out unescaped and the entire tool call is discarded unparsed
 - You can output multiple <bs_agent_tool> blocks in one response (executed in order)
 - IMPORTANT: Always use <bs_agent_tool> tags (NOT <tool_call>)
 

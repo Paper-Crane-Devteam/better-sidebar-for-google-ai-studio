@@ -16,6 +16,7 @@ import type { LoopContext } from '../context';
 import { executeToolCall } from '../../tools/tool-registry';
 import { parseCompleteTaskSignal } from '../../tools/complete-task';
 import { buildToolCallFingerprint, getToolRisk, requiresApproval } from '../../execution-policy';
+import { isHandoffTool } from '../parser/tool-schema';
 import { AUTO_APPROVED, requestApproval } from './approval-gate';
 
 export type ExecuteOutcome =
@@ -183,6 +184,17 @@ export async function executeTools(
     results.push(section(toolCall, body));
 
     // ── Session-ending signals ─────────────────────────────────────────────
+
+    // A handoff tool navigated the tab away from this conversation. Nothing left to
+    // send results into, and no turn coming back — end here rather than staging a
+    // reply on a page that is being torn down.
+    if (success && isHandoffTool(toolCall.name)) {
+      console.log(`[AgentLoop] Handoff to ${toolCall.name}, ending session`);
+      ctx.store.setCurrentTool(null);
+      ctx.finish('complete');
+      return { kind: 'ended' };
+    }
+
     const completion = parseCompleteTaskSignal(result);
     if (completion) {
       console.log(`[AgentLoop] Task explicitly ended (${completion.status}):`, completion.summary);

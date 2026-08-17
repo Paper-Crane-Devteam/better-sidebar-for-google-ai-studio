@@ -1,11 +1,16 @@
 /**
- * Tool call text parsing utilities.
+ * Tool call text parsing for the renderer.
+ *
+ * Delegates to the engine's parser rather than keeping a second implementation. The
+ * copy that used to live here drifted: it did a plain `JSON.parse` with no repair
+ * pass, so a block the engine could still salvage rendered as raw text — the user saw
+ * a wall of JSON where a tool card belonged, and no approval button. Same input, same
+ * verdict, in both places.
  */
 
 import { TOOL_CALL_TAG } from '../constants';
 import type { ParsedToolCall } from '../../types';
-
-const KNOWN_TOOLS = ['execute_sql', 'sync_conversation_messages', 'export', 'complete_task'];
+import { tryParseJson, tryParseUnstructured } from '../../engine/parser/fallbacks';
 
 export interface ExtractedToolCall {
   toolCall: ParsedToolCall;
@@ -15,48 +20,19 @@ export interface ExtractedToolCall {
   endIndex: number;
 }
 
+/** Strip the `<bs_agent_tool>` wrapper if there is one */
+function unwrap(text: string): string {
+  const tagRegex = new RegExp(`<${TOOL_CALL_TAG}>([\\s\\S]*?)<\\/${TOOL_CALL_TAG}>`);
+  const tagContent = text.match(tagRegex);
+  return tagContent ? tagContent[1].trim() : text.trim();
+}
+
 /**
  * Parse a single tool call string or content block.
  */
 export function parseToolCallFromText(text: string): ParsedToolCall | null {
-  const tagRegex = new RegExp(`<${TOOL_CALL_TAG}>([\\s\\S]*?)<\\/${TOOL_CALL_TAG}>`);
-  const tagContent = text.match(tagRegex);
-  const content = tagContent ? tagContent[1].trim() : text.trim();
-
-  if (content.startsWith('{')) {
-    try {
-      const obj = JSON.parse(content);
-      if (typeof obj.name !== 'string') return null;
-      return {
-        name: obj.name.trim(),
-        description: typeof obj.description === 'string' ? obj.description.trim() : undefined,
-        params: typeof obj.params === 'object' && obj.params !== null
-          ? Object.fromEntries(Object.entries(obj.params).map(([k, v]) => [k, String(v)]))
-          : {},
-      };
-    } catch { /* fall through */ }
-  }
-
-  for (const tool of KNOWN_TOOLS) {
-    if (content.startsWith(tool)) {
-      const rest = content.slice(tool.length).trim();
-      if (tool === 'execute_sql') {
-        const sqlMatch = rest.match(/(SELECT|INSERT|UPDATE|DELETE)\b[\s\S]*/i);
-        if (sqlMatch) {
-          return {
-            name: tool,
-            description: rest.slice(0, sqlMatch.index).trim() || undefined,
-            params: { query: sqlMatch[0].trim() },
-          };
-        }
-      }
-      if (tool === 'complete_task') {
-        return { name: tool, description: undefined, params: { summary: rest } };
-      }
-      return { name: tool, description: undefined, params: {} };
-    }
-  }
-  return null;
+  const content = unwrap(text);
+  return tryParseJson(content) || tryParseUnstructured(content);
 }
 
 /**
@@ -86,32 +62,22 @@ export function parseAllToolCallsFromText(text: string): ExtractedToolCall[] {
 
 /**
  * Extract display info (toolName, description, query) from tool call text.
+ *
+ * `query` is whatever this call's headline param is — the SQL, the summary, or the id
+ * list — since that is the one line the card shows before you expand it.
  */
-export function extractToolInfo(text: string): { toolName: string; description: string; query: string } {
-  const tagRegex = new RegExp(`<${TOOL_CALL_TAG}>([\\s\\S]*?)<\\/${TOOL_CALL_TAG}>`);
-  const tagContent = text.match(tagRegex);
-  const content = tagContent ? tagContent[1].trim() : text.trim();
+export function extractToolInfo(text: string): {
+  toolName: string;
+  description: string;
+  query: string;
+} {
+  const parsed = parseToolCallFromText(text);
+  if (!parsed) return { toolName: 'tool_call', description: '', query: '' };
 
-  if (content.startsWith('{')) {
-    try {
-      const obj = JSON.parse(content);
-      return {
-        toolName: obj.name || 'unknown',
-        description: obj.description || '',
-        query: obj.params?.query || obj.params?.summary || '',
-      };
-    } catch { /* fall through */ }
-  }
-
-  for (const tool of KNOWN_TOOLS) {
-    if (content.startsWith(tool)) {
-      const rest = content.slice(tool.length).trim();
-      const sqlMatch = rest.match(/(SELECT|INSERT|UPDATE|DELETE)\b[\s\S]*/i);
-      if (sqlMatch) {
-        return { toolName: tool, description: rest.slice(0, sqlMatch.index).trim(), query: sqlMatch[0].trim() };
-      }
-      return { toolName: tool, description: '', query: rest };
-    }
-  }
-  return { toolName: 'tool_call', description: '', query: '' };
+  const { params } = parsed;
+  return {
+    toolName: parsed.name || 'unknown',
+    description: parsed.description || '',
+    query: params.query || params.summary || params.conversation_ids || params.ids || '',
+  };
 }

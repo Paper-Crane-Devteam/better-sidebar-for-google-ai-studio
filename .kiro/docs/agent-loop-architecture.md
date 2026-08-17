@@ -875,7 +875,8 @@ agentEventBus.emit('launcher:run-entry', { entryId, userInput, autoSend });
 | 项目 | 状态 | 说明 |
 |------|------|------|
 | DB Snapshot / 撤销 | 占位 | `snapshot-manager.ts` 全部返回 false；撤销 UI 已移除，等实现后再加回 |
-| sync_conversation_messages | 占位 | 需实现页面导航 + 滚动抓取 |
+| sync_conversation_messages | 已做 | `tools/sync/`：job 存 `chrome.storage.local`，每次页面加载由 `resumeSyncRun()` 续跑；滚动目标是 `chat-window infinite-scroller`（同 SmartScrollbar），往上滚到高度不再变为止。选不到该元素时降级为 `no-scroller`，只录打开时那一页，entry 记 `partial`。未在真实长对话上验证过 |
+| handoff 工具 | 已做 | `HANDOFF_TOOLS`（目前只有 sync）：调用成功即结束 session，因为页面会被导航走。approval 强制要问一次，见 `requiresApproval()` |
 | settings UI | 未做 | 需在设置面板加 agentLoop 独立开关（现复用 slashCommand）；`AgentPolicyControls` 那三个持久开关按理也该搬过去，现在暂居 Dock 的齿轮里 |
 | AI Studio 支持 | 未做 | 需写 adapter + entry component |
 | 自动继续 | 已做 | `autoContinue` 开关（默认开）∩ 本轮批准情况，见 `shouldAutoSend()` |

@@ -5,14 +5,11 @@ export const exportChatsPrompt: BuiltInPrompt = {
   title: 'Export Conversations',
   description: 'Query and display conversation data for the user',
   icon: 'Download',
-  getPromptContent: () => `## Task: Export / Display Conversation Data
+  getPromptContent: () => `## Task: Export Conversations
 
-Help the user access their conversation data:
-1. Ask what they'd like to export (specific conversations, a folder, by date range, etc.).
-2. Query the relevant conversations and their messages from the database.
-3. Format and display the results in a readable way (markdown, summary, etc.).
-
-Note: The export tool is not yet available, so present data directly in the chat.
-You can query messages with: SELECT m.* FROM messages m JOIN conversations c ON m.conversation_id = c.id WHERE ...
+Help the user download their conversations as files:
+1. Find the conversation ids with execute_sql (by title, folder, tag or date range).
+2. Call the export tool with all of those ids in one call.
+3. Leave the format parameter out when the user did not name one — the extension asks them.
 `,
 };

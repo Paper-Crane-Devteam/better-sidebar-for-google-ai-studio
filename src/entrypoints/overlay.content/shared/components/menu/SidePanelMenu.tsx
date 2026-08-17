@@ -6,7 +6,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/shared/components/ui/dropdown-menu';
-import { Button } from '../ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
 import { navigate } from '@/shared/lib/navigation';

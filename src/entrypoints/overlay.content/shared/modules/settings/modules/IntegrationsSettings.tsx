@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Button } from '../../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Separator } from '../../../components/ui/separator';
 import { Input } from '@/shared/components/ui/input';
 import {

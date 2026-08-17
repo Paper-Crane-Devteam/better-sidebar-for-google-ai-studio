@@ -2,7 +2,7 @@ import React from 'react';
 import { Separator } from '../../../components/ui/separator';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { ExternalLink, Sparkles } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { useWhatsNewStore } from '../../whats-new/whats-new-store';
 
 export const AboutSettings = () => {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button } from '../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { X, Settings, Share2, Info, LayoutTemplate, Database, SlidersHorizontal, Palette, Keyboard, Plug, Bot } from 'lucide-react';
 import { UIcon } from '@/shared/components/ui/icon';
 import { GeneralSettings } from './modules/GeneralSettings';

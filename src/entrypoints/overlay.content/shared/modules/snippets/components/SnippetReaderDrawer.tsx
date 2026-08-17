@@ -4,7 +4,7 @@ import { useModalStore } from '@/shared/lib/modal';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { X, Copy, Pencil, ExternalLink, ChevronUp, ChevronDown, Download } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { CreateSnippetForm } from './CreateSnippetForm';
 import { toast } from '@/shared/lib/toast';
 import { cn } from '@/shared/lib/utils/utils';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Github, MessageCircle, Mail, ExternalLink, Heart } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
 

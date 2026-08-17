@@ -50,10 +50,14 @@ function getFormatOptions(): FormatOption[] {
 
 interface ExportFormatContentProps {
   onSelect: (format: ExportFormat) => void;
+  /** Restrict which formats are offered. Undefined shows all of them. */
+  allowed?: readonly ExportFormat[];
 }
 
-const ExportFormatContent = ({ onSelect }: ExportFormatContentProps) => {
-  const options = getFormatOptions();
+const ExportFormatContent = ({ onSelect, allowed }: ExportFormatContentProps) => {
+  const options = allowed
+    ? getFormatOptions().filter((opt) => allowed.includes(opt.format))
+    : getFormatOptions();
 
   return (
     <div className="flex flex-col gap-2 py-2">
@@ -77,22 +81,83 @@ const ExportFormatContent = ({ onSelect }: ExportFormatContentProps) => {
   );
 };
 
+export interface ExportDialogOptions {
+  /** Only offer these formats. Defaults to all five. */
+  allowed?: readonly ExportFormat[];
+  /** Modal title override */
+  title?: string;
+  /** Called when the dialog is dismissed without a choice */
+  onCancel?: () => void;
+  /** Modal id, used to detect dismissal from outside */
+  id?: string;
+}
+
 /**
  * Opens a modal dialog for selecting export format.
  * When user clicks a format, the modal closes and `onSelect` is called.
  */
-export function openExportDialog(onSelect: (format: ExportFormat) => void): void {
+export function openExportDialog(
+  onSelect: (format: ExportFormat) => void,
+  options: ExportDialogOptions = {},
+): void {
   const handleSelect = (format: ExportFormat) => {
     useModalStore.getState().close();
     onSelect(format);
   };
 
+  const dismiss = () => {
+    useModalStore.getState().close();
+    options.onCancel?.();
+  };
+
   useModalStore.getState().open({
+    id: options.id,
     type: 'info',
-    title: i18n.t('export.export'),
-    content: <ExportFormatContent onSelect={handleSelect} />,
+    title: options.title || i18n.t('export.export'),
+    content: <ExportFormatContent onSelect={handleSelect} allowed={options.allowed} />,
     modalClassName: 'max-w-sm',
-    onConfirm: () => useModalStore.getState().close(),
-    onCancel: () => useModalStore.getState().close(),
+    onConfirm: dismiss,
+    onCancel: dismiss,
+  });
+}
+
+/**
+ * Promise-flavoured format picker, for callers that aren't components — the agent's
+ * `export` tool in particular, which has to await the answer and then keep going.
+ *
+ * Resolves `null` when the user walks away. That path is guarded twice: through the
+ * modal's own cancel callback, and through a subscription that notices the modal
+ * leaving the stack by any other route (Esc, backdrop, `closeAll`). A promise left
+ * unresolved here would park the agent loop with no way out, so "gone" always counts
+ * as "cancelled".
+ */
+export function pickExportFormat(
+  options: Omit<ExportDialogOptions, 'onCancel' | 'id'> = {},
+): Promise<ExportFormat | null> {
+  return new Promise((resolve) => {
+    const id = `export-format-${crypto.randomUUID().slice(0, 8)}`;
+    let settled = false;
+
+    const finish = (format: ExportFormat | null) => {
+      if (settled) return;
+      settled = true;
+      unsubscribe();
+      resolve(format);
+    };
+
+    const unsubscribe = useModalStore.subscribe((state) => {
+      if (state.stack.some((m) => m.id === id)) return;
+      // Picking a format also removes the modal from the stack — `handleSelect`
+      // closes before it calls back — so a disappearance only means "cancelled" if
+      // no choice arrives in the same tick. Both happen synchronously, so a
+      // microtask is late enough to tell them apart.
+      queueMicrotask(() => finish(null));
+    });
+
+    openExportDialog((format) => finish(format), {
+      ...options,
+      id,
+      onCancel: () => finish(null),
+    });
   });
 }

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Button } from '../ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { ScrollArea } from '../ui/scroll-area';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { Database, X, ChevronUp, ChevronDown, Filter, ChevronLeft, ChevronRight, GripHorizontal } from 'lucide-react';

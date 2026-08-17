@@ -1195,6 +1195,11 @@
       "resultsTitle": "Tool results",
       "promptTitle": "Prompt content"
     },
+    "sync": {
+      "doneAll": "Synced {{count}} conversation(s)",
+      "donePartial": "Synced {{count}} conversation(s), {{incomplete}} incomplete",
+      "remaining": "{{count}} conversation(s) still have no messages — run the sync again to continue"
+    },
     "overlay": {
       "emptyTitle": "Agent view",
       "emptyHint": "Type below, or pick an agent prompt to get started",

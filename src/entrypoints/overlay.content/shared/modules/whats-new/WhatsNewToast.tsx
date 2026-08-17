@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useWhatsNew } from './useWhatsNew';
 import { CURRENT_VERSION } from './changelog';
 import { Sparkles, X } from 'lucide-react';
-import { Button } from '../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Z_INDEX } from '@/shared/lib/z-index';
 
 export const WhatsNewToast: React.FC = () => {

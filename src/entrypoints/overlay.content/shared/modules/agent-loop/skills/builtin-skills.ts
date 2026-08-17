@@ -40,18 +40,75 @@ Tips:
   {
     id: 'builtin-find-empty-chats',
     type: 'builtin',
-    title: 'Find Empty Conversations',
-    description: 'Find conversations with no synced messages that may need cleanup',
-    icon: 'Search',
-    promptContent: `## Task: Find Empty Conversations
+    title: 'Sync Missing Messages',
+    description:
+      'Find conversations whose messages were never recorded, then sync their content',
+    icon: 'RefreshCw',
+    promptContent: `## Task: Sync Conversations With No Messages
 
-Help the user identify conversations that have no message records in the database:
-1. Query conversations that have zero entries in the messages table.
-2. Show the results grouped by platform, including title and creation date.
-3. Suggest actions: the user might want to delete these (soft-delete), or sync their messages first.
+A conversation only gets its messages recorded while the user has it open. Anything
+they haven't visited since installing the extension is in the database as a title with
+no content — which is what makes search and export come up short. This skill finds
+those conversations and fills them in with \`sync_conversation_messages\`.
 
-Note: Empty conversations might just need their messages synced — they aren't necessarily useless.
-Present the data and let the user decide what to do.
+This is not a cleanup task. Do not propose deleting anything unless the user asks.
+
+1. Count them FIRST, with no LIMIT. One run can only carry 50 conversations, so the
+   list you fetch in step 2 is a page, not the total — reporting "50 conversations need
+   syncing" when there are 300 is a wrong answer, and the user has no way to tell.
+
+   \`\`\`sql
+   SELECT COUNT(*) AS total
+   FROM conversations c
+   WHERE c.deleted_at IS NULL
+     AND NOT EXISTS (SELECT 1 FROM messages m WHERE m.conversation_id = c.id)
+   \`\`\`
+
+   Keep the platform filter from the platform rules above in both queries, and skip
+   soft-deleted rows.
+
+2. Then fetch the batch to sync — the most recently active ones first:
+
+   \`\`\`sql
+   SELECT c.external_id, c.title, datetime(c.last_active_at, 'unixepoch') AS last_active
+   FROM conversations c
+   WHERE c.deleted_at IS NULL
+     AND NOT EXISTS (SELECT 1 FROM messages m WHERE m.conversation_id = c.id)
+   ORDER BY c.last_active_at DESC
+   LIMIT 50
+   \`\`\`
+
+3. Report the total from step 1, and say plainly how much of it this run covers:
+   "共 300 个没有消息记录，这轮同步最近的 50 个，剩下的可以再跑一次". If the total is
+   zero, say so and call \`complete_task\`.
+
+4. Explain what syncing involves, in plain language, BEFORE you call the tool. The user
+   needs to know all of this:
+   - the tab will leave this conversation and open each one in turn, scrolling its
+     history to load the older messages
+   - it takes roughly 10–30 seconds per conversation, and they should leave the tab alone
+   - this agent session ends when the sync starts — you will not be able to report back
+   - the tab returns here when it finishes, with a summary toast
+
+5. Then call \`sync_conversation_messages\` with the \`external_id\` values, as the LAST
+   tool call in that response (nothing after it will run):
+
+   \`\`\`
+   <bs_agent_tool>
+   {"name": "sync_conversation_messages", "description": "同步 12 个空对话的消息", "params": {"conversation_ids": ["c_abc123", "c_def456"]}}
+   </bs_agent_tool>
+   \`\`\`
+
+   \`conversation_ids\` is a real JSON array, exactly as above. Writing it as a quoted
+   string (\`"conversation_ids": "[...]"\`) leaves the inner quotes unescaped and the
+   whole call is thrown away.
+
+Notes:
+- Max 50 per run — that cap is the tool's, not the user's problem, so never present a
+  batch of 50 as if it were the whole job.
+- \`conversation_ids\` takes \`conversations.external_id\` (the id in the conversation
+  URL), not the internal \`id\`.
+- If the user only wanted to see the list, skip the sync and call \`complete_task\`.
 `,
     enabled: true,
     createdAt: 0,
@@ -63,15 +120,22 @@ Present the data and let the user decide what to do.
     title: 'Export Conversations',
     description: 'Query and display conversation data for the user',
     icon: 'Download',
-    promptContent: `## Task: Export / Display Conversation Data
+    promptContent: `## Task: Export Conversations
 
-Help the user access their conversation data:
-1. Ask what they'd like to export (specific conversations, a folder, by date range, etc.).
-2. Query the relevant conversations and their messages from the database.
-3. Format and display the results in a readable way (markdown, summary, etc.).
+Help the user download their conversations as files:
+1. Work out which conversations they mean — by title, folder, tag, date range, or the one they
+   are looking at. Use \`execute_sql\` to find the \`id\` values.
+2. Call \`export\` with those ids. Pass every id in a single call rather than one call each.
+3. If they named a format, pass it. If they did not, leave \`format\` out — the extension asks
+   them with its own picker. Never ask about the format yourself; a question ends the task.
+4. Report which files were downloaded, and mention anything that was skipped.
 
-Note: The export tool is not yet available, so present data directly in the chat.
-You can query messages with: SELECT m.* FROM messages m JOIN conversations c ON m.conversation_id = c.id WHERE ...
+Notes:
+- Several formats at once is fine: \`format\` accepts a list.
+- \`separate_files: "true"\` gives one file per conversation inside a zip; the default merges
+  them into a single file.
+- A conversation with no synced messages cannot be exported — its content only reaches the
+  database after it has been opened in the browser. Say which ones need opening.
 `,
     enabled: true,
     createdAt: 0,

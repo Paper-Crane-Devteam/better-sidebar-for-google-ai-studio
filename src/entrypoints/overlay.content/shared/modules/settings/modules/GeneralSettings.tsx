@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '../../../components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 import { Separator } from '../../../components/ui/separator';
 import { ChevronDown } from 'lucide-react';
 import { useSettingsStore } from '@/shared/lib/settings-store';
