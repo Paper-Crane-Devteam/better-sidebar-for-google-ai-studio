@@ -30,9 +30,12 @@ import { AgentDock } from '@/entrypoints/overlay.content/shared/modules/agent-do
 import { canUndo, runUndoFlow } from '@/entrypoints/overlay.content/shared/modules/agent-loop/undo';
 import { toast } from '@/shared/lib/toast';
 import i18n from '@/locale/i18n';
-import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
+import {
+  readConversationIdFromPath,
+  useCurrentConversationId,
+} from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
 import { useConversationMessages } from '@/entrypoints/overlay.content/shared/modules/agent-loop/renderer/useConversationMessages';
-import { readSessionEnd } from '@/entrypoints/overlay.content/shared/modules/agent-loop/renderer/helpers/session-end';
+import { endsSession } from '@/entrypoints/overlay.content/shared/modules/agent-loop/renderer/helpers/session-end';
 import {
   createAdapterForCurrentPlatform,
   getCurrentPlatformId,
@@ -201,16 +204,21 @@ export const AgentLoopFeature: React.FC = () => {
   // ─── Auto-pickup: detect tool calls in latest response while idle ───
 
   const messages = useConversationMessages();
-  const autoPickupFiredRef = useRef(false);
 
-  // Reset the guard when status leaves idle (session started), so a *subsequent*
-  // idle period can fire again.
-  useEffect(() => {
-    const unsub = useAgentLoopStore.subscribe((s) => {
-      if (s.status !== 'idle') autoPickupFiredRef.current = false;
-    });
-    return unsub;
-  }, []);
+  /**
+   * Which response we last picked up, as `conversation:turn:toolcalls`.
+   *
+   * Keyed rather than a bare "already fired" boolean, and that is the whole point: the
+   * overlay is never torn down any more (conversations are switched through Gemini's
+   * router, not a page load), so a boolean latch set once — on a response we then
+   * declined to run, or on one in some other conversation — stayed set for the life of
+   * the tab and quietly disabled pickup for every response after it. The user's next
+   * message got an answer full of tool calls that nothing ever executed.
+   *
+   * A key re-arms by itself for a genuinely different response, while still refusing to
+   * fire twice on the same one.
+   */
+  const pickedUpKeyRef = useRef<string | null>(null);
 
   /**
    * When the engine is idle but the newest AI response contains tool calls with no
@@ -222,8 +230,6 @@ export const AgentLoopFeature: React.FC = () => {
    * the "wait for AI" stage that would never resolve (the answer is already there).
    */
   useEffect(() => {
-    if (autoPickupFiredRef.current) return;
-
     const status = useAgentLoopStore.getState().status;
     if (status !== 'idle') return;
 
@@ -238,17 +244,35 @@ export const AgentLoopFeature: React.FC = () => {
     if (lastModel.toolOutcomes.some((o) => o !== null)) return;
 
     /**
-     * A turn that ends the task is not unfinished business.
+     * A turn that ended its session is not unfinished business.
      *
-     * `complete_task` never gets its result sent back — the session stops right
-     * there — so its outcome stays null forever and this check used to read the last
-     * turn of every *successfully finished* task as "tool calls nobody ran". It then
-     * spun up a session that did nothing but re-parse the completion and end again,
-     * which is where the stray summary card came from: on every reload, and again
-     * after each new message once `reset()` had cleared the ledger that was the only
-     * other thing holding it back.
+     * Neither `complete_task` nor a handoff tool ever gets its result sent back, so
+     * their outcomes stay null forever and this check used to read the last turn of
+     * every finished task as "tool calls nobody ran". For `complete_task` that spun up
+     * a session which re-parsed the completion and ended again — the stray summary
+     * card. For a handoff it is worse: re-running it books the tab for the entire sync
+     * road trip a second time, which is what greeted the user on getting back from the
+     * first one.
      */
-    if (readSessionEnd(lastModel) !== null) return;
+    if (endsSession(lastModel)) return;
+
+    /**
+     * Bind to the conversation the response is actually in, read from the URL now.
+     *
+     * `conversationIdRef` follows a 500ms poll (`useUrl`), and this effect is driven by
+     * the DOM — so on a router navigation the two disagree for a moment. Binding a
+     * session to the previous conversation's id hides the dock outright
+     * (`belongsToCurrent`), leaving the engine parked on an approval with no way on
+     * screen to answer it.
+     */
+    const liveConversationId = readConversationIdFromPath() ?? conversationIdRef.current;
+
+    const pickupKey = [
+      liveConversationId ?? 'unbound',
+      lastModel.id,
+      ...lastModel.toolCalls.map((tc) => buildToolCallFingerprint(tc.toolCall)),
+    ].join('|');
+    if (pickedUpKeyRef.current === pickupKey) return;
 
     // Also skip if the ledger already knows these calls (current live session)
     const store = useAgentLoopStore.getState();
@@ -264,7 +288,7 @@ export const AgentLoopFeature: React.FC = () => {
     const responseElement = adapter.getLastAIResponseElement();
     if (!responseElement) return;
 
-    autoPickupFiredRef.current = true;
+    pickedUpKeyRef.current = pickupKey;
 
     console.log('[AgentLoop] Auto-pickup: detected unexecuted tool calls in idle state, starting session');
 
@@ -272,7 +296,7 @@ export const AgentLoopFeature: React.FC = () => {
     engineRef.current = engine;
     setActiveEngine(engine);
     engine.startFromExistingResponse(responseElement, 20, {
-      conversationId: conversationIdRef.current,
+      conversationId: liveConversationId,
       title: 'Follow-up task',
     });
   }, [messages, getAdapter]);
@@ -311,7 +335,27 @@ export const AgentLoopFeature: React.FC = () => {
   const composeAndSend = useCallback(
     (editor: HTMLElement): boolean => {
       const capsule = editor.querySelector(`.${CAPSULE_CLASS}[data-trigger=">"]`);
+      // No agent capsule — not our send (a `/` prompt capsule ends up here too).
       if (!capsule) return false;
+
+      /**
+       * From here on we own this send, whatever happens.
+       *
+       * Returning false would hand it back to the fallback path, which expands the
+       * capsule in place and lets Gemini send it — i.e. it posts the raw skill
+       * instructions as an ordinary chat message, with no Soul prompt, no tool
+       * schemas and no `[#bs-agent:...#]` marker. That looks to the user exactly
+       * like a broken skill: the AI gets a task description it has no tools for, and
+       * the conversation never switches to the agent view.
+       *
+       * So every failure below blocks the send and says why, leaving the capsule
+       * where it is so the user can retry.
+       */
+      const abort = (reason: string, message: string): boolean => {
+        console.warn(`[AgentLoop] Not sending: ${reason}`);
+        toast.warning(message);
+        return true;
+      };
 
       /**
        * A session is already running — do not take over this send.
@@ -321,21 +365,45 @@ export const AgentLoopFeature: React.FC = () => {
        * builds a second engine. `setActiveEngine` then replaces the handle the UI
        * uses to stop the first one, and `store.start()` wipes its state, so the
        * original keeps looping with nothing able to reach it.
-       *
-       * Returning false lets the message go out as an ordinary chat message, which
-       * is both harmless and roughly what the user asked for.
        */
       if (useAgentLoopStore.getState().status !== 'idle') {
-        console.warn('[AgentLoop] A task is already running — sending as a plain message');
-        return false;
+        return abort('a task is already running', i18n.t('agent.send.sessionBusy'));
       }
 
       const entryId = capsule.getAttribute(CAPSULE_ATTR_ID) || '';
       const capsuleContent = capsule.getAttribute(CAPSULE_ATTR_CONTENT) || '';
-      if (!entryId) return false;
+      if (!entryId) {
+        return abort('capsule carries no entry id', i18n.t('agent.send.staleCapsule'));
+      }
 
       const adapter = getAdapter();
-      if (!adapter) return false;
+      if (!adapter) {
+        return abort('no platform adapter', i18n.t('agent.send.noEditor'));
+      }
+
+      // The auto entry has no preselected skill — the AI calls activate_skill itself
+      const entry = getAgentEntryById(entryId);
+      if (!entry) {
+        return abort(`unknown entry "${entryId}"`, i18n.t('agent.send.staleCapsule'));
+      }
+
+      /**
+       * Assembled before the editor is touched. It used to run after
+       * `expandAllCapsules`, so anything throwing in here left the expanded skill
+       * text sitting in the composer while the exception escaped the click handler —
+       * and since nothing had called `preventDefault`, Gemini sent it.
+       */
+      let basePrompt: string;
+      try {
+        basePrompt = assembleFinalPrompt({
+          selectedSkill: entry.skill,
+          allSkills: getEnabledSkills(),
+          platform: getCurrentPlatformId(),
+        });
+      } catch (err) {
+        console.error('[AgentLoop] Prompt assembly failed', err);
+        return abort('prompt assembly failed', i18n.t('agent.send.assembleFailed'));
+      }
 
       // Expand all capsules (both / and >) to read the full editor text
       expandAllCapsules(editor);
@@ -346,14 +414,6 @@ export const AgentLoopFeature: React.FC = () => {
         ? editorText.replace(capsuleContent, '').trim()
         : editorText.trim();
 
-      // The auto entry has no preselected skill — the AI calls activate_skill itself
-      const entry = getAgentEntryById(entryId);
-      const basePrompt = assembleFinalPrompt({
-        selectedSkill: entry?.skill,
-        allSkills: getEnabledSkills(),
-        platform: getCurrentPlatformId(),
-      });
-
       let fullMessage = `${buildPromptMarker(entryId)}\n${basePrompt}`;
       if (userInput) {
         fullMessage += `\n\n## User Request\n\n${userInput}`;
@@ -363,9 +423,25 @@ export const AgentLoopFeature: React.FC = () => {
         console.warn(`[AgentLoop] Message truncated to ${MAX_MESSAGE_LENGTH} chars`);
       }
 
-      const title = userInput || entry?.title || 'Agent task';
+      const title = userInput || entry.title || 'Agent task';
 
       adapter.insertText(fullMessage);
+
+      /**
+       * Confirm the payload actually landed before clicking send.
+       *
+       * The composer still holds the expanded skill instructions at this point, so a
+       * staging failure doesn't leave us with an empty box to send — it leaves us
+       * with the wrong message ready to go.
+       */
+      if (!(editor.textContent || '').includes(buildPromptMarker(entryId))) {
+        console.error('[AgentLoop] Prompt did not land in the composer', {
+          expectedLength: fullMessage.length,
+          actualLength: (editor.textContent || '').length,
+        });
+        return abort('prompt did not land in the composer', i18n.t('agent.send.stagingFailed'));
+      }
+
       // User pressed Enter / clicked send, so no artificial pause. Only start the
       // engine if the message actually went out — otherwise it would sit waiting
       // for a response to a prompt that was never delivered.
@@ -419,10 +495,16 @@ export const AgentLoopFeature: React.FC = () => {
         return;
       }
 
-      // Same reasoning as the `>` trigger: appending to a composer that holds the
-      // engine's staged results would send the capsule along with them.
-      if (isComposerHeldByEngine()) {
-        agentEventBus.emit('launcher:failed', { reason: 'composer-busy' });
+      /**
+       * Nothing can be launched while a session is live: `composeAndSend` refuses to
+       * start a second engine, so staging the capsule would only set the user up to
+       * press send and get a warning. Two reasons, because the fix differs — staged
+       * tool results need sending, a paused task needs finishing or stopping.
+       */
+      if (useAgentLoopStore.getState().status !== 'idle') {
+        agentEventBus.emit('launcher:failed', {
+          reason: isComposerHeldByEngine() ? 'composer-busy' : 'session-busy',
+        });
         return;
       }
 

@@ -83,11 +83,19 @@ export interface AgentEventMap {
   'launcher:run-entry': { entryId: string; userInput?: string; autoSend: boolean };
   'launcher:staged': { entryId: string; autoSend: boolean };
   /**
-   * `composer-busy`: a running session has its tool results staged in the chat
-   * input, so appending a capsule would send it along with them. Distinct from
-   * `no-editor` because the fix is different — wait a moment rather than open a chat.
+   * Every reason maps to a different thing the user has to do, which is why they are
+   * not collapsed into one:
+   *
+   * - `no-editor`     — open a chat first
+   * - `composer-busy` — a running session's tool results are staged in the input;
+   *                     send those, then launch
+   * - `session-busy`  — a session is live but idle-handed (paused, waiting, failed);
+   *                     finish or stop it
+   * - `unknown-entry` — the skill behind the card no longer exists
    */
-  'launcher:failed': { reason: 'no-editor' | 'unknown-entry' | 'composer-busy' };
+  'launcher:failed': {
+    reason: 'no-editor' | 'unknown-entry' | 'composer-busy' | 'session-busy';
+  };
 
   // ── Generic ────────────────────────────────────────────────────────────
   'debug:log': { level: 'info' | 'warn' | 'error'; message: string; data?: unknown };

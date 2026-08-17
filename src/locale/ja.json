@@ -1163,6 +1163,14 @@
       "generic": "ステップを実行しています",
       "nameLabel": "操作"
     },
+    "sync": {
+      "progress": "会話の内容を取得しています — {{current}}/{{total}}",
+      "stop": "停止",
+      "cancelled": "同期を停止しました — {{count}} 件の会話が完了しました",
+      "doneAll": "{{count}} 件の会話を同期しました",
+      "donePartial": "{{count}} 件の会話を同期しました（{{incomplete}} 件は未完了）",
+      "remaining": "{{count}} 件の会話にまだメッセージがありません。もう一度同期を実行して続けてください"
+    },
     "instruction": {
       "placeholder": "AI へのメモを追加…",
       "sent": "メモを送信しました"

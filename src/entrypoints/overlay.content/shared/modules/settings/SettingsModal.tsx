@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { X, Settings, Share2, Info, LayoutTemplate, Database, SlidersHorizontal, Palette, Keyboard, Plug, Bot } from 'lucide-react';
 import { UIcon } from '@/shared/components/ui/icon';
@@ -15,6 +15,8 @@ import { IntegrationsSettings } from './modules/IntegrationsSettings';
 import { AgentSettings } from './modules/AgentSettings';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { detectPlatform, Platform } from '@/shared/types/platform';
+import { useAppStore } from '@/shared/lib/store';
+import type { SettingsSection } from '@/shared/lib/store/types';
 import { useBadgeStore } from '@/shared/lib/badge-store';
 import { BadgeDot } from '@/shared/components/ui/badge-dot';
 import { Z_INDEX } from '@/shared/lib/z-index';
@@ -31,7 +33,7 @@ interface SettingsModalProps {
     onOpenChange: (open: boolean) => void;
 }
 
-type Section = 'general' | 'theme' | 'explorer' | 'data' | 'hotkeys' | 'platform' | 'integrations' | 'agent' | 'supportpack' | 'sponsor' | 'about';
+type Section = SettingsSection;
 
 /**
  * NavButton automatically shows a red dot if `settings.{id}` is an active badge.
@@ -77,6 +79,12 @@ const NavButton = ({
 export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
     const { t } = useI18n();
     const [activeSection, setActiveSection] = useState<Section>('general');
+    const requestedSection = useAppStore((s) => s.ui.overlay.settingsSection);
+
+    // Callers can deep-link into a section via setSettingsOpen(true, 'agent').
+    useEffect(() => {
+        if (open && requestedSection) setActiveSection(requestedSection);
+    }, [open, requestedSection]);
 
     if (!open) return null;
 

@@ -10,6 +10,7 @@ export const initialUIState: UIState = {
     activeTab: 'files',
     isScanning: false,
     isSettingsOpen: false,
+    settingsSection: null,
     showSqlInterface: false,
     tempHiddenToken: null,
   },

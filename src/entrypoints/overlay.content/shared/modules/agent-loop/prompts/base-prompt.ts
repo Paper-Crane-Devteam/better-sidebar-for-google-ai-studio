@@ -81,7 +81,9 @@ extension can capture what Gemini fetches. Gemini only, max 50 per run.
 **TERMINAL — it takes the page with it.** The tab leaves this conversation, so the agent
 session ends the moment it runs and you get no further turn. Therefore:
 - Tell the user what is about to happen BEFORE you call it (the tab will visit N
-  conversations, ~10–30s each, leave it alone, it comes back here afterwards).
+  conversations, ~10–30s each, leave it alone, it comes back here afterwards). Mention
+  that a progress bar with a **Stop** button stays on screen the whole time, so they can
+  end it whenever they like — a half-finished run keeps everything it already recorded.
 - Make it the LAST tool call in your response. Anything after it will not run.
 
 ### 3. export (coming soon)

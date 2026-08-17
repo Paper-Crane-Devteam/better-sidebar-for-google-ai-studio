@@ -19,13 +19,22 @@ export type ScrollOutcome =
   /** Still loading older pages when the time budget ran out */
   | 'timed-out'
   /** No scrollable element found, so only the initial page was captured */
-  | 'no-scroller';
+  | 'no-scroller'
+  /** The user stopped the run mid-scroll */
+  | 'cancelled';
 
 export interface ScrollToTopOptions {
   /** Hard cap for one conversation. Defaults to 60s. */
   maxDuration?: number;
   /** Pause after each scroll step, giving Gemini time to fetch. Defaults to 800ms. */
   stepDelay?: number;
+  /**
+   * Checked between steps so "Stop" doesn't have to wait out the budget.
+   *
+   * One conversation can hold the run here for a full minute, which is long enough that
+   * a cancel with no effect until it returns reads as a button that does nothing.
+   */
+  shouldCancel?: () => boolean;
 }
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -93,7 +102,7 @@ function resolveScrollable(root: HTMLElement): HTMLElement {
 export async function scrollConversationToTop(
   options: ScrollToTopOptions = {},
 ): Promise<ScrollOutcome> {
-  const { maxDuration = 60_000, stepDelay = 800 } = options;
+  const { maxDuration = 60_000, stepDelay = 800, shouldCancel } = options;
 
   const scroller = findConversationScroller();
   if (!scroller) {
@@ -106,6 +115,8 @@ export async function scrollConversationToTop(
   let settledRounds = 0;
 
   while (Date.now() < deadline) {
+    if (shouldCancel?.()) return 'cancelled';
+
     scroller.scrollTop = 0;
     // Virtual scrollers often only react to a real event, not to the property write.
     scroller.dispatchEvent(new Event('scroll', { bubbles: true }));

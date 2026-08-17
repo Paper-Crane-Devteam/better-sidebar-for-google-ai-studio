@@ -24,9 +24,18 @@ export function createOverlayActions(set: SetState): Pick<
       set((state) => ({
         ui: { ...state.ui, overlay: { ...state.ui.overlay, isSidebarExpanded } },
       })),
-    setSettingsOpen: (isSettingsOpen) =>
+    setSettingsOpen: (isSettingsOpen, section) =>
       set((state) => ({
-        ui: { ...state.ui, overlay: { ...state.ui.overlay, isSettingsOpen } },
+        ui: {
+          ...state.ui,
+          overlay: {
+            ...state.ui.overlay,
+            isSettingsOpen,
+            // Only meaningful while open; cleared on close so the next plain
+            // open keeps whatever section the user last looked at.
+            settingsSection: isSettingsOpen ? (section ?? null) : null,
+          },
+        },
       })),
     setTempHiddenToken: (token) =>
       set((state) => ({

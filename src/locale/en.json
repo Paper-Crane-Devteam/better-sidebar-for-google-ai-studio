@@ -1095,9 +1095,18 @@
       "stageHint": "Adds it to the chat input so you can add details before sending.",
       "noEditor": "Open a chat first — the agent runs through the chat input.",
       "composerBusy": "The running task has results waiting in the chat input. Send those first, then try again.",
+      "sessionBusy": "A task is already running. Finish it, or stop it, before starting another.",
+      "stopRunning": "Stop the running task",
       "safety": "Only your local database is touched. Changes are confirmed before they run.",
       "freeTier": "Free plan is read-only. Upgrade to let the agent make changes.",
       "manage": "Manage skills & tools"
+    },
+    "send": {
+      "sessionBusy": "A task is already running, so this one was not sent. Finish or stop the current task first.",
+      "staleCapsule": "That skill no longer exists. Remove it from the chat input and pick another one.",
+      "noEditor": "Lost track of the chat input, so nothing was sent. Reload the page and try again.",
+      "assembleFailed": "Could not build the agent prompt, so nothing was sent. Check the browser console for details.",
+      "stagingFailed": "The agent prompt did not make it into the chat input, so nothing was sent. Try again."
     },
     "view": {
       "label": "Conversation view",
@@ -1196,6 +1205,9 @@
       "promptTitle": "Prompt content"
     },
     "sync": {
+      "progress": "Fetching conversation content — {{current}}/{{total}}",
+      "stop": "Stop",
+      "cancelled": "Sync stopped — {{count}} conversation(s) finished",
       "doneAll": "Synced {{count}} conversation(s)",
       "donePartial": "Synced {{count}} conversation(s), {{incomplete}} incomplete",
       "remaining": "{{count}} conversation(s) still have no messages — run the sync again to continue"

@@ -1163,6 +1163,14 @@
       "generic": "Executando uma etapa",
       "nameLabel": "Ação"
     },
+    "sync": {
+      "progress": "Buscando o conteúdo da conversa — {{current}}/{{total}}",
+      "stop": "Parar",
+      "cancelled": "Sincronização interrompida — {{count}} conversa(s) concluída(s)",
+      "doneAll": "{{count}} conversa(s) sincronizada(s)",
+      "donePartial": "{{count}} conversa(s) sincronizada(s), {{incomplete}} incompleta(s)",
+      "remaining": "{{count}} conversa(s) ainda estão sem mensagens — execute a sincronização de novo para continuar"
+    },
     "instruction": {
       "placeholder": "Adicione uma observação para a IA...",
       "sent": "Observação enviada"

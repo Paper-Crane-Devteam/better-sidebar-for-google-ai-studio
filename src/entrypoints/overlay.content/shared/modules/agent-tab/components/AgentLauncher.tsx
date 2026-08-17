@@ -16,6 +16,8 @@ import { useAppStore } from '@/shared/lib/store';
 import { useLicenseStore } from '@/shared/lib/license-store';
 import { getAgentEntries, AGENT_AUTO_ID } from '../../agent-loop/agent-entry';
 import { agentEventBus } from '../../agent-loop/event-bus';
+import { useAgentLoopStore } from '../../agent-loop/agent-loop-store';
+import { getActiveEngine } from '../../agent-loop/engine/engine-registry';
 
 /** lucide names stored on skills → iconify names used by UIcon */
 const ICON_FALLBACK = 'lucide:sparkles';
@@ -35,7 +37,24 @@ export const AgentLauncher: React.FC = () => {
 
   const [task, setTask] = useState('');
   /** null = fine; otherwise why the last attempt didn't reach the chat input */
-  const [unavailable, setUnavailable] = useState<'no-editor' | 'composer-busy' | null>(null);
+  const [unavailable, setUnavailable] = useState<
+    'no-editor' | 'composer-busy' | 'session-busy' | null
+  >(null);
+
+  /**
+   * A second task cannot start while one is live — `composeAndSend` refuses to build
+   * a second engine, so a card that still looked clickable just staged a prompt the
+   * send would then reject. Inert here, with a way out, instead.
+   */
+  const status = useAgentLoopStore((s) => s.status);
+  const busy = status !== 'idle';
+
+  const stopRunning = () => {
+    const engine = getActiveEngine();
+    if (engine) engine.stop();
+    else useAgentLoopStore.getState().stop();
+    setUnavailable(null);
+  };
 
   const entries = getAgentEntries();
   const autoEntry = entries.find((e) => e.id === AGENT_AUTO_ID);
@@ -48,6 +67,10 @@ export const AgentLauncher: React.FC = () => {
    */
   const run = (entryId: string, userInput?: string, autoSend = false) => {
     setUnavailable(null);
+    if (busy) {
+      setUnavailable('session-busy');
+      return;
+    }
 
     let settled = false;
     const offStaged = agentEventBus.once('launcher:staged', () => {
@@ -55,7 +78,9 @@ export const AgentLauncher: React.FC = () => {
     });
     const offFailed = agentEventBus.once('launcher:failed', ({ reason }) => {
       settled = true;
-      setUnavailable(reason === 'composer-busy' ? 'composer-busy' : 'no-editor');
+      setUnavailable(
+        reason === 'composer-busy' || reason === 'session-busy' ? reason : 'no-editor',
+      );
     });
 
     agentEventBus.emit('launcher:run-entry', { entryId, userInput, autoSend });
@@ -69,6 +94,10 @@ export const AgentLauncher: React.FC = () => {
 
   const handleSubmitTask = () => {
     if (!task.trim() || !autoEntry) return;
+    if (busy) {
+      setUnavailable('session-busy');
+      return;
+    }
     run(autoEntry.id, task, true);
     setTask('');
   };
@@ -105,17 +134,19 @@ export const AgentLauncher: React.FC = () => {
               }
             }}
             rows={2}
+            disabled={busy}
             placeholder={t('agent.launcher.placeholder', {
               defaultValue: 'Describe what you want to get done...',
             })}
             className="w-full resize-none rounded-md border border-border/60 bg-muted/30 px-3 py-2 pr-8
                        text-xs text-foreground placeholder:text-muted-foreground
-                       focus:outline-none focus:ring-1 focus:ring-primary/50"
+                       focus:outline-none focus:ring-1 focus:ring-primary/50
+                       disabled:cursor-not-allowed disabled:opacity-50"
           />
           <button
             type="button"
             onClick={handleSubmitTask}
-            disabled={!task.trim()}
+            disabled={busy || !task.trim()}
             aria-label={t('agent.launcher.run', { defaultValue: 'Run' })}
             className="absolute right-2 top-2 rounded p-1 text-muted-foreground
                        hover:bg-accent hover:text-foreground disabled:opacity-40"
@@ -136,8 +167,10 @@ export const AgentLauncher: React.FC = () => {
               key={entry.id}
               type="button"
               onClick={() => run(entry.id)}
+              disabled={busy}
               className="flex w-full items-start gap-3 rounded-md bg-muted/30 px-3 py-2
-                         text-left transition-colors hover:bg-accent/40"
+                         text-left transition-colors hover:bg-accent/40
+                         disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-muted/30"
             >
               <UIcon icon={iconName(entry.icon)} className="mt-1 h-4 w-4 shrink-0 text-primary" />
               <div className="min-w-0 flex-1">
@@ -157,16 +190,28 @@ export const AgentLauncher: React.FC = () => {
       </div>
 
       {unavailable && (
-        <p className="mb-4 rounded-md bg-orange-500/10 px-3 py-2 text-xs text-muted-foreground">
-          {unavailable === 'composer-busy'
-            ? t('agent.launcher.composerBusy', {
-                defaultValue:
-                  'The running task has results waiting in the chat input. Send those first, then try again.',
-              })
-            : t('agent.launcher.noEditor', {
-                defaultValue: 'Open a chat first — the agent runs through the chat input.',
-              })}
-        </p>
+        <div className="mb-4 space-y-2 rounded-md bg-orange-500/10 px-3 py-2">
+          <p className="text-xs text-muted-foreground">
+            {unavailable === 'composer-busy'
+              ? t('agent.launcher.composerBusy', {
+                  defaultValue:
+                    'The running task has results waiting in the chat input. Send those first, then try again.',
+                })
+              : unavailable === 'session-busy'
+                ? t('agent.launcher.sessionBusy', {
+                    defaultValue:
+                      'A task is already running. Finish it, or stop it, before starting another.',
+                  })
+                : t('agent.launcher.noEditor', {
+                    defaultValue: 'Open a chat first — the agent runs through the chat input.',
+                  })}
+          </p>
+          {unavailable === 'session-busy' && (
+            <Button variant="outline" size="sm" className="h-6 text-xs" onClick={stopRunning}>
+              {t('agent.launcher.stopRunning', { defaultValue: 'Stop the running task' })}
+            </Button>
+          )}
+        </div>
       )}
 
       {/* Safety / tier note */}
@@ -196,7 +241,7 @@ export const AgentLauncher: React.FC = () => {
           variant="ghost"
           size="sm"
           className="h-7 gap-1 text-xs text-muted-foreground"
-          onClick={() => setSettingsOpen(true)}
+          onClick={() => setSettingsOpen(true, 'agent')}
         >
           <Settings className="h-3 w-3" />
           {t('agent.launcher.manage', { defaultValue: 'Manage skills & tools' })}

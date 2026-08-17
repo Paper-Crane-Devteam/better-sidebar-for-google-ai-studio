@@ -1162,6 +1162,14 @@
       "generic": "正在执行一个步骤",
       "nameLabel": "操作"
     },
+    "sync": {
+      "progress": "正在获取对话内容 — {{current}}/{{total}}",
+      "stop": "停止",
+      "cancelled": "同步已停止 — 已完成 {{count}} 个对话",
+      "doneAll": "已同步 {{count}} 个对话",
+      "donePartial": "已同步 {{count}} 个对话，{{incomplete}} 个未完成",
+      "remaining": "还有 {{count}} 个对话没有消息 — 再运行一次同步继续获取"
+    },
     "instruction": {
       "placeholder": "给 AI 补充说明…",
       "sent": "已发送"

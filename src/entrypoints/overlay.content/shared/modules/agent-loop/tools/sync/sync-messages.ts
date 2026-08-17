@@ -76,7 +76,8 @@ export async function syncMessages(params: SyncMessagesParams): Promise<string> 
     '',
     'The tab is about to leave this conversation and visit each one in turn, scrolling its',
     'history to the top so the extension records the messages. This ends the current agent',
-    'session — you will not get another turn. When the run finishes, the tab returns here and',
-    'the user gets a summary toast.',
+    'session — you will not get another turn. A progress bar with a Stop button is on screen',
+    'for the whole run. When it finishes, the tab returns here and the user gets a summary',
+    'toast.',
   ].join('\n');
 }

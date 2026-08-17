@@ -34,17 +34,30 @@ function resolveInboxPlaceholders(content: string, platform: PlatformId | null):
 
 /**
  * Generate skills summary for the Soul prompt.
- * Lists all enabled skills so AI can call activate_skill.
+ *
+ * Always lists every enabled skill, including when the user pre-selected one.
+ * Naming only the active skill made `activate_skill` a tool with no legal argument:
+ * a run started from "Export Conversations" that turned out to need a sync had no way
+ * of knowing a sync skill existed, let alone what its id was.
+ *
+ * `activeSkill` only changes the framing — its instructions are appended verbatim
+ * further down, so the agent is told not to re-activate it.
  */
-function generateSkillsSummary(skills: Skill[]): string {
+function generateSkillsSummary(skills: Skill[], activeSkill?: Skill): string {
   if (skills.length === 0) return 'No skills available.';
 
   let output = '### Available Skills\n\n';
   for (const skill of skills) {
-    output += `- **${skill.id}**: ${skill.title} — ${skill.description}\n`;
+    const active = skill.id === activeSkill?.id ? ' — **already active** (instructions included below)' : '';
+    output += `- **${skill.id}**: ${skill.title} — ${skill.description}${active}\n`;
   }
   output += '\nTo activate a skill, call:\n';
   output += '```\n<bs_agent_tool>\n{"name": "activate_skill", "description": "Activating skill", "params": {"skill_id": "SKILL_ID"}}\n</bs_agent_tool>\n```\n';
+
+  if (activeSkill) {
+    output += `\nThe user already chose **${activeSkill.title}**, and its full instructions are at the end of this message — do not activate it again. Activate one of the others only if the work turns out to need it.\n`;
+  }
+
   return output;
 }
 
@@ -62,16 +75,20 @@ export interface AssembleOptions {
 /**
  * Assemble the final prompt to inject into the editor capsule.
  *
- * If a skill is pre-selected: Soul + tool schemas + skill prompt content
- * If no skill selected (free-form): Soul + skills summary + tool schemas
+ * Always: Soul + every enabled skill (id, title, description) + tool schemas.
+ * Plus, when a skill was pre-selected, its full instructions appended at the end.
  */
 export function assembleFinalPrompt(options: AssembleOptions): string {
   const { selectedSkill, allSkills, platform } = options;
 
-  // If user selected a specific skill, no need for AI to choose
-  const skillsSummary = selectedSkill
-    ? `### Active Skill: ${selectedSkill.title}\n\n(Skill instructions follow after the tools section.)`
-    : generateSkillsSummary(allSkills);
+  // The picked skill has to appear in the list even if it is disabled — the user
+  // launching it is a stronger signal than the toggle.
+  const skills =
+    selectedSkill && !allSkills.some((s) => s.id === selectedSkill.id)
+      ? [...allSkills, selectedSkill]
+      : allSkills;
+
+  const skillsSummary = generateSkillsSummary(skills, selectedSkill);
 
   const toolSchemas = generateToolSchemaPrompt();
 

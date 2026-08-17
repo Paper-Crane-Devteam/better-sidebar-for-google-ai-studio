@@ -1163,6 +1163,14 @@
       "generic": "正在執行一個步驟",
       "nameLabel": "操作"
     },
+    "sync": {
+      "progress": "正在取得對話內容 — {{current}}/{{total}}",
+      "stop": "停止",
+      "cancelled": "同步已停止 — 已完成 {{count}} 個對話",
+      "doneAll": "已同步 {{count}} 個對話",
+      "donePartial": "已同步 {{count}} 個對話，{{incomplete}} 個未完成",
+      "remaining": "還有 {{count}} 個對話沒有訊息 — 再執行一次同步繼續取得"
+    },
     "instruction": {
       "placeholder": "給 AI 補充說明…",
       "sent": "已送出"

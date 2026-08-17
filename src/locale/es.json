@@ -1163,6 +1163,14 @@
       "generic": "Ejecutando un paso",
       "nameLabel": "Acción"
     },
+    "sync": {
+      "progress": "Obteniendo el contenido de la conversación — {{current}}/{{total}}",
+      "stop": "Detener",
+      "cancelled": "Sincronización detenida — {{count}} conversación(es) completada(s)",
+      "doneAll": "{{count}} conversación(es) sincronizada(s)",
+      "donePartial": "{{count}} conversación(es) sincronizada(s), {{incomplete}} incompleta(s)",
+      "remaining": "{{count}} conversación(es) siguen sin mensajes: vuelve a ejecutar la sincronización para continuar"
+    },
     "instruction": {
       "placeholder": "Añade una nota para la IA...",
       "sent": "Nota enviada"

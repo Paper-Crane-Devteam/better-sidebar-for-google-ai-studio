@@ -16,6 +16,7 @@
  * task into a failed one.
  */
 
+import { isHandoffTool } from '../../engine/parser/tool-schema';
 import type { DisplayMessageTurn } from '../useConversationMessages';
 
 /** The tool whose presence in a turn means the session ended there */
@@ -43,4 +44,25 @@ export function readSessionEnd(message: DisplayMessageTurn): SessionOutcome | nu
   }
 
   return null;
+}
+
+/**
+ * Whether this turn was the last one of its session, however it got there.
+ *
+ * Wider than `readSessionEnd` on purpose, and the distinction matters: that one
+ * answers "what did the AI say the verdict was", which only `complete_task` can
+ * report. This one answers "is there still a session behind this turn", and a handoff
+ * tool ends one just as firmly without reporting anything — it takes the page away
+ * (see `HANDOFF_TOOLS`), so its result is never sent back and its outcome stays `null`
+ * for good.
+ *
+ * That permanent `null` is a trap for anything scanning for "tool calls nobody ran":
+ * the sync run's own call looks exactly like unfinished business every time the user
+ * returns to the conversation, and acting on it re-books the tab for the whole road
+ * trip. Hence one predicate, used by every such scan.
+ */
+export function endsSession(message: DisplayMessageTurn): boolean {
+  if (message.role !== 'model') return false;
+  if (readSessionEnd(message) !== null) return true;
+  return message.toolCalls.some((call) => isHandoffTool(call.toolCall.name));
 }

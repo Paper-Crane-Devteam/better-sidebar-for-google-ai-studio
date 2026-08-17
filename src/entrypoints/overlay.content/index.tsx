@@ -47,8 +47,9 @@ export default defineContentScript({
       case Platform.GEMINI: {
         const { initGeminiOverlay } = await import('./gemini/Layout');
         await initGeminiOverlay(mainStyles);
-        // A message-sync run drives the tab from page to page, so every step lands
-        // back here. Picks up an unfinished run, or reports one that just finished.
+        // A message-sync run normally stays in one page for its whole length, but it
+        // outlives the tab being closed and the page loads it falls back to. Picks up
+        // an unfinished run (with a stop button), or reports one that just finished.
         const { resumeSyncRun } = await import(
           './shared/modules/agent-loop/tools/sync'
         );

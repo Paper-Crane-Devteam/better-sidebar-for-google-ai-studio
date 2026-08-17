@@ -37,6 +37,20 @@ export interface Conversation {
   notebook_id?: string | null;
 }
 
+/** Sections available in the settings modal sidebar. */
+export type SettingsSection =
+  | 'general'
+  | 'theme'
+  | 'explorer'
+  | 'data'
+  | 'hotkeys'
+  | 'platform'
+  | 'integrations'
+  | 'agent'
+  | 'supportpack'
+  | 'sponsor'
+  | 'about';
+
 export interface UIState {
   overlay: {
     currentPlatform: Platform;
@@ -56,6 +70,8 @@ export interface UIState {
       | 'agent'
       | 'spark';
     isSettingsOpen: boolean;
+    /** Section the settings modal should jump to when opened. null = keep current. */
+    settingsSection: SettingsSection | null;
     isScanning: boolean;
     showSqlInterface: boolean;
     tempHiddenToken: string | null;
@@ -197,7 +213,8 @@ export interface AppState {
   setCurrentPlatform: (platform: Platform) => void;
   setOverlayOpen: (isOpen: boolean) => void;
   setSidebarExpanded: (isExpanded: boolean) => void;
-  setSettingsOpen: (isOpen: boolean) => void;
+  /** Open/close the settings modal, optionally jumping straight to a section. */
+  setSettingsOpen: (isOpen: boolean, section?: SettingsSection) => void;
   setTempHiddenToken: (token: string | null) => void;
   setActiveTab: (
     tab:

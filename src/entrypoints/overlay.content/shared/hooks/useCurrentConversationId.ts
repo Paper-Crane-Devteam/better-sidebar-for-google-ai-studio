@@ -29,9 +29,18 @@ const CONVERSATION_PATH_PATTERNS: Partial<Record<Platform, RegExp[]>> = {
   [Platform.CLAUDE]: [new RegExp(`^${ACCOUNT_PREFIX}/chat/([a-zA-Z0-9_-]+)`)],
 };
 
-export const useCurrentConversationId = () => {
-  const { path } = useUrl();
-
+/**
+ * The same read, without React.
+ *
+ * `useUrl` notices router navigations through a 500ms poll, so the hook's value lags
+ * the address bar for up to half a second. That is fine for rendering and wrong for
+ * anything that binds state to a conversation at a particular instant — a session
+ * bound to the id we *used to* be on is a session the UI will hide as belonging
+ * elsewhere. Those callers read the path directly.
+ */
+export const readConversationIdFromPath = (
+  path: string = globalThis.location?.pathname ?? '',
+): string | null => {
   const platform = detectPlatform();
 
   for (const pattern of CONVERSATION_PATH_PATTERNS[platform] ?? []) {
@@ -40,4 +49,9 @@ export const useCurrentConversationId = () => {
   }
 
   return null;
+};
+
+export const useCurrentConversationId = () => {
+  const { path } = useUrl();
+  return readConversationIdFromPath(path);
 };

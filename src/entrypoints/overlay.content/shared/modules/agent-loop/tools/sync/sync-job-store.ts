@@ -1,15 +1,17 @@
 /**
  * Persisted state for a message-sync run.
  *
- * A run walks the tab through one conversation after another, so every step crosses
- * a page load and nothing in memory survives it. The job therefore lives in
- * `chrome.storage.local`: the runner writes its cursor before navigating and reads
- * it back when the next page boots.
+ * A run walks the tab through one conversation after another. It does that through
+ * Gemini's own router, so the driver normally keeps running in memory the whole way —
+ * but a run lasts minutes, and the two things that end it early are exactly the two
+ * things memory can't survive: the tab being closed, and the full page load the runner
+ * falls back to when the router won't open a conversation. So the cursor is written to
+ * `chrome.storage.local` before each move and read back at overlay start-up.
  *
  * Two things are deliberately kept here rather than in the agent store:
  * - the job outlives the agent session (the session ends the moment we navigate)
- * - the report, so the "synced N conversations" toast can be shown *after* the run
- *   has already left the last page
+ * - the report, so the "synced N conversations" toast can be shown even if the run
+ *   crossed a page load on its way out
  */
 
 const JOB_KEY = 'bs-agent-sync-job';
@@ -32,12 +34,12 @@ export interface SyncJobEntry {
   externalId: string;
   status: SyncEntryStatus;
   /**
-   * How many times we've navigated at this one.
+   * How many full page loads we've spent trying to open this one.
    *
-   * The run's whole control flow is "navigate, and check on the next page load
-   * whether we arrived". A conversation that no longer exists never arrives — Gemini
-   * bounces the URL back to `/app` — so without a count the resume path would
-   * navigate at it again, forever, in a reload loop the user can't get out of.
+   * Only the fallback path: the router is asked first and usually lands. A conversation
+   * that no longer exists never lands either way — Gemini bounces the URL back to
+   * `/app` — so without a count the resume path would reload at it again, forever, in a
+   * loop the user can't get out of.
    */
   attempts: number;
   /** Why it isn't a clean `done` — surfaced in the report */

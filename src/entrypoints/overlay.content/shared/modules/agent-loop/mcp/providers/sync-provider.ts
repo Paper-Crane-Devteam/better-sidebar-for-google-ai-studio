@@ -9,7 +9,7 @@ export const syncProvider: ToolDefinition = {
   schema: {
     name: 'sync_conversation_messages',
     description:
-      "Record the message history of conversations that have none in the database. There is no API for this: the tab navigates to each conversation and scrolls its history to the top so the extension can capture the messages. TERMINAL — it leaves the current page, so the agent session ends here and you get no further turn. Tell the user what is about to happen (the tab will move through N conversations and come back) BEFORE calling it, and make it the last tool call in your response.",
+      "Record the message history of conversations that have none in the database. There is no API for this: the tab navigates to each conversation and scrolls its history to the top so the extension can capture the messages. TERMINAL — it leaves the current page, so the agent session ends here and you get no further turn. Tell the user what is about to happen BEFORE calling it (the tab will move through N conversations and come back, and a progress bar with a Stop button stays on screen so they can end it any time), and make it the last tool call in your response.",
     parameters: {
       type: 'object',
       properties: {

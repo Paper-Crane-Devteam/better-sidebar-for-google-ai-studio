@@ -615,6 +615,17 @@ desired = override ?? (hasAgentContent || isRunning ? 'custom' : 'original')
 3. `onBeforeSend` 返回 true → preventDefault，由 adapter 自行发送
 4. `onBeforeSend` 返回 false → expandCapsules 展开后让 Gemini 原生发送
 
+⚠️ **`composeAndSend` 一旦看到 `>` capsule 就必须返回 true，包括各种失败情形。**
+返回 false 会走到第 4 步：capsule 就地展开成 skill 的原文，由 Gemini 当普通消息发出去 ——
+没有 soul、没有 tool schema、没有 `[#bs-agent:...#]` marker。用户看到的现象就是
+「这个技能坏了」：AI 拿到一段没有工具可用的任务描述，会话也不切 agent 视图。
+所以所有失败分支（会话未 idle / entry 不存在 / prompt 组装抛错 / 文本没落进输入框）
+都走 `abort()`：拦下发送 + toast 说明原因，capsule 留在原地供重试。
+
+⚠️ **prompt 组装要放在 `expandAllCapsules()` 之前。** 反过来的话，组装抛错时编辑器里
+已经是展开后的 skill 原文，异常又逃出了 click handler（`preventDefault` 还没调用），
+Gemini 就把那段原文发出去了。
+
 ### 路径 2: 发送按钮点击
 
 由 `installSendButtonInterceptor()` 注册的 document capture click 拦截：
@@ -846,7 +857,14 @@ agentEventBus.emit('launcher:run-entry', { entryId, userInput, autoSend });
 ```
 
 `AgentLoopFeature` 负责落地（插 capsule、可选自动发送），成功后回 `launcher:staged`，
-编辑器不可用时回 `launcher:failed`。启动器据此提示"先打开一个对话"。
+不可用时回 `launcher:failed` + 原因：`no-editor`（先开一个对话）、`composer-busy`
+（引擎的 tool 结果还压在输入框里，先发出去）、`session-busy`（有会话还没结束，先跑完或停掉）、
+`unknown-entry`（技能已被删）。
+
+⚠️ **`status !== 'idle'` 时不能落地 capsule。** `composeAndSend` 不会开第二个引擎，
+所以那种 capsule 只会让用户按下发送后吃一个警告。启动器自己也拿 `useAgentLoopStore.status`
+把卡片和输入框置灰，并给一个「停掉当前任务」的出口 —— `AgentTab` 的注释一直声称有这个守卫，
+实际上没有，这就是「第一个技能好使、后面点的技能只把 skill 原文发出去」的来源。
 
 ### 修改编辑器交互逻辑
 
@@ -875,8 +893,9 @@ agentEventBus.emit('launcher:run-entry', { entryId, userInput, autoSend });
 | 项目 | 状态 | 说明 |
 |------|------|------|
 | DB Snapshot / 撤销 | 占位 | `snapshot-manager.ts` 全部返回 false；撤销 UI 已移除，等实现后再加回 |
-| sync_conversation_messages | 已做 | `tools/sync/`：job 存 `chrome.storage.local`，每次页面加载由 `resumeSyncRun()` 续跑；滚动目标是 `chat-window infinite-scroller`（同 SmartScrollbar），往上滚到高度不再变为止。选不到该元素时降级为 `no-scroller`，只录打开时那一页，entry 记 `partial`。未在真实长对话上验证过 |
-| handoff 工具 | 已做 | `HANDOFF_TOOLS`（目前只有 sync）：调用成功即结束 session，因为页面会被导航走。approval 强制要问一次，见 `requiresApproval()` |
+| sync_conversation_messages | 已做 | `tools/sync/`：对话间走 Gemini 自己的路由（`shared/lib/navigation`，同 explorer），整个 run 活在一个 JS 上下文里，所以有常驻进度 toast（`sync-progress.ts`）和即时生效的 Stop。job 仍存 `chrome.storage.local`，供路由打不开时的整页兜底和关标签后 `resumeSyncRun()` 续跑（续跑同样先立进度条，可中断）。到站判据是「message 列表指纹变了」而不是「有没有 message」——旧对话的 DOM 会滞留一拍。滚动目标是 `chat-window infinite-scroller`（同 SmartScrollbar），往上滚到高度不再变为止；选不到该元素时降级为 `no-scroller`，只录打开时那一页，entry 记 `partial`。未在真实长对话上验证过 |
+| handoff 工具 | 已做 | `HANDOFF_TOOLS`（目前只有 sync）：调用成功即结束 session，因为页面会被导航走。approval 强制要问一次，见 `requiresApproval()`。**它的 tool 结果永远不会回传**，所以 `toolOutcomes` 恒为 null——任何扫「有没有没人执行的 tool call」的地方都必须用 `renderer/helpers/session-end.ts` 的 `endsSession()` 排除它，否则每次回到该对话都会把 sync 整趟重跑一遍 |
+| auto-pickup（idle 时接手 tool call） | 已做 | `AgentLoopFeature.tsx`：session 结束后用户直接追问，AI 仍用 tool 格式回答，这里起一个新 session（`startFromExistingResponse`）。两个坑：① 闩锁必须按「对话 + turn + tool call 指纹」做 key，不能用 per-mount 布尔——SPA 跳转后组件永不卸载，布尔一旦置上就把整个标签页后续的 pickup 全废了；② session 绑的 conversationId 要用 `readConversationIdFromPath()` 现读 URL，不能用 `useCurrentConversationId()`（走 500ms 轮询，路由跳转瞬间是旧值），绑错了 Dock 的 `belongsToCurrent` 会判定不属于当前对话，approval 直接没地方显示 |
 | settings UI | 未做 | 需在设置面板加 agentLoop 独立开关（现复用 slashCommand）；`AgentPolicyControls` 那三个持久开关按理也该搬过去，现在暂居 Dock 的齿轮里 |
 | AI Studio 支持 | 未做 | 需写 adapter + entry component |
 | 自动继续 | 已做 | `autoContinue` 开关（默认开）∩ 本轮批准情况，见 `shouldAutoSend()` |
