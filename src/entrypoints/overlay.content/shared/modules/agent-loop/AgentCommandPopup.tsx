@@ -3,8 +3,9 @@
  * First item is the "auto" agent, the rest are enabled skills.
  */
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Bot } from 'lucide-react';
+import { OverflowTooltip } from '@/shared/components/ui/overflow-tooltip';
 import type { AgentEntry } from './agent-entry';
 import { AGENT_AUTO_ID } from './agent-entry';
 import { PopupFooterHints } from '@/entrypoints/overlay.content/shared/features/trigger-popup';
@@ -17,6 +18,71 @@ interface AgentCommandPopupProps {
   position: { bottom: number; left: number };
   query: string;
 }
+
+interface AgentCommandItemProps {
+  entry: AgentEntry;
+  isSelected: boolean;
+  onHighlight: () => void;
+  onConfirm: () => void;
+}
+
+/**
+ * One row. The description no longer takes a second line — it lives in the
+ * tooltip, same deal as the library tree: the title is only repeated there when
+ * it got truncated, otherwise the tooltip is just the description.
+ */
+const AgentCommandItem: React.FC<AgentCommandItemProps> = ({
+  entry,
+  isSelected,
+  onHighlight,
+  onConfirm,
+}) => {
+  const rowRef = useRef<HTMLDivElement>(null);
+  const isAuto = entry.id === AGENT_AUTO_ID;
+  const hasDescription = !!entry.description;
+
+  return (
+    <div
+      ref={rowRef}
+      className={`flex cursor-pointer items-center gap-3 px-3 py-2 transition-colors ${
+        isSelected ? 'bg-accent' : 'hover:bg-accent/50'
+      }`}
+      onMouseEnter={onHighlight}
+      onMouseDown={(e) => {
+        e.preventDefault(); // Prevent blur
+        onConfirm();
+      }}
+    >
+      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary/10 text-xs text-primary">
+        {isAuto ? <Bot className="h-4 w-4" /> : '>'}
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <OverflowTooltip
+          content={(isOverflowing) =>
+            isOverflowing || !hasDescription ? (
+              <div className="flex flex-col gap-1">
+                <div className="font-medium">{entry.title}</div>
+                {hasDescription && (
+                  <div className="text-[10px] opacity-80">{entry.description}</div>
+                )}
+              </div>
+            ) : (
+              entry.description
+            )
+          }
+          placement="right"
+          offset={16}
+          className="text-sm font-medium text-foreground select-none"
+          hoverRef={rowRef}
+          positionRef={rowRef}
+          forceShow={hasDescription}
+        >
+          {entry.title}
+        </OverflowTooltip>
+      </div>
+    </div>
+  );
+};
 
 export const AgentCommandPopup: React.FC<AgentCommandPopupProps> = ({
   matches,
@@ -47,30 +113,15 @@ export const AgentCommandPopup: React.FC<AgentCommandPopupProps> = ({
 
       {/* Items */}
       <div className="max-h-[320px] overflow-y-auto py-1">
-        {matches.map((entry, index) => {
-          const isAuto = entry.id === AGENT_AUTO_ID;
-          return (
-            <div
-              key={entry.id}
-              className={`flex cursor-pointer items-start gap-3 px-3 py-2 transition-colors ${
-                index === selectedIndex ? 'bg-accent' : 'hover:bg-accent/50'
-              }`}
-              onMouseEnter={() => onHighlight(index)}
-              onMouseDown={(e) => {
-                e.preventDefault(); // Prevent blur
-                onConfirm(index);
-              }}
-            >
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary/10 text-xs text-primary">
-                {isAuto ? <Bot className="h-4 w-4" /> : '>'}
-              </div>
-              <div className="flex-1 overflow-hidden">
-                <div className="truncate text-sm font-medium text-foreground">{entry.title}</div>
-                <div className="truncate text-xs text-muted-foreground">{entry.description}</div>
-              </div>
-            </div>
-          );
-        })}
+        {matches.map((entry, index) => (
+          <AgentCommandItem
+            key={entry.id}
+            entry={entry}
+            isSelected={index === selectedIndex}
+            onHighlight={() => onHighlight(index)}
+            onConfirm={() => onConfirm(index)}
+          />
+        ))}
       </div>
 
       {/* Footer hint */}

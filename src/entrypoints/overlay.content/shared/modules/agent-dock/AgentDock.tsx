@@ -22,6 +22,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { cn } from '@/shared/lib/utils/utils';
 import { useAgentLoopStore } from '../agent-loop/agent-loop-store';
 import { useUndoAvailable, useUndoWasUndone } from '../agent-loop/undo';
 import { useCurrentConversationId } from '../../hooks/useCurrentConversationId';
@@ -74,7 +75,28 @@ export const AgentDock: React.FC<AgentDockProps> = ({ hidden }) => {
   const belongsToCurrent =
     sessionConversationId === null || sessionConversationId === conversationId;
 
-  const visible = hasSession && belongsToCurrent && !hidden;
+  const failedSteps = history.reduce(
+    (sum, h) => sum + h.results.filter((r) => !r.success).length,
+    0,
+  );
+
+  /**
+   * Whether a finished session has anything for the user to *do*.
+   *
+   * A run that completed cleanly and left nothing to revert has nothing to offer here:
+   * the conversation already ends with its own "Task finished" divider, so a floating
+   * card over the composer saying the same thing is a second announcement of an event
+   * the user just watched happen. Worse, it needs dismissing.
+   *
+   * The cases that keep it are the ones with a button on them: an upgrade prompt, a
+   * failure worth noticing, an undo offer, or a restore that just rewrote history.
+   */
+  const finishedNeedsAttention =
+    endReason !== 'complete' || failedSteps > 0 || undoAvailable || undone;
+  const isFinished = !isRunning && endReason !== null;
+
+  const visible =
+    hasSession && belongsToCurrent && !hidden && (!isFinished || finishedNeedsAttention);
   const anchor = useComposerAnchor(visible);
 
   // Adopt the conversation id once the platform assigns one — including after the
@@ -93,32 +115,23 @@ export const AgentDock: React.FC<AgentDockProps> = ({ hidden }) => {
   }, [isRunning, endReason, belongsToCurrent]);
 
   /**
-   * A clean finish dismisses itself; anything the user has to act on stays.
+   * Clear the session state behind a finish nobody has to act on.
    *
-   * An earlier version auto-reset *every* ended session after a moment, which threw
-   * away the two cases that exist to be acted upon: `paywall` (whose card carries the
-   * upgrade button) and a run with failed steps. It also cleared `endReason`, and with
-   * it the inline completion card in the conversation, which reads that field.
+   * Nothing is on screen for this case any more (see `finishedNeedsAttention`), so the
+   * delay isn't about giving the user time to read — it's slack for `undoAvailable`
+   * and the rest to settle before the state they're read from is thrown away.
    *
-   * `undoAvailable` holds it open too — offering to revert the changes is pointless
-   * if the offer disappears on its own a second later. So does `undone`: a completed
-   * restore means the transcript above now describes changes that no longer exist,
-   * and that mismatch is worth leaving on screen until the user closes it.
+   * Deliberately not applied to the cases that *do* show a card: an earlier version
+   * auto-reset every ended session, which discarded the paywall's upgrade button and
+   * any run with failed steps out from under the user.
    */
   useEffect(() => {
     if (isRunning || endReason === null || !belongsToCurrent) return;
-
-    const failedSteps = history.reduce(
-      (sum, h) => sum + h.results.filter((r) => !r.success).length,
-      0,
-    );
-    const needsAttention =
-      endReason !== 'complete' || failedSteps > 0 || undoAvailable || undone;
-    if (needsAttention) return;
+    if (finishedNeedsAttention) return;
 
     const timer = setTimeout(() => useAgentLoopStore.getState().reset(), 4000);
     return () => clearTimeout(timer);
-  }, [isRunning, endReason, belongsToCurrent, history, undoAvailable]);
+  }, [isRunning, endReason, belongsToCurrent, finishedNeedsAttention]);
 
   /**
    * Identifies *which* decision is currently pending, so a new one can re-open a dock
@@ -167,10 +180,6 @@ export const AgentDock: React.FC<AgentDockProps> = ({ hidden }) => {
     else setSettingsOpen((s) => !s);
   };
 
-  // When the task is finished (idle + has an endReason), the dock only needs to show
-  // the session summary — the status pill is noise at that point.
-  const isFinished = !isRunning && endReason !== null;
-
   return (
     <div
       className="fixed z-[9998] overflow-hidden rounded-lg bg-popover shadow-[shadow:var(--shadow-popover)]"
@@ -194,8 +203,15 @@ export const AgentDock: React.FC<AgentDockProps> = ({ hidden }) => {
         />
       )}
 
+      {/* `pt-3` only when the pill is gone: with it there, the pill's own bottom
+          padding already separates the two, and adding more doubles the gap. */}
       {(expanded || isFinished) && (
-        <div className="max-h-[50vh] space-y-2 overflow-y-auto px-3 pb-3">
+        <div
+          className={cn(
+            'max-h-[50vh] space-y-2 overflow-y-auto px-3 pb-3',
+            isFinished && 'pt-3',
+          )}
+        >
           <AgentApproval />
           <AgentContinuePrompt />
           <AgentCheckIn />

@@ -156,8 +156,18 @@ export const MarkdownRenderer = memo(({ children, className, highlight, highligh
       ),
       p: ({ children }: any) => <p className="leading-relaxed [&:not(:first-child)]:mt-3.5">{processChildren(children)}</p>,
       li: ({ children }: any) => <li>{processChildren(children)}</li>,
-      ul: ({ children }: any) => <ul className="my-3 ml-5 list-disc [&>li]:mt-1.5">{children}</ul>,
-      ol: ({ children }: any) => <ol className="my-3 ml-5 list-decimal [&>li]:mt-1.5">{children}</ol>,
+      // Nested lists get a tighter vertical rhythm and a different bullet shape,
+      // so a sub-level reads as belonging to its parent rather than as a new block.
+      ul: ({ children }: any) => (
+        <ul className="my-3 ml-5 list-disc [&>li]:mt-1.5 [&_ul]:!my-1 [&_ol]:!my-1 [&_ul]:list-[circle] [&_ul_ul]:list-[square]">
+          {children}
+        </ul>
+      ),
+      ol: ({ children }: any) => (
+        <ol className="my-3 ml-5 list-decimal [&>li]:mt-1.5 [&_ul]:!my-1 [&_ol]:!my-1">
+          {children}
+        </ol>
+      ),
       h1: ({ children }: any) => <h1 className="text-xl font-semibold tracking-tight mt-5 mb-2.5 first:mt-0">{processChildren(children)}</h1>,
       h2: ({ children }: any) => <h2 className="text-lg font-semibold tracking-tight mt-4 mb-2 first:mt-0">{processChildren(children)}</h2>,
       h3: ({ children }: any) => <h3 className="text-base font-semibold tracking-tight mt-3.5 mb-1.5 first:mt-0">{processChildren(children)}</h3>,

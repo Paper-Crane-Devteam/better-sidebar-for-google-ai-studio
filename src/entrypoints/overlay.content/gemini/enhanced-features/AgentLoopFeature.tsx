@@ -32,6 +32,7 @@ import { toast } from '@/shared/lib/toast';
 import i18n from '@/locale/i18n';
 import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
 import { useConversationMessages } from '@/entrypoints/overlay.content/shared/modules/agent-loop/renderer/useConversationMessages';
+import { readSessionEnd } from '@/entrypoints/overlay.content/shared/modules/agent-loop/renderer/helpers/session-end';
 import {
   createAdapterForCurrentPlatform,
   getCurrentPlatformId,
@@ -235,6 +236,19 @@ export const AgentLoopFeature: React.FC = () => {
 
     // If any outcome is already known (from the next user message), it's history
     if (lastModel.toolOutcomes.some((o) => o !== null)) return;
+
+    /**
+     * A turn that ends the task is not unfinished business.
+     *
+     * `complete_task` never gets its result sent back — the session stops right
+     * there — so its outcome stays null forever and this check used to read the last
+     * turn of every *successfully finished* task as "tool calls nobody ran". It then
+     * spun up a session that did nothing but re-parse the completion and end again,
+     * which is where the stray summary card came from: on every reload, and again
+     * after each new message once `reset()` had cleared the ledger that was the only
+     * other thing holding it back.
+     */
+    if (readSessionEnd(lastModel) !== null) return;
 
     // Also skip if the ledger already knows these calls (current live session)
     const store = useAgentLoopStore.getState();

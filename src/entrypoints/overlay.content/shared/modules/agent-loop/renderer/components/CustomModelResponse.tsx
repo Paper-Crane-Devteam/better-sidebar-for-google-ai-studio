@@ -34,12 +34,34 @@ export const CustomModelResponse: React.FC<CustomModelResponseProps> = ({
     const elements: React.ReactNode[] = [];
     let lastIndex = 0;
 
+    /**
+     * Drop a fence marker left stranded by lifting a tool call out of the prose.
+     *
+     * The prompt asks for bare `<bs_agent_tool>` tags, but models like to wrap
+     * them in a code block anyway. Cutting the tag out of the middle then leaves
+     * the opening fence at the tail of one segment and the closing fence at the
+     * head of the next, which would swallow everything after it as code.
+     * Only an odd fence count can be stranded, so a balanced segment is left be.
+     */
+    const stripOrphanFence = (text: string) => {
+      const fences = text.match(/^ *`{3,}[^\n]*$/gm)?.length ?? 0;
+      if (fences % 2 === 0) return text;
+      // Exactly one marker goes: the stranded closing fence always leads the
+      // segment after a tool call, the stranded opening fence always trails the
+      // segment before it. Removing both would unbalance a real code block that
+      // happens to sit in the same segment.
+      const leading = /^\n* *`{3,}[^\n]*\n*/;
+      return leading.test(text)
+        ? text.replace(leading, '\n')
+        : text.replace(/\n* *`{3,}[^\n]*\n*$/, '\n');
+    };
+
     // Prose is buffered rather than flushed per tool call, so a hidden tool leaves
     // no seam: the text on either side of it merges back into one markdown block
     // instead of two with a gap where the card would have been.
     let pending = '';
     const flushText = (key: string, className: string) => {
-      const text = pending;
+      const text = stripOrphanFence(pending);
       pending = '';
       if (!text.trim()) return;
       elements.push(

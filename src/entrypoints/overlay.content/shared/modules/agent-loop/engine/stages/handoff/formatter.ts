@@ -8,11 +8,23 @@
  * The round trip exists because the editor shows a tidy capsule per tool while the
  * AI receives a single `<bs_agent_result>` block. If the separator here and the
  * split regex ever drift apart, the capsules silently collapse into one.
+ *
+ * `formatResults` is also where the composer's character cap is enforced (see
+ * `budget.ts`) — it is the single funnel every payload passes through, including the
+ * one `holdForRetry` parks for a later retry.
  */
+
+import { ROUND_BUDGET, clampPayload, fitSections } from './budget';
 
 /** Wrapper the AI is told to look for — also the marker for raw-text staging */
 export const RESULT_OPEN_TAG = '<bs_agent_result>';
 const RESULT_CLOSE_TAG = '</bs_agent_result>';
+
+/**
+ * What `wrapForAI` (or the send interceptor) adds around the payload. Counted against
+ * the budget here because by the time it is added, there is no trimming left to do.
+ */
+const WRAPPER_OVERHEAD = RESULT_OPEN_TAG.length + RESULT_CLOSE_TAG.length + 2;
 
 /**
  * Exported because the renderer has to read this format back out of the
@@ -42,29 +54,48 @@ export function wrapForAI(text: string): string {
  * Assemble one round's outcome into the document sent back to the AI.
  *
  * A user instruction typed mid-round is prepended so it lands in the same turn.
+ *
+ * Tool output is trimmed to fit the composer's cap; the instruction and error blocks
+ * are not, since they are short by nature and are the parts the AI most needs whole.
+ * They are still *counted*, so tool output shrinks to make room for them.
  */
 export function formatResults(
   results: string[],
   errors: string[],
   userInstruction?: string | null,
 ): string {
-  let output = '';
-
-  if (userInstruction) {
-    output += `${USER_INSTRUCTION_HEADER}\n\n${userInstruction}\n\n`;
-  }
+  const instructionBlock = userInstruction
+    ? `${USER_INSTRUCTION_HEADER}\n\n${userInstruction}\n\n`
+    : '';
 
   // A round carrying only an instruction ran no tools, and titling it "Tool
   // Execution Results" would have the AI hunting for output that doesn't exist.
-  if (results.length > 0) output += `${RESULTS_HEADER}\n\n`;
-  output += results.join(SECTION_SEPARATOR);
+  const resultsHeader = results.length > 0 ? `${RESULTS_HEADER}\n\n` : '';
 
-  if (errors.length > 0) {
-    output += `\n\n${PARSE_ERRORS_HEADER}\n\n`;
-    output += errors.map((e) => `- ${e}`).join('\n');
+  const errorBlock =
+    errors.length > 0
+      ? `\n\n${PARSE_ERRORS_HEADER}\n\n${errors.map((e) => `- ${e}`).join('\n')}`
+      : '';
+
+  const reserved =
+    WRAPPER_OVERHEAD +
+    instructionBlock.length +
+    resultsHeader.length +
+    errorBlock.length +
+    Math.max(0, results.length - 1) * SECTION_SEPARATOR.length;
+
+  const { sections, truncated } = fitSections(results, reserved);
+
+  if (truncated > 0) {
+    console.warn(
+      `[AgentLoop] ${truncated} of ${results.length} tool result(s) exceeded the ` +
+        `${ROUND_BUDGET}-character round budget and were truncated`,
+    );
   }
 
-  return output;
+  const output = instructionBlock + resultsHeader + sections.join(SECTION_SEPARATOR) + errorBlock;
+
+  return clampPayload(output, WRAPPER_OVERHEAD);
 }
 
 /**

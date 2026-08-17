@@ -63,6 +63,83 @@ export function applyShadowStyles(shadow: ShadowRoot, css: string) {
   }
 }
 
+/**
+ * Tags that flow inside a line of text. Used to decide whether the whitespace
+ * around a text node carries meaning: the space in `<strong>a</strong> b` does,
+ * the newline between two `<p>`s does not.
+ */
+const INLINE_TAGS = new Set([
+  'A', 'ABBR', 'B', 'BDI', 'BDO', 'BR', 'CITE', 'CODE', 'DEL', 'EM', 'I', 'IMG',
+  'INS', 'KBD', 'MARK', 'Q', 'S', 'SAMP', 'SMALL', 'SPAN', 'STRONG', 'SUB',
+  'SUP', 'TIME', 'U', 'VAR', 'WBR',
+]);
+
+function isInlineNeighbour(node: Node | null): boolean {
+  if (!node) return false;
+  if (node.nodeType === Node.TEXT_NODE) return !!node.textContent?.trim();
+  if (node.nodeType !== Node.ELEMENT_NODE) return false;
+  return INLINE_TAGS.has((node as Element).tagName.toUpperCase());
+}
+
+/**
+ * Squash runs of blank lines, leaving fenced code blocks alone — a code sample
+ * with two blank lines in it is not the same sample once they're collapsed.
+ */
+function collapseBlankLines(md: string): string {
+  return md
+    .split(/(`{3,}[^\n]*\n[\s\S]*?\n`{3,})/g)
+    .map((part, i) => (i % 2 === 1 ? part : part.replace(/\n{3,}/g, '\n\n')))
+    .join('');
+}
+
+/** Indent every line but the first, so a nested block stays inside its list item. */
+function indentContinuation(body: string, indent: string): string {
+  return body
+    .split('\n')
+    .map((line, i) => (i === 0 || !line ? line : indent + line))
+    .join('\n');
+}
+
+/**
+ * Render `<ul>`/`<ol>` children as markdown list lines.
+ *
+ * Nested lists are indented by the parent marker's width. Without this every
+ * level came out flush left and sub-items read as siblings of their parent.
+ */
+function parseListToMarkdown(element: HTMLElement, ordered: boolean): string {
+  const start = ordered
+    ? parseInt(element.getAttribute('start') || '1', 10) || 1
+    : 1;
+  const items: string[] = [];
+
+  for (const child of Array.from(element.children)) {
+    const tag = child.tagName.toUpperCase();
+
+    if (tag === 'LI') {
+      const marker = ordered ? `${start + items.length}. ` : '- ';
+      const body = collapseBlankLines(parseNodeToMarkdown(child)).trim();
+      items.push(marker + indentContinuation(body, ' '.repeat(marker.length)));
+      continue;
+    }
+
+    // A list nested directly under the list (rather than under an <li>) still
+    // belongs to the item above it.
+    if ((tag === 'UL' || tag === 'OL') && items.length > 0) {
+      const nested = parseNodeToMarkdown(child).trim();
+      if (nested) {
+        const indented = nested
+          .split('\n')
+          .map((line) => (line ? '  ' + line : line))
+          .join('\n');
+        items[items.length - 1] += '\n' + indented;
+      }
+    }
+  }
+
+  if (items.length === 0) return '';
+  return `\n${items.join('\n')}\n`;
+}
+
 function parseNodeToMarkdown(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) {
     // Attempt to preserve whitespace for elements like <pre>
@@ -72,7 +149,21 @@ function parseNodeToMarkdown(node: Node): string {
     ) {
       return node.textContent || '';
     }
-    return node.textContent?.trim() || '';
+    const raw = node.textContent || '';
+    const trimmed = raw.trim();
+    // Whitespace-only nodes are layout artefacts unless they separate two
+    // inline siblings, where they are the space between two words.
+    if (!trimmed) {
+      return isInlineNeighbour(node.previousSibling) &&
+        isInlineNeighbour(node.nextSibling)
+        ? ' '
+        : '';
+    }
+    // Keep the single space that hugs an inline sibling — trimming it merged
+    // words together, e.g. `**bold** text` came out as `**bold**text`.
+    const lead = /^\s/.test(raw) && isInlineNeighbour(node.previousSibling) ? ' ' : '';
+    const tail = /\s$/.test(raw) && isInlineNeighbour(node.nextSibling) ? ' ' : '';
+    return lead + trimmed + tail;
   }
 
   if (node.nodeType !== Node.ELEMENT_NODE) {
@@ -97,38 +188,77 @@ function parseNodeToMarkdown(node: Node): string {
   switch (tagName) {
     case 'P':
       return `\n${childrenMarkdown}\n`;
+    case 'BR':
+      return '\n';
     case 'STRONG':
-      return `**${childrenMarkdown}**`;
+    case 'B':
+      return childrenMarkdown.trim() ? `**${childrenMarkdown}**` : childrenMarkdown;
+    case 'EM':
+    case 'I':
+      return childrenMarkdown.trim() ? `*${childrenMarkdown}*` : childrenMarkdown;
+    case 'DEL':
+    case 'S':
+      return childrenMarkdown.trim() ? `~~${childrenMarkdown}~~` : childrenMarkdown;
+    case 'H1':
+    case 'H2':
     case 'H3':
-      return `### ${childrenMarkdown}\n\n`;
-    case 'UL': {
-      const listItems = Array.from(element.children).filter(
-        (child) => child.tagName.toUpperCase() === 'LI',
-      );
-      return (
-        '\n' +
-        listItems
-          .map((item) => `- ${parseNodeToMarkdown(item).trim()}`)
-          .join('\n') +
-        '\n'
-      );
-    }
-    case 'OL': {
-      const listItems = Array.from(element.children).filter(
-        (child) => child.tagName.toUpperCase() === 'LI',
-      );
-      return (
-        '\n' +
-        listItems
-          .map(
-            (item, index) =>
-              `${index + 1}. ${parseNodeToMarkdown(item).trim()}`,
-          )
-          .join('\n') +
-        '\n'
-      );
-    }
+    case 'H4':
+    case 'H5':
+    case 'H6':
+      return `\n${'#'.repeat(Number(tagName[1]))} ${childrenMarkdown.trim()}\n\n`;
+    case 'UL':
+      return parseListToMarkdown(element, false);
+    case 'OL':
+      return parseListToMarkdown(element, true);
     case 'LI':
+      return childrenMarkdown;
+    case 'BLOCKQUOTE': {
+      const body = childrenMarkdown.replace(/\n{3,}/g, '\n\n').trim();
+      if (!body) return '';
+      return `\n${body
+        .split('\n')
+        .map((line) => `> ${line}`.trimEnd())
+        .join('\n')}\n\n`;
+    }
+    case 'A': {
+      const href = element.getAttribute('href') || '';
+      const label = childrenMarkdown.trim();
+      if (!label) return '';
+      return href ? `[${label}](${href})` : label;
+    }
+    case 'IMG': {
+      const src = element.getAttribute('src') || '';
+      if (!src) return '';
+      return `![${element.getAttribute('alt') || ''}](${src})`;
+    }
+    case 'TABLE': {
+      const rows = Array.from(element.querySelectorAll('tr'));
+      if (rows.length === 0) return childrenMarkdown;
+      const cellsOf = (row: Element) =>
+        Array.from(row.children)
+          .filter((c) => /^T[HD]$/.test(c.tagName.toUpperCase()))
+          .map((c) =>
+            parseNodeToMarkdown(c)
+              .replace(/\s*\n\s*/g, ' ')
+              .trim()
+              .replace(/\|/g, '\\|'),
+          );
+      const header = cellsOf(rows[0]);
+      const toLine = (cells: string[]) => `| ${cells.join(' | ')} |`;
+      return [
+        '',
+        toLine(header),
+        toLine(header.map(() => '---')),
+        ...rows.slice(1).map((r) => toLine(cellsOf(r))),
+        '',
+      ].join('\n');
+    }
+    case 'THEAD':
+    case 'TBODY':
+    case 'TFOOT':
+    case 'TR':
+    case 'TH':
+    case 'TD':
       return childrenMarkdown;
     case 'SPAN':
       if (element.classList.contains('inline-code')) {
@@ -149,9 +279,30 @@ function parseNodeToMarkdown(node: Node): string {
     }
     case 'HR':
       return '\n\n---\n\n';
-    case 'PRE':
-    case 'CODE':
-      return childrenMarkdown;
+    case 'PRE': {
+      // Gemini wraps code blocks in <code-block><pre><code class="language-x">.
+      // Reading textContent keeps the code verbatim; recursing would strip its
+      // indentation and syntax-highlight spans.
+      const codeEl = element.querySelector('code');
+      const code = (codeEl?.textContent ?? element.textContent ?? '').replace(
+        /\n+$/,
+        '',
+      );
+      const lang =
+        /language-([\w+#.-]+)/.exec(codeEl?.className || '')?.[1] || '';
+      // Longer fence than any run of backticks inside, so embedded fences survive
+      const fence = '`'.repeat(
+        Math.max(3, ...[...code.matchAll(/`+/g)].map((m) => m[0].length + 1)),
+      );
+      return `\n${fence}${lang}\n${code}\n${fence}\n`;
+    }
+    case 'CODE': {
+      if (element.closest('pre')) return childrenMarkdown;
+      const code = element.textContent || '';
+      if (!code.trim()) return childrenMarkdown;
+      const fence = code.includes('`') ? '``' : '`';
+      return `${fence}${code}${fence}`;
+    }
     // These are container tags, just process their children.
     case 'MS-PROMPT-CHUNK':
     case 'MS-TEXT-CHUNK':
@@ -175,15 +326,11 @@ export function htmlToMarkdown(container: HTMLElement): string {
   const cmarkNode = tempContainer.querySelector('ms-cmark-node');
   if (cmarkNode) {
     // We clean up excessive newlines that might be generated
-    return parseNodeToMarkdown(cmarkNode)
-      .trim()
-      .replace(/\n{3,}/g, '\n\n');
+    return collapseBlankLines(parseNodeToMarkdown(cmarkNode).trim());
   }
 
   // Fallback: Parse the entire container if no specific wrapper is found (e.g. User messages)
-  return parseNodeToMarkdown(tempContainer)
-    .trim()
-    .replace(/\n{3,}/g, '\n\n');
+  return collapseBlankLines(parseNodeToMarkdown(tempContainer).trim());
 }
 
 export async function syncGeminiTheme(theme: 'light' | 'dark' | 'system') {

@@ -77,18 +77,4 @@ You can query messages with: SELECT m.* FROM messages m JOIN conversations c ON 
     createdAt: 0,
     updatedAt: 0,
   },
-  {
-    id: 'builtin-freeform',
-    type: 'builtin',
-    title: 'Custom Task',
-    description: 'Tell the AI what you want to do with your data',
-    icon: 'Sparkles',
-    promptContent: `## Task: Custom
-
-The user will describe what they want to accomplish. Help them by querying and modifying the database as needed. Always start by understanding the current data state with SELECT queries.
-`,
-    enabled: true,
-    createdAt: 0,
-    updatedAt: 0,
-  },
 ];

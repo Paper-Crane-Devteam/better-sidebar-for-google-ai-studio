@@ -14,6 +14,10 @@
 import { SCHEMA } from '@/shared/db/schema';
 import { INBOX_FOLDER_ID, SNIPPET_INBOX_ID, PROMPT_INBOX_ID } from '@/shared/constants/inbox';
 import type { PlatformId } from '../adapters/adapter-factory';
+// Deep import on purpose: `budget.ts` is a dependency-free constants leaf, while going
+// through `engine/index` would close a cycle (engine → tools → prompt-assembler → here).
+// The number the prompt quotes has to be the one the code enforces.
+import { ROUND_BUDGET } from '../engine/stages/handoff/budget';
 
 // ─── Platform Context ────────────────────────────────────────────────────────
 
@@ -71,6 +75,49 @@ Rules:
 `;
 }
 
+// ─── Result Size Budget ──────────────────────────────────────────────────────
+
+/**
+ * Tell the AI how much room its results have.
+ *
+ * Deliberately framed as "a generous budget, spend it" rather than a list of caps.
+ * The failure mode of a strict version is worse than the one it prevents: an agent
+ * told to keep queries small samples three rows from every table, concludes from
+ * almost nothing, and the user gets a confident wrong answer. Truncation, by
+ * contrast, announces itself — `budget.ts` appends a notice saying what was cut and
+ * how to ask for the rest.
+ *
+ * So the only genuinely firm advice here is about `messages.content`, the one field
+ * that can exhaust the whole budget in a single row.
+ */
+function getResultBudgetBlock(): string {
+  return `
+## Result Size Budget
+
+All tool results from one response travel back to you through the chat input, which
+holds about ${ROUND_BUDGET} characters. Past that the extension truncates the output and
+tells you it did.
+
+**This is a lot of room — use it.** Do not shrink every query to a handful of rows
+"just in case": a thin sample you then reason from is far worse than one good look at
+the data. Metadata (ids, titles, folder ids, timestamps) is small; hundreds of rows of
+it fit comfortably.
+
+The one field to be deliberate about is \`messages.content\`, which holds full message
+text — a single long model reply can be tens of thousands of characters on its own.
+
+- Scanning or searching across many messages? Take excerpts:
+  \`substr(content, 1, 800)\`. Read a message in full once you have narrowed down to
+  the one that matters.
+- Searching for words? \`messages_fts\` with \`snippet()\` returns matching excerpts
+  instead of whole messages.
+- Not sure how much data you're about to pull? One cheap probe first is worth it:
+  \`SELECT COUNT(*), SUM(LENGTH(content)) FROM ...\`, then decide.
+- If output does come back truncated, don't re-run the same query hoping for more —
+  it will be cut at the same point. Narrow it, or page with \`LIMIT\`/\`OFFSET\`.
+`;
+}
+
 // ─── Behavioral Rules ────────────────────────────────────────────────────────
 
 function getRules(): string {
@@ -90,6 +137,7 @@ function getRules(): string {
 12. **Error recovery** — If a tool returns an error, analyze it and try a corrected approach.
 13. **Maximum 5 tool calls per response** — If a task needs more steps, call up to 5 tools, then wait.
 14. **No repetitive patterns** — If you've called the same tool with identical arguments before, try a different approach.
+15. **Result size** — One response's tool results share a ~${ROUND_BUDGET} character budget; see "Result Size Budget" above. It's roomy, so query freely — just take excerpts of \`messages.content\` (\`substr(content, 1, 800)\`) when reading across many rows.
 `;
 }
 
@@ -155,6 +203,6 @@ ${toolSchemas}
 \`\`\`sql
 ${SCHEMA}
 \`\`\`
-
+${getResultBudgetBlock()}
 ${getRules()}`;
 }
