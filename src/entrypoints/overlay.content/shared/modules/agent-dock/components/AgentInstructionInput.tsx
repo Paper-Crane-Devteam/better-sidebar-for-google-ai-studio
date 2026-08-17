@@ -55,7 +55,7 @@ export const AgentInstructionInput: React.FC = () => {
         )}
       </div>
       {sent && (
-        <span className="mt-1 block text-xs text-green-500">
+        <span className="mt-1 block text-xs text-success">
           ✓ {t('agent.instruction.sent', { defaultValue: 'Note sent' })}
         </span>
       )}

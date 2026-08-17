@@ -6,11 +6,12 @@
  * without modifying original conversation DOM nodes.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAgentLoopStore } from '../agent-loop-store';
 import { findConversationScroller } from './constants';
 import { useAgentViewState } from './useAgentViewState';
+import { readSessionEnd, type SessionOutcome } from './helpers/session-end';
 import { CustomUserMessage } from './components/CustomUserMessage';
 import { CustomModelResponse } from './components/CustomModelResponse';
 import { SessionEndCard } from './components/SessionEndCard';
@@ -27,8 +28,6 @@ export const ConversationOverlay: React.FC = () => {
   const { t } = useI18n();
   const { messages, isActive: isCustomActive } = useAgentViewState();
   const setAgentViewActive = useAgentLoopStore((s) => s.setAgentViewActive);
-  const endReason = useAgentLoopStore((s) => s.endReason);
-  const status = useAgentLoopStore((s) => s.status);
   const chatWidth = usePegasusStore((s) => s.enhancedFeatures.gemini?.chatWidth ?? 46);
 
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
@@ -128,6 +127,26 @@ export const ConversationOverlay: React.FC = () => {
 
   // Manual tool execution is only offered on the newest model turn
   const latestModelMessageId = [...messages].reverse().find((m) => m.role === 'model')?.id;
+
+  /**
+   * Where tasks ended, according to the transcript itself.
+   *
+   * `complete_task` is in the DOM, so the divider is there whenever the conversation
+   * is — after a reload, after an undo, after switching away and back — and nowhere
+   * else. The card for that call is hidden (see `HIDDEN_TOOLS`), so this divider is
+   * the only thing standing in for it.
+   */
+  const sessionEnds = useMemo(() => {
+    const ends = new Map<string, SessionOutcome>();
+    for (const message of messages) {
+      const outcome = readSessionEnd(message);
+      if (outcome) ends.set(message.id, outcome);
+    }
+    return ends;
+  }, [messages]);
+
+  // Only the newest marker offers undo — the snapshot covers one session
+  const lastEndedMessageId = [...messages].reverse().find((m) => sessionEnds.has(m.id))?.id;
 
   /**
    * Only blank out / take over the native conversation once we can actually render a
@@ -296,18 +315,22 @@ export const ConversationOverlay: React.FC = () => {
             msg.role === 'user' ? (
               <CustomUserMessage key={msg.id} message={msg} />
             ) : (
-              <CustomModelResponse
-                key={msg.id}
-                message={msg}
-                isLatestResponse={msg.id === latestModelMessageId}
-              />
+              <React.Fragment key={msg.id}>
+                <CustomModelResponse
+                  message={msg}
+                  isLatestResponse={msg.id === latestModelMessageId}
+                />
+                {/* Session end indicator, drawn where the task actually ended, so a
+                    conversation holding several sessions reads correctly. */}
+                {sessionEnds.has(msg.id) && (
+                  <SessionEndCard
+                    outcome={sessionEnds.get(msg.id)!}
+                    isLatest={msg.id === lastEndedMessageId}
+                  />
+                )}
+              </React.Fragment>
             ),
           )
-        )}
-
-        {/* Session end indicator — shown in the conversation so it's clear the task is done */}
-        {status === 'idle' && endReason && messages.length > 0 && (
-          <SessionEndCard endReason={endReason} />
         )}
       </div>
 

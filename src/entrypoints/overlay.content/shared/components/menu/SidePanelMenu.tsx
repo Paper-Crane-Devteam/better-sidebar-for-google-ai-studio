@@ -90,7 +90,10 @@ export const SidePanelMenu = ({
           <Button
             variant="ghost"
             size="icon"
-            className="data-[state=open]:bg-accent data-[state=open]:text-accent-foreground"
+            // Same sizing + colour contract as the sibling header actions
+            // (GDrive / sort / new folder), so the trigger tracks the sidebar
+            // theme instead of inheriting the host page's text colour.
+            className="h-7 w-7 text-muted-foreground hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground"
             onPointerEnter={() => { cancelClose(); setOpen(true); }}
             onPointerLeave={handleTriggerLeave}
           >

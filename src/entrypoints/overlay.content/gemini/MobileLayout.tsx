@@ -11,6 +11,7 @@ import { OverlayPanel } from './OverlayPanel';
 import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
 import { applyShadowStyles, waitForElement } from '@/shared/lib/utils';
+import { bindShadowRootToTheme } from '@/themes/platforms/gemini';
 import { useAppStore } from '@/shared/lib/store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useExclusiveContextMenuStore } from '../shared/components/ui/exclusive-context-menu';
@@ -97,7 +98,7 @@ export async function mountMobileLayout(
       }
     };
     syncGeminiStyle();
-    useSettingsStore.subscribe((state, prevState) => {
+    const unsubGeminiStyle = useSettingsStore.subscribe((state, prevState) => {
       if (state.geminiStyle !== prevState.geminiStyle) {
         syncGeminiStyle();
       }
@@ -133,6 +134,9 @@ export async function mountMobileLayout(
     });
 
     shadow.appendChild(rootContainer);
+
+    // Bind custom theme to sidebar Shadow DOM (same as desktop layout)
+    const unsubSidebarTheme = bindShadowRootToTheme(rootContainer);
 
     // Render React App
     const root = ReactDOM.createRoot(rootContainer);
@@ -196,6 +200,8 @@ export async function mountMobileLayout(
       destroy: () => {
         console.log('Better Sidebar: Destroying mobile layout');
         unsubscribe();
+        unsubGeminiStyle();
+        unsubSidebarTheme();
         window.removeEventListener('storage', onStorage);
         mediaQuery.removeEventListener('change', syncTheme);
         bodyObserver.disconnect();

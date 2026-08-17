@@ -123,7 +123,7 @@ export function ImportThemeModalContentStateful() {
         <div
           className={`flex items-start gap-2 rounded-md px-3 py-2 text-xs ${
             validation.valid
-              ? 'bg-green-500/10 text-green-700 dark:text-green-300'
+              ? 'bg-success/10 text-success'
               : 'bg-destructive/10 text-destructive'
           }`}
         >
@@ -158,16 +158,16 @@ export function ImportThemeModalContentStateful() {
 
       {/* License Required Prompt */}
       {showLicensePrompt && (
-        <div className="flex items-center justify-between gap-2 rounded-lg bg-amber-500/10 px-4 py-3">
+        <div className="flex items-center justify-between gap-2 rounded-lg bg-highlight/10 px-4 py-3">
           <div className="flex items-center gap-2 min-w-0">
-            <Sparkles className="h-4 w-4 text-amber-600 shrink-0" />
-            <span className="text-xs text-amber-800 dark:text-amber-300">
+            <Sparkles className="h-4 w-4 text-highlight shrink-0" />
+            <span className="text-xs text-highlight">
               {t('themeSettings.importRequiresLicense')}
             </span>
           </div>
           <button
             onClick={() => openPurchasePage()}
-            className="flex items-center gap-1 shrink-0 rounded-md border border-amber-500/50 px-2.5 py-1 text-xs font-medium text-amber-700 hover:bg-amber-500/10 transition-colors"
+            className="flex items-center gap-1 shrink-0 rounded-md border border-highlight/50 px-2.5 py-1 text-xs font-medium text-highlight hover:bg-highlight/10 transition-colors"
           >
             <ShoppingCart className="h-3 w-3" />
             {t('themeSettings.buyNow')}

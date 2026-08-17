@@ -218,7 +218,7 @@ export const BackupListModal: React.FC<BackupListModalProps> = ({
                     <span
                       className={`shrink-0 rounded px-1 py-1 text-xs leading-none ${
                         PROTECTIVE_REASONS.includes(backup.reason)
-                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                          ? 'bg-warning/15 text-warning'
                           : 'bg-muted text-muted-foreground'
                       }`}
                     >

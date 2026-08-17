@@ -322,7 +322,7 @@ export const DataSettings = () => {
           <div className="mt-3 p-4 rounded-lg bg-muted/40 space-y-3">
             {/* Header row */}
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
               <span className="text-sm font-semibold">
                 {activeProfile.name}
               </span>

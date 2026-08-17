@@ -95,7 +95,7 @@ export const AgentSessionSummary: React.FC = () => {
         isPaywall
           ? 'bg-primary/10'
           : isClean
-            ? 'bg-green-500/10'
+            ? 'bg-success/10'
             : 'bg-muted/40',
       )}
     >
@@ -103,7 +103,7 @@ export const AgentSessionSummary: React.FC = () => {
         {isPaywall ? (
           <Lock className="h-3 w-3 shrink-0 text-primary" />
         ) : isClean ? (
-          <CheckCircle2 className="h-3 w-3 shrink-0 text-green-500" />
+          <CheckCircle2 className="h-3 w-3 shrink-0 text-success" />
         ) : (
           <AlertTriangle className="h-3 w-3 shrink-0 text-muted-foreground" />
         )}

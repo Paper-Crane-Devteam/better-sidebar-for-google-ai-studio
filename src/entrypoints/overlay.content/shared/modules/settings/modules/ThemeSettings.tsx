@@ -428,17 +428,17 @@ export const ThemeSettings = () => {
 /** Preview banner — tells user the theme will revert in 5 min, with a purchase CTA */
 function PreviewBanner({ t }: { t: (key: string) => string }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded-lg bg-amber-500/10 px-4 py-3">
+    <div className="flex items-center justify-between gap-2 rounded-lg bg-highlight/10 px-4 py-3">
       <div className="flex items-center gap-2 min-w-0">
-        <Eye className="h-4 w-4 text-amber-600 shrink-0" />
-        <span className="text-xs text-amber-800 dark:text-amber-300 truncate">
+        <Eye className="h-4 w-4 text-highlight shrink-0" />
+        <span className="text-xs text-highlight truncate">
           {t('themeSettings.previewBannerText')}
         </span>
       </div>
       <Button
         variant="outline"
         size="sm"
-        className="h-6 px-2.5 text-xs shrink-0 border-amber-500/50 text-amber-700 hover:bg-amber-500/10"
+        className="h-6 px-2.5 text-xs shrink-0 border-highlight/50 text-highlight hover:bg-highlight/10"
         onClick={() => openPurchasePage()}
       >
         <ShoppingCart className="h-3 w-3 mr-1" />
@@ -672,15 +672,15 @@ function ThemeCard({
 
       {/* Preview indicator */}
       {isPreviewing && (
-        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-amber-500 flex items-center justify-center">
-          <Eye className="h-3 w-3 text-white" />
+        <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-highlight flex items-center justify-center">
+          <Eye className="h-3 w-3 text-highlight-foreground" />
         </div>
       )}
 
       {/* Premium badge */}
       {isPremium && !hasLicense && !isActive && !isPreviewing && !isUserTheme && (
-        <div className="absolute top-2 right-2 flex items-center gap-0.5 rounded-full bg-amber-500/15 px-1.5 py-0.5">
-          <Sparkles className="h-3 w-3 text-amber-600" />
+        <div className="absolute top-2 right-2 flex items-center gap-0.5 rounded-full bg-highlight/15 px-1.5 py-0.5">
+          <Sparkles className="h-3 w-3 text-highlight" />
         </div>
       )}
 

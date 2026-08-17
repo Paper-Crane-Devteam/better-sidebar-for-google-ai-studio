@@ -83,7 +83,13 @@
     @apply bg-background text-foreground;
   }
   .shadow-body {
-    // @apply bg-background text-foreground antialiased;
+    // Background is intentionally NOT set here — themes drive the panel surface
+    // via --panel-bg / --overlay-bg so frosted-glass presets stay translucent.
+    // The text colour, however, must be pinned to the theme: this div is the
+    // root inside each shadow root, and without an explicit colour every
+    // element that has no `text-*` class inherits through the shadow host from
+    // the host page (Gemini/AI Studio), so icons ignore the sidebar theme.
+    color: rgb(var(--foreground));
     font-family: var(--font-sans);
     font-size: 14px;
     line-height: 20px;

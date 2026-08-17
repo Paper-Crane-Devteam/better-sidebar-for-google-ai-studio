@@ -69,7 +69,7 @@ const PermissionsPage = () => {
         )}
 
         {status === 'granted' && (
-          <p className="text-green-600 font-medium">
+          <p className="text-success font-medium">
             ✓ Permission granted. This tab will close automatically.
           </p>
         )}

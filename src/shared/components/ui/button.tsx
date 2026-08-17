@@ -27,6 +27,19 @@ const buttonVariants = cva(
         icon: "h-9 w-9",
       },
     },
+    compoundVariants: [
+      {
+        // Icon-only ghost buttons (toolbar / header actions) default to the
+        // muted foreground and brighten on hover. This is the convention most
+        // headers already spell out by hand; putting it here means a button
+        // that forgets the class still tracks the theme instead of inheriting
+        // the host page's colour. Any explicit `text-*` in className wins,
+        // since tailwind-merge resolves className last.
+        variant: "ghost",
+        size: "icon",
+        class: "text-muted-foreground hover:text-foreground",
+      },
+    ],
     defaultVariants: {
       variant: "default",
       size: "default",

@@ -12,53 +12,43 @@
  */
 
 import React from 'react';
-import { CheckCircle2, AlertTriangle, Square, Undo2, RotateCcw } from 'lucide-react';
-import type { AgentEndReason } from '../../types';
+import { CheckCircle2, AlertTriangle, Undo2, RotateCcw } from 'lucide-react';
+import type { SessionOutcome } from '../helpers/session-end';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useUndoAvailable, useUndoWasUndone, useUndoAction } from '../../undo';
 
 interface SessionEndCardProps {
-  endReason: AgentEndReason;
+  outcome: SessionOutcome;
+  /**
+   * Whether this marker owns the undo entry point.
+   *
+   * A conversation can contain several finished sessions, but the snapshot only ever
+   * covers the most recent one — offering "Undo changes" on an older divider would
+   * revert work the user never pointed at.
+   */
+  isLatest?: boolean;
 }
 
-export const SessionEndCard: React.FC<SessionEndCardProps> = ({ endReason }) => {
+export const SessionEndCard: React.FC<SessionEndCardProps> = ({ outcome, isLatest = true }) => {
   const { t } = useI18n();
-  const undoAvailable = useUndoAvailable();
-  const undone = useUndoWasUndone();
+  const undoAvailable = useUndoAvailable() && isLatest;
+  const undone = useUndoWasUndone() && isLatest;
   const { undoing, runUndo } = useUndoAction();
 
-  const isSuccess = endReason === 'complete';
-  const isStop = endReason === 'user_stop';
+  const isSuccess = outcome === 'complete';
 
-  const label = (() => {
-    switch (endReason) {
-      case 'complete':
-        return t('agent.summary.done', { defaultValue: 'Task finished' });
-      case 'infeasible':
-        return t('agent.summary.infeasible', { defaultValue: "Couldn't be done" });
-      case 'user_stop':
-        return t('agent.summary.stopped', { defaultValue: 'Stopped' });
-      case 'circuit_breaker':
-        return t('agent.summary.stuck', { defaultValue: 'Stopped — the agent was looping' });
-      case 'no_tool_call':
-        return t('agent.summary.noToolCall', { defaultValue: 'Stopped — no action was taken' });
-      case 'paywall':
-        return t('agent.summary.paywall', { defaultValue: 'Upgrade required' });
-      default:
-        return t('agent.summary.ended', { defaultValue: 'Session ended' });
-    }
-  })();
+  const label = isSuccess
+    ? t('agent.summary.done', { defaultValue: 'Task finished' })
+    : t('agent.summary.infeasible', { defaultValue: "Couldn't be done" });
 
-  // Reverted wins over the end reason: the transcript above still describes changes
+  // Reverted wins over the outcome: the transcript above still describes changes
   // that no longer exist, so "Task finished" alone would read as confirmation.
-  const Icon = undone ? RotateCcw : isSuccess ? CheckCircle2 : isStop ? Square : AlertTriangle;
+  const Icon = undone ? RotateCcw : isSuccess ? CheckCircle2 : AlertTriangle;
   const iconColor = undone
     ? 'text-muted-foreground'
     : isSuccess
-      ? 'text-green-500'
-      : isStop
-        ? 'text-muted-foreground'
-        : 'text-amber-500';
+      ? 'text-success'
+      : 'text-warning';
 
   return (
     <div className="my-6 flex items-center gap-2 py-3">

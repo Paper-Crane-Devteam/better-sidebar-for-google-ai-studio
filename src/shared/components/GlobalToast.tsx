@@ -5,24 +5,24 @@ import { cn } from '@/shared/lib/utils/utils'; // Assuming cn utility exists, us
 import { Z_INDEX } from '@/shared/lib/z-index';
 
 const icons = {
-  success: <CheckCircle className="h-5 w-5 text-green-500" />,
-  error: <AlertCircle className="h-5 w-5 text-red-500" />,
+  success: <CheckCircle className="h-5 w-5 text-success" />,
+  error: <AlertCircle className="h-5 w-5 text-destructive" />,
   info: <Info className="h-5 w-5 text-blue-500" />,
-  warning: <AlertTriangle className="h-5 w-5 text-yellow-500" />,
+  warning: <AlertTriangle className="h-5 w-5 text-warning" />,
 };
 
 const borderColors = {
-    success: 'border-green-200 dark:border-green-900',
-    error: 'border-red-200 dark:border-red-900',
+    success: 'border-success/30',
+    error: 'border-destructive/30',
     info: 'border-blue-200 dark:border-blue-900',
-    warning: 'border-yellow-200 dark:border-yellow-900',
+    warning: 'border-warning/30',
 };
 
 const bgColors = {
-    success: 'bg-green-50 dark:bg-green-950/30',
-    error: 'bg-red-50 dark:bg-red-950/30',
+    success: 'bg-success/10',
+    error: 'bg-destructive/10',
     info: 'bg-blue-50 dark:bg-blue-950/30',
-    warning: 'bg-yellow-50 dark:bg-yellow-950/30',
+    warning: 'bg-warning/10',
 };
 
 export const GlobalToast = () => {

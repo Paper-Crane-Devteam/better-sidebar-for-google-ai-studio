@@ -36,12 +36,12 @@ const STATUS_COLORS: Record<AgentLoopStatus, string> = {
   idle: 'bg-muted-foreground',
   waiting_ai: 'bg-blue-500',
   parsing: 'bg-blue-500',
-  executing: 'bg-green-500',
-  awaiting_approval: 'bg-amber-500',
+  executing: 'bg-success',
+  awaiting_approval: 'bg-warning',
   sending: 'bg-blue-500',
   awaiting_send: 'bg-primary',
   paused: 'bg-orange-500',
-  error: 'bg-red-500',
+  error: 'bg-destructive',
 };
 
 interface AgentDockPillProps {

@@ -113,7 +113,7 @@ export const PowerPackPaywall = () => {
                 </div>
                 <span className="text-sm">{t(`packs.${key}`)}</span>
                 {comingSoon && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-600 dark:text-amber-400 whitespace-nowrap">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-highlight/20 text-highlight whitespace-nowrap">
                     {t('packs.comingSoon')}
                   </span>
                 )}

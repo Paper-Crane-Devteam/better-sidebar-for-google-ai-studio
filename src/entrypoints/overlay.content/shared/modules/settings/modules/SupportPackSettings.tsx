@@ -75,7 +75,7 @@ function ActivatedView({ t, tier }: { t: (key: string) => string; tier: LicenseT
 
       {/* If only support pack, show upgrade prompt */}
       {tier === 'support_pack' && (
-        <div className="rounded-xl bg-amber-500/10 p-5">
+        <div className="rounded-xl bg-highlight/10 p-5">
           <div className="flex items-start gap-3">
             <UIcon icon="fluent-color:ribbon-star-24" width={20} height={20} className="shrink-0 mt-0.5" />
             <div className="space-y-2">
@@ -368,7 +368,7 @@ function FeatureItem({ icon, text, badge }: { icon: React.ReactNode; text: strin
       <div className="shrink-0">{icon}</div>
       <span className="text-xs">{text}</span>
       {badge && (
-        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-600 dark:text-amber-400 whitespace-nowrap">
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-highlight/20 text-highlight whitespace-nowrap">
           {badge}
         </span>
       )}

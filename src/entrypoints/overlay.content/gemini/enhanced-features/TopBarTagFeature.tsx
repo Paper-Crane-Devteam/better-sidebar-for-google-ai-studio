@@ -223,7 +223,7 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
           <SimpleTooltip content={t('topBarTag.saveChanges')}>
             <button
               onClick={handleConfirm}
-              className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-green-100 hover:text-green-600 dark:hover:bg-green-900/30 dark:hover:text-green-400 text-muted-foreground transition-colors outline-none shrink-0"
+              className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-success/10 hover:text-success text-muted-foreground transition-colors outline-none shrink-0"
             >
               <Check className="w-3.5 h-3.5" />
             </button>
@@ -232,7 +232,7 @@ const TopBarTagUI = ({ container }: { container: Element }) => {
           <SimpleTooltip content={t('topBarTag.cancel')}>
             <button
               onClick={handleCancel}
-              className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-muted-foreground transition-colors outline-none shrink-0"
+              className="flex items-center justify-center w-6 h-6 rounded-md hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-colors outline-none shrink-0"
             >
               <X className="w-3.5 h-3.5" />
             </button>

@@ -249,13 +249,13 @@ export const GDriveSyncSection = ({ hideTitle }: { hideTitle?: boolean }) => {
 
             {/* Divergence notice — automatic uploads are frozen until resolved */}
             {gdriveStatus.hasConflict && (
-              <div className="flex items-start gap-2 rounded-lg bg-amber-500/10 p-3">
-                <AlertTriangle className="h-4 w-4 mt-1 shrink-0 text-amber-600 dark:text-amber-400" />
+              <div className="flex items-start gap-2 rounded-lg bg-warning/10 p-3">
+                <AlertTriangle className="h-4 w-4 mt-1 shrink-0 text-warning" />
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-amber-700 dark:text-amber-300">
+                  <p className="text-sm font-medium text-warning">
                     {t('data.gdriveConflictTitle')}
                   </p>
-                  <p className="text-xs text-amber-700/80 dark:text-amber-300/80">
+                  <p className="text-xs text-warning/80">
                     {t('data.gdriveConflictDesc')}
                   </p>
                 </div>

@@ -202,7 +202,7 @@ export const IntegrationsSettings = () => {
 
             {/* Connection status */}
             {connectionStatus === 'ok' && (
-              <div className="flex items-center gap-2 text-sm text-green-600">
+              <div className="flex items-center gap-2 text-sm text-success">
                 <Check className="h-4 w-4" />
                 {t('integrations.connected')}: {connectionName}
               </div>
@@ -273,7 +273,7 @@ export const IntegrationsSettings = () => {
                 ) : (
                   <div className="text-xs text-muted-foreground py-2 space-y-1">
                     <p>{t('integrations.noPagesFound')}</p>
-                    <p className="text-amber-600 dark:text-amber-400">
+                    <p className="text-warning">
                       {t('integrations.noPagesPermissionHint')}
                     </p>
                   </div>

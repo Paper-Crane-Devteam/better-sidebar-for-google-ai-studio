@@ -424,11 +424,11 @@ export const ImportHistoryDialog = ({ isOpen, onClose }: { isOpen: boolean; onCl
 
           {stats && (
             <div className="text-sm space-y-1">
-              <div className="flex items-center gap-2 text-green-600">
+              <div className="flex items-center gap-2 text-success">
                 <CheckCircle className="h-4 w-4" />{' '}
                 {t('importHistory.importedCount', { count: stats.success })}
               </div>
-              <div className="flex items-center gap-2 text-amber-600">
+              <div className="flex items-center gap-2 text-warning">
                 <AlertCircle className="h-4 w-4" />{' '}
                 {t('importHistory.unmatchedCount', { count: stats.failed })}
               </div>
