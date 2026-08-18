@@ -5,8 +5,16 @@ import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/entrypoints/overlay.content/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Loader2, CheckCircle, AlertCircle, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
-import openInDriveImg from '@/assets/images/open-in-drive.png';
-import downloadConversationsImg from '@/assets/images/download-conversations.png';
+// These screenshots live in `public/` and are referenced by extension URL rather
+// than imported. Content-script bundles are built as a single self-contained
+// file, so any imported asset gets inlined as a base64 data URI regardless of
+// Vite's assetsInlineLimit. These two PNGs alone added ~740 KB to
+// content-scripts/overlay.js and pushed it past the 5 MB ceiling that
+// addons-linter enforces when validating an AMO upload.
+const openInDriveImg = browser.runtime.getURL('/images/open-in-drive.png');
+const downloadConversationsImg = browser.runtime.getURL(
+  '/images/download-conversations.png',
+);
 import { toast } from '@/shared/lib/toast';
 
 export const ImportHistoryDialog = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {

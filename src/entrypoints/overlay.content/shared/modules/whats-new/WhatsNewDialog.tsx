@@ -7,7 +7,10 @@ import { X, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { useI18n } from '@/shared/hooks/useI18n';
-import snippetDemoGif from '@/assets/images/snippet-demo.gif';
+// Served from `public/` instead of imported — see the note in
+// ImportHistoryDialog.tsx: assets imported into a content script are inlined as
+// base64 and count against addons-linter's 5 MB per-file limit.
+const snippetDemoGif = browser.runtime.getURL('/images/snippet-demo.gif');
 import { Z_INDEX } from '@/shared/lib/z-index';
 import { WhatsNewToast } from './WhatsNewToast';
 

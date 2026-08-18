@@ -66,6 +66,7 @@
   "devDependencies": {
     "@iconify-json/codicon": "^1.2.63",
     "@iconify-json/fluent-color": "^1.2.21",
+    "@iconify-json/tabler": "1.2.38",
     "@types/chrome": "^0.1.1",
     "@types/lodash": "^4.17.21",
     "@types/node": "^24.0.15",

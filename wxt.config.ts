@@ -64,6 +64,10 @@ export default defineConfig({
           'main-world.js',
           'wa-sqlite-async.mjs',
           'wa-sqlite-async.wasm',
+          // Screenshots/QR shown inside the injected sidebar. They are kept in
+          // public/ and loaded by URL so they are not inlined as base64 into
+          // content-scripts/overlay.js (see ImportHistoryDialog.tsx).
+          'images/*',
         ],
         matches: [
           'https://aistudio.google.com/*',
@@ -71,6 +75,34 @@ export default defineConfig({
           // 'https://chatgpt.com/*',
         ],
       },
+    ],
+  },
+  zip: {
+    // Drop orphaned KaTeX font files (~0.78 MB). scripts/postcss-woff2-only.mjs
+    // strips the woff/truetype sources from katex's @font-face rules, but Vite
+    // resolves url() before our PostCSS plugin runs, so it has already emitted
+    // those files by the time the declarations are rewritten. Nothing in the
+    // build references them; only the 19 woff2 files are actually used.
+    // Patterns are matched against paths relative to the output dir, and
+    // `*.woff` does not match `*.woff2`.
+    exclude: ['assets/KaTeX_*.ttf', 'assets/KaTeX_*.woff'],
+    // Firefox reviewers must be able to reproduce the exact uploaded build.
+    // `.env` holds the build-time constants injected via `import.meta.env.VITE_*`
+    // (OAuth client id/secret, license API URL, EmailJS ids). Without it those
+    // become `undefined` and the output bytes differ from the published XPI.
+    // These values are already visible in plain text inside the shipped bundle,
+    // so including them here exposes nothing new. `includeSources` takes
+    // precedence over WXT's default `excludeSources` (which drops all dotfiles).
+    includeSources: ['.env'],
+    // Keep credentials, reference docs and scratch files out of the source zip.
+    excludeSources: [
+      'misc/**',
+      'doc/**',
+      'feature-summary.md',
+      'temp.md',
+      'test.html',
+      'landing.html',
+      'landing-official.html',
     ],
   },
   vite: (env) => ({

@@ -5,7 +5,10 @@ import { Heart, Star, Share2, Link, Check } from 'lucide-react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { toast } from '@/shared/lib/toast';
 import { getRandomShareCopy, isChinese, SHARE_URL } from '@/shared/share-copy';
-import qrcodeImg from '@/assets/images/qrcode.png';
+// Served from `public/` instead of imported — see the note in
+// ImportHistoryDialog.tsx: assets imported into a content script are inlined as
+// base64 and count against addons-linter's 5 MB per-file limit.
+const qrcodeImg = browser.runtime.getURL('/images/qrcode.png');
 
 /** Twitter / X icon */
 const XIcon = ({ className }: { className?: string }) => (

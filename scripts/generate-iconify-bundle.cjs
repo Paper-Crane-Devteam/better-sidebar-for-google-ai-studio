@@ -1,20 +1,37 @@
 /**
  * Extracts only the used iconify icons and generates a pre-registration module.
  * Run: node scripts/generate-iconify-bundle.cjs
+ *
+ * IMPORTANT: every `<UIcon icon="prefix:name" />` used anywhere in src/ must be
+ * listed in `needed` below. Icons that are missing here are NOT bundled, and
+ * @iconify/react silently falls back to fetching them from
+ * https://api.iconify.design at runtime. That fetch works in Chrome but is
+ * blocked in Firefox (content-script requests are subject to the host page's
+ * CSP), so the icon renders as a blank box. Run this script after adding or
+ * changing any iconify icon, and verify with:
+ *   grep -rhoE '"[a-z0-9-]+:[a-z0-9-]+"' src/ | sort -u
  */
 const fs = require('fs');
 const path = require('path');
 
-const fluent = require('../node_modules/@iconify-json/fluent-color/icons.json');
-const codicon = require('../node_modules/@iconify-json/codicon/icons.json');
+const sources = {
+  'fluent-color': require('../node_modules/@iconify-json/fluent-color/icons.json'),
+  'codicon': require('../node_modules/@iconify-json/codicon/icons.json'),
+  'tabler': require('../node_modules/@iconify-json/tabler/icons.json'),
+};
 
 const needed = {
   'fluent-color': [
     'premium-24', 'bot-sparkle-24', 'star-24', 'trophy-24',
     'ribbon-star-24', 'paint-brush-24', 'arrow-sync-24', 'wrench-24',
     'laptop-24', 'database-24', 'history-24', 'share-android-24',
+    'document-add-24',
   ],
   'codicon': ['collapse-all'],
+  'tabler': [
+    'diamond', 'notebook', 'blockquote', 'message-plus',
+    'layout-sidebar-left-expand',
+  ],
 };
 
 const lines = [
@@ -27,20 +44,66 @@ const lines = [
   '',
 ];
 
+/**
+ * Properties an icon set may declare once at the top level and that individual
+ * icons inherit. `addIcon()` does NOT apply these defaults — it falls back to
+ * 16x16 — so they have to be baked in here. tabler in particular declares
+ * width/height 24 at the set level and omits them per icon; without this merge
+ * its icons render with a 16x16 viewBox over 24x24 paths and get clipped.
+ */
+const INHERITED_PROPS = ['width', 'height', 'rotate', 'hFlip', 'vFlip', 'left', 'top'];
+
+/** Resolves a name to its icon data, following aliases, applying set defaults. */
+function resolveIcon(set, name) {
+  let entry = set.icons[name];
+  const alias = !entry ? set.aliases?.[name] : undefined;
+  if (alias) {
+    const parent = set.icons[alias.parent] ?? set.aliases?.[alias.parent];
+    if (!parent?.body) return null;
+    entry = { ...parent, ...alias };
+    delete entry.parent;
+  }
+  if (!entry?.body) return null;
+
+  const resolved = { body: entry.body };
+  for (const prop of INHERITED_PROPS) {
+    const value = entry[prop] ?? set[prop];
+    if (value !== undefined) resolved[prop] = value;
+  }
+  return resolved;
+}
+
+let missing = 0;
+let bundled = 0;
+
 for (const [prefix, names] of Object.entries(needed)) {
-  const source = prefix === 'fluent-color' ? fluent : codicon;
+  const set = sources[prefix];
+  if (!set) {
+    console.error('MISSING ICON SET:', prefix);
+    missing += names.length;
+    continue;
+  }
   for (const name of names) {
-    const icon = source.icons[name];
+    const icon = resolveIcon(set, name);
     if (!icon) {
       console.error('MISSING:', prefix + ':' + name);
+      missing++;
       continue;
     }
     lines.push(`addIcon(${JSON.stringify(prefix + ':' + name)}, ${JSON.stringify(icon)});`);
+    bundled++;
   }
   lines.push('');
+}
+
+// Fail loudly: a partially generated bundle means some icons silently fall back
+// to the network at runtime and break on Firefox.
+if (missing > 0) {
+  console.error(`\n${missing} icon(s) could not be resolved. Bundle NOT written.`);
+  process.exit(1);
 }
 
 const outPath = path.resolve(__dirname, '../src/shared/lib/iconify-bundle.ts');
 fs.writeFileSync(outPath, lines.join('\n'));
 console.log('Generated:', outPath);
-console.log('Icons bundled:', Object.values(needed).flat().length);
+console.log('Icons bundled:', bundled);
