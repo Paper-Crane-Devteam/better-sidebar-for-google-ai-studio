@@ -7,30 +7,28 @@
 
 import { mcpRegistry } from './registry';
 import { BUILTIN_MCP } from './builtin-mcp';
-import { useAgentConfigStore } from '../agent-config-store';
 
 /**
  * Initialize the MCP registry with builtin server(s).
- * Applies user's disabled state from the config store.
  */
 export function initMCPRegistry(): void {
   // Register builtin
   mcpRegistry.registerServer({ ...BUILTIN_MCP });
 
-  // Apply user's disabled state
   syncMCPEnabledState();
 }
 
 /**
- * Sync MCP server enabled states from the agent config store.
- * Call this on store change to keep registry in sync.
+ * Sync MCP server enabled states.
+ *
+ * Builtin servers (Better Sidebar) carry the Agent's core tools and can never
+ * be disabled, so they are always forced on. Custom servers, once supported,
+ * will read their state from the config store here.
  */
 export function syncMCPEnabledState(): void {
-  const { disabledBuiltinMCPs } = useAgentConfigStore.getState();
-
   for (const server of mcpRegistry.getServers()) {
     if (server.type === 'builtin') {
-      mcpRegistry.setServerEnabled(server.id, !disabledBuiltinMCPs.includes(server.id));
+      mcpRegistry.setServerEnabled(server.id, true);
     }
   }
 }

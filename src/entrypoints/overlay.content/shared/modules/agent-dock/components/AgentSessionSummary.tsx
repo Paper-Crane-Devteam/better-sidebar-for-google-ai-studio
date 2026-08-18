@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { CheckCircle2, AlertTriangle, Lock, Undo2, X } from 'lucide-react';
+import { Check, CheckCircle2, AlertTriangle, Lock, Undo2, X } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -192,7 +192,7 @@ export const AgentSessionSummary: React.FC = () => {
               className="h-7 gap-1 text-xs"
               onClick={handleDismiss}
             >
-              <X className="h-3 w-3" />
+              {undoAvailable ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
               {undoAvailable
                 ? t('agent.summary.keepChanges', { defaultValue: 'Keep changes' })
                 : t('agent.summary.dismiss', { defaultValue: 'Dismiss' })}

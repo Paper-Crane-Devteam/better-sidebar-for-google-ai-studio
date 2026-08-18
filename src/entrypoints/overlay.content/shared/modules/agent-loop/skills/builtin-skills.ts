@@ -3,6 +3,10 @@
  *
  * Migrated from prompts/utilities/*.ts + built-in-registry.ts.
  * These are immutable — users can only enable/disable them.
+ *
+ * `title` and `description` are i18n keys resolved at display time via `t()`.
+ * `titleKey` / `descriptionKey` store the key; the fields are filled at runtime
+ * by `skill-registry.ts` so consumers see localized strings.
  */
 
 import type { Skill } from './types';
@@ -13,6 +17,8 @@ export const BUILTIN_SKILLS: Skill[] = [
     type: 'builtin',
     title: 'Auto-Classify Conversations',
     description: 'Automatically organize conversations into folders and tags based on their titles',
+    titleKey: 'agent.skills.autoClassify.title',
+    descriptionKey: 'agent.skills.autoClassify.description',
     icon: 'FolderTree',
     promptContent: `## Task: Auto-Classify Conversations
 
@@ -43,6 +49,8 @@ Tips:
     title: 'Sync Missing Messages',
     description:
       'Find conversations whose messages were never recorded, then sync their content',
+    titleKey: 'agent.skills.syncMessages.title',
+    descriptionKey: 'agent.skills.syncMessages.description',
     icon: 'RefreshCw',
     promptContent: `## Task: Sync Conversations With No Messages
 
@@ -119,6 +127,8 @@ Notes:
     type: 'builtin',
     title: 'Export Conversations',
     description: 'Query and display conversation data for the user',
+    titleKey: 'agent.skills.export.title',
+    descriptionKey: 'agent.skills.export.description',
     icon: 'Download',
     promptContent: `## Task: Export Conversations
 
@@ -136,6 +146,192 @@ Notes:
   them into a single file.
 - A conversation with no synced messages cannot be exported — its content only reaches the
   database after it has been opened in the browser. Say which ones need opening.
+`,
+    enabled: true,
+    createdAt: 0,
+    updatedAt: 0,
+  },
+  {
+    id: 'builtin-manage-prompts',
+    type: 'builtin',
+    title: 'Manage Prompt Library',
+    description:
+      'Author, refactor and organize reusable prompts — including variables and imports',
+    titleKey: 'agent.skills.managePrompts.title',
+    descriptionKey: 'agent.skills.managePrompts.description',
+    icon: 'Wand2',
+    promptContent: `## Task: Manage the Prompt Library
+
+The prompt library is \`prompts\` + \`prompt_folders\`. This is the user's own writing, not
+captured data, so the bar is higher than for conversations: propose rewrites, keep their
+voice, and never mass-edit bodies without showing what changes.
+
+### What makes this module different
+
+- **No \`platform\` column.** Prompts and prompt folders are shared across Gemini, AI Studio,
+  ChatGPT and Claude. The platform filter rule above is for \`conversations\` and \`folders\`
+  only — adding \`WHERE platform = ...\` here is a SQL error, not a stricter query.
+- **Titles are the entire search surface.** A prompt is used by typing \`/\` in the platform's
+  input box, which fuzzy-matches **titles only**: top 8, words ANDed, and a word scores far
+  higher when it starts the title. Content is never matched. So "Untitled" or "Prompt 2" is
+  effectively unreachable, and the front of the title is prime real estate. Fixing this is
+  usually the highest-value thing you can do here.
+- **\`type\`** is \`'normal'\` or \`'system'\` — a label plus a filter toggle in the sidebar and
+  nothing else; both insert identically. Prompts created from the UI default to \`'system'\`.
+  Match whatever the siblings in the same folder use.
+- **\`icon\`** is a Lucide name from a fixed list: Sparkles, MessageSquare, FileText, Lightbulb,
+  BookOpen, Code, Image, Zap, Send, Copy, Star, Heart, Bookmark, PenLine, Bot, User. Anything
+  else silently falls back to Sparkles. NULL is fine.
+- **\`order_index\` does nothing.** The tree sorts by pinned → favorited → folders first →
+  then title or \`updated_at\`. Writing it is wasted work.
+- **Favorites** live in \`favorites\` with \`target_type = 'prompt'\` and \`target_id\` = the prompt
+  id. The schema comment only names conversations and messages, but \`'prompt'\` is what the
+  star in the UI writes. \`UNIQUE(target_id, target_type)\`.
+- **\`prompts\` has no \`is_pinned\`** — only \`prompt_folders\` does. Don't try to pin a prompt.
+- **Folder deletes cascade.** Foreign keys are ON, so deleting a \`prompt_folders\` row deletes
+  its subfolders and every prompt inside. Count them first, say the number, and offer to move
+  them out instead.
+- **Prompt inbox** = \`prompt_folders.id = '<PROMPT_INBOX_ID>'\` — where "save selection as
+  prompt" drops things, so treat it as an unsorted pile. Never create, rename or delete it.
+- **There is no FTS table for prompts** and the sidebar search only matches titles, so
+  \`content LIKE '%...%'\` is something the user cannot do at all. Lead with it when they are
+  hunting for "the prompt where I said ...".
+
+### The template syntax — the reason a prompt is worth keeping
+
+A body may contain three kinds of \`{{...}}\` token, resolved when the user picks the prompt:
+
+| Syntax | Meaning |
+| --- | --- |
+| \`{{tone}}\` | free-text field in the fill-in form |
+| \`{{tone:formal,casual,blunt}}\` | dropdown; **the first option is the default** |
+| \`{{@import:Shared Rules}}\` | inlines another prompt's content |
+
+How they actually behave:
+
+- Imports resolve **first** and **recursively**, so an imported prompt's own variables turn
+  into fields on the form. The match is on \`prompts.title\`, **exact and case-sensitive**, and
+  the first row wins if two prompts share a title. No match leaves the literal text
+  \`[not found: Title]\` in the prompt; a cycle leaves \`[circular: Title]\`. Both fail silently —
+  nothing warns the user before they send it.
+- A token is \`{{\` + anything containing no braces + \`}}\`. There is no escape, so \`{{\` in the
+  text is always a variable. Single braces (JSON, code samples) are safe.
+- Values are keyed by **name**, but tokens are de-duplicated by **raw text**. Repeating
+  \`{{code}}\` gives one field used in both places (good). Writing \`{{lang}}\` in one place and
+  \`{{lang:go,rust}}\` in another gives two fields fighting over one value (bad) — declare each
+  name once, with its options.
+- **An unfilled variable becomes an empty string**, not a leftover placeholder. A template
+  that only reads correctly when every field is filled comes out mangled instead of obviously
+  incomplete. Keep the sentence around a variable able to survive a blank.
+
+Use that to write templates worth having:
+
+- A closed set of choices belongs in a dropdown, not a text field: one click instead of
+  typing, and typos never reach the model.
+- The block the user repeats everywhere (role, tone, output format, "answer in Chinese")
+  belongs in its own prompt, pulled in with \`{{@import:...}}\`. One edit then reaches every
+  prompt that imports it. This is the highest-payoff refactor in this module and the one
+  nobody does by hand.
+- Put each \`{{...}}\` where its value is used rather than in a header block: the form is
+  generated in first-occurrence order, so the reading order of the template is the tab order.
+
+### Writing bodies through SQL
+
+Prompt bodies are multi-line prose full of apostrophes. Two things bite:
+
+- Escape \`'\` as \`''\` inside the SQL string.
+- Inside the tool-call JSON, line breaks must be written \`\\n\`. A real newline in the JSON
+  string breaks the parse and the entire call is thrown away.
+
+After writing a long body, \`SELECT\` the row back and check it landed the way you meant.
+
+### Good work in this module
+
+- Audit: prompts with empty content, duplicate titles, titles \`/\` cannot find, broken or
+  circular imports (\`content LIKE '%{{@import:%'\`, then check each target against the title
+  list), and whatever is piled up in the inbox.
+- Turn a hardcoded prompt into a template: point out the parts that change run to run, and
+  offer the dropdown-vs-text choice per variable.
+- Reorganize into folders by job, and rename for slash-discoverability — front-load the word
+  the user would actually type.
+
+Report edits as before/after per prompt, then call \`complete_task\`.
+`,
+    enabled: true,
+    createdAt: 0,
+    updatedAt: 0,
+  },
+  {
+    id: 'builtin-manage-snippets',
+    type: 'builtin',
+    title: 'Manage Snippets',
+    description:
+      'Organize, dedupe and search saved snippets — including their full text',
+    titleKey: 'agent.skills.manageSnippets.title',
+    descriptionKey: 'agent.skills.manageSnippets.description',
+    icon: 'Bookmark',
+    promptContent: `## Task: Manage Snippets
+
+\`snippets\` + \`snippet_folders\` hold text the user saved off a page: whole model replies and
+highlighted selections. Unlike prompts, this is captured material — it arrives fast, with
+machine-made titles, and nobody ever tidies it. Sorting and searching it is the job.
+
+### Where snippets come from, and why they look like that
+
+- A **Save button on hover over a model reply** (Gemini, AI Studio) stores the reply's markdown
+  as \`content\` and uses **the user's preceding question as the \`title\`** — stripped of a
+  leading "you said", cut at 100 chars, falling back to the first 50 chars of the content. So
+  titles are questions: long, and often near-duplicates of each other. Dragging that button
+  onto a folder files it there; a plain click sends it to the inbox.
+- The **selection toolbar** ("Save as snippet") stores whatever text was highlighted.
+- Manual creation in the Snippets tab — the only path that leaves both \`source_*\` fields NULL.
+- \`source_url\` is the page URL at capture time; \`source_platform\` is \`'gemini'\` or
+  \`'aistudio'\`. A conversation URL on those platforms contains the conversation's
+  \`external_id\`, so snippets can usually be traced back:
+  \`FROM snippets s JOIN conversations c ON s.source_url LIKE '%' || c.external_id\`.
+  Verify that against one sample row before trusting it across the whole table.
+
+### What makes this module different
+
+- **No \`platform\` column.** Snippets and their folders are shared across all platforms; the
+  platform filter rule above applies to \`conversations\`/\`folders\`, not here.
+- **The sidebar can only search titles**, in memory, and there is no FTS table for snippets.
+  \`content LIKE '%...%'\` — plus \`LENGTH(content)\` and \`substr(...)\` — is something the user
+  cannot do from the UI at all. That is your main advantage here; reach for it early.
+- **Content is long.** A saved reply is routinely thousands of characters. Scan with
+  \`substr(content, 1, 500)\`, size things up with \`SELECT COUNT(*), SUM(LENGTH(content))\`, and
+  read a row in full only once it is the row that matters.
+- **Duplicates are normal.** Saving the same reply twice, or saving a reply and then a
+  selection taken out of it, both leave two rows. Match on identical \`content\`, or on
+  \`LENGTH(content)\` plus a \`substr\` prefix, and keep the oldest unless told otherwise.
+- **\`is_pinned\` works from SQL** and the tree honours it — pinned rows sort to the top of
+  their folder. The UI only exposes pinning for folders, so this is a small thing you can do
+  that the user cannot.
+- **Favorites** live in \`favorites\` with \`target_type = 'snippet'\`.
+- **\`order_index\` does nothing**; sorting is pinned → favorited → folders first → title or
+  \`updated_at\`.
+- **Folder deletes cascade** with foreign keys ON: a \`snippet_folders\` delete takes its
+  subfolders and every snippet inside with it. Count and state the number before deleting.
+- **Snippet inbox** = \`snippet_folders.id = '<SNIPPET_INBOX_ID>'\`. Anything saved without a
+  target lands there — the unsorted queue. Never create, rename or delete it.
+- **The \`export\` tool does not handle snippets** — it takes conversation ids only. If the user
+  wants files, tell them the right-click Export menu on a snippet offers markdown, text, JSON,
+  Obsidian and Notion. Never claim you exported a snippet.
+- Reading happens in a **folder-scoped reader drawer**, so a folder behaves like a reading
+  list: grouping by topic and keeping titles short is what makes it usable.
+
+### Good work in this module
+
+- Empty the inbox: read titles plus a \`substr\` of each content, propose folders by topic, then
+  move in bulk.
+- Retitle: the auto-title is the old question. Offer a short descriptive title drawn from the
+  content, keeping the original wording wherever it was already good.
+- Dedupe, with the counts stated before anything is deleted.
+- The content search the sidebar cannot do: "the snippet where the migration steps were".
+- Provenance reports: snippets whose source conversation is soft-deleted or was never synced,
+  snippets per conversation, or a whole folder condensed into one overview.
+
+Say what changed, per row or per group, then call \`complete_task\`.
 `,
     enabled: true,
     createdAt: 0,

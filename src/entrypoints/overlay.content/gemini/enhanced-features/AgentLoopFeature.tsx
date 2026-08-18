@@ -24,11 +24,14 @@ import {
   buildPromptMarker,
   setActiveEngine,
   clearActiveEngine,
+  getActiveEngine,
   agentEventBus,
+  isSyncRunActive,
 } from '@/entrypoints/overlay.content/shared/modules/agent-loop';
 import { AgentDock } from '@/entrypoints/overlay.content/shared/modules/agent-dock';
 import { canUndo, runUndoFlow } from '@/entrypoints/overlay.content/shared/modules/agent-loop/undo';
 import { toast } from '@/shared/lib/toast';
+import { retireOnboardingHint } from '@/shared/lib/onboarding-store';
 import i18n from '@/locale/i18n';
 import {
   readConversationIdFromPath,
@@ -257,6 +260,21 @@ export const AgentLoopFeature: React.FC = () => {
     if (endsSession(lastModel)) return;
 
     /**
+     * A sync run is driving the tab — none of these conversations were opened by the
+     * user, so none of them is a follow-up.
+     *
+     * Pickup's whole premise is "the user kept talking and nobody ran the tools". A run
+     * walks the tab through up to fifty conversations, and any one of them can end with
+     * agent tool calls that were never reported back (a task the user stopped, say).
+     * Without this the run's own navigation looks like fifty follow-ups: pickup starts a
+     * session, executes the calls, and posts the results into a chat the user never
+     * opened — then the run navigates away, leaving that session parked in a
+     * conversation whose Dock won't even render (`belongsToCurrent`), so nothing on
+     * screen can stop it and the tab refuses to start any new task until a reload.
+     */
+    if (isSyncRunActive()) return;
+
+    /**
      * Bind to the conversation the response is actually in, read from the URL now.
      *
      * `conversationIdRef` follows a 500ms poll (`useUrl`), and this effect is driven by
@@ -289,6 +307,10 @@ export const AgentLoopFeature: React.FC = () => {
     if (!responseElement) return;
 
     pickedUpKeyRef.current = pickupKey;
+
+    // The user just did the thing the end-of-task hint exists to teach — carried on
+    // talking instead of retyping `>`. Nothing left to explain, so it stops appearing.
+    retireOnboardingHint('agentContinueAfterEnd');
 
     console.log('[AgentLoop] Auto-pickup: detected unexecuted tool calls in idle state, starting session');
 
@@ -351,9 +373,32 @@ export const AgentLoopFeature: React.FC = () => {
        * So every failure below blocks the send and says why, leaving the capsule
        * where it is so the user can retry.
        */
-      const abort = (reason: string, message: string): boolean => {
+      const abort = (
+        reason: string,
+        message: string,
+        /** A way out, for refusals the user can actually resolve from here */
+        action?: { label: string; onClick: () => void },
+      ): boolean => {
         console.warn(`[AgentLoop] Not sending: ${reason}`);
-        toast.warning(message);
+        if (!action) {
+          toast.warning(message);
+          return true;
+        }
+        // Dismissed on use: the notice is about a task that no longer exists the moment
+        // the button is pressed, and a stale "already running" left on screen reads as
+        // the button having done nothing.
+        const id: string = toast.withAction(
+          message,
+          'warning',
+          {
+            label: action.label,
+            onClick: () => {
+              action.onClick();
+              toast.dismiss(id);
+            },
+          },
+          10000,
+        );
         return true;
       };
 
@@ -367,7 +412,28 @@ export const AgentLoopFeature: React.FC = () => {
        * original keeps looping with nothing able to reach it.
        */
       if (useAgentLoopStore.getState().status !== 'idle') {
-        return abort('a task is already running', i18n.t('agent.send.sessionBusy'));
+        /**
+         * The refusal carries the way out with it.
+         *
+         * Saying "finish or stop the current task first" is only actionable if the user
+         * can find the task, and often they can't: a session bound to another
+         * conversation hides its Dock (`belongsToCurrent`), and the Agent tab's own Stop
+         * button sits behind cards that are disabled precisely because a task is
+         * running. So the dead end was total — reloading the page was the only exit.
+         *
+         * Stop only, no auto-resend: a session parked at `awaiting_send` has its tool
+         * results sitting in this very composer next to the capsule, and sending that
+         * mixture would post both at once. The capsule stays put, so pressing Enter
+         * again is all it takes.
+         */
+        return abort('a task is already running', i18n.t('agent.send.sessionBusy'), {
+          label: i18n.t('agent.send.stopRunning'),
+          onClick: () => {
+            const engine = getActiveEngine();
+            if (engine) engine.stop();
+            else useAgentLoopStore.getState().stop();
+          },
+        });
       }
 
       const entryId = capsule.getAttribute(CAPSULE_ATTR_ID) || '';

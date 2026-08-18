@@ -60,6 +60,7 @@ src/entrypoints/overlay.content/shared/
 │   │   │   │       ├── index.ts        #   ResultHandoff：staging → 等发送 → 成功/暂停
 │   │   │   │       ├── staging.ts      #   capsule 写入 + 落地校验 + 纯文本降级
 │   │   │   │       ├── formatter.ts    #   结果 markdown 拼装 / 切段（互为逆运算）
+│   │   │   │       ├── budget.ts       #   ★ 输入框 31998 字符硬上限 + 注水式截断
 │   │   │   │       └── send-watcher.ts #   ★ 两步确认送达：离开输入框 + 送达正证据
 │   │   │   ├── guards/
 │   │   │   │   ├── circuit-breaker.ts  # 重复调用 / 连续失败 / 无进展
@@ -720,6 +721,65 @@ resume() → hasPending() → resend()          ← 此时才 stage + 发送
 工具如果抛异常而不是返回 ERROR，异常会一路冲到引擎顶层的 catch，`ctx.fail()`
 把会话打成 `error` 且没有 pending，Retry 又是同一个挂法——一个失败的步骤不该有这种
 杀伤力。`execute-sql` 自己 catch 了，但别的 provider 不保证。
+
+### 结果有多大：输入框是唯一的硬上限
+
+Gemini 的输入框实测装到 **31998 字符**（UTF-16 length，中文一个字算 1）就不再收了。
+④ 的所有结果都要过这个口，所以一轮的 payload 有一道硬预算，在
+`engine/stages/handoff/budget.ts`：
+
+```
+COMPOSER_CHAR_LIMIT = 31998
+SAFETY_MARGIN       = 2000    ← wrapper 标签 + replaceAllContent 的 \u200B + 数不准的部分
+ROUND_BUDGET        = 29998
+```
+
+⚠️ **必须在代码里拦，不能只靠 prompt。** 超了的后果不是报错而是**静默丢数据**：
+`send-watcher` 判送达看的是「payload 离开输入框」+「`user-query` 变多」，截断后的消息
+两条都满足，于是判 `'sent'`、轮次照常推进。AI 收到的是尾巴被砍掉的 payload
+（`</bs_agent_result>` 闭合标签和末尾几行没了），它和用户都不知道。
+
+两层，都必要：
+
+| 函数 | 角色 |
+|------|------|
+| `fitSections(sections, reserved)` | 优雅那层：按段分配额度，保住 `### label` 行 |
+| `clampPayload(payload, reserved)` | 兜底那层：`reserved` 自己就爆了预算时的钝刀（超长的 mid-round instruction、超长 parse errors） |
+
+**额度是"注水式"分配而不是平均分**：每段先拿等份，小段没用完的份额回流给大段。所以
+一个孤零零的巨型结果能吃掉整个预算（实测 100%），而「4 条小查询 + 1 个大 dump」里
+大 dump 拿到 28832 而不是被压成 1/5。这正是**单工具固定字符上限**做不对的地方 ——
+也是为什么 `execute-sql` 里没有加那个上限，只保留了 `MAX_RESULT_ROWS`。
+
+⚠️ **闸设在 `formatResults` 里**，因为它是所有 payload 的唯一漏斗 —— 包括
+`holdForRetry` 为熔断硬停攒下的那份。设在 `staging.ts` 就晚了：那时已经没有可裁的结构。
+
+⚠️ **截断段落必须保住 `### label` 行**。`splitSections` 拿它当 capsule 的标签，
+`tool-outcomes.ts` 又靠同一个 label 把历史调用和它的输出对齐。切进标题里，capsule 会
+悄悄变成无名的 "Result"，历史卡片跟着退回「未执行」。
+
+⚠️ **截断处要留话给 AI**，`buildNotice()` 干三件事：说明输出不完整（否则 AI 会拿半张表
+下结论）、给出拿到剩下部分的办法、以及明确否掉它最可能的下一步 —— 原样重跑同一条查询
+（会在同一个位置被砍掉，白烧一轮）。
+
+⚠️ **instruction 和 errors 不裁只算**。它们本来就短，而且是 AI 最需要完整看到的部分；
+但它们占掉的字符会计入 `reserved`，所以工具输出会自动让位。
+
+### prompt 那一层是「劝」，故意说得宽松
+
+`soul.ts` 的 `getResultBudgetBlock()` 把这个数字告诉 AI，口径是**「额度很大，放开用」**
+而不是一串上限。写死的版本副作用更糟：一个被要求「查询要小」的 agent 会每张表抽三行，
+然后基于几乎没有的数据给出一个自信的错答案。而截断是**会自己出声**的。
+
+所以这一段里真正硬的建议只有一条：`messages.content` 是唯一能靠一行就吃光预算的字段
+（一条长回答几万字符），扫多行时用 `substr(content, 1, 800)`，锁定到某一条了再读全文。
+另外三条是软的：`messages_fts` + `snippet()` 做搜索、拿不准规模先
+`SELECT COUNT(*), SUM(LENGTH(content))` 探一下、被截断了就收窄或分页而不是重跑。
+
+⚠️ `ROUND_BUDGET` 由 soul.ts **深引** `engine/stages/handoff/budget`，是刻意的例外：
+`budget.ts` 是零依赖的常量叶子，而走 `engine/index` 会成环
+（engine → tools/tool-registry → prompt-assembler → soul）。prompt 里报的数字必须
+就是代码执行的那个，不能各写一份。
 
 ### 拒绝要带理由
 

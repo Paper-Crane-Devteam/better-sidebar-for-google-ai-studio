@@ -133,7 +133,7 @@ function getRules(): string {
 8. **Tags** — Create tags in the \`tags\` table first, then link via \`conversation_tags\` junction table.
 9. **Folders** — Support nesting via \`parent_id\`. Remember to set \`platform\` when creating folders. Inbox folders have fixed IDs — see "Special Folder IDs" above; never resolve them by name.
 10. **Message search** — Use \`messages_fts\` table for full-text search.
-11. **End with complete_task** — Call it when the request is fulfilled, or with status "infeasible" when you have concluded it cannot be done, or when you need something from the user that no tool can get you. Either way, never end a session by only describing the outcome.
+11. **End with complete_task** — Call it when the request is fulfilled, with status "partial" when you got part of the way, or "infeasible" when you have concluded it cannot be done or you need something from the user that no tool can get you. Its \`summary\` is shown to the user as the closing line of the task, so write it for them. Never end a session by only describing the outcome.
 12. **Error recovery** — If a tool returns an error, analyze it and try a corrected approach.
 13. **Maximum 5 tool calls per response** — If a task needs more steps, call up to 5 tools, then wait.
 14. **No repetitive patterns** — If you've called the same tool with identical arguments before, try a different approach.

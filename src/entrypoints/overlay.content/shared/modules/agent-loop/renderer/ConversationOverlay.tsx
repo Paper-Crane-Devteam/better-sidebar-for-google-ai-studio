@@ -11,7 +11,14 @@ import { createPortal } from 'react-dom';
 import { useAgentLoopStore } from '../agent-loop-store';
 import { findConversationScroller } from './constants';
 import { useAgentViewState } from './useAgentViewState';
-import { readSessionEnd, type SessionOutcome } from './helpers/session-end';
+import {
+  readSessionEnd,
+  weighSession,
+  isLightSession,
+  type SessionEnd,
+  type SessionWeight,
+} from './helpers/session-end';
+import { useUndoAvailable } from '../undo';
 import { CustomUserMessage } from './components/CustomUserMessage';
 import { CustomModelResponse } from './components/CustomModelResponse';
 import { SessionEndCard } from './components/SessionEndCard';
@@ -29,6 +36,9 @@ export const ConversationOverlay: React.FC = () => {
   const { messages, isActive: isCustomActive } = useAgentViewState();
   const setAgentViewActive = useAgentLoopStore((s) => s.setAgentViewActive);
   const chatWidth = usePegasusStore((s) => s.enhancedFeatures.gemini?.chatWidth ?? 46);
+  // Only feeds the end marker's size: a session with an undo offer is never "light",
+  // or the compact form would swallow the button.
+  const undoAvailable = useUndoAvailable();
 
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const [nativeScroller, setNativeScroller] = useState<HTMLElement | null>(null);
@@ -137,11 +147,13 @@ export const ConversationOverlay: React.FC = () => {
    * the only thing standing in for it.
    */
   const sessionEnds = useMemo(() => {
-    const ends = new Map<string, SessionOutcome>();
-    for (const message of messages) {
-      const outcome = readSessionEnd(message);
-      if (outcome) ends.set(message.id, outcome);
-    }
+    const ends = new Map<string, SessionEnd & { weight: SessionWeight }>();
+    messages.forEach((message, index) => {
+      const end = readSessionEnd(message);
+      // Weighed here rather than in the card: it takes the surrounding messages, which
+      // only this component has, and the marker's size depends on the answer.
+      if (end) ends.set(message.id, { ...end, weight: weighSession(messages, index) });
+    });
     return ends;
   }, [messages]);
 
@@ -322,12 +334,23 @@ export const ConversationOverlay: React.FC = () => {
                 />
                 {/* Session end indicator, drawn where the task actually ended, so a
                     conversation holding several sessions reads correctly. */}
-                {sessionEnds.has(msg.id) && (
-                  <SessionEndCard
-                    outcome={sessionEnds.get(msg.id)!}
-                    isLatest={msg.id === lastEndedMessageId}
-                  />
-                )}
+                {sessionEnds.has(msg.id) &&
+                  (() => {
+                    const end = sessionEnds.get(msg.id)!;
+                    const isLatest = msg.id === lastEndedMessageId;
+                    return (
+                      <SessionEndCard
+                        outcome={end.outcome}
+                        summary={end.summary}
+                        isLatest={isLatest}
+                        light={isLightSession(
+                          end.outcome,
+                          end.weight,
+                          undoAvailable && isLatest,
+                        )}
+                      />
+                    );
+                  })()}
               </React.Fragment>
             ),
           )

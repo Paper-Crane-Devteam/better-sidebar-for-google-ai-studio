@@ -1089,10 +1089,22 @@
       "skills": "O empieza con una habilidad",
       "stageHint": "Lo añade al campo del chat para que puedas dar más detalles antes de enviarlo.",
       "noEditor": "Abre primero un chat: el agente funciona a través del campo de entrada.",
-      "busy": "Hay una tarea en marcha. El progreso se ve en el chat, y todo lo que necesite de ti aparece junto al campo de entrada.",
+      "composerBusy": "La tarea en marcha tiene resultados esperando en el campo del chat. Envíalos primero y vuelve a intentarlo.",
+      "sessionBusy": "Ya hay una tarea en marcha. Termínala o detenla antes de empezar otra.",
+      "stopRunning": "Detener la tarea en marcha",
       "safety": "Solo se toca tu base de datos local. Los cambios se confirman antes de ejecutarse.",
       "freeTier": "El plan gratuito es de solo lectura. Mejora tu plan para que el agente pueda hacer cambios.",
-      "manage": "Gestionar habilidades y herramientas"
+      "manage": "Gestionar habilidades y herramientas",
+      "newChatHint": "Se ejecuta en el chat que tienes abierto. Abre uno nuevo para mantenerlo limpio.",
+      "triggerHint": "Escribir > en el campo del chat también inicia el agente desde ahí."
+    },
+    "send": {
+      "sessionBusy": "Ya hay una tarea en marcha, así que esta no se envió. Detenla y vuelve a pulsar Enter.",
+      "stopRunning": "Detenerla",
+      "staleCapsule": "Esa habilidad ya no existe. Quítala del campo del chat y elige otra.",
+      "noEditor": "Se perdió el campo del chat, así que no se envió nada. Recarga la página e inténtalo de nuevo.",
+      "assembleFailed": "No se pudo construir el prompt del agente, así que no se envió nada. Revisa la consola del navegador para más detalles.",
+      "stagingFailed": "El prompt del agente no llegó al campo del chat, así que no se envió nada. Inténtalo de nuevo."
     },
     "view": {
       "label": "Vista de la conversación",
@@ -1161,7 +1173,22 @@
       "export": "Exportando",
       "complete": "Finalizando",
       "generic": "Ejecutando un paso",
-      "nameLabel": "Acción"
+      "nameLabel": "Acción",
+      "waiting": "Esperándote",
+      "running": "Ejecutando",
+      "notRun": "No ejecutado",
+      "rejected": "Rechazado",
+      "rejectedTitle": "Rechazaste esta acción",
+      "done": "Listo",
+      "failed": "Falló",
+      "output": "Resultado",
+      "streaming": "Escribiendo...",
+      "streamDone": "Listo",
+      "viewResult": "Haz clic para ver el resultado completo",
+      "viewPrompt": "Haz clic para ver el prompt completo",
+      "systemPrompt": "Prompt del sistema",
+      "resultsTitle": "Resultados de herramientas",
+      "promptTitle": "Contenido del prompt"
     },
     "sync": {
       "progress": "Obteniendo el contenido de la conversación — {{current}}/{{total}}",
@@ -1180,6 +1207,9 @@
     },
     "summary": {
       "done": "Tarea finalizada",
+      "continueHint": "Solo sigue escribiendo para continuar — no necesitas escribir \">\" de nuevo.",
+      "hintDismiss": "Entendido",
+      "partial": "Parcialmente completado",
       "infeasible": "No se pudo completar",
       "paywall": "Se requiere mejorar el plan",
       "stopped": "Detenido",
@@ -1195,7 +1225,8 @@
       "noSteps": "No se ejecutó ninguna herramienta.",
       "upgrade": "Ver planes",
       "dismiss": "Descartar",
-      "clear": "Limpiar"
+      "clear": "Limpiar",
+      "keepChanges": "Conservar cambios"
     },
     "checkIn": {
       "title_one": "{{count}} paso realizado por su cuenta",
@@ -1218,7 +1249,86 @@
       "done_other": "Se revirtieron {{count}} filas",
       "done": "Se revirtieron {{count}} filas",
       "failed": "No se pudo deshacer: {{message}}",
-      "unavailable": "Estos cambios no se pueden deshacer automáticamente. Motivo: {{reason}}"
+      "unavailable": "Estos cambios no se pueden deshacer automáticamente. Motivo: {{reason}}",
+      "aiUnaware": "La IA no sabe de esto — díselo antes de continuar la conversación.",
+      "reverted": "Cambios revertidos",
+      "toastPrompt": "El agente modificó tus datos.",
+      "expired": "No queda nada que deshacer — se inició una nueva tarea o los cambios se conservaron."
+    },
+    "dock": {
+      "speedOff": "Aprobando todo para esta tarea — haz clic para detenerlo",
+      "settings": "Lo que puede hacer",
+      "collapse": "Colapsar",
+      "expand": "Expandir"
+    },
+    "overlay": {
+      "emptyTitle": "Vista del agente",
+      "emptyHint": "Escribe abajo o elige un prompt de agente para empezar",
+      "scrollToBottom": "Ir al final"
+    },
+    "settings": {
+      "newSkill": "Nueva habilidad",
+      "editSkill": "Editar habilidad",
+      "skillTitle": "Título",
+      "skillTitlePlaceholder": "p. ej. Organizar por tema",
+      "skillDescription": "Descripción",
+      "skillDescriptionPlaceholder": "Breve descripción de lo que hace esta habilidad",
+      "skillPrompt": "Contenido del prompt",
+      "skillPromptPlaceholder": "## Tarea: Nombre de tu tarea\n\nDescribe qué hace esta habilidad y cómo debe abordarla la IA.\n\nConsejos:\n- Empieza entendiendo el estado actual\n- Explica tu plan antes de ejecutar",
+      "titleRequired": "El título es obligatorio",
+      "descriptionRequired": "La descripción es obligatoria",
+      "promptRequired": "El contenido del prompt es obligatorio",
+      "discardTitle": "¿Descartar cambios sin guardar?",
+      "discardContent": "Se perderán tus ediciones a esta habilidad.",
+      "discard": "Descartar",
+      "deleteSkillTitle": "Eliminar habilidad",
+      "deleteSkillContent": "\"{{title}}\" se eliminará permanentemente. Esto no se puede deshacer.",
+      "alwaysOn": "Siempre activa",
+      "skillsTitle": "Habilidades",
+      "skillsDescription": "Las habilidades definen instrucciones especializadas para el Agente. Las habilidades integradas no se pueden eliminar.",
+      "maxSkills": "Se alcanzó el máximo de 20 habilidades personalizadas.",
+      "mcpTitle": "Servidores MCP",
+      "mcpDescription": "Los servidores MCP proporcionan herramientas que el Agente puede usar.",
+      "mcpToolCount": "{{count}} herramientas"
+    },
+    "skills": {
+      "autoClassify": {
+        "title": "Clasificar conversaciones automáticamente",
+        "description": "Organiza conversaciones en carpetas y etiquetas según sus títulos"
+      },
+      "syncMessages": {
+        "title": "Sincronizar mensajes faltantes",
+        "description": "Busca conversaciones sin mensajes registrados y sincroniza su contenido"
+      },
+      "export": {
+        "title": "Exportar conversaciones",
+        "description": "Consulta y muestra datos de conversaciones para el usuario"
+      },
+      "managePrompts": {
+        "title": "Gestionar biblioteca de prompts",
+        "description": "Crea, refactoriza y organiza prompts reutilizables — incluyendo variables e importaciones"
+      },
+      "manageSnippets": {
+        "title": "Gestionar snippets",
+        "description": "Organiza, deduplica y busca snippets guardados — incluyendo su texto completo"
+      }
+    },
+    "mcp": {
+      "builtin": {
+        "name": "Better Sidebar",
+        "description": "Herramientas principales para gestionar conversaciones, datos y tareas"
+      },
+      "tools": {
+        "activate_skill": "Cargar instrucciones especializadas para un tipo de tarea",
+        "execute_sql": "Ejecutar consultas SQL en la base de datos local",
+        "sync_conversation_messages": "Registrar el historial de mensajes de conversaciones sin contenido",
+        "export": "Descargar conversaciones como archivos",
+        "complete_task": "Finalizar el bucle del agente y reportar resultados"
+      }
+    },
+    "entry": {
+      "autoTitle": "Agente Better Sidebar",
+      "autoDescription": "Describe una tarea y deja que el agente elija las herramientas adecuadas"
     }
   },
   "backup": {

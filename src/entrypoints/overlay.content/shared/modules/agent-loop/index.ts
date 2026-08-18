@@ -41,7 +41,13 @@ export type { CircuitBreakerState, LoopCheckResult, FailureCheckResult } from '.
 export { executeToolCall } from './tools/tool-registry';
 export { executeSql } from './tools/execute-sql';
 // Message sync — the run outlives the agent session, so the overlay entry resumes it
-export { syncMessages, startSyncRun, resumeSyncRun, cancelSyncRun } from './tools/sync';
+export {
+  syncMessages,
+  startSyncRun,
+  resumeSyncRun,
+  cancelSyncRun,
+  isSyncRunActive,
+} from './tools/sync';
 
 // Undo — table snapshots, one undo point per session
 export {

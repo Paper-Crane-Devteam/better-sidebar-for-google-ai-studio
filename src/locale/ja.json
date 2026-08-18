@@ -1089,10 +1089,22 @@
       "skills": "またはスキルから始める",
       "stageHint": "入力欄に追加されるので、送信前に詳細を追記できます。",
       "noEditor": "まずチャットを開いてください。エージェントは入力欄経由で動作します。",
-      "busy": "タスクが実行中です。進捗はチャットに表示され、確認が必要なことは入力欄のそばに表示されます。",
+      "composerBusy": "実行中のタスクの結果が入力欄で待っています。先にそれを送信してから、もう一度お試しください。",
+      "sessionBusy": "すでにタスクが実行中です。完了させるか停止してから、新しいタスクを始めてください。",
+      "stopRunning": "実行中のタスクを停止",
       "safety": "操作対象はローカルデータベースのみです。変更前に必ず確認します。",
       "freeTier": "無料プランは読み取り専用です。アップグレードするとエージェントが変更できるようになります。",
-      "manage": "スキルとツールを管理"
+      "manage": "スキルとツールを管理",
+      "newChatHint": "開いているチャットで実行されます。きれいに保つには新しいチャットを開いてください。",
+      "triggerHint": "チャット入力欄で > と入力してもエージェントを起動できます。"
+    },
+    "send": {
+      "sessionBusy": "すでにタスクが実行中のため、これは送信されませんでした。停止してから、もう一度 Enter を押してください。",
+      "stopRunning": "停止する",
+      "staleCapsule": "そのスキルはもう存在しません。入力欄から削除して、別のスキルを選んでください。",
+      "noEditor": "入力欄が見つからず、何も送信されませんでした。ページを再読み込みしてお試しください。",
+      "assembleFailed": "エージェントのプロンプトを組み立てられず、何も送信されませんでした。詳細はブラウザのコンソールをご確認ください。",
+      "stagingFailed": "エージェントのプロンプトが入力欄に入らず、何も送信されませんでした。もう一度お試しください。"
     },
     "view": {
       "label": "会話の表示",
@@ -1161,7 +1173,22 @@
       "export": "エクスポートしています",
       "complete": "仕上げています",
       "generic": "ステップを実行しています",
-      "nameLabel": "操作"
+      "nameLabel": "操作",
+      "waiting": "あなたの操作を待っています",
+      "running": "実行中",
+      "notRun": "未実行",
+      "rejected": "拒否済み",
+      "rejectedTitle": "この操作を拒否しました",
+      "done": "完了",
+      "failed": "失敗",
+      "output": "出力",
+      "streaming": "書き出し中...",
+      "streamDone": "準備完了",
+      "viewResult": "クリックして結果を表示",
+      "viewPrompt": "クリックしてプロンプトを表示",
+      "systemPrompt": "システムプロンプト",
+      "resultsTitle": "ツール結果",
+      "promptTitle": "プロンプト内容"
     },
     "sync": {
       "progress": "会話の内容を取得しています — {{current}}/{{total}}",
@@ -1180,6 +1207,9 @@
     },
     "summary": {
       "done": "タスク完了",
+      "continueHint": "そのまま入力を続けてください — 「>」を再入力する必要はありません。",
+      "hintDismiss": "了解",
+      "partial": "一部完了",
       "infeasible": "実行できませんでした",
       "paywall": "アップグレードが必要",
       "stopped": "停止しました",
@@ -1195,7 +1225,8 @@
       "noSteps": "ツールは実行されませんでした。",
       "upgrade": "プランを見る",
       "dismiss": "閉じる",
-      "clear": "クリア"
+      "clear": "クリア",
+      "keepChanges": "変更を保持"
     },
     "checkIn": {
       "title_one": "{{count}} 件のステップを自動で実行しました",
@@ -1218,7 +1249,86 @@
       "done_other": "{{count}} 件のレコードを元に戻しました",
       "done": "{{count}} 件のレコードを元に戻しました",
       "failed": "取り消しに失敗しました: {{message}}",
-      "unavailable": "これらの変更は自動では取り消せません。理由: {{reason}}"
+      "unavailable": "これらの変更は自動では取り消せません。理由: {{reason}}",
+      "aiUnaware": "AIはこの操作を知りません — 会話を続ける前に伝えてください。",
+      "reverted": "変更を元に戻しました",
+      "toastPrompt": "エージェントがデータを変更しました。",
+      "expired": "元に戻すものがありません — 新しいタスクが開始されたか、変更が保持されました。"
+    },
+    "dock": {
+      "speedOff": "このタスクではすべて自動承認中 — クリックで停止",
+      "settings": "できること",
+      "collapse": "折りたたむ",
+      "expand": "展開"
+    },
+    "overlay": {
+      "emptyTitle": "エージェントビュー",
+      "emptyHint": "下に入力するか、エージェントプロンプトを選んで開始",
+      "scrollToBottom": "一番下へ"
+    },
+    "settings": {
+      "newSkill": "新規スキル",
+      "editSkill": "スキルを編集",
+      "skillTitle": "タイトル",
+      "skillTitlePlaceholder": "例：トピック別に整理",
+      "skillDescription": "説明",
+      "skillDescriptionPlaceholder": "このスキルの機能を簡潔に説明",
+      "skillPrompt": "プロンプト内容",
+      "skillPromptPlaceholder": "## タスク: タスク名\n\nこのスキルの機能とAIのアプローチ方法を記述してください。\n\nヒント:\n- まず現在の状態を理解する\n- 実行前に計画を説明する",
+      "titleRequired": "タイトルは必須です",
+      "descriptionRequired": "説明は必須です",
+      "promptRequired": "プロンプト内容は必須です",
+      "discardTitle": "未保存の変更を破棄しますか？",
+      "discardContent": "このスキルへの編集内容が失われます。",
+      "discard": "破棄",
+      "deleteSkillTitle": "スキルを削除",
+      "deleteSkillContent": "「{{title}}」は完全に削除されます。この操作は元に戻せません。",
+      "alwaysOn": "常にオン",
+      "skillsTitle": "スキル",
+      "skillsDescription": "スキルはエージェント向けの専門的なプロンプト指示を定義します。組み込みスキルは削除できません。",
+      "maxSkills": "カスタムスキルの上限（20個）に達しました。",
+      "mcpTitle": "MCP サーバー",
+      "mcpDescription": "MCP サーバーはエージェントが使用できるツールを提供します。",
+      "mcpToolCount": "{{count}} ツール"
+    },
+    "skills": {
+      "autoClassify": {
+        "title": "会話を自動分類",
+        "description": "タイトルに基づいて会話をフォルダとタグに自動整理"
+      },
+      "syncMessages": {
+        "title": "不足メッセージを同期",
+        "description": "メッセージが記録されていない会話を見つけて内容を同期"
+      },
+      "export": {
+        "title": "会話をエクスポート",
+        "description": "ユーザー向けに会話データを検索・表示"
+      },
+      "managePrompts": {
+        "title": "プロンプトライブラリを管理",
+        "description": "再利用可能なプロンプトの作成・リファクタリング・整理 — 変数やインポートを含む"
+      },
+      "manageSnippets": {
+        "title": "スニペットを管理",
+        "description": "保存済みスニペットの整理・重複排除・検索 — 全文を含む"
+      }
+    },
+    "mcp": {
+      "builtin": {
+        "name": "Better Sidebar",
+        "description": "会話・データ・タスクを管理するコアツール"
+      },
+      "tools": {
+        "activate_skill": "タスクタイプに特化した指示を読み込む",
+        "execute_sql": "ローカルデータベースで SQL クエリを実行",
+        "sync_conversation_messages": "メッセージ履歴のない会話の内容を記録",
+        "export": "会話をファイルとしてダウンロード",
+        "complete_task": "エージェントループを終了して結果を報告"
+      }
+    },
+    "entry": {
+      "autoTitle": "Better Sidebar エージェント",
+      "autoDescription": "タスクを説明すると、エージェントが適切なツールを選びます"
     }
   },
   "backup": {

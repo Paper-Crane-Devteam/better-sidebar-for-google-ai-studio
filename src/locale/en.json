@@ -1088,21 +1088,24 @@
   "agent": {
     "launcher": {
       "title": "Agent",
-      "subtitle": "Let the AI work directly on your conversation data.",
+      "subtitle": "Ask for anything you would otherwise click through in the sidebar — the AI operates Better Sidebar for you.",
       "placeholder": "Describe what you want to get done...",
+      "newChatHint": "It runs in the chat you have open. Start a fresh one to keep it clean.",
       "run": "Run",
       "skills": "Or start with a skill",
-      "stageHint": "Adds it to the chat input so you can add details before sending.",
+      "stageHint": "Shortcuts, not limits — a skill fills the chat input so you can add details before sending.",
       "noEditor": "Open a chat first — the agent runs through the chat input.",
       "composerBusy": "The running task has results waiting in the chat input. Send those first, then try again.",
       "sessionBusy": "A task is already running. Finish it, or stop it, before starting another.",
       "stopRunning": "Stop the running task",
+      "triggerHint": "Typing > in the chat input starts the agent from there too.",
       "safety": "Only your local database is touched. Changes are confirmed before they run.",
       "freeTier": "Free plan is read-only. Upgrade to let the agent make changes.",
       "manage": "Manage skills & tools"
     },
     "send": {
-      "sessionBusy": "A task is already running, so this one was not sent. Finish or stop the current task first.",
+      "sessionBusy": "A task is already running, so this one was not sent. Stop it, then press Enter again.",
+      "stopRunning": "Stop it",
       "staleCapsule": "That skill no longer exists. Remove it from the chat input and pick another one.",
       "noEditor": "Lost track of the chat input, so nothing was sent. Reload the page and try again.",
       "assembleFailed": "Could not build the agent prompt, so nothing was sent. Check the browser console for details.",
@@ -1223,6 +1226,9 @@
     },
     "summary": {
       "done": "Task finished",
+      "continueHint": "Just keep talking to carry on — no need to type > again.",
+      "hintDismiss": "Got it",
+      "partial": "Partly done",
       "infeasible": "Couldn't be done",
       "paywall": "Upgrade required",
       "stopped": "Stopped",
@@ -1256,6 +1262,70 @@
       "expired": "There's nothing left to undo — a new task has started, or the changes were kept.",
       "failed": "Undo failed: {{message}}",
       "unavailable": "These changes can't be undone automatically. Reason: {{reason}}"
+    },
+    "settings": {
+      "skillsTitle": "Skills",
+      "skillsDescription": "Skills define specialized prompt instructions for the Agent. Built-in skills cannot be deleted.",
+      "maxSkills": "Maximum 20 custom skills reached.",
+      "mcpTitle": "MCP Servers",
+      "mcpDescription": "MCP Servers provide tools that the Agent can use.",
+      "mcpToolCount": "{{count}} tools",
+      "newSkill": "New Skill",
+      "editSkill": "Edit Skill",
+      "skillTitle": "Title",
+      "skillTitlePlaceholder": "e.g. Organize by Topic",
+      "skillDescription": "Description",
+      "skillDescriptionPlaceholder": "Brief description of what this skill does",
+      "skillPrompt": "Prompt Content",
+      "skillPromptPlaceholder": "## Task: Your task name\n\nDescribe what this skill does and how the AI should approach it.\n\nTips:\n- Start with understanding the current state\n- Explain your plan before executing",
+      "titleRequired": "Title is required",
+      "descriptionRequired": "Description is required",
+      "promptRequired": "Prompt content is required",
+      "discardTitle": "Discard unsaved changes?",
+      "discardContent": "Your edits to this skill will be lost.",
+      "discard": "Discard",
+      "deleteSkillTitle": "Delete skill",
+      "deleteSkillContent": "\"{{title}}\" will be removed for good. This cannot be undone.",
+      "alwaysOn": "Always on"
+    },
+    "skills": {
+      "autoClassify": {
+        "title": "Auto-Classify Conversations",
+        "description": "Automatically organize conversations into folders and tags based on their titles"
+      },
+      "syncMessages": {
+        "title": "Sync Missing Messages",
+        "description": "Find conversations whose messages were never recorded, then sync their content"
+      },
+      "export": {
+        "title": "Export Conversations",
+        "description": "Query and display conversation data for the user"
+      },
+      "managePrompts": {
+        "title": "Manage Prompt Library",
+        "description": "Author, refactor and organize reusable prompts — including variables and imports"
+      },
+      "manageSnippets": {
+        "title": "Manage Snippets",
+        "description": "Organize, dedupe and search saved snippets — including their full text"
+      }
+    },
+    "mcp": {
+      "builtin": {
+        "name": "Better Sidebar",
+        "description": "Core tools for managing conversations, data, and tasks"
+      },
+      "tools": {
+        "activate_skill": "Load specialized instructions for a task type",
+        "execute_sql": "Run SQL queries on the local database",
+        "sync_conversation_messages": "Record message history for conversations that have none",
+        "export": "Download conversations as files",
+        "complete_task": "End the agent loop and report results"
+      }
+    },
+    "entry": {
+      "autoTitle": "Better Sidebar Agent",
+      "autoDescription": "Describe a task and let the agent pick the right tools"
     }
   },
   "backup": {

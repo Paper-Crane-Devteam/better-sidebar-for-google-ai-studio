@@ -1088,10 +1088,22 @@
       "skills": "或从技能开始",
       "stageHint": "会先放进输入框，你可以补充细节再发送。",
       "noEditor": "请先打开一个对话，Agent 通过输入框运行。",
-      "busy": "有任务正在执行。进度会显示在对话里，需要你确认的事情会出现在输入框旁边。",
+      "composerBusy": "正在执行的任务有结果等在输入框里。先把它发出去，再试一次。",
+      "sessionBusy": "已经有任务在执行了。先完成或停止它，再开始新的。",
+      "stopRunning": "停止正在执行的任务",
       "safety": "只操作本地数据库，修改前会先向你确认。",
       "freeTier": "免费版只能读取。升级后 Agent 才能修改数据。",
-      "manage": "管理技能与工具"
+      "manage": "管理技能与工具",
+      "newChatHint": "在你打开的聊天中运行。开个新聊天可以保持整洁。",
+      "triggerHint": "在聊天输入框输入 > 也能从那里启动智能体。"
+    },
+    "send": {
+      "sessionBusy": "已经有任务在执行了，这条没有发出去。先停止它，然后再按一次回车。",
+      "stopRunning": "停止它",
+      "staleCapsule": "该技能已不存在。请从输入框中移除它，并另选一个。",
+      "noEditor": "找不到输入框了，什么都没有发出去。请刷新页面后重试。",
+      "assembleFailed": "无法生成 Agent 提示词，什么都没有发出去。详情请查看浏览器控制台。",
+      "stagingFailed": "Agent 提示词没能写进输入框，什么都没有发出去。请重试。"
     },
     "view": {
       "label": "对话视图",
@@ -1160,7 +1172,22 @@
       "export": "正在导出",
       "complete": "正在收尾",
       "generic": "正在执行一个步骤",
-      "nameLabel": "操作"
+      "nameLabel": "操作",
+      "waiting": "等待你的操作",
+      "running": "执行中",
+      "notRun": "未执行",
+      "rejected": "已拒绝",
+      "rejectedTitle": "你拒绝了此操作",
+      "done": "已完成",
+      "failed": "失败",
+      "output": "输出",
+      "streaming": "正在输出...",
+      "streamDone": "就绪",
+      "viewResult": "点击查看完整结果",
+      "viewPrompt": "点击查看完整提示词",
+      "systemPrompt": "系统提示词",
+      "resultsTitle": "工具结果",
+      "promptTitle": "提示词内容"
     },
     "sync": {
       "progress": "正在获取对话内容 — {{current}}/{{total}}",
@@ -1179,6 +1206,9 @@
     },
     "summary": {
       "done": "任务完成",
+      "continueHint": "直接继续输入就行，不需要再打 \">\"。",
+      "hintDismiss": "知道了",
+      "partial": "部分完成",
       "infeasible": "无法完成",
       "paywall": "需要升级",
       "stopped": "已停止",
@@ -1194,7 +1224,8 @@
       "noSteps": "没有执行任何工具。",
       "upgrade": "查看方案",
       "dismiss": "关闭",
-      "clear": "清除"
+      "clear": "清除",
+      "keepChanges": "保留更改"
     },
     "checkIn": {
       "title_one": "已自动执行 {{count}} 步",
@@ -1217,7 +1248,86 @@
       "done_other": "已回退 {{count}} 条记录",
       "done": "已回退 {{count}} 条记录",
       "failed": "撤销失败：{{message}}",
-      "unavailable": "这些更改无法自动撤销。原因：{{reason}}"
+      "unavailable": "这些更改无法自动撤销。原因：{{reason}}",
+      "aiUnaware": "AI 不知道这个操作 — 继续对话前请告知它。",
+      "reverted": "更改已撤销",
+      "toastPrompt": "智能体修改了你的数据。",
+      "expired": "没有可撤销的内容 — 新任务已开始，或更改已被保留。"
+    },
+    "dock": {
+      "speedOff": "本次任务自动批准所有操作 — 点击停止",
+      "settings": "可以做什么",
+      "collapse": "收起",
+      "expand": "展开"
+    },
+    "overlay": {
+      "emptyTitle": "智能体视图",
+      "emptyHint": "在下方输入，或选择一个智能体提示词开始",
+      "scrollToBottom": "回到底部"
+    },
+    "settings": {
+      "newSkill": "新建技能",
+      "editSkill": "编辑技能",
+      "skillTitle": "标题",
+      "skillTitlePlaceholder": "例如：按主题整理",
+      "skillDescription": "描述",
+      "skillDescriptionPlaceholder": "简要描述这个技能的功能",
+      "skillPrompt": "提示词内容",
+      "skillPromptPlaceholder": "## 任务：你的任务名称\n\n描述这个技能的作用以及 AI 应该如何执行。\n\n提示：\n- 先了解当前状态\n- 执行前说明你的计划",
+      "titleRequired": "标题为必填项",
+      "descriptionRequired": "描述为必填项",
+      "promptRequired": "提示词内容为必填项",
+      "discardTitle": "放弃未保存的更改？",
+      "discardContent": "你对此技能的编辑将丢失。",
+      "discard": "放弃",
+      "deleteSkillTitle": "删除技能",
+      "deleteSkillContent": "「{{title}}」将被永久删除，此操作不可撤销。",
+      "alwaysOn": "始终启用",
+      "skillsTitle": "技能",
+      "skillsDescription": "技能为智能体定义了专门的提示词指令。内置技能不可删除。",
+      "maxSkills": "已达到 20 个自定义技能的上限。",
+      "mcpTitle": "MCP 服务器",
+      "mcpDescription": "MCP 服务器为智能体提供工具。",
+      "mcpToolCount": "{{count}} 个工具"
+    },
+    "skills": {
+      "autoClassify": {
+        "title": "自动分类对话",
+        "description": "根据标题将对话自动整理到文件夹和标签中"
+      },
+      "syncMessages": {
+        "title": "同步缺失消息",
+        "description": "查找未记录消息的对话并同步其内容"
+      },
+      "export": {
+        "title": "导出对话",
+        "description": "为用户查询和展示对话数据"
+      },
+      "managePrompts": {
+        "title": "管理提示词库",
+        "description": "创建、重构和整理可复用的提示词 — 包括变量和引用"
+      },
+      "manageSnippets": {
+        "title": "管理片段",
+        "description": "整理、去重和搜索已保存的片段 — 包括全文内容"
+      }
+    },
+    "mcp": {
+      "builtin": {
+        "name": "Better Sidebar",
+        "description": "管理对话、数据和任务的核心工具"
+      },
+      "tools": {
+        "activate_skill": "加载某类任务的专业指令",
+        "execute_sql": "在本地数据库上运行 SQL 查询",
+        "sync_conversation_messages": "为没有消息记录的对话补录历史",
+        "export": "将对话导出为文件",
+        "complete_task": "结束智能体循环并汇报结果"
+      }
+    },
+    "entry": {
+      "autoTitle": "Better Sidebar 智能体",
+      "autoDescription": "描述一个任务，让智能体选择合适的工具"
     }
   },
   "backup": {

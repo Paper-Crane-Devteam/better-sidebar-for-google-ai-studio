@@ -3,11 +3,27 @@
  *
  * Runtime queries merge BUILTIN_SKILLS with the persisted custom skills
  * from the agent config store.
+ *
+ * For builtin skills, `titleKey` / `descriptionKey` are resolved via i18n so
+ * that UI consumers see localized strings. Custom skills use their raw fields.
  */
 
 import type { Skill } from './types';
 import { BUILTIN_SKILLS } from './builtin-skills';
 import { useAgentConfigStore } from '../agent-config-store';
+import i18n from '@/locale/i18n';
+
+/** Resolve i18n keys on a builtin skill (display layer only; promptContent stays English). */
+function localize(skill: Skill): Skill {
+  if (!skill.titleKey) return skill;
+  return {
+    ...skill,
+    title: i18n.t(skill.titleKey, { defaultValue: skill.title }),
+    description: skill.descriptionKey
+      ? i18n.t(skill.descriptionKey, { defaultValue: skill.description })
+      : skill.description,
+  };
+}
 
 /**
  * Get all skills (builtin + custom), with enabled state applied.
@@ -16,7 +32,7 @@ import { useAgentConfigStore } from '../agent-config-store';
 export function getAllSkills(): Skill[] {
   const { customSkills, disabledBuiltinSkills } = useAgentConfigStore.getState();
 
-  const builtins = BUILTIN_SKILLS.map((s) => ({
+  const builtins = BUILTIN_SKILLS.map((s) => localize({
     ...s,
     enabled: !disabledBuiltinSkills.includes(s.id),
   }));

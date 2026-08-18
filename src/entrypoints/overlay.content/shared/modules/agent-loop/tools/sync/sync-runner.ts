@@ -88,6 +88,47 @@ const SETTLE_DELAY = 1500;
 let driving = false;
 
 /**
+ * "A run is driving this tab", readable synchronously by anyone.
+ *
+ * Kept in `sessionStorage` rather than a module variable for one reason: the run can
+ * cross a full page load (the fallback when the router won't open a conversation), and
+ * the thing that most needs this answer runs *during* that page load. `sessionStorage`
+ * is per-tab, synchronous, and survives the reload; the job in `chrome.storage.local`
+ * is the durable record but only readable asynchronously, which is too late.
+ *
+ * Who asks: auto-pickup in the platform feature. A run walks the tab through other
+ * people's conversations, and any of them may end with agent tool calls that were
+ * never reported back. To pickup that looks exactly like "the user asked a follow-up
+ * and nobody ran the tools" — so it starts a session, executes the calls, and posts
+ * the results into a conversation the user never opened. The run then navigates away
+ * mid-flight, leaving that session parked forever, which is what makes the whole tab
+ * refuse to start any new task.
+ *
+ * Self-heals: `resumeSyncRun` runs on every page load and clears the flag when there
+ * is no job, so a crashed run can't silence pickup for the life of the tab.
+ */
+const RUN_FLAG_KEY = 'bs-agent-sync-running';
+
+function markRunActive(active: boolean): void {
+  try {
+    if (active) sessionStorage.setItem(RUN_FLAG_KEY, '1');
+    else sessionStorage.removeItem(RUN_FLAG_KEY);
+  } catch {
+    // Storage can be denied (private mode, blocked cookies). Losing the flag only
+    // costs the pickup guard, and a run must not fail over its own bookkeeping.
+  }
+}
+
+/** Whether a sync run currently owns the tab's navigation */
+export function isSyncRunActive(): boolean {
+  try {
+    return sessionStorage.getItem(RUN_FLAG_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Cancellation for the run currently driving.
  *
  * A token rather than a bare flag so a Stop aimed at one run can never land on the next
@@ -130,6 +171,10 @@ export async function startSyncRun(externalIds: string[]): Promise<StartSyncRunR
 
   const job = createSyncJob(externalIds, SYNC_PLATFORM);
   await saveSyncJob(job);
+  // Raised here, not in `driveJob`: the tab is already committed to the trip, and the
+  // 2.5s handoff delay is long enough for pickup to act on the very response that
+  // booked it.
+  markRunActive(true);
 
   console.log(`[AgentLoop][sync] queued ${externalIds.length} conversation(s)`);
   setTimeout(() => {
@@ -150,8 +195,14 @@ export async function startSyncRun(externalIds: string[]): Promise<StartSyncRunR
 export async function resumeSyncRun(): Promise<void> {
   await flushReport();
   const job = await loadSyncJob();
-  if (!job) return;
+  if (!job) {
+    // The job is the truth; the flag is only its synchronous shadow. Clearing it here
+    // is what stops a crashed or expired run from silencing auto-pickup forever.
+    markRunActive(false);
+    return;
+  }
 
+  markRunActive(true);
   console.log(`[AgentLoop][sync] resuming at ${job.cursor + 1}/${job.entries.length}`);
   void driveJob(job);
 }
@@ -168,6 +219,7 @@ export async function cancelSyncRun(): Promise<void> {
 
   const job = activeJob ?? (await loadSyncJob());
   await clearSyncJob();
+  markRunActive(false);
   hideSyncProgress();
 
   if (!job) return;
@@ -255,6 +307,7 @@ async function driveJob(preloaded?: SyncJob): Promise<void> {
     // A crashed run must not keep the wheel: leaving the job behind would make every
     // later page load try to navigate again.
     await clearSyncJob();
+    markRunActive(false);
     hideSyncProgress();
   } finally {
     driving = false;
@@ -306,6 +359,7 @@ async function finishJob(job: SyncJob): Promise<void> {
   const report = summarizeJob(job, await countUnsynced(job.platform));
   await saveSyncReport(report);
   await clearSyncJob();
+  markRunActive(false);
   hideSyncProgress();
   console.log('[AgentLoop][sync] run finished', report);
 

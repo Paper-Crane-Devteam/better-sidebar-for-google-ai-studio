@@ -3,6 +3,9 @@
  *
  * Contains all core tools: activate_skill, execute_sql,
  * sync_conversation_messages, export, complete_task.
+ *
+ * `name` and `description` are English defaults; the AgentSettings UI
+ * resolves localized versions via `agent.mcp.builtin.name` / `.description`.
  */
 
 import type { MCPServer } from './types';

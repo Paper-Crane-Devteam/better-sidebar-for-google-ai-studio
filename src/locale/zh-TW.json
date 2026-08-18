@@ -1089,10 +1089,22 @@
       "skills": "或從技能開始",
       "stageHint": "會先放進輸入框，你可以補充細節再送出。",
       "noEditor": "請先開啟一個對話，Agent 透過輸入框執行。",
-      "busy": "有任務正在執行。進度會顯示在對話裡，需要你確認的事情會出現在輸入框旁邊。",
+      "composerBusy": "正在執行的任務有結果等在輸入框裡。先把它送出去，再試一次。",
+      "sessionBusy": "已經有任務在執行了。先完成或停止它，再開始新的。",
+      "stopRunning": "停止正在執行的任務",
       "safety": "只操作本機資料庫，修改前會先向你確認。",
       "freeTier": "免費版只能讀取。升級後 Agent 才能修改資料。",
-      "manage": "管理技能與工具"
+      "manage": "管理技能與工具",
+      "newChatHint": "在你開啟的聊天中執行。開個新聊天可以保持整潔。",
+      "triggerHint": "在聊天輸入框輸入 > 也能從那裡啟動智慧體。"
+    },
+    "send": {
+      "sessionBusy": "已經有任務在執行了，這一條沒有送出去。先停止它，然後再按一次 Enter。",
+      "stopRunning": "停止它",
+      "staleCapsule": "該技能已不存在。請從輸入框中移除它，並另選一個。",
+      "noEditor": "找不到輸入框了，什麼都沒有送出去。請重新載入頁面後再試。",
+      "assembleFailed": "無法組出 Agent 提示詞，什麼都沒有送出去。詳情請查看瀏覽器主控台。",
+      "stagingFailed": "Agent 提示詞沒能寫進輸入框，什麼都沒有送出去。請再試一次。"
     },
     "view": {
       "label": "對話檢視",
@@ -1161,7 +1173,22 @@
       "export": "正在匯出",
       "complete": "正在收尾",
       "generic": "正在執行一個步驟",
-      "nameLabel": "操作"
+      "nameLabel": "操作",
+      "waiting": "等待你的操作",
+      "running": "執行中",
+      "notRun": "未執行",
+      "rejected": "已拒絕",
+      "rejectedTitle": "你拒絕了此操作",
+      "done": "已完成",
+      "failed": "失敗",
+      "output": "輸出",
+      "streaming": "正在輸出...",
+      "streamDone": "就緒",
+      "viewResult": "點擊查看完整結果",
+      "viewPrompt": "點擊查看完整提示詞",
+      "systemPrompt": "系統提示詞",
+      "resultsTitle": "工具結果",
+      "promptTitle": "提示詞內容"
     },
     "sync": {
       "progress": "正在取得對話內容 — {{current}}/{{total}}",
@@ -1180,6 +1207,9 @@
     },
     "summary": {
       "done": "任務完成",
+      "continueHint": "直接繼續輸入就好，不需要再打「>」。",
+      "hintDismiss": "知道了",
+      "partial": "部分完成",
       "infeasible": "無法完成",
       "paywall": "需要升級",
       "stopped": "已停止",
@@ -1195,7 +1225,8 @@
       "noSteps": "沒有執行任何工具。",
       "upgrade": "查看方案",
       "dismiss": "關閉",
-      "clear": "清除"
+      "clear": "清除",
+      "keepChanges": "保留變更"
     },
     "checkIn": {
       "title_one": "已自動執行 {{count}} 步",
@@ -1218,7 +1249,86 @@
       "done_other": "已回退 {{count}} 筆記錄",
       "done": "已回退 {{count}} 筆記錄",
       "failed": "復原失敗：{{message}}",
-      "unavailable": "這些變更無法自動復原。原因：{{reason}}"
+      "unavailable": "這些變更無法自動復原。原因：{{reason}}",
+      "aiUnaware": "AI 不知道這個操作 — 繼續對話前請告知它。",
+      "reverted": "變更已撤銷",
+      "toastPrompt": "智慧體修改了你的資料。",
+      "expired": "沒有可撤銷的內容 — 新任務已開始，或變更已被保留。"
+    },
+    "dock": {
+      "speedOff": "本次任務自動批准所有操作 — 點擊停止",
+      "settings": "可以做什麼",
+      "collapse": "收合",
+      "expand": "展開"
+    },
+    "overlay": {
+      "emptyTitle": "智慧體視圖",
+      "emptyHint": "在下方輸入，或選擇一個智慧體提示詞開始",
+      "scrollToBottom": "回到底部"
+    },
+    "settings": {
+      "newSkill": "新增技能",
+      "editSkill": "編輯技能",
+      "skillTitle": "標題",
+      "skillTitlePlaceholder": "例如：按主題整理",
+      "skillDescription": "描述",
+      "skillDescriptionPlaceholder": "簡要描述這個技能的功能",
+      "skillPrompt": "提示詞內容",
+      "skillPromptPlaceholder": "## 任務：你的任務名稱\n\n描述這個技能的作用以及 AI 應該如何執行。\n\n提示：\n- 先了解目前狀態\n- 執行前說明你的計畫",
+      "titleRequired": "標題為必填欄位",
+      "descriptionRequired": "描述為必填欄位",
+      "promptRequired": "提示詞內容為必填欄位",
+      "discardTitle": "捨棄未儲存的變更？",
+      "discardContent": "你對此技能的編輯將遺失。",
+      "discard": "捨棄",
+      "deleteSkillTitle": "刪除技能",
+      "deleteSkillContent": "「{{title}}」將被永久刪除，此操作無法復原。",
+      "alwaysOn": "始終啟用",
+      "skillsTitle": "技能",
+      "skillsDescription": "技能為智慧體定義專門的提示詞指令。內建技能無法刪除。",
+      "maxSkills": "已達自訂技能上限（20 個）。",
+      "mcpTitle": "MCP 伺服器",
+      "mcpDescription": "MCP 伺服器提供智慧體可使用的工具。",
+      "mcpToolCount": "{{count}} 個工具"
+    },
+    "skills": {
+      "autoClassify": {
+        "title": "自動分類對話",
+        "description": "根據標題將對話自動整理到資料夾和標籤中"
+      },
+      "syncMessages": {
+        "title": "同步缺失訊息",
+        "description": "尋找未記錄訊息的對話並同步其內容"
+      },
+      "export": {
+        "title": "匯出對話",
+        "description": "為使用者查詢和展示對話資料"
+      },
+      "managePrompts": {
+        "title": "管理提示詞庫",
+        "description": "建立、重構和整理可重複使用的提示詞 — 包括變數和匯入"
+      },
+      "manageSnippets": {
+        "title": "管理片段",
+        "description": "整理、去重和搜尋已儲存的片段 — 包括全文內容"
+      }
+    },
+    "mcp": {
+      "builtin": {
+        "name": "Better Sidebar",
+        "description": "管理對話、資料和任務的核心工具"
+      },
+      "tools": {
+        "activate_skill": "載入特定任務類型的專門指令",
+        "execute_sql": "在本機資料庫執行 SQL 查詢",
+        "sync_conversation_messages": "為沒有訊息記錄的對話記錄訊息歷史",
+        "export": "將對話下載為檔案",
+        "complete_task": "結束智慧體迴圈並回報結果"
+      }
+    },
+    "entry": {
+      "autoTitle": "Better Sidebar 智慧體",
+      "autoDescription": "描述一個任務，讓智慧體選擇合適的工具"
     }
   },
   "backup": {

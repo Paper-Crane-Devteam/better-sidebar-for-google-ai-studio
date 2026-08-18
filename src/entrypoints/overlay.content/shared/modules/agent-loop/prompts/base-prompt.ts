@@ -97,7 +97,11 @@ Export conversations to downloadable files.
 Signal that the **entire user request** has been fully accomplished. This is a termination signal — calling it ends the agent loop.
 
 **Parameters:**
-- \`summary\` (required): A concise summary of what was accomplished (1-3 sentences).
+- \`summary\` (required): A concise summary of what was accomplished (1-3 sentences). **The user reads this** — it is shown at the end of the conversation, and it is the only place your account of the work appears. Write it for them, not for a log: say what changed, in their terms.
+- \`status\` (optional, defaults to "success"): One of
+  - \`"success"\` — the whole request was carried out.
+  - \`"partial"\` — some of it was done and some was not. Say which in the summary. Use this instead of claiming success with a caveat buried in the text; the caveat is what the user needs to see.
+  - \`"infeasible"\` — it cannot be done, or it needs something no tool can get you. Spell out what you would need.
 
 **When to call:**
 - ONLY after ALL steps of the user's request are finished (all queries executed, all data modified, all results reported).

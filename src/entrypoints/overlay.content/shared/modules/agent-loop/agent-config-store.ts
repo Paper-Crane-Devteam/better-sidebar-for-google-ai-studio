@@ -4,8 +4,9 @@
  * Stores user customization:
  * - Custom skills (user-created)
  * - Disabled builtin skills
- * - Disabled builtin MCPs
  * - Custom MCP servers (future)
+ *
+ * The builtin "Better Sidebar" MCP server is always on and has no user override.
  *
  * Builtin data lives in code (builtin-skills.ts, builtin-mcp.ts).
  * This store only holds user overrides and additions.
@@ -22,9 +23,6 @@ export interface AgentConfigStoreState {
   /** IDs of builtin skills that user has disabled */
   disabledBuiltinSkills: string[];
 
-  /** IDs of builtin MCP servers that user has disabled */
-  disabledBuiltinMCPs: string[];
-
   // ─── Actions ─────────────────────────────────────────────────────────
 
   addCustomSkill: (
@@ -37,7 +35,6 @@ export interface AgentConfigStoreState {
   removeCustomSkill: (id: string) => void;
   setCustomSkillEnabled: (id: string, enabled: boolean) => void;
   toggleBuiltinSkill: (id: string) => void;
-  toggleBuiltinMCP: (id: string) => void;
 }
 
 export const useAgentConfigStore = create<AgentConfigStoreState>()(
@@ -45,7 +42,6 @@ export const useAgentConfigStore = create<AgentConfigStoreState>()(
     (set, get) => ({
       customSkills: [],
       disabledBuiltinSkills: [],
-      disabledBuiltinMCPs: [],
 
       addCustomSkill: (data) => {
         const now = Date.now();
@@ -84,15 +80,6 @@ export const useAgentConfigStore = create<AgentConfigStoreState>()(
           set({ disabledBuiltinSkills: current.filter((i) => i !== id) });
         } else {
           set({ disabledBuiltinSkills: [...current, id] });
-        }
-      },
-
-      toggleBuiltinMCP: (id) => {
-        const current = get().disabledBuiltinMCPs;
-        if (current.includes(id)) {
-          set({ disabledBuiltinMCPs: current.filter((i) => i !== id) });
-        } else {
-          set({ disabledBuiltinMCPs: [...current, id] });
         }
       },
     }),

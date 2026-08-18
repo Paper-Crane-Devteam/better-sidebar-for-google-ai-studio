@@ -8,26 +8,19 @@
  */
 
 import React, { useState } from 'react';
-import { Bot, Lock, Send, Settings, ShieldCheck } from 'lucide-react';
+import { Bot, Keyboard, Lock, Send, Settings, ShieldCheck } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { UIcon } from '@/shared/components/ui/icon';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
 import { useLicenseStore } from '@/shared/lib/license-store';
+import { navigateToNewChat } from '@/shared/lib/navigation';
 import { getAgentEntries, AGENT_AUTO_ID } from '../../agent-loop/agent-entry';
 import { agentEventBus } from '../../agent-loop/event-bus';
 import { useAgentLoopStore } from '../../agent-loop/agent-loop-store';
 import { getActiveEngine } from '../../agent-loop/engine/engine-registry';
 
-/** lucide names stored on skills → iconify names used by UIcon */
-const ICON_FALLBACK = 'lucide:sparkles';
 
-function iconName(icon: string): string {
-  if (!icon) return ICON_FALLBACK;
-  // Skills store PascalCase lucide names ("FolderTree")
-  const kebab = icon.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
-  return `lucide:${kebab}`;
-}
 
 export const AgentLauncher: React.FC = () => {
   const { t } = useI18n();
@@ -65,7 +58,7 @@ export const AgentLauncher: React.FC = () => {
    * a moment, the chat input isn't reachable (no chat open, or the feature is
    * turned off) — say so instead of failing silently.
    */
-  const run = (entryId: string, userInput?: string, autoSend = false) => {
+  const run = (entryId: string, userInput?: string, autoSend = false, onStaged?: () => void) => {
     setUnavailable(null);
     if (busy) {
       setUnavailable('session-busy');
@@ -75,6 +68,7 @@ export const AgentLauncher: React.FC = () => {
     let settled = false;
     const offStaged = agentEventBus.once('launcher:staged', () => {
       settled = true;
+      onStaged?.();
     });
     const offFailed = agentEventBus.once('launcher:failed', ({ reason }) => {
       settled = true;
@@ -98,9 +92,31 @@ export const AgentLauncher: React.FC = () => {
       setUnavailable('session-busy');
       return;
     }
-    run(autoEntry.id, task, true);
-    setTask('');
+    // Only clear once the text actually reached the chat input — otherwise a
+    // failed attempt (no chat open) would throw away what the user just typed.
+    run(autoEntry.id, task, true, () => setTask(''));
   };
+
+  /**
+   * The agent runs through the page's chat input, so there has to be a chat open.
+   * Offer that as a one-click action here rather than only telling the user about it.
+   */
+  const handleNewChat = () => {
+    setUnavailable(null);
+    navigateToNewChat();
+  };
+
+  const newChatButton = (
+    <Button
+      variant="outline"
+      size="sm"
+      className="h-6 gap-1 px-2 text-xs"
+      onClick={handleNewChat}
+    >
+      <UIcon icon="tabler:message-plus" className="h-3 w-3" />
+      {t('explorerHeader.newChat')}
+    </Button>
+  );
 
   return (
     <div className="flex h-full flex-col overflow-y-auto px-4 py-4">
@@ -115,7 +131,8 @@ export const AgentLauncher: React.FC = () => {
           </h2>
           <p className="text-xs leading-relaxed text-muted-foreground">
             {t('agent.launcher.subtitle', {
-              defaultValue: 'Let the AI work directly on your conversation data.',
+              defaultValue:
+                'Ask for anything you would otherwise click through in the sidebar — the AI operates Better Sidebar for you.',
             })}
           </p>
         </div>
@@ -154,6 +171,14 @@ export const AgentLauncher: React.FC = () => {
             <Send className="h-3 w-3" />
           </button>
         </div>
+        <div className="mt-2 flex items-center gap-2">
+          {newChatButton}
+          <span className="min-w-0 flex-1 text-xs text-muted-foreground">
+            {t('agent.launcher.newChatHint', {
+              defaultValue: 'It runs in the chat you have open. Start a fresh one to keep it clean.',
+            })}
+          </span>
+        </div>
       </div>
 
       {/* Skill cards */}
@@ -172,7 +197,6 @@ export const AgentLauncher: React.FC = () => {
                          text-left transition-colors hover:bg-accent/40
                          disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-muted/30"
             >
-              <UIcon icon={iconName(entry.icon)} className="mt-1 h-4 w-4 shrink-0 text-primary" />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-xs font-medium text-foreground">{entry.title}</div>
                 <div className="line-clamp-2 text-xs text-muted-foreground">
@@ -184,7 +208,8 @@ export const AgentLauncher: React.FC = () => {
         </div>
         <p className="px-1 pt-1 text-xs text-muted-foreground">
           {t('agent.launcher.stageHint', {
-            defaultValue: 'Adds it to the chat input so you can add details before sending.',
+            defaultValue:
+              'Shortcuts, not limits — a skill fills the chat input so you can add details before sending.',
           })}
         </p>
       </div>
@@ -211,11 +236,21 @@ export const AgentLauncher: React.FC = () => {
               {t('agent.launcher.stopRunning', { defaultValue: 'Stop the running task' })}
             </Button>
           )}
+          {unavailable === 'no-editor' && newChatButton}
         </div>
       )}
 
       {/* Safety / tier note */}
       <div className="mt-auto space-y-2 pt-4">
+        <div className="flex items-start gap-2 text-xs text-muted-foreground">
+          <Keyboard className="mt-1 h-3 w-3 shrink-0" />
+          <span>
+            {t('agent.launcher.triggerHint', {
+              defaultValue: 'Typing > in the chat input starts the agent from there too.',
+            })}
+          </span>
+        </div>
+
         <div className="flex items-start gap-2 text-xs text-muted-foreground">
           <ShieldCheck className="mt-1 h-3 w-3 shrink-0" />
           <span>

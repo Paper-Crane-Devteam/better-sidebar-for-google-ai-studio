@@ -4,7 +4,7 @@
 
 export { syncMessages } from './sync-messages';
 export type { SyncMessagesParams } from './sync-messages';
-export { startSyncRun, resumeSyncRun, cancelSyncRun } from './sync-runner';
+export { startSyncRun, resumeSyncRun, cancelSyncRun, isSyncRunActive } from './sync-runner';
 export { MAX_SYNC_IDS, loadSyncJob } from './sync-job-store';
 export type { SyncJob, SyncJobEntry, SyncReport } from './sync-job-store';
 export {

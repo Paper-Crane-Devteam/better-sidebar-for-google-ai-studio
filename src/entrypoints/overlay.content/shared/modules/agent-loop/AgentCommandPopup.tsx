@@ -1,6 +1,11 @@
 /**
  * AgentCommandPopup — Shows the agent entry list when `>` is typed.
- * First item is the "auto" agent, the rest are enabled skills.
+ *
+ * Layout: a tree-like hierarchy.
+ * - "Better Sidebar Agent" (auto entry) is the root, always shown.
+ * - Skills are its children, visually indented.
+ *
+ * Both levels are selectable; selecting the auto entry = let the agent decide.
  */
 
 import React, { useRef } from 'react';
@@ -22,18 +27,18 @@ interface AgentCommandPopupProps {
 interface AgentCommandItemProps {
   entry: AgentEntry;
   isSelected: boolean;
+  isChild: boolean;
   onHighlight: () => void;
   onConfirm: () => void;
 }
 
 /**
- * One row. The description no longer takes a second line — it lives in the
- * tooltip, same deal as the library tree: the title is only repeated there when
- * it got truncated, otherwise the tooltip is just the description.
+ * One row. Auto entry renders at root level; skills are indented children.
  */
 const AgentCommandItem: React.FC<AgentCommandItemProps> = ({
   entry,
   isSelected,
+  isChild,
   onHighlight,
   onConfirm,
 }) => {
@@ -44,18 +49,27 @@ const AgentCommandItem: React.FC<AgentCommandItemProps> = ({
   return (
     <div
       ref={rowRef}
-      className={`flex cursor-pointer items-center gap-3 px-3 py-2 transition-colors ${
-        isSelected ? 'bg-accent' : 'hover:bg-accent/50'
-      }`}
+      className={`flex cursor-pointer items-center gap-2 py-2 transition-colors ${
+        isChild ? 'pl-8 pr-3' : 'px-3'
+      } ${isSelected ? 'bg-accent' : 'hover:bg-accent/50'}`}
       onMouseEnter={onHighlight}
       onMouseDown={(e) => {
         e.preventDefault(); // Prevent blur
         onConfirm();
       }}
     >
-      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary/10 text-xs text-primary">
-        {isAuto ? <Bot className="h-4 w-4" /> : '>'}
-      </div>
+      {/* Icon */}
+      {isAuto ? (
+        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary/10 text-primary">
+          <Bot className="h-4 w-4" />
+        </div>
+      ) : (
+        <div className="flex h-4 w-4 shrink-0 items-center justify-center">
+          <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
+        </div>
+      )}
+
+      {/* Title */}
       <div className="flex-1 overflow-hidden">
         <OverflowTooltip
           content={(isOverflowing) =>
@@ -72,7 +86,7 @@ const AgentCommandItem: React.FC<AgentCommandItemProps> = ({
           }
           placement="right"
           offset={16}
-          className="text-sm font-medium text-foreground select-none"
+          className={`select-none ${isAuto ? 'text-sm font-medium text-foreground' : 'text-xs text-foreground/90'}`}
           hoverRef={rowRef}
           positionRef={rowRef}
           forceShow={hasDescription}
@@ -111,13 +125,14 @@ export const AgentCommandPopup: React.FC<AgentCommandPopupProps> = ({
         )}
       </div>
 
-      {/* Items */}
+      {/* Items — tree layout */}
       <div className="max-h-[320px] overflow-y-auto py-1">
         {matches.map((entry, index) => (
           <AgentCommandItem
             key={entry.id}
             entry={entry}
             isSelected={index === selectedIndex}
+            isChild={entry.id !== AGENT_AUTO_ID}
             onHighlight={() => onHighlight(index)}
             onConfirm={() => onConfirm(index)}
           />

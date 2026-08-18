@@ -10,6 +10,7 @@
 
 import type { Skill } from './skills/types';
 import { getSkillsForPopup, getSkillById } from './skills/skill-registry';
+import i18n from '@/locale/i18n';
 
 /** Sentinel id for "run the agent, let it pick a skill itself" */
 export const AGENT_AUTO_ID = '__agent_auto__';
@@ -25,13 +26,15 @@ export interface AgentEntry {
   skill?: Skill;
 }
 
-const AUTO_ENTRY: AgentEntry = {
-  id: AGENT_AUTO_ID,
-  title: 'Better Sidebar Agent',
-  description: 'Describe a task and let the agent pick the right tools',
-  icon: 'Bot',
-  capsuleContent: 'Better Sidebar Agent',
-};
+function getAutoEntry(): AgentEntry {
+  return {
+    id: AGENT_AUTO_ID,
+    title: i18n.t('agent.entry.autoTitle', { defaultValue: 'Better Sidebar Agent' }),
+    description: i18n.t('agent.entry.autoDescription', { defaultValue: 'Describe a task and let the agent pick the right tools' }),
+    icon: 'Bot',
+    capsuleContent: 'Better Sidebar Agent',
+  };
+}
 
 function toEntry(skill: Skill): AgentEntry {
   return {
@@ -46,26 +49,37 @@ function toEntry(skill: Skill): AgentEntry {
 
 /** All entries: auto first, then enabled skills. */
 export function getAgentEntries(): AgentEntry[] {
-  return [AUTO_ENTRY, ...getSkillsForPopup().map(toEntry)];
+  return [getAutoEntry(), ...getSkillsForPopup().map(toEntry)];
 }
 
 /** Resolve an entry by id (works for both the auto sentinel and skill ids). */
 export function getAgentEntryById(id: string): AgentEntry | undefined {
-  if (id === AGENT_AUTO_ID) return AUTO_ENTRY;
+  if (id === AGENT_AUTO_ID) return getAutoEntry();
   const skill = getSkillById(id);
   return skill ? toEntry(skill) : undefined;
 }
 
-/** Match entries against a query (multi-word AND over title + description). */
+/** Match entries against a query (multi-word AND over title + description).
+ *
+ * The auto entry ("Better Sidebar Agent") is always kept at the top as a group
+ * header/anchor so the tree structure stays visible even when filtering.
+ */
 export function searchAgentEntries(query: string): AgentEntry[] {
   const entries = getAgentEntries();
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return entries.slice(0, 8);
 
-  return entries
-    .filter((e) => {
-      const haystack = `${e.title} ${e.description}`.toLowerCase();
-      return words.every((w) => haystack.includes(w));
-    })
-    .slice(0, 8);
+  if (words.length === 0) return entries.slice(0, 9); // auto + up to 8 skills
+
+  const matched = entries.filter((e) => {
+    const haystack = `${e.title} ${e.description}`.toLowerCase();
+    return words.every((w) => haystack.includes(w));
+  });
+
+  // Always keep auto entry at position 0 if there are any matches
+  const hasAuto = matched.some((e) => e.id === AGENT_AUTO_ID);
+  if (!hasAuto && matched.length > 0) {
+    matched.unshift(getAutoEntry());
+  }
+
+  return matched.slice(0, 9);
 }
