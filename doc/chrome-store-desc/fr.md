@@ -1,142 +1,160 @@
-Votre historique de prompts Google AI Studio devient-il un désordre ?
-Vous avez du mal à retrouver ce prompt parfait que vous avez écrit la semaine dernière ?
+L'organisateur tout-en-un de conversations, gestionnaire de prompts et boîte à outils de productivité pour Google Gemini et AI Studio.
+Organisez vos conversations dans des dossiers, recherchez dans tous les messages, exportez vos chats, synchronisez avec Google Drive — et maintenant, laissez un Agent IA gérer vos données pour vous.
 
-Better Sidebar for Gemini & AI Studio — l'organisateur tout-en-un de conversations, gestionnaire de prompts et boîte à outils de productivité pour Google Gemini et AI Studio.
-Organisez vos conversations dans des dossiers, recherchez dans tous les messages, exportez vos chats, synchronisez avec Google Drive et personnalisez votre interface — tout dans une seule extension.
+BETTER SIDEBAR FOR GEMINI & AI STUDIO — l'accélérateur ultime pour les développeurs, ingénieurs prompts et power users IA.
 
 Nous transformons l'interface par défaut en une base de connaissances puissante et organisée. Arrêtez de faire défiler sans fin l'historique et commencez à travailler efficacement.
 
-🔥 NOUVEAUTÉS (v2.8.0)
+🔥 NOUVEAUTÉS (v2.9.0)
 
-🚀 Powerpack — Intégration Second Brain :
-• Exportez vos conversations vers Notion et Obsidian avec un formatage et des blocs de code parfaitement préservés.
-• Export par lots : Sélectionnez plusieurs conversations et exportez-les d'un coup.
-• Bientôt : AI Agent Local Takeover — laissez l'IA gérer les données du plugin et agir en votre nom.
-• Remboursement sans condition sous 7 jours pour tous les packs payants.
+🤖 AI Agent — La star :
+• Tapez « > » dans la zone de saisie Gemini et décrivez ce que vous voulez. L'IA lit vos données, prend des décisions, exécute des tâches multi-étapes et vous fait un rapport.
+• Skills intégrés : tri auto des chats en dossiers, remplissage de l'index de recherche (sync des anciens messages), requêtes sur vos données, gestion en lot des Prompts et Snippets.
+• Créez vos propres Skills dans Paramètres → Agent.
+• Pas limité aux presets — l'Agent interroge toute votre base et fait tout ce que vous pouvez décrire.
+• Conversation multi-tours : approfondissez tour après tour, le contexte se conserve.
+• Sécurité : les écritures nécessitent approbation, les lectures sont libres. Mode Vitesse. Disjoncteurs contre les boucles infinies.
+• Agent Dock flotte au-dessus de la zone de saisie, même sidebar fermée.
+• Les acheteurs Early Bird du Powerpack obtiennent l'Agent gratuitement.
 
-✂️ Snippets :
-• Extrayez les meilleurs passages de n'importe quelle réponse IA dans votre bibliothèque de Snippets.
-• Gestion par dossiers pour les Snippets — vos étincelles d'inspiration ne seront plus jamais perdues.
-• Les Snippets peuvent aussi être exportés vers Notion/Obsidian via le Powerpack.
+⚡ Intégration Gemini Spark :
+• Si Spark est actif sur votre compte, il apparaît comme onglet natif automatiquement.
 
-📚 Barre latérale entièrement repensée :
-• UI entièrement reconstruite — plus propre, mieux organisée, lag d'animation considérablement réduit.
-• 👀 Plan de conversation : Voyez la structure des longues conversations d'un coup d'œil.
-• 📝 Notes de chat : Ajoutez des descriptions/notes personnalisées aux chats individuels.
-• ✨ Infobulles enrichies : Survolez pour voir la date de création, la description et les tags.
-• 📌 Dossiers épinglés et glisser-réorganiser : Épinglez vos dossiers favoris en haut et réorganisez librement.
-• 🎯 Localiser le chat actif : Dépliez automatiquement et sautez à votre conversation active.
+🎨 UI plus propre & animations de thème :
+• Espacement resserré, meilleur contraste, thèmes affinés. Transition animée fluide au changement de thème.
 
-⚡ Boosters de workflow :
-• Dossiers par défaut pour Gems et Notebooks : Assignez un dossier par défaut — les nouveaux chats se classent automatiquement.
-• Commandes magiques / : Tapez « / » dans Gemini pour invoquer instantanément votre Bibliothèque de Prompts.
+🎛️ Panneau de réglages via l'icône :
+• Clic sur l'icône de la barre d'outils pour ouvrir un vrai panneau de contrôle. Sans menus.
 
-🎨 Visuel :
-• 10 nouveaux thèmes exclusifs pour le Supporter Pack.
-• Changelog en Markdown : Parcourez l'historique des mises à jour en Markdown.
+⌨️ Commandes slash dans AI Studio :
+• Le raccourci « / » pour la bibliothèque de Prompts fonctionne maintenant dans AI Studio.
+
+💾 Sauvegardes locales automatiques :
+• Données sauvegardées selon un planning. Snapshots manuels. Rollback disponible.
+
+📜 Smart Scrollbar extensible :
+• Clic pour déplier en liste complète de messages.
+
+📁 Créer un dossier dans le dialogue de déplacement :
+• Le dialogue « Déplacer dans un dossier » a un bouton Nouveau Dossier.
+
+🐛 Corrections importantes :
+• Google Drive ne réécrit plus les données locales — la restauration est maintenant un téléchargement manuel uniquement.
+• Corrigé : scan des conversations Gemini, sidebar zombie après veille, saut de mise en page, espace annulant le renommage, horodatages incorrects, détection Gem/Notebook, points morts du scrollbar.
 
 ---
 
 🚀 FONCTIONNALITÉS PRINCIPALES
 
-📂 BARRE LATÉRALE ET ORGANISATION
+🤖 AI AGENT (NOUVEAU)
 
-📂 Dossiers et Couleurs
-Créez des dossiers imbriqués par glisser-déposer. Attribuez des couleurs personnalisées aux dossiers et tags.
+Tapez « > » pour invoquer l'Agent. Décrivez des tâches en langage naturel et il les exécute — tri auto, requêtes, gestion de prompts, synchronisation de messages manquants. Skills personnalisés, multi-tours, approbations, mode vitesse, disjoncteurs. Fonctionne via Agent Dock même sidebar fermée.
 
-🔍 Recherche et Filtrage
-Recherche en texte intégral dans tous les messages. Combinez plusieurs conditions — titre, tag, type — pour des résultats précis. Recherche dans la conversation active.
+📂 SIDEBAR & ORGANISATION
+
+📂 Dossiers & Couleurs
+Glissez-déposez dans des dossiers imbriqués. Couleurs personnalisées pour dossiers et tags.
+
+🔍 Recherche & Filtres
+Recherche plein texte sur tout l'historique. Filtres combinés : titre, tag, type. Recherche dans le chat actif.
 
 🏷️ Tags Intelligents
-Attribuez des tags personnalisés, visibles directement dans l'en-tête du chat. Filtrage instantané par tag.
+Tags personnalisés visibles dans l'en-tête. Filtrage instantané.
 
-⭐ Favoris et Épinglage
-Gardez vos chats ou prompts les plus importants en haut pour un accès rapide.
+⭐ Favoris & Épinglage
+Épinglez chats ou prompts importants en haut.
 
-📊 Vue Chronologique
-Visualisez votre workflow avec les groupes « Aujourd'hui », « Hier » et « Semaine Dernière ».
+📊 Vue Timeline
+Groupement « Aujourd'hui », « Hier », « Semaine dernière ».
 
-🗑️ Suppression par Lots
-Suppression par lots avec suppression réelle côté serveur. Fini les chats fantômes.
+🗑️ Suppression en Lot
+Suppression réelle côté serveur. Plus de chats fantômes.
 
-📥 Export des Conversations
-Exportez vos conversations individuelles en Markdown, texte brut ou JSON. Export par lots disponible avec Powerpack.
+📤 Export de Conversations
+Markdown, texte brut ou JSON. Export en lot avec Powerpack.
 
 ✂️ Snippets
-Extrayez les meilleurs passages de n'importe quelle réponse IA dans une bibliothèque de Snippets avec gestion par dossiers.
+Extrayez le meilleur des réponses IA dans une bibliothèque avec dossiers.
 
 👀 Plan de Conversation
-Ouvrez la vue Plan pour voir la structure des longues conversations d'un coup d'œil.
+Vue Outline pour voir la structure des longues conversations.
 
-📝 Notes de Chat et Infobulles Enrichies
-Ajoutez des descriptions aux chats ; survolez pour voir la date de création, les tags et les notes.
+📝 Notes & Infobulles Enrichies
+Ajoutez des descriptions ; survol pour date, tags et notes.
+
+💾 Sauvegardes Locales Automatiques
+Backup auto par planning. Snapshots manuels et rollback.
 
 ---
 
-🎨 PERSONNALISATION DE L'UI
+🎨 PERSONNALISATION UI
 
 Gemini :
-• Ajustez la largeur de la barre latérale, du contenu et de la zone de saisie
-• Mode Focus — masquez les éléments inutiles (logo, disclaimer, bouton upgrade)
-• Barre de défilement intelligente — accédez directement à n'importe quel message
-• Téléchargement d'images sans filigrane (y compris HD pour les comptes Pro)
+• Ajuster largeur sidebar, contenu et zone de saisie
+• Mode Focus — masquer éléments superflus (logo, disclaimer, bouton upgrade)
+• Smart Scrollbar — sauter à n'importe quel message ; extensible en liste complète
+• Téléchargement d'images sans filigrane (y compris Pro HD)
+• Animation de changement de thème
 
 AI Studio :
-• Largeur de barre latérale configurable
-• Masquage automatique de la zone de saisie
-• Masquage automatique du panneau de paramètres d'exécution
+• Largeur sidebar configurable
+• Auto-masquer la zone de saisie
+• Auto-masquer le panneau des paramètres d'exécution
+• Commande « / » pour la bibliothèque de Prompts
 
 🎨 Thèmes
-13 thèmes exclusifs (Supporter Pack, incluant des thèmes générés par IA). Détection automatique du mode clair/sombre.
+13+ thèmes exclusifs (y compris générés par IA). Détection auto dark/light. Transitions animées fluides.
 
 ---
 
-💎 GEMS, NOTEBOOKS ET PROMPTS
+💎 GEMS, NOTEBOOKS & PROMPTS
 
 💎 Gestion des Gems
-Intégration complète des Gems — parcourez, filtrez, créez et démarrez des conversations avec vos Gems depuis la barre latérale.
+Intégration complète — parcourir, filtrer, créer et démarrer des conversations Gem depuis la sidebar.
 
-📓 Intégration Notebook
-Support complet des Notebooks pour Gemini — parcourez, organisez et gérez vos Notebooks depuis la barre latérale.
+📓 Intégration Notebooks
+Support complet des Notebooks Gemini — parcourir, organiser et gérer depuis la sidebar.
 
 📝 Bibliothèque de Prompts
-Construisez votre bibliothèque de prompts réutilisables. Supporte les variables d'options, la composition et l'importation de prompts système.
+Construisez votre bibliothèque personnelle. Variables, composition de prompts, import de system prompts. Raccourci « / » sur Gemini et AI Studio.
 
-☁️ Synchronisation Automatique Google Drive
-Paramètres et bibliothèque de prompts synchronisés automatiquement avec Google Drive en arrière-plan.
+☁️ Google Drive Sync
+Upload auto des paramètres et prompts. Restauration manuelle uniquement — données locales = seule source de vérité.
 
 🔗 Powerpack — Export vers Notion & Obsidian
-Exportez conversations et snippets vers Notion et Obsidian avec un formatage parfaitement préservé. Export par lots : sélectionnez plusieurs conversations et exportez-les d'un coup. Remboursement sans condition sous 7 jours.
+Export parfait vers Notion et Obsidian avec formatage préservé. Export en lot. AI Agent inclus. Remboursement 7 jours sans condition.
 
 ---
 
 ⚙️ PLUS
 
-🌟 Support Multi-plateformes
-Gérez les conversations Gemini et Google AI Studio dans une seule barre latérale unifiée.
+🌟 Multi-Plateforme
+Gérez Gemini et AI Studio dans une sidebar unifiée.
 
-👥 Profils Multi-comptes
-Créez des profils séparés pour le travail ou l'usage personnel avec des bases de données indépendantes.
+👤 Profils Multi-Comptes
+Profils séparés pour le travail ou personnel. Base de données indépendante chacun.
 
 💾 Contrôle des Données
-Vos données vous appartiennent. Exportez votre structure (dump SQL) pour sauvegarde à tout moment.
+Vos données vous appartiennent. Export SQL à tout moment. Backups auto + rollback.
+
+⚡ Gemini Spark
+Si disponible sur votre compte, apparaît comme onglet natif — zéro configuration.
+
+🎛️ Panneau via Icône
+Clic sur l'icône de la barre pour panneau de contrôle rapide.
 
 ---
 
-🔒 PRIVACY FIRST
+🔒 CONFIDENTIALITÉ D'ABORD
 
-Nous prenons votre confidentialité au sérieux.
-
-• 100% Local : Base de données SQLite intégrée fonctionnant entièrement dans votre navigateur.
-• Pas de Synchronisation Cloud : Vos dossiers, tags et notes ne sont PAS envoyés à nos serveurs.
-• Pas d'Entraînement : Nous ne lisons pas vos conversations pour entraîner des modèles d'IA.
-
-Pourquoi l'extension a-t-elle besoin de permissions ?
-L'accès à aistudio.google.com et gemini.google.com est nécessaire uniquement pour injecter l'interface de barre latérale et lire les titres de chat pour l'organisation.
+• 100% Local : Base SQLite intégrée dans votre navigateur.
+• Pas de sync vers nos serveurs : Dossiers, tags et notes ne sont PAS envoyés chez nous.
+• Pas d'entraînement : Nous ne lisons pas vos conversations pour entraîner des modèles IA.
+• Agent local : Utilise votre propre session Gemini. Pas de clés API, pas de tokens supplémentaires, aucune donnée ne sort de votre machine.
 
 ---
 
-Disclaimer : Cette extension est un projet indépendant et n'est pas affiliée, approuvée ou sponsorisée par Google.
+Avis : Cette extension est un projet indépendant, non affilié, approuvé ou sponsorisé par Google.
 
 🔗 LIENS
 • GitHub: https://github.com/Paper-Crane-Devteam/better-sidebar-for-google-gemini-and-ai-studio

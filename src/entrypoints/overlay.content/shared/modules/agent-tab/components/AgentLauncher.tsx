@@ -131,8 +131,7 @@ export const AgentLauncher: React.FC = () => {
           </h2>
           <p className="text-xs leading-relaxed text-muted-foreground">
             {t('agent.launcher.subtitle', {
-              defaultValue:
-                'Ask for anything you would otherwise click through in the sidebar — the AI operates Better Sidebar for you.',
+              defaultValue: 'Team up with AI to manage your chats, prompts and data.',
             })}
           </p>
         </div>
@@ -209,7 +208,7 @@ export const AgentLauncher: React.FC = () => {
         <p className="px-1 pt-1 text-xs text-muted-foreground">
           {t('agent.launcher.stageHint', {
             defaultValue:
-              'Shortcuts, not limits — a skill fills the chat input so you can add details before sending.',
+              'Optional — just describe your task and the agent picks the right skill on its own. Pick one here and it fills the chat input, so you can still add your own details before sending.',
           })}
         </p>
       </div>

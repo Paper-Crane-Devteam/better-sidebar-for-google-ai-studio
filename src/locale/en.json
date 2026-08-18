@@ -1088,12 +1088,12 @@
   "agent": {
     "launcher": {
       "title": "Agent",
-      "subtitle": "Ask for anything you would otherwise click through in the sidebar — the AI operates Better Sidebar for you.",
+      "subtitle": "Team up with AI to manage your chats, prompts and data.",
       "placeholder": "Describe what you want to get done...",
       "newChatHint": "It runs in the chat you have open. Start a fresh one to keep it clean.",
       "run": "Run",
       "skills": "Or start with a skill",
-      "stageHint": "Shortcuts, not limits — a skill fills the chat input so you can add details before sending.",
+      "stageHint": "Optional — just describe your task and the agent picks the right skill on its own. Pick one here and it fills the chat input, so you can still add your own details before sending.",
       "noEditor": "Open a chat first — the agent runs through the chat input.",
       "composerBusy": "The running task has results waiting in the chat input. Send those first, then try again.",
       "sessionBusy": "A task is already running. Finish it, or stop it, before starting another.",

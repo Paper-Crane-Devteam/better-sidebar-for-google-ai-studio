@@ -1083,11 +1083,11 @@
   "agent": {
     "launcher": {
       "title": "Agente",
-      "subtitle": "Deixe a IA trabalhar diretamente nos dados das suas conversas.",
+      "subtitle": "Junte-se à IA para gerenciar seus chats, prompts e dados.",
       "placeholder": "Descreva o que você quer fazer...",
       "run": "Executar",
       "skills": "Ou comece com uma habilidade",
-      "stageHint": "Adiciona ao campo do chat para você complementar antes de enviar.",
+      "stageHint": "Opcional: basta descrever sua tarefa e o agente escolhe a habilidade certa por conta própria. Se escolher uma aqui, ela é adicionada ao campo do chat para você complementar antes de enviar.",
       "noEditor": "Abra um chat primeiro — o agente funciona pelo campo de entrada.",
       "composerBusy": "A tarefa em andamento tem resultados esperando no campo do chat. Envie-os primeiro e tente de novo.",
       "sessionBusy": "Já existe uma tarefa em andamento. Termine ou pare ela antes de começar outra.",
