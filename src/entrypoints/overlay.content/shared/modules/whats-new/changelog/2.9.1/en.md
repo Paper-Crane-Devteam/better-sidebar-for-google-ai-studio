@@ -5,6 +5,8 @@ A quick follow-up to 2.9.0, built almost entirely from your feedback. Thank you 
 ## ✨ New
 
 *   **📁 Default Folder for Gems & Notebooks:** Assign a default folder to any Gem or Notebook. Start a new chat from it and the conversation lands in that folder automatically — no dragging afterwards.
+*   **⚡ Manage default folders from the folder side:** Folder settings now lists every Gem and Notebook that defaults into that folder, so you can bind or unbind them right there. And when a folder is someone's default, its hover row gets an extra button to start that Gem's or Notebook's chat directly.
+*   **🗑️ Optional: delete conversations without confirmation:** Off by default. Turn it on in Settings → General and deleting a single conversation skips the dialog entirely — immediate, permanent, no undo, removed both here and on the platform. Batch delete still asks.
 *   **🖍️ Text Selection Toolbar:** Select any text in a conversation and a small toolbar appears right above it. Ask the AI to explain or summarize the selection, save it as a snippet, or copy it. Configurable in settings — pick which actions show up, or turn the whole thing off.
 
 ## 🐛 Fixes

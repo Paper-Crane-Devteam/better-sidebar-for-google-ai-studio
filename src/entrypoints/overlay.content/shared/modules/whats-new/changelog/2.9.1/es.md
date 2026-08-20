@@ -5,6 +5,8 @@ Una actualización rápida después de la 2.9.0, construida casi por completo a 
 ## ✨ Novedades
 
 *   **📁 Carpeta predeterminada para Gems y Notebooks:** Asigna una carpeta predeterminada a cualquier Gem o Notebook. Al iniciar un chat nuevo desde ahí, la conversación va directamente a esa carpeta, sin tener que arrastrarla después.
+*   **⚡ Gestiona las carpetas predeterminadas desde la carpeta:** Los ajustes de carpeta ahora listan todos los Gems y Notebooks que la usan como destino predeterminado, así que puedes vincularlos o desvincularlos ahí mismo. Y cuando una carpeta es el destino de alguno, su fila al pasar el ratón gana un botón extra para iniciar directamente ese chat.
+*   **🗑️ Opcional: eliminar conversaciones sin confirmación:** Desactivado por defecto. Actívalo en Ajustes → General y eliminar una conversación individual se salta el diálogo por completo: inmediato, permanente, sin deshacer, y se borra tanto aquí como en la plataforma. La eliminación por lotes sigue pidiendo confirmación.
 *   **🖍️ Barra de herramientas al seleccionar texto:** Selecciona cualquier texto en una conversación y aparecerá una pequeña barra justo encima. Puedes pedirle a la IA que explique o resuma la selección, guardarla como snippet o copiarla. Configurable en los ajustes: elige qué acciones se muestran o desactívala por completo.
 
 ## 🐛 Correcciones

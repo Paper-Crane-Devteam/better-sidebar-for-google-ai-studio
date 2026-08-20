@@ -5,6 +5,8 @@ Uma atualização rápida depois da 2.9.0, construída quase inteiramente a part
 ## ✨ Novidades
 
 *   **📁 Pasta predefinida para Gems e Notebooks:** Atribui uma pasta predefinida a qualquer Gem ou Notebook. Ao iniciar uma nova conversa a partir dele, a conversa vai automaticamente para essa pasta — sem precisares de arrastar depois.
+*   **⚡ Gere as pastas padrão pelo lado da pasta:** As definições de pasta agora listam todos os Gems e Notebooks que a usam como destino padrão, para poderes ligá-los ou desligá-los ali mesmo. E quando uma pasta é o destino de algum, a linha ganha um botão extra ao passar o rato para começar essa conversa diretamente.
+*   **🗑️ Opcional: apagar conversas sem confirmação:** Desligado por predefinição. Ativa em Definições → Geral e apagar uma conversa individual salta o diálogo por completo — imediato, permanente, sem desfazer, removido aqui e na plataforma. A eliminação em lote continua a pedir confirmação.
 *   **🖍️ Barra de ferramentas ao selecionar texto:** Seleciona qualquer texto numa conversa e aparece uma pequena barra logo acima. Podes pedir à IA para explicar ou resumir a seleção, guardá-la como snippet ou copiá-la. Configurável nas definições — escolhe que ações aparecem ou desliga tudo.
 
 ## 🐛 Correções
