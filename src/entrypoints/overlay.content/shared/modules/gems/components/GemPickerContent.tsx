@@ -18,11 +18,33 @@ const OVERSCAN = 4;
 
 interface GemPickerContentProps {
   lastSelectedGemId?: string | null;
+  /**
+   * Close the surrounding modal when a gem is picked. Default true.
+   * Set to false when the picker is opened *from inside* a modal that
+   * should stay open after the selection (e.g. folder settings).
+   */
+  closeModalOnSelect?: boolean;
+  /**
+   * Remember the picked gem as "last selected". Default true.
+   * Set to false when the pick is not about starting a chat (e.g. binding
+   * a gem to a folder), so the New Chat shortcut isn't hijacked.
+   */
+  recordLastSelected?: boolean;
+  /** Gem IDs to hide from the list */
+  excludeIds?: string[];
+  /** Show each gem's current default folder as a hint on the right */
+  showDefaultFolderHint?: boolean;
 }
 
-export const GemPickerContent = ({ lastSelectedGemId }: GemPickerContentProps) => {
+export const GemPickerContent = ({
+  lastSelectedGemId,
+  closeModalOnSelect = true,
+  recordLastSelected = true,
+  excludeIds,
+  showDefaultFolderHint,
+}: GemPickerContentProps) => {
   const { t } = useI18n();
-  const { gems, fetchData } = useAppStore();
+  const { gems, folders, fetchData } = useAppStore();
   const close = useModalStore((s) => s.close);
   const closePopover = usePopoverPickerStore((s) => s.close);
   const [search, setSearch] = useState('');
@@ -32,11 +54,21 @@ export const GemPickerContent = ({ lastSelectedGemId }: GemPickerContentProps) =
   const [scrollTop, setScrollTop] = useState(0);
   const [isScanning, setIsScanning] = useState(false);
 
+  const candidates = useMemo(
+    () => (excludeIds?.length ? gems.filter((g) => !excludeIds.includes(g.id)) : gems),
+    [gems, excludeIds],
+  );
+
   const filtered = useMemo(() => {
-    if (!search.trim()) return gems;
+    if (!search.trim()) return candidates;
     const q = search.toLowerCase();
-    return gems.filter((g) => g.name.toLowerCase().includes(q));
-  }, [gems, search]);
+    return candidates.filter((g) => g.name.toLowerCase().includes(q));
+  }, [candidates, search]);
+
+  const folderNameById = useMemo(() => {
+    if (!showDefaultFolderHint) return null;
+    return new Map(folders.map((f) => [f.id, f.name]));
+  }, [folders, showDefaultFolderHint]);
 
 
 
@@ -47,11 +79,11 @@ export const GemPickerContent = ({ lastSelectedGemId }: GemPickerContentProps) =
 
   const handleSelect = useCallback(
     (gem: Gem) => {
-      useSettingsStore.getState().setLastSelectedGemId(gem.id);
-      close();
+      if (recordLastSelected) useSettingsStore.getState().setLastSelectedGemId(gem.id);
+      if (closeModalOnSelect) close();
       usePopoverPickerStore.getState().resolve(gem);
     },
-    [close],
+    [close, closeModalOnSelect, recordLastSelected],
   );
 
   const handleCreateGem = useCallback(() => {
@@ -203,7 +235,12 @@ export const GemPickerContent = ({ lastSelectedGemId }: GemPickerContentProps) =
                   onMouseEnter={() => setActiveIndex(index)}
                 >
                   {renderGemIcon(gem)}
-                  <span className="truncate">{gem.name}</span>
+                  <span className="truncate flex-1">{gem.name}</span>
+                  {folderNameById && gem.default_folder_id && folderNameById.has(gem.default_folder_id) && (
+                    <span className="shrink-0 max-w-[45%] truncate text-xs font-normal text-muted-foreground">
+                      {folderNameById.get(gem.default_folder_id)}
+                    </span>
+                  )}
                 </button>
               );
             })}

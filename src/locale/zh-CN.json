@@ -80,6 +80,8 @@
     "newChatBehaviorDescription": "在哪里打开新对话",
     "currentTab": "当前标签页",
     "newTab": "新标签页",
+    "skipDeleteConfirm": "删除对话时不再确认",
+    "skipDeleteConfirmDescription": "危险：单个对话将被立即永久删除，不会弹出确认框，也无法撤销。本插件和平台上的数据都会被删除。批量删除仍会询问确认。",
     "defaultSyncFolder": "默认同步文件夹",
     "defaultSyncFolderDescription": "新同步和扫描的对话将放置在此文件夹中",
     "defaultSyncFolderImported": "收件箱（默认）",
@@ -421,7 +423,16 @@
     "name": "名称",
     "color": "图标颜色",
     "defaultColor": "默认",
-    "customColor": "自定义："
+    "customColor": "自定义：",
+    "defaultTargets": "默认存放来源",
+    "defaultTargetsHint": "从这些 Gem 或 Notebook 发起的新对话会保存到此文件夹。",
+    "addGemTarget": "Gem",
+    "addNotebookTarget": "Notebook",
+    "defaultTargetRemove": "移除 {{name}}",
+    "defaultTargetAdded": "「{{name}}」的新对话将保存到这里",
+    "defaultTargetMoved": "「{{name}}」已从「{{from}}」移到这里",
+    "defaultTargetRemoved": "「{{name}}」不再默认保存到此文件夹",
+    "defaultTargetFailed": "更新默认文件夹失败"
   },
   "folderColor": {
     "indigo": "靛蓝",

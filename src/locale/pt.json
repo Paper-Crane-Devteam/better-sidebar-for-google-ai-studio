@@ -80,6 +80,8 @@
     "newChatBehaviorDescription": "Onde abrir novas conversas",
     "currentTab": "Aba Atual",
     "newTab": "Nova Aba",
+    "skipDeleteConfirm": "Excluir conversas sem confirmação",
+    "skipDeleteConfirmDescription": "Perigo: uma conversa individual é excluída imediatamente e permanentemente, sem diálogo de confirmação e sem como desfazer. Ela é removida aqui e na plataforma. A exclusão em lote continua pedindo confirmação.",
     "defaultSyncFolder": "Pasta de Sincronização Padrão",
     "defaultSyncFolderDescription": "Onde as conversas sincronizadas e escaneadas são colocadas",
     "defaultSyncFolderImported": "Caixa de entrada (padrão)",
@@ -421,7 +423,16 @@
     "name": "Nome",
     "color": "Cor do Ícone",
     "defaultColor": "Padrão",
-    "customColor": "Personalizado:"
+    "customColor": "Personalizado:",
+    "defaultTargets": "Pasta padrão de",
+    "defaultTargetsHint": "Novas conversas iniciadas nestes Gems ou Notebooks são salvas nesta pasta.",
+    "addGemTarget": "Gem",
+    "addNotebookTarget": "Notebook",
+    "defaultTargetRemove": "Remover {{name}}",
+    "defaultTargetAdded": "Novas conversas de \"{{name}}\" serão salvas aqui",
+    "defaultTargetMoved": "\"{{name}}\" foi movido para cá de \"{{from}}\"",
+    "defaultTargetRemoved": "\"{{name}}\" não usa mais esta pasta por padrão",
+    "defaultTargetFailed": "Não foi possível atualizar a pasta padrão"
   },
   "folderColor": {
     "indigo": "Índigo",

@@ -217,6 +217,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
       title: t('folderSettings.title'),
       content: (
         <FolderSettingsDialog
+          folderId={node.data.id}
           initialName={node.data.name}
           initialColor={folderColor}
           onSave={(name, color) => {
@@ -510,6 +511,7 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
           onTogglePin={(id: string, isPinned: boolean) =>
             useAppStore.getState().togglePin(id, 'folders', isPinned)
           }
+          onFolderSettings={!isFile && !isTimeGroup ? handleFolderSettings : undefined}
           style={style}
           dragHandle={dragHandle}
           tree={tree}

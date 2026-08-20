@@ -86,6 +86,8 @@
     "newChatBehaviorDescription": "Where to open new chats",
     "currentTab": "Current Tab",
     "newTab": "New Tab",
+    "skipDeleteConfirm": "Delete conversations without confirmation",
+    "skipDeleteConfirmDescription": "Danger: a single conversation is deleted immediately and permanently, with no confirmation dialog and no way to undo. It is removed here and on the platform. Batch delete still asks for confirmation.",
     "defaultSyncFolder": "Default Sync Folder",
     "defaultSyncFolderDescription": "Where new synced and scanned chats are placed",
     "defaultSyncFolderImported": "Inbox (default)",
@@ -408,7 +410,16 @@
     "name": "Name",
     "color": "Icon Color",
     "defaultColor": "Default",
-    "customColor": "Custom:"
+    "customColor": "Custom:",
+    "defaultTargets": "Default target for",
+    "defaultTargetsHint": "New chats started from these Gems or Notebooks are saved into this folder.",
+    "addGemTarget": "Gem",
+    "addNotebookTarget": "Notebook",
+    "defaultTargetRemove": "Remove {{name}}",
+    "defaultTargetAdded": "New chats from \"{{name}}\" will be saved here",
+    "defaultTargetMoved": "\"{{name}}\" moved here from \"{{from}}\"",
+    "defaultTargetRemoved": "\"{{name}}\" no longer defaults to this folder",
+    "defaultTargetFailed": "Failed to update the default folder"
   },
   "folderColor": {
     "indigo": "Indigo",

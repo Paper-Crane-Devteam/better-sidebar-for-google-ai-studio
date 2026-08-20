@@ -80,6 +80,8 @@
     "newChatBehaviorDescription": "Dónde abrir nuevas conversaciones",
     "currentTab": "Pestaña Actual",
     "newTab": "Nueva Pestaña",
+    "skipDeleteConfirm": "Eliminar conversaciones sin confirmación",
+    "skipDeleteConfirmDescription": "Peligro: una conversación individual se elimina de inmediato y de forma permanente, sin diálogo de confirmación y sin posibilidad de deshacer. Se elimina aquí y en la plataforma. La eliminación por lotes sigue pidiendo confirmación.",
     "defaultSyncFolder": "Carpeta de Sincronización Predeterminada",
     "defaultSyncFolderDescription": "Dónde se colocan las conversaciones sincronizadas y escaneadas",
     "defaultSyncFolderImported": "Bandeja de entrada (predeterminado)",
@@ -421,7 +423,16 @@
     "name": "Nombre",
     "color": "Color del Ícono",
     "defaultColor": "Predeterminado",
-    "customColor": "Personalizado:"
+    "customColor": "Personalizado:",
+    "defaultTargets": "Carpeta predeterminada de",
+    "defaultTargetsHint": "Los chats nuevos iniciados desde estos Gems o Notebooks se guardan en esta carpeta.",
+    "addGemTarget": "Gem",
+    "addNotebookTarget": "Notebook",
+    "defaultTargetRemove": "Quitar {{name}}",
+    "defaultTargetAdded": "Los chats nuevos de \"{{name}}\" se guardarán aquí",
+    "defaultTargetMoved": "\"{{name}}\" se movió aquí desde \"{{from}}\"",
+    "defaultTargetRemoved": "\"{{name}}\" ya no usa esta carpeta por defecto",
+    "defaultTargetFailed": "No se pudo actualizar la carpeta predeterminada"
   },
   "folderColor": {
     "indigo": "Índigo",

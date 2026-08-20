@@ -80,6 +80,8 @@
     "newChatBehaviorDescription": "新しい会話を開く場所",
     "currentTab": "現在のタブ",
     "newTab": "新しいタブ",
+    "skipDeleteConfirm": "確認なしで会話を削除する",
+    "skipDeleteConfirmDescription": "危険: 単一の会話は確認ダイアログなしで即座に完全に削除され、元に戻すことはできません。この拡張機能とプラットフォームの両方から削除されます。一括削除では引き続き確認を求めます。",
     "defaultSyncFolder": "デフォルト同期フォルダ",
     "defaultSyncFolderDescription": "同期・スキャンされた会話の保存先",
     "defaultSyncFolderImported": "受信トレイ（デフォルト）",
@@ -421,7 +423,16 @@
     "name": "名前",
     "color": "アイコンの色",
     "defaultColor": "デフォルト",
-    "customColor": "カスタム:"
+    "customColor": "カスタム:",
+    "defaultTargets": "デフォルト保存先として設定中",
+    "defaultTargetsHint": "これらの Gem または Notebook から始めた新しいチャットは、このフォルダーに保存されます。",
+    "addGemTarget": "Gem",
+    "addNotebookTarget": "Notebook",
+    "defaultTargetRemove": "{{name}} を解除",
+    "defaultTargetAdded": "「{{name}}」の新しいチャットはここに保存されます",
+    "defaultTargetMoved": "「{{name}}」を「{{from}}」からここに移動しました",
+    "defaultTargetRemoved": "「{{name}}」のデフォルト保存先を解除しました",
+    "defaultTargetFailed": "デフォルトフォルダーの更新に失敗しました"
   },
   "folderColor": {
     "indigo": "インディゴ",

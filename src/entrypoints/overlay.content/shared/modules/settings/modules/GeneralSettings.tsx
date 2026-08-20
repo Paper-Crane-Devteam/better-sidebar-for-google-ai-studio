@@ -1,7 +1,8 @@
 import React from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { Separator } from '../../../components/ui/separator';
-import { ChevronDown } from 'lucide-react';
+import { AlertTriangle, ChevronDown } from 'lucide-react';
+import { Switch } from '@/shared/components/ui/switch';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -22,6 +23,8 @@ export const GeneralSettings = () => {
     setNewChatBehavior,
     shortcuts,
     setShortcutVisible,
+    skipDeleteConfirm,
+    setSkipDeleteConfirm,
   } = useSettingsStore();
 
   const { language, setLanguage } = usePegasusStore();
@@ -198,6 +201,24 @@ export const GeneralSettings = () => {
                 </Button>
               </div>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-sm font-medium">
+                  {t('settings.skipDeleteConfirm')}
+                </span>
+              </div>
+              <Switch
+                checked={skipDeleteConfirm ?? false}
+                onCheckedChange={setSkipDeleteConfirm}
+              />
+            </div>
+            <p className="flex items-start gap-2 text-xs text-destructive bg-destructive/10 p-2 rounded">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-px" />
+              <span>{t('settings.skipDeleteConfirmDescription')}</span>
+            </p>
           </div>
         </div>
       </div>

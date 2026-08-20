@@ -17,6 +17,7 @@ interface NodeContextMenuProps extends NodeProps {
   onCreateFolder: (parentId: string) => void;
   onToggleFavorite: (id: string, isFav: boolean) => void;
   onTogglePin?: (id: string, isPinned: boolean) => void;
+  onFolderSettings?: () => void;
 }
 
 export const NodeContextMenu = ({
@@ -30,6 +31,7 @@ export const NodeContextMenu = ({
   isPinned,
   folderColor,
   onTogglePin,
+  onFolderSettings,
 }: NodeContextMenuProps) => {
   const shouldPreventRef = React.useRef(false);
 
@@ -48,6 +50,7 @@ export const NodeContextMenu = ({
     onCreateFolder,
     onToggleFavorite,
     onTogglePin: onTogglePin ?? (() => {}),
+    onFolderSettings,
   });
 
   return (

@@ -5,8 +5,10 @@ import { Check, X } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
+import { FolderDefaultTargetsSection } from './FolderDefaultTargetsSection';
 
 interface FolderSettingsDialogProps {
+  folderId: string;
   initialName: string;
   initialColor: string | null;
   onSave: (name: string, color: string | null) => void;
@@ -14,6 +16,7 @@ interface FolderSettingsDialogProps {
 }
 
 export const FolderSettingsDialog = ({
+  folderId,
   initialName,
   initialColor,
   onSave,
@@ -127,6 +130,9 @@ export const FolderSettingsDialog = ({
           )}
         </div>
       </div>
+
+      {/* Gems / Notebooks that default into this folder — saved immediately */}
+      <FolderDefaultTargetsSection folderId={folderId} />
     </div>
   );
 };

@@ -7,6 +7,12 @@ interface SettingsState {
   geminiStyle: 'default' | 'classic';
   newChatBehavior: 'current-tab' | 'new-tab';
   autoScanLibrary: boolean;
+  /**
+   * When true, deleting a single conversation happens immediately without a
+   * confirmation dialog. Batch delete and folder delete always confirm.
+   * Defaults to false because the deletion is irreversible.
+   */
+  skipDeleteConfirm: boolean;
   overlayPosition: { x: number; y: number };
   lastSelectedGemId: string | null;
   lastSelectedNotebookId: string | null;
@@ -53,6 +59,7 @@ interface SettingsState {
   setGeminiStyle: (style: 'default' | 'classic') => void;
   setNewChatBehavior: (behavior: 'current-tab' | 'new-tab') => void;
   setAutoScanLibrary: (enabled: boolean) => void;
+  setSkipDeleteConfirm: (enabled: boolean) => void;
   setOverlayPosition: (position: { x: number; y: number }) => void;
   setExplorerViewMode: (mode: 'tree' | 'timeline') => void;
   setExplorerSortOrder: (order: 'alpha' | 'date') => void;
@@ -122,6 +129,7 @@ export const useSettingsStore = create<SettingsState>()(
       geminiStyle: 'default',
       newChatBehavior: 'current-tab',
       autoScanLibrary: false,
+      skipDeleteConfirm: false,
       overlayPosition: { x: 16, y: 16 },
       lastSelectedGemId: null,
       lastSelectedNotebookId: null,
@@ -164,6 +172,7 @@ export const useSettingsStore = create<SettingsState>()(
       },
       setNewChatBehavior: (newChatBehavior) => set({ newChatBehavior }),
       setAutoScanLibrary: (autoScanLibrary) => set({ autoScanLibrary }),
+      setSkipDeleteConfirm: (skipDeleteConfirm) => set({ skipDeleteConfirm }),
       setOverlayPosition: (overlayPosition) => set({ overlayPosition }),
       setExplorerViewMode: (viewMode) =>
         set((state) => ({ explorer: { ...state.explorer, viewMode } })),

@@ -4,6 +4,7 @@ import { useI18n } from '@/shared/hooks/useI18n';
 import { modal } from '@/shared/lib/modal';
 import { toast } from '@/shared/lib/toast';
 import { isInboxFolder } from '@/shared/constants/inbox';
+import { useSettingsStore } from '@/shared/lib/settings-store';
 
 export const useDeleteHandler = () => {
   const { t } = useI18n();
@@ -46,6 +47,15 @@ export const useDeleteHandler = () => {
     const name = isFolder
       ? folders.find((f) => f.id === id)?.name
       : conversations.find((c) => c.id === id)?.title || t('common.untitled');
+
+    // Opt-in: skip the confirm dialog for a single conversation.
+    // Folders and multi-select deletes always confirm.
+    const skipConfirm =
+      useSettingsStore.getState().skipDeleteConfirm ?? false;
+    if (skipConfirm && !isFolder && ids.length === 1) {
+      await deleteItem(id, 'file');
+      return;
+    }
 
     const confirmMessage = isFolder
       ? t('node.deleteFolderConfirm', { name })

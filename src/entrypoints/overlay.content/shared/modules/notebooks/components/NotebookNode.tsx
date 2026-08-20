@@ -17,6 +17,7 @@ import {
   navigateToNewChat,
 } from '@/shared/lib/navigation';
 import { useAppStore } from '@/shared/lib/store';
+import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useCurrentConversationId } from '../../../../shared/hooks/useCurrentConversationId';
 import type { NodeRendererProps } from 'react-arborist';
@@ -160,6 +161,10 @@ export const NotebookNode = ({
 
   const handleDeleteConversation = async () => {
     const { deleteItem } = useAppStore.getState();
+    if (useSettingsStore.getState().skipDeleteConfirm ?? false) {
+      await deleteItem(node.data.id, 'file');
+      return;
+    }
     const confirmed = await modal.confirmDelete({
       title: t('node.deleteItem'),
       content: t('node.deleteConfirm', { name: node.data.name }),

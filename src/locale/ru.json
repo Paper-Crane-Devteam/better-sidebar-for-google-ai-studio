@@ -80,6 +80,8 @@
     "newChatBehaviorDescription": "Где открывать новые диалоги",
     "currentTab": "Текущая вкладка",
     "newTab": "Новая вкладка",
+    "skipDeleteConfirm": "Удалять диалоги без подтверждения",
+    "skipDeleteConfirmDescription": "Опасно: отдельный диалог удаляется сразу и безвозвратно, без окна подтверждения и без возможности отмены. Он удаляется здесь и на платформе. Пакетное удаление по-прежнему требует подтверждения.",
     "defaultSyncFolder": "Папка синхронизации по умолчанию",
     "defaultSyncFolderDescription": "Куда помещаются синхронизированные и отсканированные диалоги",
     "defaultSyncFolderImported": "Входящие (по умолчанию)",
@@ -421,7 +423,16 @@
     "name": "Имя",
     "color": "Цвет иконки",
     "defaultColor": "По умолчанию",
-    "customColor": "Пользовательский:"
+    "customColor": "Пользовательский:",
+    "defaultTargets": "Папка по умолчанию для",
+    "defaultTargetsHint": "Новые чаты, начатые из этих Gem или Notebook, сохраняются в эту папку.",
+    "addGemTarget": "Gem",
+    "addNotebookTarget": "Notebook",
+    "defaultTargetRemove": "Убрать {{name}}",
+    "defaultTargetAdded": "Новые чаты из «{{name}}» будут сохраняться здесь",
+    "defaultTargetMoved": "«{{name}}» перемещён сюда из «{{from}}»",
+    "defaultTargetRemoved": "«{{name}}» больше не использует эту папку по умолчанию",
+    "defaultTargetFailed": "Не удалось обновить папку по умолчанию"
   },
   "folderColor": {
     "indigo": "Индиго",
