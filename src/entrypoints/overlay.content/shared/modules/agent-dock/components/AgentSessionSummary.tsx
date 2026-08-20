@@ -12,7 +12,7 @@ import { Check, CheckCircle2, AlertTriangle, Lock, Undo2, X } from 'lucide-react
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { useAppStore } from '@/shared/lib/store';
+import { usePaywallStore } from '@/shared/lib/powerpack-paywall';
 import { useAgentLoopStore } from '../../agent-loop/agent-loop-store';
 import {
   discardSnapshots,
@@ -28,7 +28,7 @@ export const AgentSessionSummary: React.FC = () => {
   const endReason = useAgentLoopStore((s) => s.endReason);
   const history = useAgentLoopStore((s) => s.history);
   const sessionTitle = useAgentLoopStore((s) => s.sessionTitle);
-  const setSettingsOpen = useAppStore((s) => s.setSettingsOpen);
+  const showPaywall = usePaywallStore((s) => s.show);
 
   const undoAvailable = useUndoAvailable();
   const undoBlocked = useUndoBlockedReason();
@@ -163,7 +163,15 @@ export const AgentSessionSummary: React.FC = () => {
 
       <div className="flex items-center gap-2">
         {isPaywall ? (
-          <Button size="sm" className="h-7 text-xs" onClick={() => setSettingsOpen(true)}>
+          <Button
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() =>
+              showPaywall(
+                t('agent.summary.paywallFeature', { defaultValue: 'Agent database writes' }),
+              )
+            }
+          >
             {t('agent.summary.upgrade', { defaultValue: 'See plans' })}
           </Button>
         ) : (

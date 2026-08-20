@@ -135,16 +135,42 @@
     @apply bg-accent/60;
   }
 
-  /* Node hover action bar – transparent background, text fades via mask */
+  /* ─── Node hover action bar ──────────────────────────────────────────
+   * The bar floats over the right edge of the row rather than taking part in
+   * the flex layout, so the title keeps its glyph positions when the pointer
+   * enters the row (no re-truncation jump). The trade-off is that a long
+   * title runs underneath the buttons, so the title container is masked:
+   * fully transparent from where the buttons begin, with a short ramp in
+   * front of it.
+   *
+   * Both hooks come from NodeActionBar, which tags its row with
+   * `data-node-actions` and publishes its measured width as --node-actions-w.
+   * Keying the mask on that attribute means the title only ever fades when a
+   * bar is really there, and the cut lands on the real bar width whether the
+   * row carries one button or four. The fallback covers the widest bar we
+   * ship, so nothing bleeds through before the measurement lands.
+   *
+   * Rows opt in purely by rendering NodeActionBar as a sibling of the title —
+   * no per-tab padding or width bookkeeping.
+   */
   .node-action-bar {
     background: transparent;
   }
 
-  /* Text fade mask when action bar is visible (but not during editing) */
-  .group:hover > .node-text-content:not(.is-editing),
-  .group.node-menu-active > .node-text-content:not(.is-editing) {
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent 100%);
-    mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent 100%);
+  [data-node-actions]:hover > .node-text-content:not(.is-editing),
+  [data-node-actions].node-menu-active > .node-text-content:not(.is-editing) {
+    --node-actions-ramp: 24px;
+    --node-actions-cut: calc(100% - var(--node-actions-w, 72px));
+    -webkit-mask-image: linear-gradient(
+      to right,
+      #000 calc(var(--node-actions-cut) - var(--node-actions-ramp)),
+      transparent var(--node-actions-cut)
+    );
+    mask-image: linear-gradient(
+      to right,
+      #000 calc(var(--node-actions-cut) - var(--node-actions-ramp)),
+      transparent var(--node-actions-cut)
+    );
   }
 
 

@@ -100,7 +100,7 @@ export const TagItem = ({ tag }: TagItemProps) => {
         <div style={{ height: rowHeight }} className="w-full px-1">
           <div
             className={cn(
-              'group flex items-center justify-between px-2 text-sm border border-transparent transition-colors cursor-default h-[calc(100%-2px)] mt-[1px] relative pr-8',
+              'group flex items-center justify-between px-2 pr-2 text-sm border border-transparent transition-colors cursor-default h-[calc(100%-2px)] mt-[1px] relative',
               tag.color
                 ? 'tag-item-colored'
                 : isMenuActive

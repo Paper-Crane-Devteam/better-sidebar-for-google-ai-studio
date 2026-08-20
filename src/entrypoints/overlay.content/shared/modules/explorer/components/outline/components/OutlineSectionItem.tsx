@@ -3,6 +3,7 @@ import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { OverflowTooltip } from '@/shared/components/ui/overflow-tooltip';
 import { toast } from '@/shared/lib/toast';
+import { NodeActionBar } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import type { OutlineSection } from '../types';
 import { OutlineNodeItem } from './OutlineNodeItem';
 
@@ -41,7 +42,7 @@ export function OutlineSectionItem({
     <div ref={activeRef} className="mx-1 rounded-md">
       <div
         className={cn(
-          'group/section flex items-center gap-1 px-2 py-1 rounded-md relative',
+          'group flex items-center gap-1 px-2 py-1 rounded-md relative min-w-0',
           'cursor-pointer hover:bg-accent/50',
         )}
         onClick={() => hasChildren && onToggle()}
@@ -82,43 +83,41 @@ export function OutlineSectionItem({
           {section.turnIndex}
         </span>
 
-        <OverflowTooltip
-          content={section.userQueryFull || section.userQuery}
-          placement="right"
-          interactive
-          className={cn(
-            'text-sm leading-snug truncate flex-1',
-            isActive ? 'text-foreground font-medium' : 'text-foreground',
-          )}
-        >
-          {section.userQuery}
-        </OverflowTooltip>
-
-        <div
-          className="invisible group-hover/section:visible absolute right-1 top-0 bottom-0 flex items-center gap-1 bg-accent/90 rounded-md px-1"
-          data-tooltip-suppress
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            onClick={handleCopyQuery}
-            className="h-5 w-5 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-colors"
-            title={t('outline.copyQuery')}
+        <div className="flex-1 min-w-0 flex items-center overflow-hidden node-text-content">
+          <OverflowTooltip
+            content={section.userQueryFull || section.userQuery}
+            placement="right"
+            interactive
+            className={cn(
+              'text-sm leading-snug truncate flex-1',
+              isActive ? 'text-foreground font-medium' : 'text-foreground',
+            )}
           >
-            <Copy className="h-3.5 w-3.5" />
-          </button>
-          {section.userInDom && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onNavigate(section.userMessageId);
-              }}
-              className="h-5 w-5 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-colors"
-              title={t('outline.navigate')}
-            >
-              <MapPin className="h-3.5 w-3.5" />
-            </button>
-          )}
+            {section.userQuery}
+          </OverflowTooltip>
         </div>
+
+        <NodeActionBar
+          actions={[
+            {
+              icon: <Copy className="h-3.5 w-3.5" />,
+              tooltip: t('outline.copyQuery'),
+              onClick: handleCopyQuery,
+            },
+            ...(section.userInDom
+              ? [
+                  {
+                    icon: <MapPin className="h-3.5 w-3.5" />,
+                    tooltip: t('outline.navigate'),
+                    onClick: (e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      onNavigate(section.userMessageId);
+                    },
+                  },
+                ]
+              : []),
+          ]}
+        />
       </div>
 
       {hasChildren && !isCollapsed && (

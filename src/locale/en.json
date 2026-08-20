@@ -1237,6 +1237,7 @@
       "noToolCallDesc": "The agent's last reply didn't run anything. Read it in the chat — if the task still needs doing, start it again.",
       "ended": "Session ended",
       "paywallDesc": "The free plan lets the agent read your data but not change it. Upgrade to allow writes.",
+      "paywallFeature": "Agent database writes",
       "steps_one": "{{count}} step run",
       "steps_other": "{{count}} steps run",
       "steps": "{{count}} steps run",

@@ -5,6 +5,7 @@ import { useI18n } from '@/shared/hooks/useI18n';
 import { OverflowTooltip } from '@/shared/components/ui/overflow-tooltip';
 import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { toast } from '@/shared/lib/toast';
+import { NodeActionBar } from '@/entrypoints/overlay.content/shared/components/node-action-bar';
 import type { OutlineNode } from '../types';
 import { getNodeIcon } from './getNodeIcon';
 
@@ -135,7 +136,7 @@ export function OutlineNodeItem({
           }
         }}
         className={cn(
-          'group/node flex items-center gap-1 px-2 py-1 rounded-md relative min-w-0',
+          'group flex items-center gap-1 px-2 py-1 rounded-md relative min-w-0',
           'transition-colors duration-100',
           'cursor-pointer hover:bg-accent/50',
         )}
@@ -162,62 +163,60 @@ export function OutlineNodeItem({
 
         {getNodeIcon(node)}
 
-        <OverflowTooltip
-          content={
-            tooltipMarkdown ? (
-              <MarkdownRenderer className="text-xs max-h-[300px] overflow-y-auto custom-scrollbar-inverted tooltip-markdown">
-                {tooltipMarkdown}
-              </MarkdownRenderer>
-            ) : undefined
-          }
-          forceShow={!!tooltipMarkdown}
-          interactive
-          placement="right"
-          tooltipClassName={cn(
-            'max-w-[400px]',
-            // Fix markdown elements for inverted tooltip background (bg-foreground text-background)
-            '[&_.tooltip-markdown]:text-background',
-            '[&_.tooltip-markdown_strong]:text-background',
-            '[&_.tooltip-markdown_em]:text-background',
-            '[&_.tooltip-markdown_code]:bg-background/15 [&_.tooltip-markdown_code]:text-background',
-            '[&_.tooltip-markdown_pre]:bg-background/10 [&_.tooltip-markdown_pre]:border-background/20',
-            '[&_.tooltip-markdown_th]:bg-background/10 [&_.tooltip-markdown_th]:text-background [&_.tooltip-markdown_th]:border-background/20',
-            '[&_.tooltip-markdown_td]:text-background [&_.tooltip-markdown_td]:border-background/20',
-            '[&_.tooltip-markdown_table]:border-background/20',
-            '[&_.tooltip-markdown_a]:text-blue-300',
-            '[&_.tooltip-markdown_blockquote]:border-background/40',
-            // KaTeX formulas inherit color from parent
-            '[&_.tooltip-markdown_.katex]:text-background',
-          )}
-          className={cn(
-            'text-sm leading-snug truncate flex-1',
-            node.type === 'heading'
-              ? 'text-foreground font-medium'
-              : 'text-foreground',
-          )}
-        >
-          {node.label}
-        </OverflowTooltip>
-
-        {node.meta && node.type === 'code-block' && (
-          <span className="text-[10px] px-1 py-1 rounded bg-muted/50 text-muted-foreground/70 font-mono shrink-0">
-            {node.meta}
-          </span>
-        )}
-
-        <div
-          className="invisible group-hover/node:visible absolute right-1 top-0 bottom-0 flex items-center bg-accent/90 rounded-md px-1"
-          data-tooltip-suppress
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            onClick={handleCopy}
-            className="h-5 w-5 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground hover:bg-accent/80 transition-colors"
-            title={t('outline.copy')}
+        <div className="flex-1 min-w-0 flex items-center gap-1 overflow-hidden node-text-content">
+          <OverflowTooltip
+            content={
+              tooltipMarkdown ? (
+                <MarkdownRenderer className="text-xs max-h-[300px] overflow-y-auto custom-scrollbar-inverted tooltip-markdown">
+                  {tooltipMarkdown}
+                </MarkdownRenderer>
+              ) : undefined
+            }
+            forceShow={!!tooltipMarkdown}
+            interactive
+            placement="right"
+            tooltipClassName={cn(
+              'max-w-[400px]',
+              // Fix markdown elements for inverted tooltip background (bg-foreground text-background)
+              '[&_.tooltip-markdown]:text-background',
+              '[&_.tooltip-markdown_strong]:text-background',
+              '[&_.tooltip-markdown_em]:text-background',
+              '[&_.tooltip-markdown_code]:bg-background/15 [&_.tooltip-markdown_code]:text-background',
+              '[&_.tooltip-markdown_pre]:bg-background/10 [&_.tooltip-markdown_pre]:border-background/20',
+              '[&_.tooltip-markdown_th]:bg-background/10 [&_.tooltip-markdown_th]:text-background [&_.tooltip-markdown_th]:border-background/20',
+              '[&_.tooltip-markdown_td]:text-background [&_.tooltip-markdown_td]:border-background/20',
+              '[&_.tooltip-markdown_table]:border-background/20',
+              '[&_.tooltip-markdown_a]:text-blue-300',
+              '[&_.tooltip-markdown_blockquote]:border-background/40',
+              // KaTeX formulas inherit color from parent
+              '[&_.tooltip-markdown_.katex]:text-background',
+            )}
+            className={cn(
+              'text-sm leading-snug truncate flex-1',
+              node.type === 'heading'
+                ? 'text-foreground font-medium'
+                : 'text-foreground',
+            )}
           >
-            <Copy className="h-3.5 w-3.5" />
-          </button>
+            {node.label}
+          </OverflowTooltip>
+
+          {node.meta && node.type === 'code-block' && (
+            <span className="text-[10px] px-1 py-1 rounded bg-muted/50 text-muted-foreground/70 font-mono shrink-0">
+              {node.meta}
+            </span>
+          )}
         </div>
+
+        <NodeActionBar
+          actions={[
+            {
+              icon: <Copy className="h-3.5 w-3.5" />,
+              tooltip: t('outline.copy'),
+              onClick: handleCopy,
+            },
+          ]}
+        />
       </div>
 
       {hasChildren && isExpanded && (

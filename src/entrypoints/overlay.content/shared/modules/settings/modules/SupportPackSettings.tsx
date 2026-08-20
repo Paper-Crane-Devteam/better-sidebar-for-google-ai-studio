@@ -188,17 +188,14 @@ function PurchaseView({ t }: { t: (key: string) => string }) {
             <FeatureItem
               icon={<UIcon icon="fluent-color:bot-sparkle-24" width={14} height={14} />}
               text={t('packs.ppFeatureAgent')}
-              badge={t('packs.comingSoon')}
             />
             <FeatureItem
               icon={<UIcon icon="fluent-color:database-24" width={14} height={14} />}
               text={t('packs.ppFeatureWrite')}
-              badge={t('packs.comingSoon')}
             />
             <FeatureItem
               icon={<UIcon icon="fluent-color:history-24" width={14} height={14} />}
               text={t('packs.ppFeatureHistory')}
-              badge={t('packs.comingSoon')}
             />
             <FeatureItem
               icon={<UIcon icon="fluent-color:share-android-24" width={14} height={14} />}

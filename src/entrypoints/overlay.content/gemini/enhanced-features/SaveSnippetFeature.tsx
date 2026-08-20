@@ -4,7 +4,7 @@ import { useAppStore } from '@/shared/lib/store';
 import { toast } from '@/shared/lib/toast';
 import i18n from '@/locale/i18n';
 import mainStyles from '@/index.scss?inline';
-import { applyShadowStyles } from '@/shared/lib/utils';
+import { applyShadowStyles, htmlToMarkdown } from '@/shared/lib/utils';
 import { SaveSnippetButton } from './SaveSnippetButton';
 import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 import { snippetDragBus } from '@/entrypoints/overlay.content/shared/modules/snippets/snippet-drag-bus';
@@ -127,10 +127,27 @@ export const SaveSnippetFeature = () => {
       // Prefer cached markdown from API response (stored via data attribute or cache map)
       let content = modelResponse.getAttribute(MARKDOWN_CACHE_ATTR) || '';
 
-      // Fallback: try to get from the markdown element's textContent
+      // Fallback: convert the rendered DOM back to markdown.
+      //
+      // The API cache only covers responses that streamed in while this feature was
+      // listening. Anything loaded from history (page refresh, switching chats,
+      // scrolling back) has no cached markdown, and reading `textContent` there threw
+      // away every heading, list marker, code fence and link — the snippet came out as
+      // one flat blob of text. `htmlToMarkdown` reconstructs the formatting from the
+      // same DOM the conversation renderer reads.
       if (!content) {
-        const markdown = modelResponse.querySelector('.markdown');
-        content = markdown?.textContent?.trim() || '';
+        const markdown = modelResponse.querySelector(
+          '.markdown, .model-response-text, .response-content',
+        );
+        if (markdown) {
+          const clone = markdown.cloneNode(true) as HTMLElement;
+          // Screen-reader-only nodes ("Analysis", collapsed thought labels) would
+          // otherwise show up as stray lines in the snippet.
+          clone
+            .querySelectorAll('.cdk-visually-hidden')
+            .forEach((h) => h.remove());
+          content = htmlToMarkdown(clone).trim();
+        }
       }
       if (!content) return null;
 

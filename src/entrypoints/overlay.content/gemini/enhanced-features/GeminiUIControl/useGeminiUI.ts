@@ -187,17 +187,18 @@ export const useGeminiUI = () => {
   ]);
 
   // Handle elements that need to react to sidebar expanded/collapsed state separately
-  useEffect(() => {
-    // Top bar actions offset
-    waitForElement('top-bar-actions').then((el) => {
-      const topBarActions = el as HTMLElement;
-      if (topBarActions) {
-        if (isSidebarExpanded) {
-          topBarActions.style.left = `${storeSidebarWidth + 1}px`;
-        } else {
-          topBarActions.style.left = '57px';
-        }
-      }
-    });
-  }, [isSidebarExpanded, storeSidebarWidth]);
+  // gemini new UI seems put top bar on the right side, so this code is not usable, keep commented, later check if delete or not
+  // useEffect(() => {
+  //   // Top bar actions offset
+  //   waitForElement('top-bar-actions').then((el) => {
+  //     const topBarActions = el as HTMLElement;
+  //     if (topBarActions) {
+  //       if (isSidebarExpanded) {
+  //         topBarActions.style.left = `${storeSidebarWidth + 1}px`;
+  //       } else {
+  //         topBarActions.style.left = '57px';
+  //       }
+  //     }
+  //   });
+  // }, [isSidebarExpanded, storeSidebarWidth]);
 };

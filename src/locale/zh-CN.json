@@ -1217,6 +1217,7 @@
       "noToolCallDesc": "Agent 最后的回复没有执行任何操作。可以在聊天里看看内容，如果任务还需要做，重新发起一次。",
       "ended": "会话结束",
       "paywallDesc": "免费版只允许 Agent 读取数据，升级后可以修改。",
+      "paywallFeature": "Agent 数据库写入",
       "steps_one": "执行了 {{count}} 步",
       "steps_other": "执行了 {{count}} 步",
       "steps": "执行了 {{count}} 步",

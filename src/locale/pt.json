@@ -1218,6 +1218,7 @@
       "noToolCallDesc": "A última resposta do agente não executou nada. Leia no chat — se a tarefa ainda precisa ser feita, comece de novo.",
       "ended": "Sessão encerrada",
       "paywallDesc": "O plano gratuito permite que o agente leia seus dados, mas não os altere. Faça upgrade para permitir escritas.",
+      "paywallFeature": "Escrita no banco de dados do agente",
       "steps_one": "{{count}} etapa executada",
       "steps_other": "{{count}} etapas executadas",
       "steps": "{{count}} etapas executadas",
