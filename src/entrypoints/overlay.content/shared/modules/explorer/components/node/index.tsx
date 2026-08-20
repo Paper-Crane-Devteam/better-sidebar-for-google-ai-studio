@@ -12,7 +12,8 @@ import {
   Inbox,
 } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
-import { navigateToConversation } from '@/shared/lib/navigation';
+import { UIcon } from '@/shared/components/ui/icon';
+import { navigateToConversation, navigateToGem, navigateToNotebook } from '@/shared/lib/navigation';
 import { useAppStore } from '@/shared/lib/store';
 import { modal } from '@/shared/lib/modal';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -35,8 +36,10 @@ import { isInboxFolder } from '@/shared/constants/inbox';
 
 export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   const { t } = useI18n();
-  const { onNewChat, onNewChatInFolder } = useExplorerContext();
+  const { onNewChat, onNewChatInFolder, createPendingAndFocus } = useExplorerContext();
   const {
+    gems,
+    notebooks,
     conversationTags,
     addTagToConversation,
     removeTagFromConversation,
@@ -77,6 +80,16 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
   const folderColor = !isFile && !isTimeGroup ? node.data?.data?.color : null;
   const url = isFile ? node.data?.data?.external_url : undefined;
   const isInbox = isFolder && isInboxFolder(node.data.id);
+
+  // Gem / Notebook that uses this folder as its default folder.
+  // When present, the hover action bar gets an extra "new gem/notebook chat" button.
+  const isPlainFolder = isFolder && !isTimeGroup;
+  const boundGem = isPlainFolder
+    ? gems.find((g) => g.default_folder_id === node.data.id && !g.is_deleted)
+    : undefined;
+  const boundNotebook = isPlainFolder && !boundGem
+    ? notebooks.find((n) => n.default_folder_id === node.data.id && !n.is_deleted)
+    : undefined;
 
   // --- Batch selection state ---
   const { isBatchMode, selectedIds: batchSelectedIds } = ui.explorer.batch;
@@ -444,6 +457,30 @@ export const Node = ({ node, style, dragHandle, tree, preview }: NodeProps) => {
                       e.preventDefault();
                       node.select();
                       onNewChatInFolder(node.data.id);
+                    },
+                  }] : []),
+                  // New gem chat button when this folder is a gem's default folder
+                  ...(boundGem ? [{
+                    icon: <UIcon icon="tabler:diamond" className="h-3.5 w-3.5" />,
+                    tooltip: t('newChatButton.folderGemChatTooltip', { name: boundGem.name }),
+                    onClick: (e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      node.select();
+                      createPendingAndFocus?.(node.data.id);
+                      navigateToGem(boundGem.id);
+                    },
+                  }] : []),
+                  // New notebook chat button when this folder is a notebook's default folder
+                  ...(boundNotebook ? [{
+                    icon: <UIcon icon="tabler:notebook" className="h-3.5 w-3.5" />,
+                    tooltip: t('newChatButton.folderNotebookChatTooltip', { name: boundNotebook.name }),
+                    onClick: (e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      node.select();
+                      createPendingAndFocus?.(node.data.id);
+                      navigateToNotebook(boundNotebook.id);
                     },
                   }] : []),
                 ]}

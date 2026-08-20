@@ -195,6 +195,14 @@ export type ExtensionMessage = (
       payload: { conversationId: string };
     }
   | {
+      /**
+       * Delete specific messages inside one conversation. Used by the stale-row
+       * cleanup — see `shared/lib/stale-messages.ts` for how the ids are derived.
+       */
+      type: 'DELETE_MESSAGES_BY_IDS';
+      payload: { conversationId: string; ids: string[] };
+    }
+  | {
       type: 'BULK_INSERT_MESSAGES';
       payload: {
         conversationId: string;

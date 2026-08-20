@@ -40,6 +40,7 @@ export function useInitConversationMessages() {
     setIsLoading,
     setFetchedForUrl,
     setIsOnConversation,
+    setDbRows,
     fetchedForUrl,
     messages,
   } = useConversationMessagesStore();
@@ -92,6 +93,20 @@ export function useInitConversationMessages() {
         const allMessages: any[] = response.data;
         const idsToDelete = await dedupModelMessages(allMessages);
 
+        // Snapshot for stale-row detection. Keeps `order_index`, which the
+        // merged `messages` list cannot be trusted for (interceptor rows have
+        // no order). Rows dedup just removed are excluded.
+        setDbRows(
+          convo.id,
+          allMessages
+            .filter((msg: any) => !idsToDelete.includes(msg.id))
+            .map((msg: any) => ({
+              id: msg.id,
+              order_index: msg.order_index,
+              message_type: msg.message_type,
+            })),
+        );
+
         const dbMessages: ConversationMessage[] = allMessages
           .filter(
             (msg: any) =>
@@ -131,12 +146,25 @@ export function useInitConversationMessages() {
     const parsed = adapter.parseInterceptorEvent(detail);
     if (!parsed) return;
 
-    const { conversationId: eventConvoId, messages: parsedMessages, replaceAfterMessageId } = parsed;
+    const {
+      conversationId: eventConvoId,
+      messages: parsedMessages,
+      replaceAfterMessageId,
+      source,
+    } = parsed;
     const urlConvoId = adapter.extractExternalId(pathRef.current);
     if (!urlConvoId || eventConvoId !== urlConvoId) return;
 
     // Mark as on-conversation in case this fires before the DB fetch path runs
     useConversationMessagesStore.getState().setIsOnConversation(true);
+
+    // Only an authoritative history page tells us which turns are still alive.
+    // A single streamed turn (no `source`) must never feed the diff.
+    if (source === 'history') {
+      useConversationMessagesStore
+        .getState()
+        .addLiveIds(parsedMessages.map((m) => m.id).filter(Boolean));
+    }
 
     // On regeneration, remove stale messages after the anchor before merging new ones
     if (replaceAfterMessageId) {

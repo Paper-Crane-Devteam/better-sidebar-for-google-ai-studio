@@ -344,7 +344,9 @@
     "gemItemTooltip": "Clic: Seleccionar un Gem · Clic derecho: Seleccionar un Gem",
     "gemItemTooltipWithLast": "Clic: Chatear con {{name}} · Clic derecho: Seleccionar un Gem",
     "notebookItemTooltip": "Clic: Seleccionar un Notebook · Clic derecho: Seleccionar un Notebook",
-    "notebookItemTooltipWithLast": "Clic: Chatear con {{name}} · Clic derecho: Seleccionar un Notebook"
+    "notebookItemTooltipWithLast": "Clic: Chatear con {{name}} · Clic derecho: Seleccionar un Notebook",
+    "folderGemChatTooltip": "Nuevo chat con el Gem \"{{name}}\"",
+    "folderNotebookChatTooltip": "Nuevo chat con el Notebook \"{{name}}\""
   },
   "favorites": {
     "noFavoritesFound": "No se encontraron favoritos que coincidan con tus filtros.",
@@ -914,7 +916,17 @@
     "restoreOutline": "Restaurar esquema",
     "restoreToCompactView": "Restaurar a vista compacta",
     "collapseToIcon": "Contraer a icono",
-    "expandToFullOutline": "Expandir a esquema completo"
+    "expandToFullOutline": "Expandir a esquema completo",
+    "staleFound": "Se encontraron {{count}} mensajes residuales en esta conversación: haz clic para revisar",
+    "staleConfirm": "Haz clic de nuevo para eliminar {{count}} mensajes residuales",
+    "staleCleaning": "Eliminando...",
+    "staleCleaned": "Se eliminaron {{count}} mensajes residuales",
+    "staleCleanupFailed": "No se pudieron eliminar los mensajes residuales",
+    "staleFound": "Se encontraron {{count}} mensajes residuales en esta conversación — haz clic para revisar",
+    "staleConfirm": "Haz clic de nuevo para eliminar {{count}} mensajes residuales",
+    "staleCleaning": "Eliminando...",
+    "staleCleaned": "Se eliminaron {{count}} mensajes residuales",
+    "staleCleanupFailed": "No se pudieron eliminar los mensajes residuales"
   },
   "firstInstall": {
     "title": "¿Importar lista de conversaciones?",

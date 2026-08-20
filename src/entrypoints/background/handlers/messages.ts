@@ -35,6 +35,15 @@ export async function handleMessages(
         return { success: false, error: (e as Error).message };
       }
     }
+    case 'DELETE_MESSAGES_BY_IDS': {
+      try {
+        const { conversationId, ids } = message.payload;
+        const deleted = await messageRepo.deleteByIds(conversationId, ids);
+        return { success: true, data: deleted };
+      } catch (e: unknown) {
+        return { success: false, error: (e as Error).message };
+      }
+    }
     case 'BULK_INSERT_MESSAGES': {
       try {
         const { conversationId, messages } = message.payload;

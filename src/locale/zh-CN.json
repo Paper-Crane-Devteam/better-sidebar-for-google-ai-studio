@@ -344,7 +344,9 @@
     "gemItemTooltip": "点击：选择 Gem · 右键：选择 Gem",
     "gemItemTooltipWithLast": "点击：与 {{name}} 对话 · 右键：选择 Gem",
     "notebookItemTooltip": "点击：选择 Notebook · 右键：选择 Notebook",
-    "notebookItemTooltipWithLast": "点击：与 {{name}} 对话 · 右键：选择 Notebook"
+    "notebookItemTooltipWithLast": "点击：与 {{name}} 对话 · 右键：选择 Notebook",
+    "folderGemChatTooltip": "用 Gem「{{name}}」新建对话",
+    "folderNotebookChatTooltip": "用 Notebook「{{name}}」新建对话"
   },
   "favorites": {
     "noFavoritesFound": "未找到匹配筛选条件的收藏",
@@ -913,7 +915,17 @@
     "restoreOutline": "恢复大纲",
     "restoreToCompactView": "恢复为紧凑视图",
     "collapseToIcon": "折叠为图标",
-    "expandToFullOutline": "展开完整大纲"
+    "expandToFullOutline": "展开完整大纲",
+    "staleFound": "这个对话里有 {{count}} 条残留消息，点击查看",
+    "staleConfirm": "再点一次删除 {{count}} 条残留消息",
+    "staleCleaning": "正在删除...",
+    "staleCleaned": "已删除 {{count}} 条残留消息",
+    "staleCleanupFailed": "删除残留消息失败",
+    "staleFound": "此对话中发现 {{count}} 条残留消息 — 点击查看",
+    "staleConfirm": "再次点击以移除 {{count}} 条残留消息",
+    "staleCleaning": "正在移除...",
+    "staleCleaned": "已移除 {{count}} 条残留消息",
+    "staleCleanupFailed": "无法移除残留消息"
   },
   "firstInstall": {
     "title": "是否导入对话列表？",

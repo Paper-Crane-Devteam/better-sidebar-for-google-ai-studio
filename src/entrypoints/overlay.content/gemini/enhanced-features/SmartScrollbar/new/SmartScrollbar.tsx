@@ -3,6 +3,7 @@ import { List } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { useConversationNodes } from './useConversationNodes';
+import { StaleCleanupButton } from './StaleCleanupButton';
 import type { ConversationNode } from './types';
 import { Z_INDEX } from '@/shared/lib/z-index';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -82,23 +83,36 @@ export const SmartScrollbar: React.FC = () => {
           maxHeight: expanded ? `${MAX_PANEL_HEIGHT}px` : `${MAX_DOT_HEIGHT}px`,
         }}
       >
-        {/* Outline toggle icon */}
-        <button
-          onClick={() => setExpanded((v) => !v)}
+        {/* Header: outline toggle, plus the stale-cleanup button when there is
+            something to clean. Stacks vertically while collapsed (the bar is
+            only 32px wide) and sits on one row once expanded. */}
+        <div
           className={cn(
-            'flex items-center gap-2 shrink-0',
-            'transition-colors duration-150',
-            'hover:bg-accent/60',
-            expanded ? 'px-3 py-2 border-b border-border/30' : 'p-2 self-center',
+            'flex shrink-0',
+            expanded
+              ? 'flex-row items-center border-b border-border/30'
+              : 'flex-col items-center',
           )}
         >
-          <List className="h-4 w-4 shrink-0 text-muted-foreground" />
-          {expanded && (
-            <span className="text-xs font-medium text-muted-foreground truncate animate-in fade-in duration-200">
-              {t('smartScrollbar.topics')}
-            </span>
-          )}
-        </button>
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className={cn(
+              'flex items-center gap-2 min-w-0 flex-1',
+              'transition-colors duration-150',
+              'hover:bg-accent/60',
+              expanded ? 'px-3 py-2' : 'p-2 self-center',
+            )}
+          >
+            <List className="h-4 w-4 shrink-0 text-muted-foreground" />
+            {expanded && (
+              <span className="text-xs font-medium text-muted-foreground truncate animate-in fade-in duration-200">
+                {t('smartScrollbar.topics')}
+              </span>
+            )}
+          </button>
+
+          <StaleCleanupButton expanded={expanded} />
+        </div>
 
         {/* Content area */}
         {expanded ? (

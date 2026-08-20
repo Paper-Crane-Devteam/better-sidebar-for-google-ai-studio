@@ -102,6 +102,14 @@ export function handleChatContentResponse(response: any, url: string) {
             detail: {
               conversationId: chatHistory[0].conversation_id,
               messages: chatHistory,
+              // `source: 'history'` marks this as an authoritative page of the
+              // conversation's LIVE history — Gemini only returns the active
+              // branch here, so any DB row inside this window that is missing
+              // from it is stale (left behind by a pre-fix re-edit/regenerate).
+              // `generate.ts` dispatches the same event for a single new turn
+              // and deliberately does NOT set this, because diffing against
+              // one turn would mark the whole conversation stale.
+              source: 'history',
             }
           })
         );

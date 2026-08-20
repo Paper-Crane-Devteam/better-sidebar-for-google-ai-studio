@@ -344,7 +344,9 @@
     "gemItemTooltip": "Клик: Выбрать Gem · Правый клик: Выбрать Gem",
     "gemItemTooltipWithLast": "Клик: Чат с {{name}} · Правый клик: Выбрать Gem",
     "notebookItemTooltip": "Клик: Выбрать Notebook · Правый клик: Выбрать Notebook",
-    "notebookItemTooltipWithLast": "Клик: Чат с {{name}} · Правый клик: Выбрать Notebook"
+    "notebookItemTooltipWithLast": "Клик: Чат с {{name}} · Правый клик: Выбрать Notebook",
+    "folderGemChatTooltip": "Новый чат с Gem «{{name}}»",
+    "folderNotebookChatTooltip": "Новый чат с Notebook «{{name}}»"
   },
   "favorites": {
     "noFavoritesFound": "Не найдено избранного, соответствующего вашим фильтрам.",
@@ -914,7 +916,17 @@
     "restoreOutline": "Восстановить структуру",
     "restoreToCompactView": "Вернуть компактный вид",
     "collapseToIcon": "Свернуть в иконку",
-    "expandToFullOutline": "Развернуть полную структуру"
+    "expandToFullOutline": "Развернуть полную структуру",
+    "staleFound": "В этом разговоре найдено {{count}} остаточных сообщений — нажмите для проверки",
+    "staleConfirm": "Нажмите снова, чтобы удалить {{count}} остаточных сообщений",
+    "staleCleaning": "Удаление...",
+    "staleCleaned": "Удалено {{count}} остаточных сообщений",
+    "staleCleanupFailed": "Не удалось удалить остаточные сообщения",
+    "staleFound": "В этом диалоге найдено {{count}} остаточных сообщений — нажмите для просмотра",
+    "staleConfirm": "Нажмите ещё раз, чтобы удалить {{count}} остаточных сообщений",
+    "staleCleaning": "Удаление...",
+    "staleCleaned": "Удалено {{count}} остаточных сообщений",
+    "staleCleanupFailed": "Не удалось удалить остаточные сообщения"
   },
   "firstInstall": {
     "title": "Импортировать список разговоров?",

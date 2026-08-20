@@ -344,7 +344,9 @@
     "gemItemTooltip": "クリック：Gem を選択 · 右クリック：Gem を選択",
     "gemItemTooltipWithLast": "クリック：{{name}} とチャット · 右クリック：Gem を選択",
     "notebookItemTooltip": "クリック：Notebook を選択 · 右クリック：Notebook を選択",
-    "notebookItemTooltipWithLast": "クリック：{{name}} とチャット · 右クリック：Notebook を選択"
+    "notebookItemTooltipWithLast": "クリック：{{name}} とチャット · 右クリック：Notebook を選択",
+    "folderGemChatTooltip": "Gem「{{name}}」で新しいチャット",
+    "folderNotebookChatTooltip": "Notebook「{{name}}」で新しいチャット"
   },
   "favorites": {
     "noFavoritesFound": "フィルタに一致するお気に入りが見つかりません。",
@@ -914,7 +916,17 @@
     "restoreOutline": "アウトラインを復元",
     "restoreToCompactView": "コンパクトビューに戻す",
     "collapseToIcon": "アイコンに折りたたむ",
-    "expandToFullOutline": "完全なアウトラインに展開"
+    "expandToFullOutline": "完全なアウトラインに展開",
+    "staleFound": "この会話に {{count}} 件の残存メッセージが見つかりました。クリックして確認してください",
+    "staleConfirm": "もう一度クリックすると {{count}} 件の残存メッセージを削除します",
+    "staleCleaning": "削除中...",
+    "staleCleaned": "{{count}} 件の残存メッセージを削除しました",
+    "staleCleanupFailed": "残存メッセージを削除できませんでした",
+    "staleFound": "この会話に {{count}} 件の残留メッセージがあります — クリックして確認",
+    "staleConfirm": "もう一度クリックして {{count}} 件の残留メッセージを削除",
+    "staleCleaning": "削除中...",
+    "staleCleaned": "{{count}} 件の残留メッセージを削除しました",
+    "staleCleanupFailed": "残留メッセージを削除できませんでした"
   },
   "firstInstall": {
     "title": "会話リストをインポートしますか？",

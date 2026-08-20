@@ -350,7 +350,9 @@
     "gemItemTooltip": "Click: Select a Gem · Right-click: Select a Gem",
     "gemItemTooltipWithLast": "Click: Chat with {{name}} · Right-click: Select a Gem",
     "notebookItemTooltip": "Click: Select a Notebook · Right-click: Select a Notebook",
-    "notebookItemTooltipWithLast": "Click: Chat with {{name}} · Right-click: Select a Notebook"
+    "notebookItemTooltipWithLast": "Click: Chat with {{name}} · Right-click: Select a Notebook",
+    "folderGemChatTooltip": "New chat with Gem \"{{name}}\"",
+    "folderNotebookChatTooltip": "New chat with Notebook \"{{name}}\""
   },
   "favorites": {
     "noFavoritesFound": "No favorites found matching your filters.",
@@ -900,7 +902,12 @@
     "restoreOutline": "Restore outline",
     "restoreToCompactView": "Restore to compact view",
     "collapseToIcon": "Collapse to icon",
-    "expandToFullOutline": "Expand to full outline"
+    "expandToFullOutline": "Expand to full outline",
+    "staleFound": "{{count}} leftover messages found in this conversation — click to review",
+    "staleConfirm": "Click again to remove {{count}} leftover messages",
+    "staleCleaning": "Removing...",
+    "staleCleaned": "Removed {{count}} leftover messages",
+    "staleCleanupFailed": "Could not remove the leftover messages"
   },
   "outline": {
     "title": "Outline",

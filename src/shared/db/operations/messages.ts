@@ -78,6 +78,37 @@ export const messageRepo = {
   },
 
   /**
+   * Delete a specific set of messages, scoped to one conversation.
+   *
+   * The `conversation_id` predicate is not redundant: ids arrive from the content
+   * script, and scoping the statement means a wrong id can only ever affect the
+   * conversation the caller is actually looking at. Used by the stale-row cleanup
+   * (see `shared/lib/stale-messages.ts`).
+   *
+   * Returns the number of rows actually removed.
+   */
+  deleteByIds: async (
+    conversationId: string,
+    ids: string[],
+  ): Promise<number> => {
+    if (ids.length === 0) return 0;
+
+    const placeholders = ids.map(() => '?').join(',');
+    const before = await runQuery(
+      `SELECT COUNT(*) as n FROM messages WHERE conversation_id = ? AND id IN (${placeholders})`,
+      [conversationId, ...ids],
+    );
+    const matched = before[0]?.n ?? 0;
+    if (matched === 0) return 0;
+
+    await runCommand(
+      `DELETE FROM messages WHERE conversation_id = ? AND id IN (${placeholders})`,
+      [conversationId, ...ids],
+    );
+    return matched;
+  },
+
+  /**
    * Delete all messages in a conversation that come after the given anchor message
    * (by order_index). Used for regeneration: keeps everything up to and including
    * the anchor, removes everything after it.
