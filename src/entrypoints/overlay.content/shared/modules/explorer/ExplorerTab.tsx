@@ -180,6 +180,35 @@ export const ExplorerTab = ({
     onNewChat();
   }, [createPendingEntry, onNewChat]);
 
+  // Resolve the target folder for a new gem/notebook chat.
+  // Priority: currently selected folder → gem/notebook default folder → inbox.
+  const resolveNewChatFolder = useCallback((
+    gemId?: string | null,
+    notebookId?: string | null,
+  ): string => {
+    const platform = useAppStore.getState().ui.overlay.currentPlatform;
+
+    // 1. Selected folder wins (virtual time groups don't count)
+    const node = selectedNodeRef.current;
+    if (node && node.data.type === 'folder' && !node.data.data?.isTimeGroup) {
+      return node.data.id;
+    }
+
+    // 2. Gem / notebook default folder
+    const { gems: allGems, notebooks: allNotebooks } = useAppStore.getState();
+    if (gemId) {
+      const gem = allGems.find((g) => g.id === gemId);
+      if (gem?.default_folder_id) return gem.default_folder_id;
+    }
+    if (notebookId) {
+      const notebook = allNotebooks.find((n) => n.id === notebookId);
+      if (notebook?.default_folder_id) return notebook.default_folder_id;
+    }
+
+    // 3. Inbox
+    return INBOX_FOLDER_ID(platform);
+  }, []);
+
   // Utility: create a pending entry in a folder, expand it, and scroll to the entry.
   // Used by NewChatButton dropdown items (gem/notebook) that navigate independently.
   const createPendingAndFocus = useCallback((folderId: string | null) => {
@@ -462,6 +491,7 @@ export const ExplorerTab = ({
       pendingEntry,
       createPendingEntry,
       createPendingAndFocus,
+      resolveNewChatFolder,
       updatePendingTitle,
       commitPendingEditing,
       startPendingEditing,
@@ -555,7 +585,7 @@ export const ExplorerTab = ({
       </div>
 
       {/* Import Chat List Tip (shown if user never imported & never dismissed) */}
-      <ImportChatListTip />
+      <ImportChatListTip onImport={handleScanLibrary} />
 
       {/* OUTLINE Section (collapsible, at the bottom) */}
       <OutlineSection fillAvailable={!isChatsSectionExpanded} />

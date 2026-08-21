@@ -1,21 +1,21 @@
-# ✨ v2.9.1 — Carpetas predeterminadas y barra de selección
+# ✨ v2.9.1 — Carpetas predeterminadas y barra de herramientas de selección
 
-Una actualización rápida después de la 2.9.0, construida casi por completo a partir de vuestros comentarios. Gracias por los reportes. 🙏
+Esta es una versión de iteración rápida basada directamente en sus comentarios. Gracias a todos los que aportaron sugerencias. 🙏
 
-## ✨ Novedades
+## ✨ Nuevas funciones
 
-*   **📁 Carpeta predeterminada para Gems y Notebooks:** Asigna una carpeta predeterminada a cualquier Gem o Notebook. Al iniciar un chat nuevo desde ahí, la conversación va directamente a esa carpeta, sin tener que arrastrarla después.
-*   **⚡ Gestiona las carpetas predeterminadas desde la carpeta:** Los ajustes de carpeta ahora listan todos los Gems y Notebooks que la usan como destino predeterminado, así que puedes vincularlos o desvincularlos ahí mismo. Y cuando una carpeta es el destino de alguno, su fila al pasar el ratón gana un botón extra para iniciar directamente ese chat.
-*   **🗑️ Opcional: eliminar conversaciones sin confirmación:** Desactivado por defecto. Actívalo en Ajustes → General y eliminar una conversación individual se salta el diálogo por completo: inmediato, permanente, sin deshacer, y se borra tanto aquí como en la plataforma. La eliminación por lotes sigue pidiendo confirmación.
-*   **🖍️ Barra de herramientas al seleccionar texto:** Selecciona cualquier texto en una conversación y aparecerá una pequeña barra justo encima. Puedes pedirle a la IA que explique o resuma la selección, guardarla como snippet o copiarla. Configurable en los ajustes: elige qué acciones se muestran o desactívala por completo.
+*   **📁 Carpetas predeterminadas para Gems y Notebooks:** Ahora puedes asignar una carpeta predeterminada a cualquier Gem o Notebook. Cuando inicies una nueva conversación utilizando ese ajuste preestablecido, se ubicará automáticamente en la carpeta asignada, ahorrándote el tener que moverla manualmente más tarde.
+*   **⚡ Gestionar asociaciones predeterminadas desde las carpetas:** El panel de configuración de la carpeta ahora enumera todos los Gems y Notebooks que la usan como su carpeta predeterminada, lo que te permite vincularlos o desvincularlos directamente. Además, cuando una carpeta se establece como predeterminada, se agrega un botón de acceso directo a su barra de acción emergente, lo que te permite crear una conversación relacionada con un solo clic.
+*   **🗑️ Opcional: Omitir la confirmación de eliminación:** Esta función está deshabilitada de forma predeterminada. Una vez habilitada en "Configuración → General", eliminar una sola conversación omitirá el cuadro de diálogo de confirmación. Ten en cuenta: esta acción es inmediata, permanente y no se puede deshacer; eliminará los datos tanto de la extensión como de la plataforma en la nube. Las eliminaciones masivas seguirán solicitando confirmación.
+*   **🖍️ Barra de herramientas de selección de texto:** Al resaltar texto en una conversación, aparecerá una barra de herramientas compacta sobre él. Puedes pedirle a la IA que explique o resuma la selección, guardarla como un Snippet (fragmento) o simplemente copiarla. Puedes personalizar qué acciones se muestran o deshabilitar la barra de herramientas por completo en la configuración.
 
-## 🐛 Correcciones
+## 🐛 Correcciones de errores
 
-*   **⚪ Los puntos grises en conversaciones antiguas ya se pueden limpiar.** La v2.9.0 evitó que los chats nuevos dejaran puntos inservibles, pero los hilos existentes conservaban los suyos. No hice un script de limpieza entonces porque no quería arriesgar el historial de nadie. Esta es la versión segura: cuando una conversación tiene registros residuales, aparece un botón de limpieza en la parte superior de la Smart Scrollbar. Un clic para armarlo, otro para confirmar, listo. Solo elimina registros que la propia conversación ya no referencia, nunca toca historial que no haya verificado, y se detiene por completo si algo no cuadra.
-*   **⋯ El menú nativo de 3 puntos de Gemini estaba mal posicionado.** Tenías razón, esto era culpa mía: parte del CSS de la extensión se filtraba al menú de acciones de Google y le movía la posición. Corregido.
-*   **📂 Los botones de acción de carpeta se mezclaban con nombres largos.** Antes, los nombres de carpeta largos se transparentaban por debajo de los botones flotantes y quedaba todo ilegible. Ahora el nombre se recorta limpiamente detrás de ellos.
-*   **📝 Los snippets perdían el formato Markdown.** Al guardar un snippet se conservaba el texto pero se perdía el formato. Localizado y corregido: los encabezados, las listas, los bloques de código y todo lo demás sobreviven al guardado.
+*   **⚪ Limpieza de puntos grises no válidos en chats históricos:** En la versión 2.9.0, optimizamos la representación de nuevas conversaciones para evitar que quedaran puntos de registro no válidos. Para garantizar la seguridad absoluta de tus datos históricos, ahora proporcionamos un método de limpieza seguro: cuando existen registros residuales en una conversación, aparecerá un botón de limpieza en la parte superior del Smart Scrollbar (barra de desplazamiento inteligente). Después de hacer clic y confirmar, el sistema solo eliminará los registros no válidos y no referenciados sin afectar ningún historial normal. Si se detectan anomalías en los datos, la operación de limpieza se cancelará automáticamente.
+*   **⋯ Se solucionó la desalineación del menú nativo de Gemini:** Se solucionó un problema en el que los conflictos de CSS de la extensión causaban que el menú nativo "Más acciones" de Google estuviera desalineado.
+*   **📂 Se solucionaron los problemas de visualización con nombres de carpeta largos:** Se solucionó un problema en el que los nombres de carpeta largos se superponían con los botones de acción emergentes. Los nombres excesivamente largos ahora se truncan y ocultan correctamente.
+*   **📝 Se solucionó la pérdida de formato Markdown en los Snippets:** Se solucionó un problema en el que se perdía el formato del texto al guardar un Snippet. Todo el formato Markdown, incluidos los encabezados, las listas y los bloques de código, ahora se conserva por completo.
 
 ***
 
-Versión pequeña, respuesta rápida. Seguid enviando reportes: esta versión existe gracias a ellos.
+Gracias por tu continuo apoyo y comentarios. Seguiremos escuchando tus sugerencias para optimizar la experiencia de la extensión.

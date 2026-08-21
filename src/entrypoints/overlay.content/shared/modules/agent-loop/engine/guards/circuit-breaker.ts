@@ -16,6 +16,7 @@
  */
 
 import { agentEventBus } from '../../event-bus';
+import { identityParams } from '../parser/tool-schema';
 
 // ─── Thresholds ──────────────────────────────────────────────────────────────
 
@@ -105,10 +106,16 @@ export class CircuitBreaker {
   /**
    * Compute a canonical signature for a tool call's params.
    * Ignores key order to prevent false negatives.
+   *
+   * ⚠️ Also ignores the human-facing params (`change_summary`). Those are prose the AI
+   * rewrites freely, so counting them would let an AI re-issuing one broken statement
+   * slip past this check simply by rephrasing its explanation — which is precisely the
+   * situation the check exists for.
    */
   private toolCallSignature(params: Record<string, string>): string {
-    const keys = Object.keys(params).sort();
-    return JSON.stringify(params, keys);
+    const source = identityParams(params);
+    const keys = Object.keys(source).sort();
+    return JSON.stringify(source, keys);
   }
 
   /**

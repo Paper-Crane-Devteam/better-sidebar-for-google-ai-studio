@@ -6,6 +6,7 @@
 
 import { create } from 'zustand';
 import { useAgentViewStore } from './agent-view-store';
+import { toolCallRecorder } from './records';
 import type {
   AgentLoopStatus,
   AgentEndReason,
@@ -226,7 +227,16 @@ export const useAgentLoopStore = create<AgentLoopStoreState>((set) => ({
   // A session started in a brand new chat has no conversation id yet; adopt the
   // one the platform assigns after the first message is sent.
   attachSessionConversation: (id) =>
-    set((state) => (state.sessionConversationId ? {} : { sessionConversationId: id })),
+    set((state) => {
+      if (state.sessionConversationId) return {};
+      // The ledger adopts it at the same moment, and backfills the rows already
+      // written against a null conversation — the card lookup is scoped by
+      // conversation, so those rows would otherwise be invisible on their own page.
+      // Placed here rather than in the caller because this is where the decision
+      // "we didn't have an id and now we do" is actually made.
+      toolCallRecorder.claimConversation(id);
+      return { sessionConversationId: id };
+    }),
 
   recordExecutedCall: (fingerprint, call) =>
     set((state) => ({

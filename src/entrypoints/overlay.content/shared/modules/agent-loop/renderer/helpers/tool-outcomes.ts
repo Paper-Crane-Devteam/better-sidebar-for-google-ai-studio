@@ -15,6 +15,11 @@
  * This file is the inverse of `engine/stages/handoff/formatter.ts`. The grammar
  * constants come from there rather than being retyped, because a drift between the
  * two ends shows up as every card silently going back to "not run".
+ *
+ * Each section now carries the digest of the call it answers, so lining the two up is
+ * a lookup. The label/position heuristic below is still here for everything written
+ * before that — and for sections that lost the marker on the way through Gemini — but
+ * it no longer runs on anything a key already claimed.
  */
 
 import {
@@ -22,7 +27,10 @@ import {
   RESULTS_HEADER,
   SECTION_SEPARATOR,
   USER_INSTRUCTION_HEADER,
+  readSectionKey,
+  stripSectionKey,
 } from '../../engine/stages/handoff/formatter';
+import { buildToolCallKey } from '../../execution-policy';
 import { RESULT_TAG } from '../constants';
 import type { ExtractedToolCall } from './tool-parser';
 
@@ -31,8 +39,16 @@ import type { ExtractedToolCall } from './tool-parser';
 /** A single tool result section extracted from a user message */
 export interface ToolResultEntry {
   toolName: string;
-  /** Short description from the ### header line */
+  /** Short description from the ### header line, join key stripped */
   description: string;
+  /**
+   * Digest of the call this section answers, when the section carries one.
+   *
+   * Null for a section written before the key existed, and for the ones that answer
+   * no call at all (`### ⚠️ Loop Warning`). Both fall through to the label/position
+   * heuristic below.
+   */
+  key: string | null;
   /** Full content of this tool result section, header line included */
   content: string;
 }
@@ -110,14 +126,18 @@ export function parseToolResults(text: string): {
       if (!trimmed) continue;
 
       const heading = trimmed.match(/^###\s+(.+)/);
-      const description = heading
+      const rawDescription = heading
         ? heading[1].trim()
         : trimmed.slice(0, trimmed.indexOf('\n') > 0 ? trimmed.indexOf('\n') : 60).trim();
+      // Read the key off the raw heading, then take it out of the text people read.
+      const key = readSectionKey(rawDescription);
+      const description = stripSectionKey(rawDescription);
       const toolNameMatch = description.match(/^([a-zA-Z0-9_-]+)/);
 
       results.push({
         toolName: toolNameMatch ? toolNameMatch[1] : 'tool_result',
         description,
+        key,
         content: trimmed,
       });
     }
@@ -172,24 +192,66 @@ export function deriveToolOutcomes(
   );
   if (sections.length === 0) return outcomes;
 
-  const positionalIsSafe = sections.length === calls.length;
+  /**
+   * Pass 1 — exact, by key.
+   *
+   * Two calls with identical parameters share a key, so they also share whichever
+   * section matched. That is a real limitation and a cheap one: identical calls in one
+   * round is precisely what `checkRepeatedToolCall` exists to stop, and when it does
+   * happen both cards report the same true outcome.
+   */
+  const byKey = new Map<string, number>();
+  sections.forEach((entry, index) => {
+    if (entry.key && !byKey.has(entry.key)) byKey.set(entry.key, index);
+  });
+
+  const claimed = new Set<number>();
+
+  if (byKey.size > 0) {
+    calls.forEach((call, index) => {
+      const found = byKey.get(buildToolCallKey(call.toolCall));
+      if (found === undefined || claimed.has(found)) return;
+      claimed.add(found);
+      outcomes[index] = readOutcome(sections[found]);
+    });
+  }
+
+  /**
+   * Pass 2 — the old heuristic, for what pass 1 could not place.
+   *
+   * Still needed, and not only for conversations that predate the key: a session run
+   * in another browser, or one whose sections lost the marker somewhere in the
+   * round trip, arrives here too. Restricted to the leftovers on both sides so a
+   * key match is never overruled by a guess.
+   */
+  const residualCalls = calls
+    .map((call, index) => ({ call, index }))
+    .filter(({ index }) => outcomes[index] === null);
+  if (residualCalls.length === 0) return outcomes;
+
+  const residualSections = sections
+    .map((entry, index) => ({ entry, index }))
+    .filter(({ index }) => !claimed.has(index));
+  if (residualSections.length === 0) return outcomes;
+
+  const positionalIsSafe = residualSections.length === residualCalls.length;
   let cursor = 0;
 
-  calls.forEach((call, index) => {
+  residualCalls.forEach(({ call, index }) => {
     const label = normalize(call.toolCall.description || call.toolCall.name);
 
     let found = -1;
-    for (let j = cursor; j < sections.length; j++) {
-      if (normalize(sections[j].description) === label) {
+    for (let j = cursor; j < residualSections.length; j++) {
+      if (normalize(residualSections[j].entry.description) === label) {
         found = j;
         break;
       }
     }
-    if (found === -1 && positionalIsSafe && cursor < sections.length) found = cursor;
+    if (found === -1 && positionalIsSafe && cursor < residualSections.length) found = cursor;
     if (found === -1) return;
 
     cursor = found + 1;
-    outcomes[index] = readOutcome(sections[found]);
+    outcomes[index] = readOutcome(residualSections[found].entry);
   });
 
   return outcomes;

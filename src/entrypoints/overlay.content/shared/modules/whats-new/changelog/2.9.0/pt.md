@@ -1,73 +1,66 @@
-# 🤖 v2.9.0 — O Agent chegou
+# 🤖 v2.9.0 — O AI Agent chegou
 
-Lembram do que eu prometi na v2.8.0? *"O Agent ainda está no forno."* Pois é, o timer disparou. 🔔
+Após um período de desenvolvimento e atualizações arquitetônicas, temos o prazer de apresentar um recurso totalmente novo: **o AI Agent**. 🎉
 
-Dois meses e meio. Muito café. Um motor reescrito mais vezes do que eu gostaria de admitir publicamente. **O AI Agent está oficialmente no ar.**
+Esperamos fornecer a você um **assistente inteligente** mais prático, em vez de apenas alguns botões de atalho. Você pode dizer o que precisa em linguagem natural, e ele tentará pesquisar em seus dados, analisá-los, executar as etapas e relatar a você. Tudo isso funciona inteiramente local no seu navegador usando a sua sessão atual do Gemini. Não são necessárias chaves de API, não são consumidos tokens extras e seus dados nunca saem do seu dispositivo, garantindo privacidade e segurança.
 
-O que preciso que vocês entendam sobre essa versão: as outras extensões de sidebar dão *botões* — clica, faz uma coisa. Essa aqui dá um **operador**. Você descreve o que quer em linguagem natural e a IA vai lá e faz — lê seus dados, toma decisões, executa trabalho multi-etapa e volta com o relatório. Tudo no seu próprio navegador, usando sua própria sessão do Gemini. Sem API key, sem tokens extras, sem dados saindo da sua máquina.
+## 🚀 Atualização Principal: AI Agent
 
-## 🚀 O destaque: AI Agent
+Basta digitar `>` na caixa de entrada do Gemini para chamá-lo.
 
-Digite `>` na caixa de entrada do Gemini. Só isso. Essa é toda a interface.
+Uma lista aparecerá onde você pode selecionar uma **habilidade predefinida**, ou você pode optar por não fazer isso e simplesmente descrever naturalmente a sua solicitação, deixando a IA determinar como executá-la.
 
-Aparece uma lista: escolha uma **Skill** ou selecione a primeira opção e deixe a IA decidir. Depois descreva sua tarefa como descreveria para um colega competente e assista.
+**Preparamos as seguintes habilidades básicas para você experimentar:**
 
-**Já vem com algumas Skills para você começar:**
+*   **🗂️ Auto-Organizar:** "Classifique minhas últimas 200 conversas em pastas e adicione tags." Ele analisará automaticamente os títulos, tentará a categorização, criará pastas e moverá os itens, ajudando a organizar seus registros de bate-papo acumulados.
+*   **🔄 Completar Índice de Pesquisa:** Você pode ter notado que a pesquisa de texto completo às vezes não encontra conversas mais antigas. Isso ocorre porque chats antigos de antes da instalação da extensão possuem apenas os títulos no banco de dados por padrão. Esta habilidade ajuda a encontrar esses chats "vazios" e sincroniza seus conteúdos automaticamente. Se permanecerem vazios após a sincronização, significa que não estão mais disponíveis na nuvem, e o Agent o ajudará a limpar esses dados inválidos.
+*   **📊 Consulta de Dados:** "Qual pasta teve mais conversas no mês passado?" Basta perguntar, e ele consultará os dados locais para lhe dar uma resposta.
+*   **📝 Gerenciar Prompts e Snippets em Lote:** Ele auxilia na reescrita, recategorização, desduplicação ou reorganização para ajudar a arrumar sua biblioteca.
+*   **🛠️ Habilidades Personalizadas:** Em **Configurações → Agent**, você pode usar suas próprias instruções para definir novas habilidades. Se você tiver fluxos de trabalho repetitivos, pode tentar ensiná-los ao Agent para poder executá-los com um único clique posteriormente.
 
-*   **🗂️ Auto-Organizar:** "Organize meus últimos 200 chats em pastas e coloque tags." Lê os títulos, monta uma taxonomia, cria as pastas, move tudo. Seis meses de caos acumulado, resolvido em uma passada.
-*   **🔄 Preencher o índice de busca:** Algo que você provavelmente não sabia: as mensagens de uma conversa só são gravadas enquanto ela está aberta. Todos os chats que você teve *antes* de instalar a extensão estão no banco só como título sem conteúdo — por isso a busca full-text às vezes não encontra nada. Essa skill encontra conversas vazias e sincroniza o conteúdo real. Se depois de sincronizar ainda estiver vazia, é porque não existe mais no Google — entrada fantasma. Manda o Agent apagar.
-*   **📊 Consultar seus próprios dados:** Faça perguntas sobre seu histórico de conversas como se fosse um banco de dados — porque é. "Qual pasta teve mais chats mês passado?" Ele responde.
-*   **📝 Gerenciar Prompts e Snippets em lote:** Reescrever, reorganizar, deduplicar e reestruturar sua biblioteca. Transformar uma bagunça em algo utilizável.
-*   **🛠️ Escreva suas próprias Skills:** Vá em **Configurações → Agent** e defina Skills personalizadas com suas instruções. Se você consegue descrever um fluxo repetível, pode ensinar ao Agent — e vira um card permanente de um clique.
+### 🔓 Explorando Mais Possibilidades
 
-### 🔓 Mas não ache que é só isso
+Além das habilidades predefinidas, o Agent pode consultar diretamente o banco de dados da extensão, incluindo conversas, mensagens, pastas, tags, Prompts e Snippets. Ele pode escrever consultas automaticamente com base em suas necessidades, analisar os resultados e decidir a próxima etapa. Desde que envolva seus dados locais e possa ser descrito claramente, você pode tentar pedir ajuda.
 
-Essas Skills são **presets, não limites**. Preciso ser muito claro nisso, porque esse é o ponto todo.
+Você pode tentar estas abordagens:
 
-Por baixo, o Agent tem acesso real de consulta ao banco de dados da extensão — cada conversa, mensagem, pasta, tag, prompt e snippet, tudo consultável. Ele não escolhe de um menu de cinco ações fixas. Ele escreve suas próprias queries contra seus dados reais, olha o resultado e decide o próximo passo. A resposta real para "o que ele pode fazer?" é: **qualquer coisa que você consiga descrever sobre seus próprios dados.**
+*   Digite `>` e **simplesmente pergunte**: "O que você pode fazer com meus dados?" ou "Existem áreas no meu espaço de trabalho que precisam de organização?". Veja o que ele sugere.
+*   **Interaja com ele como um assistente por meio de conversas em vários turnos.** Ele mantém o contexto. Por exemplo: "Interessante, divida isso por mês, por favor." "Faça o mesmo com os chats marcados com estrela." "Na verdade, apenas junte essas duas pastas."
+*   Tente solicitações para as quais não criamos predefinições: "Sobre quais tópicos eu mais falo?" "Encontre conversas sobre o bug de autenticação de março e agrupe-as." "Quais dos meus Prompts eu nunca usei?"
+*   Se descobrir casos de uso interessantes, sinta-se à vontade para compartilhá-los conosco.
 
-Como encontrar o teto:
+**Com Relação a Segurança e Controle:**
 
-*   Digite `>` e **pergunte direto**. "O que você pode fazer com meus dados?" "O que está bagunçado aqui que eu não percebi?" Ele sabe que tabelas vê e que ferramentas tem — deixe ele te vender.
-*   **Converse como com um colega, não como com uma caixa de busca.** É uma conversa real de vários turnos — ele reporta, você pede mais. "Interessante, quebra por mês." "Faz o mesmo com os que eu marquei com estrela." "Na verdade, junta essas duas pastas." Cada rodada já tem o contexto da anterior.
-*   Pergunte coisas que nenhuma feature que eu pudesse criar cobriria: "Que assuntos eu fico voltando?" "Acha os chats sobre o bug de auth de março e junta numa pasta." "Quais dos meus prompts eu nunca usei?" "Resume no que eu trabalhei no trimestre passado."
+*   **🛑 Você decide.** Por padrão, qualquer ação que modifique dados pedirá sua confirmação primeiro, enquanto as operações de leitura podem ser executadas diretamente. Você pode ajustar essas políticas nas configurações a qualquer momento.
+*   **⚡ Modo Extremo.** Se você estiver familiarizado e confiar nas operações, pode habilitar o Modo Extremo para que ele pare de pedir confirmação. (Todas as ações ainda podem ser desfeitas.)
+*   **🎛️ Agent Dock.** A barra de status é fixada acima da caixa de entrada, para que você possa ver o progresso atual mesmo quando a barra lateral estiver fechada. Status, botões de parada e aprovações são claramente visíveis.
+*   **🔌 Disjuntor Inteligente.** Se o Agent ficar preso em um loop ou progredir lentamente, o motor será interrompido automaticamente e o notificará sobre o motivo. Se for executado por muito tempo, ele pausará e solicitará sua opinião em vez de ser executado infinitamente em segundo plano.
 
-Honestamente, os usos mais criativos vão ser os que eu nunca imaginei. Vai lá explorar e me conta o que descobriu.
+**💚 Para todos os primeiros usuários do Powerpack — este recurso agora está desbloqueado para vocês gratuitamente.** Obrigado por sua confiança e apoio contínuos.
 
-**A parte de segurança, da qual me orgulho:**
+## ✨ Mais Melhorias
 
-*   **🛑 Você sempre decide.** Qualquer coisa que *escreve* nos seus dados pede aprovação primeiro. Leituras são livres. Política é você quem define e pode mudar por sessão.
-*   **⚡ Modo Velocidade** se você confia. Um toggle e ele para de perguntar. (Com undo, não sou um monstro.)
-*   **🎛️ Agent Dock** fica logo acima da caixa de entrada — te acompanha mesmo com a sidebar fechada. Status, botão stop, aprovações, tudo num lugar só.
-*   **🔌 Circuit breakers por todo lado.** Se entrar em loop, repetir ou parar de progredir, o motor mata a execução e explica por quê. Também faz check-in com você após períodos longos sem supervisão, em vez de ficar rodando em silêncio.
+*   **⚡ Integração com Gemini Spark:** Se o Google habilitou o Spark em sua conta, a barra lateral exibirá automaticamente uma aba Spark.
+*   **🎨 Atualização Visual:** A interface geral foi reajustada — o espaçamento está mais compacto e o contraste mais confortável. Também adicionamos animações de transição ao alternar temas, esperando proporcionar uma melhor experiência visual.
+*   **🎛️ Acesso Rápido às Configurações:** Clicar no ícone da extensão na barra de ferramentas do navegador agora abre um painel de controle para alternar rapidamente entre plataformas ou recursos.
+*   **⌨️ Suporte a `/` no AI Studio:** O atalho `/` para chamar a biblioteca de Prompts antes era limitado ao Gemini; agora também pode ser usado no AI Studio.
+*   **💾 Backups Locais Automáticos:** Os dados da extensão agora oferecem suporte a backups automáticos agendados, e você pode criar instantâneos manuais a qualquer momento para melhorar a segurança dos dados.
+*   **📜 Melhorias no Smart Scrollbar:** Clicar na barra de rolagem inteligente (Smart Scrollbar) a expande em uma lista de mensagens para facilitar a navegação em conversas longas.
+*   **📁 Botão de Nova Pasta:** Adicionado um botão para criar novas pastas diretamente na janela modal "Mover para a pasta".
 
-**💚 Se você comprou o Powerpack no preço Early Bird — essa feature é sua de graça, agora.** Você apostou quando isso ainda não existia. Obrigado. Vai lá digitar `>` e ver pelo que pagou.
+## 🐛 Correções de Bugs
 
-## ✨ Também nessa versão
-
-*   **⚡ Integração Gemini Spark:** Se o Google já liberou Spark na sua conta, aparece como aba nativa na sidebar. Nada pra configurar — se tem, tá lá.
-*   **🎨 Interface mais limpa e calma:** Passei por toda a UI e abaixei o ruído. Ritmo de espaçamento mais justo, contraste melhor, temas refinados. Visualmente menos carregada. Mais uma **transição animada ao trocar de tema**, porque detalhezinhos importam.
-*   **🎛️ Clique no ícone da extensão para configurações:** O ícone na barra de ferramentas agora abre um painel de controle real — liga/desliga plataformas e funcionalidades sem navegar menus.
-*   **⌨️ Slash commands no AI Studio:** O atalho `/` para a Biblioteca de Prompts era só do Gemini. Agora AI Studio também tem.
-*   **💾 Backups locais automáticos:** Os dados da extensão agora fazem backup automaticamente por cronograma — e você pode disparar um snapshot manual a qualquer hora. Se algo der errado, volta pra um estado anterior. Paz de espírito finalmente entregue.
-*   **📜 Smart Scrollbar expansível:** Clique para expandir numa lista completa de mensagens. Conversas longas ficaram finalmente navegáveis.
-*   **📁 Criar pastas sem sair do diálogo:** O diálogo "Mover para pasta" agora tem um botão **Nova Pasta**. Pequeno, mas resolve um beco sem saída genuinamente irritante.
-
-## 🐛 Correções — E uma importante
-
-*   **☁️ Sincronização com Google Drive não come mais seus dados.** A grande. Vou ser direto: a lógica antiga de auto-merge podia sobrescrever dados locais de forma ruim. **Foi removida.** O Drive nunca mais vai sobrescrever ou fazer merge nos seus dados locais silenciosamente — restaurar agora é um download manual que você inicia. Uploads continuam automáticos se a sincronia está ativa. Seus dados locais são a fonte da verdade, ponto final.
-*   **🔍 Escaneamento de conversas Gemini corrigido.** Funciona de forma confiável de novo.
-*   **😴 Não mais "acordar morto".** Deixou a aba aberta por horas e voltou com sidebar zumbi? Corrigido, reconecta direito agora.
-*   **📐 Página do Gemini não pula mais pra cima aleatoriamente.** Aquele salto intermitente de layout sumiu.
-*   **⌨️ Espaço não cancela mais o renomear.** Digitar espaço ao renomear não te joga fora do modo edição.
-*   **🕒 Timestamps corretos.** Data de criação e última atividade agora exibem corretamente.
-*   **💎 Gems e Notebooks detectados na criação.** Aparecem imediatamente sem o ritual de recarregar.
-*   **⚪ Chega de pontos cinzas mortos.** Corrigido o Smart Scrollbar renderizando ocasionalmente pontos não-clicáveis.
+*   **☁️ Lógica de Sincronização do Google Drive:** Melhoramos a lógica de mesclagem automática anterior. O Drive não sobrescreverá mais ou mesclará automaticamente em seus dados locais. Para restaurar os dados, você deve iniciar um download manualmente. Os uploads permanecem automáticos (se a sincronização estiver ativada). Isso garante que seus dados locais sejam sempre sua fonte de verdade mais confiável.
+*   **🔍 Verificação de Conversas do Gemini:** Corrigido um problema em que a verificação da lista de conversas falhava ocasionalmente.
+*   **😴 Problema de Desconexão por Inatividade:** Corrigido um problema em que a barra lateral deixava de responder depois que a guia era deixada inativa por muito tempo. Agora ela pode se reconectar normalmente.
+*   **📐 Pulos na Página:** Resolvido o tremor de layout ocasional na interface do Gemini.
+*   **⌨️ Saída ao Renomear com Espaço:** Digitar um espaço ao renomear não sairá mais acidentalmente do modo de edição.
+*   **🕒 Erros na Exibição de Tempo:** Os horários de criação das conversas e os últimos momentos ativos agora são exibidos corretamente.
+*   **💎 Detecção em Tempo Real de Gem/Notebook:** Novos Gems ou Notebooks agora são detectados instantaneamente pela extensão após a criação.
+*   **⚪ Pixel Morto Cinza:** Corrigido um ponto não clicável que ocasionalmente aparecia no Smart Scrollbar.
 
 ***
 
-Essa versão demorou, e é a maior coisa que construí pra essa extensão. O Agent não é demo — é o motor que vou empilhando nas próximas versões, e vai ficar afiado rápido.
+Esta versão é uma atualização significativa para nós recentemente, e o motor do Agent continuará sendo refinado em versões futuras.
 
-Então por favor: vai quebrar. Aponta pro sua pasta mais bagunçada. Escreve uma Skill maluca. E me conta o que aconteceu — Discord, email, onde for. Cada report de bug de vocês fez essa versão melhor do que eu conseguiria sozinho.
-
-Agora vai digitar `>` e deixa ele trabalhar. 🚀
+Se você estiver interessado, pode digitar `>` para abrir o painel e experimentar este novo recurso por conta própria. Se você encontrar algum problema ou tiver sugestões de melhoria, sinta-se à vontade para nos avisar pelo Discord ou por e-mail.

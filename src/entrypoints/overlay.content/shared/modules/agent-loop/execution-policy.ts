@@ -19,7 +19,7 @@
 import type { ParsedToolCall, ToolRisk } from './types';
 import { useAgentLoopStore } from './agent-loop-store';
 import { useAgentPolicyStore } from './agent-policy-store';
-import { CONTROL_TOOLS, isHandoffTool } from './engine/parser/tool-schema';
+import { CONTROL_TOOLS, identityParams, isHandoffTool } from './engine/parser/tool-schema';
 
 // ─── Approval ────────────────────────────────────────────────────────────────
 
@@ -128,9 +128,63 @@ export function isUnattendedAllowed(): boolean {
  * formatting don't produce a different fingerprint.
  */
 export function buildToolCallFingerprint(toolCall: ParsedToolCall): string {
-  const params = Object.keys(toolCall.params)
+  // `identityParams` drops the human-facing ones (`change_summary`): they are reworded
+  // freely and would give the same effective call a different fingerprint each time,
+  // which the join key written into the conversation cannot tolerate.
+  const source = identityParams(toolCall.params);
+  const params = Object.keys(source)
     .sort()
-    .map((key) => `${key}=${(toolCall.params[key] ?? '').replace(/\s+/g, ' ').trim()}`)
+    .map((key) => `${key}=${(source[key] ?? '').replace(/\s+/g, ' ').trim()}`)
     .join('&');
   return `${toolCall.name}(${params})`;
+}
+
+/**
+ * The same identity, short enough to travel inside a message.
+ *
+ * A fingerprint carries the whole SQL statement, so it cannot be written into the
+ * results we send back to the AI. This is its digest: ten hex characters, which is
+ * ample when the only thing it has to be unique across is the tool calls of one
+ * conversation.
+ *
+ * Why a digest of the fingerprint rather than a random id minted per call: the card
+ * in the chat has to find its own record, and a random id would only exist in our
+ * database — a dangling pointer as soon as you open the conversation on another
+ * machine, or after a restore that didn't carry these tables. A digest is
+ * self-describing. The card recomputes it from the call it is already rendering and
+ * matches on that, so the conversation alone is enough.
+ *
+ * ⚠️ It follows that `buildToolCallFingerprint` is now a *wire* format: change how it
+ * normalises params and every key already written into a conversation stops matching.
+ * `deriveToolOutcomes` falls back to its heuristic in that case, so the failure is
+ * graceful rather than silent — but it is still a one-way door.
+ *
+ * Synchronous on purpose: `crypto.subtle.digest` is async, and this is called during
+ * render. FNV-1a twice with different offset bases is not cryptography, and does not
+ * need to be — nothing security-relevant rests on it, only which card lights up.
+ */
+export function buildToolCallKey(toolCall: ParsedToolCall): string {
+  return digest(buildToolCallFingerprint(toolCall));
+}
+
+/** Length of the hex digest `buildToolCallKey` emits */
+export const TOOL_CALL_KEY_LENGTH = 10;
+
+function digest(input: string): string {
+  const a = fnv1a(input, 0x811c9dc5);
+  const b = fnv1a(input, 0x01000193);
+  return (
+    a.toString(16).padStart(8, '0') + b.toString(16).padStart(8, '0')
+  ).slice(0, TOOL_CALL_KEY_LENGTH);
+}
+
+function fnv1a(input: string, seed: number): number {
+  let hash = seed;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    // `Math.imul` keeps the multiply in 32-bit territory; `hash * 16777619` would
+    // drift into float precision and stop being a hash after a few characters.
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
 }

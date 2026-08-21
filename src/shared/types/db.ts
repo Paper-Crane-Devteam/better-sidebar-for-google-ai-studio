@@ -140,3 +140,63 @@ export interface Snippet {
   created_at: number;
   updated_at: number;
 }
+
+/**
+ * One agent task, from the first prompt to whatever ended it.
+ *
+ * Exists so a reload can say what was running rather than starting over with a blank
+ * "Follow-up task" — the runtime store holds all of this and loses it on refresh.
+ */
+export interface AgentSessionRow {
+  id: string;
+  /** Null until the platform assigns one, for a session started in a fresh chat */
+  conversation_id: string | null;
+  title: string | null;
+  skill_id: string | null;
+  status: 'running' | 'ended';
+  /** Mirrors `AgentEndReason`; null while still running */
+  end_reason: string | null;
+  rounds: number;
+  started_at: number;
+  ended_at: number | null;
+}
+
+/**
+ * What became of one tool call.
+ *
+ * `join_key` is `buildToolCallKey(call)` — the same digest written into the result
+ * section sent back to the AI, which is what lets a card in the chat find this row
+ * without any positional guessing.
+ *
+ * `status` is written twice: `running` before the tool is invoked, then the verdict
+ * after. A row still at `running` means the page went away mid-execution, so the
+ * write may or may not have landed — the one state that has to be reported as
+ * uncertain rather than resolved either way.
+ */
+export interface AgentToolCallRow {
+  id: string;
+  session_id: string | null;
+  conversation_id: string | null;
+  join_key: string;
+  round: number;
+  order_index: number;
+  tool_name: string | null;
+  description: string | null;
+  /** JSON of the call's params, for showing what ran and for a future replay */
+  params: string | null;
+  is_write: number;
+  status: 'running' | 'ok' | 'failed' | 'rejected';
+  /**
+   * The result as the AI would have read it — kept only while undelivered.
+   *
+   * Cleared once delivery is confirmed, because from that point the conversation
+   * carries it and a second copy is dead weight. While it is here, it is the only
+   * copy in existence: the payload was staged in the composer and the composer is
+   * gone.
+   */
+  result_body: string | null;
+  /** 1 once the round's results were confirmed to reach the AI */
+  delivered: number;
+  created_at: number;
+  updated_at: number;
+}

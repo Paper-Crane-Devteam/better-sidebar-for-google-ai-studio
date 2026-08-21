@@ -29,6 +29,21 @@ const SELECT_PATTERN = /^\s*SELECT\b/i;
 const MAX_RESULT_ROWS = 1000;
 
 /**
+ * How a licence block is reported, and how the engine recognises it.
+ *
+ * A prefix rather than a word anywhere in the text, and exported rather than retyped,
+ * because the engine ends the session on seeing it. It used to test
+ * `result.includes('PAYWALL')`, which reads the *whole* result — so a plain SELECT
+ * whose rows happened to contain the word (dumping `messages.content` is routine, and
+ * a conversation about subscriptions will contain it) ended the session and showed the
+ * upgrade card, for a query that was never blocked.
+ *
+ * Same reasoning as `ERROR:` / `CANCELLED:` elsewhere: only the first line is the
+ * verdict, the rest is data.
+ */
+export const PAYWALL_SIGNAL = 'ERROR: PAYWALL';
+
+/**
  * Placeholder the AI uses instead of inventing random UUIDs.
  *
  * The surrounding quote (if any) is part of the match on purpose: the model
@@ -92,7 +107,7 @@ export async function executeSql(params: ExecuteSqlParams): Promise<string> {
       license.tier === 'power_pack' || license.tier === 'pro' || license.tier === 'support_pack';
 
     if (!hasPowerPack) {
-      return 'ERROR: PAYWALL - Writing to database requires Power Pack subscription. The user has been shown an upgrade prompt.';
+      return `${PAYWALL_SIGNAL} - Writing to database requires Power Pack subscription. The user has been shown an upgrade prompt.`;
     }
   }
 

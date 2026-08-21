@@ -70,14 +70,22 @@ export function extractToolInfo(text: string): {
   toolName: string;
   description: string;
   query: string;
+  /**
+   * The AI's plain-language account of what a write will change, when it gave one.
+   *
+   * Separate from `description`, which is a one-line label for the step. This is the
+   * text the approval decision is actually made on — see `sql-provider`'s schema.
+   */
+  changeSummary: string;
 } {
   const parsed = parseToolCallFromText(text);
-  if (!parsed) return { toolName: 'tool_call', description: '', query: '' };
+  if (!parsed) return { toolName: 'tool_call', description: '', query: '', changeSummary: '' };
 
   const { params } = parsed;
   return {
     toolName: parsed.name || 'unknown',
     description: parsed.description || '',
     query: params.query || params.summary || params.conversation_ids || params.ids || '',
+    changeSummary: (params.change_summary || '').trim(),
   };
 }

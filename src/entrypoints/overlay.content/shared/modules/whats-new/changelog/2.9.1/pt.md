@@ -1,21 +1,21 @@
-# ✨ v2.9.1 — Pastas predefinidas e barra de seleção
+# ✨ v2.9.1 — Pastas padrão e Barra de seleção
 
-Uma atualização rápida depois da 2.9.0, construída quase inteiramente a partir dos vossos comentários. Obrigado pelos relatos. 🙏
+Este é um lançamento de iteração rápida com base direta no seu feedback. Obrigado a todos que enviaram sugestões. 🙏
 
-## ✨ Novidades
+## ✨ Novos Recursos
 
-*   **📁 Pasta predefinida para Gems e Notebooks:** Atribui uma pasta predefinida a qualquer Gem ou Notebook. Ao iniciar uma nova conversa a partir dele, a conversa vai automaticamente para essa pasta — sem precisares de arrastar depois.
-*   **⚡ Gere as pastas padrão pelo lado da pasta:** As definições de pasta agora listam todos os Gems e Notebooks que a usam como destino padrão, para poderes ligá-los ou desligá-los ali mesmo. E quando uma pasta é o destino de algum, a linha ganha um botão extra ao passar o rato para começar essa conversa diretamente.
-*   **🗑️ Opcional: apagar conversas sem confirmação:** Desligado por predefinição. Ativa em Definições → Geral e apagar uma conversa individual salta o diálogo por completo — imediato, permanente, sem desfazer, removido aqui e na plataforma. A eliminação em lote continua a pedir confirmação.
-*   **🖍️ Barra de ferramentas ao selecionar texto:** Seleciona qualquer texto numa conversa e aparece uma pequena barra logo acima. Podes pedir à IA para explicar ou resumir a seleção, guardá-la como snippet ou copiá-la. Configurável nas definições — escolhe que ações aparecem ou desliga tudo.
+*   **📁 Pastas Padrão para Gems e Notebooks:** Agora você pode atribuir uma pasta padrão a qualquer Gem ou Notebook. Ao iniciar uma nova conversa usando essa predefinição, ela será automaticamente colocada na pasta atribuída, evitando que você precise movê-la manualmente depois.
+*   **⚡ Gerenciar Associações Padrão a partir das Pastas:** O painel de configurações da pasta agora lista todos os Gems e Notebooks que a utilizam como pasta padrão, permitindo que você os vincule ou desvincule diretamente. Além disso, quando uma pasta é definida como padrão, um botão de atalho é adicionado à sua barra de ação, permitindo que você crie uma conversa relacionada com um único clique.
+*   **🗑️ Opcional: Ignorar a Confirmação de Exclusão:** Este recurso é desativado por padrão. Uma vez ativado em "Configurações → Geral", excluir uma única conversa pulará a caixa de diálogo de confirmação. Observação: esta ação é imediata, permanente e não pode ser desfeita; ela excluirá os dados da extensão e da plataforma em nuvem. As exclusões em massa ainda solicitarão confirmação.
+*   **🖍️ Barra de Ferramentas de Seleção de Texto:** Ao destacar um texto em uma conversa, uma barra de ferramentas compacta aparecerá sobre ele. Você pode pedir à IA que explique ou resuma a seleção, salvá-la como um Snippet ou simplesmente copiá-la. Você pode personalizar quais ações são exibidas ou desativar a barra de ferramentas totalmente nas configurações.
 
-## 🐛 Correções
+## 🐛 Correções de Bugs
 
-*   **⚪ Os pontos cinzentos em conversas antigas já podem ser limpos.** A v2.9.0 impediu que novas conversas deixassem pontos inúteis atrás, mas os tópicos existentes mantiveram os seus. Na altura não fiz um script de limpeza porque não queria arriscar o histórico de ninguém. Esta é a versão segura: quando uma conversa tem registos residuais, aparece um botão de limpeza no topo da Smart Scrollbar. Um clique para armar, outro para confirmar, e está feito. Só remove registos que a própria conversa já não referencia, nunca toca em histórico que não tenha verificado, e recua totalmente se algo não bater certo.
-*   **⋯ O menu nativo de 3 pontos do Gemini estava mal posicionado.** Tinhas razão, esta foi minha — parte do CSS da extensão estava a interferir com o menu de ações do próprio Google e a empurrá-lo para fora do lugar. Corrigido.
-*   **📂 Botões de ação da pasta a misturar-se com nomes longos.** Antes, nomes de pasta longos transpareciam por baixo dos botões e ficava tudo confuso. Agora o nome é truncado de forma limpa por trás deles.
-*   **📝 Snippets a perder a formatação Markdown.** Ao guardar um snippet, o texto ficava mas a formatação desaparecia. Já foi localizado e corrigido — títulos, listas, blocos de código e o resto sobrevivem ao guardar.
+*   **⚪ Limpeza de Pontos Cinzas Inválidos no Histórico de Chats:** Na v2.9.0, otimizamos a renderização de novas conversas para evitar que sobrassem pontos de registro inválidos. Para garantir a segurança absoluta de seus dados históricos, agora fornecemos um método de limpeza seguro: quando existirem registros residuais em uma conversa, um botão de limpeza aparecerá na parte superior da Smart Scrollbar (barra de rolagem inteligente). Após você clicar e confirmar, o sistema excluirá apenas os registros inválidos não referenciados sem afetar o histórico normal. Se forem detectadas anomalias nos dados, a operação de limpeza será abortada automaticamente.
+*   **⋯ Correção de Desalinhamento do Menu Nativo do Gemini:** Corrigido um problema em que conflitos de CSS da extensão faziam com que o menu "Mais ações" nativo do Google ficasse desalinhado.
+*   **📂 Correção de Problemas de Exibição com Nomes de Pasta Longos:** Corrigido um problema em que nomes de pasta longos se sobrepunham aos botões de ação na seleção. Nomes muito longos agora são truncados e ocultos adequadamente.
+*   **📝 Correção da Perda de Formatação Markdown nos Snippets:** Corrigido um problema em que a formatação de texto era perdida ao salvar um Snippet. Toda a formatação Markdown, incluindo cabeçalhos, listas e blocos de código, agora é totalmente preservada.
 
 ***
 
-Versão pequena, resposta rápida. Continuem a enviar relatos — esta versão existe por causa deles.
+Obrigado por seu apoio contínuo e feedback. Continuaremos ouvindo suas sugestões para otimizar a experiência da extensão.

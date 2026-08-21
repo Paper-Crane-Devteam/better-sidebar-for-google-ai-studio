@@ -39,7 +39,12 @@ src/entrypoints/overlay.content/shared/
 │   │   ├── agent-view-store.ts    # ★ 视图 override（持久化：conversationId → 手动选择）
 │   │   ├── agent-policy-store.ts  # 执行策略（持久化：autoRunReads / autoRunWrites）
 │   │   ├── agent-config-store.ts  # 用户自定义 skill / MCP 开关（持久化）
+│   │   ├── agent-record-store.ts  # ★ 账本读侧：joinKey → 结果 + owed（跑了但没送出去）
+│   │   ├── records.ts             # ★ 账本写侧：toolCallRecorder，全部 best-effort
+│   │   ├── ledger-client.ts       # ★ 账本的唯一出口：发消息给 background（**别碰 @/shared/db**）
+│   │   ├── recovery.ts            # ★ 把未送达的行重新拼回 payload
 │   │   ├── execution-policy.ts    # requiresApproval / shouldAutoSend / getToolRisk
+│   │   │                          #   buildToolCallKey ★ 是 wire format，见「join key」
 │   │   ├── agent-entry.ts         # ★ `>` 列表数据源：auto 条目 + skills
 │   │   ├── event-bus.ts           # 类型安全事件总线
 │   │   ├── useAgentTrigger.ts     # `>` 前缀检测
@@ -89,6 +94,7 @@ src/entrypoints/overlay.content/shared/
 │   │       ├── AgentInterruptNotice.tsx   # 暂停 / 报错原因 + Retry
 │   │       ├── AgentSessionSummary.tsx    # 结束卡（含 paywall upsell）
 │   │       ├── AgentPolicyControls.tsx    # 读自动 / 写自动 / 自动继续（齿轮里，默认折叠）
+│   │       ├── AgentOwedResults.tsx       # ★ 跑了但没送到 AI 的结果 → 补发（唯一无 session 也显示的卡）
 │   │       └── AgentInstructionInput.tsx  # 中途给 AI 补充说明
 │   └── slash-command/             # `/` snippets（与 `>` 互斥）
 ```
@@ -398,11 +404,38 @@ Gemini 用同一个按钮承担「发送」和「停止生成」，class 和 dis
 | `paused` + `checkInSteps !== null` | 无人值守跑够 20 轮，例行 check-in | 中性卡 + 继续 / 就停这 |
 | `paused` | 超时 / 断点 / 熔断 | 原因 + Retry / Dismiss |
 | `error` | 引擎异常 | 原因 + Retry / Dismiss |
+| `idle` + 账本有 `delivered = 0` 的行 | 上一次页面生命里跑完但没送出去 | 补发卡（⚠️ 没有 session 也要显示） |
 
 会话结束时 `endReason` 记录原因（`complete` / `infeasible` / `user_stop` /
 `circuit_breaker` / `paywall` / `no_tool_call`），
 `AgentSessionSummary` 据此决定显示完成卡、"做不到"说明还是升级引导。
 注意里面**没有** `max_rounds` —— 见下文，那是 check-in 不是结束。
+
+### complete_task 不接受「跟活儿写在同一轮」
+
+AI 经常一口气发三条 UPDATE 加一个 `complete_task`。问题是**它写这轮回复的时候还没看到那三条
+的结果** —— 结果是下一轮才回传的，而 `complete_task` 让循环就地结束，那一轮的 results 连同
+session 一起被丢掉。所以只要有一条写失败了（或者被用户拒了），最终状态是：库没改成，
+而对话里留着一句自信的「已完成」。
+
+现在 ③ 里拦这一种：**这一轮有任何失败或被拒的调用 + 出现 `complete_task` → 不结束，改成
+把结果回传**。AI 读到真实情况，然后要么修，要么用 `partial` / `infeasible` 老实报。
+
+```
+completion && trouble.length > 0
+  → results.pop()                  ← 把 __TASK_COMPLETE__ 那段扔掉
+  → push「### ⚠️ Completion Not Accepted」+ 说明
+  → return { kind: 'results' }     ← 走 ④ 回传，轮次继续
+```
+
+⚠️ **只拦失败那一种。** 全成功时它的判断算数，直接结束 —— 去质疑一次干净的执行只会白烧一轮。
+
+⚠️ **`results.pop()` 是必需的。** 不摘掉那段，AI 会读到自己发出的 `__TASK_COMPLETE__`
+标记，然后认为任务已经关闭了。
+
+⚠️ **prompt 里也写了**（soul.ts 的「Never call complete_task in the same response as work」
++ 规则 11/16 + `task-provider` 的 schema description），但 prompt 不能是唯一防线：这类错误
+的后果是「留下错数据同时告诉用户没事」，而 Gemini 对长 prompt 的遵循度本来就不稳。两边都要有。
 
 ### 一轮回复只有两种合法结尾
 
@@ -419,6 +452,55 @@ Gemini 用同一个按钮承担「发送」和「停止生成」，class 和 dis
 直接在聊天框答了」，为此背了 `carryOver`（问题前已产出但没送出的结果）、
 `observed`（回复已经生成完，① 的 baseline 会等一个已发生的回合）、
 以及提问不占 `maxRounds` 的额度豁免 —— 三个机制都只为这一条路径存在。
+
+### 批准看的是 change_summary，不是 SQL
+
+`description` 是**这一步**的一行标签（「link candidate conversations to tags」）—— 它不说
+哪些对话、哪些标签、多少条，所以拿它没法做决定。`execute_sql` 因此多了一个
+`change_summary`：AI 写的 markdown，说清楚用户的数据会变成什么样。
+
+批准框（`AgentApproval` 和卡片）的主体就是它，**完整展开而不是折叠** —— 它就是决定本身，
+不是决定背后的细节。
+
+| 情况 | 批准框里显示 |
+|------|-------------|
+| 有 `change_summary` | 渲染成 markdown，**不显示**「查看 SQL」 |
+| 没给（AI 漏了） | 回退成原来那个「查看 SQL」折叠按钮 |
+
+⚠️ **有 summary 时故意不给 SQL 入口。** 99% 的用户读不懂 SQL，放在决策路径上是干扰而不是
+保护。要看语句就在 agent 视图里展开那张卡 —— 卡片的展开区是 summary 在上、语句在下。
+但**「一句人话都没有」比「只有 SQL」更糟**，所以 AI 没给的时候那个按钮要回来。
+
+⚠️ `change_summary` 是**可选**的，没进 `REQUIRED_PARAMS`。设成必填会让格式事故变多
+（doc 里那条「Gemini 对格式遵循度不稳」同样适用），而 SELECT 压根不需要它。
+硬性要求写在 prompt 里（soul.ts 的「Every write must explain itself」+ 规则 17 +
+sql-provider 的 schema description），代码这边靠上面那个回退兜。
+
+### ⚠️ 它不能参与「谁是同一个调用」的判定
+
+`NON_IDENTITY_PARAMS`（tool-schema.ts）+ `identityParams()`，两个消费者共用一个 helper：
+
+| 消费者 | 不排除的后果 |
+|--------|-------------|
+| `circuit-breaker.toolCallSignature` | AI 只要**换个说法**，同一条坏语句就不算重复调用，循环检测直接瞎掉 |
+| `buildToolCallFingerprint` → `buildToolCallKey` | 同一个调用每次算出不同 join key，卡片找不到自己的结果 |
+
+第一条更要命：那恰好是这个检测存在的场合。
+
+### ⚠️ markdown 进 JSON 字符串 = 新的格式事故来源
+
+`change_summary` 要求 markdown（要有 bullet 才好读），而它得待在 JSON 字符串里 ——
+模型经常直接敲真换行而不是 `\n`。真换行在 JSON 字符串里是**非法**的，
+`JSON.parse` 会拒掉**整个 block**，于是一个写操作因为「只给人看的那部分」排版没弄好而
+整个被丢掉。
+
+`fallbacks.ts` 的 `escapeRawControlChars` 修这个：扫一遍，只把**字符串内部**的
+`\n` `\r` `\t` 转义掉。安全性来自「字符串里的真换行本来就非法」—— 修它只可能把
+不可解析变成可解析，不可能弄坏本来正确的 JSON。token 之间的换行是合法的，所以必须跟踪
+字符串状态，不能全局替换。
+
+⚠️ `describeJsonFault` 判定这一档**直接调用 `escapeRawControlChars` 看有没有变**，
+不再写第二个正则 —— 两边对「什么算这个错」不会有分歧。
 
 ### 写确认这一条闸
 
@@ -458,11 +540,18 @@ engine 方法。
 ### Dock 什么时候出现、什么时候自己展开
 
 ```
-可见 = (status !== 'idle' || endReason !== null)   ← 有会话
-       且 会话属于当前对话
-       且 不在 `>` 弹窗打开时
+可见 = 不在 `>` 弹窗打开时
+       且 ( (status !== 'idle' || endReason !== null)   ← 有会话
+              且 会话属于当前对话
+              且 (还在跑 或 结束了但有事要办)
+            或 当前对话有未送达的结果 )                  ← ★ 没有 session 也算
 展开 = 有待决策 ? 用户没手动折叠 : 齿轮打开
+       或 没有 session（补发卡就是全部内容，没什么可折的）
 ```
+
+⚠️ **`hasOwedResults` 是独立的一支，不能塞进 `hasSession`。** 它描述的是上一次页面生命
+留下的欠账，那时候没有任何 session。同时 pill 改成只在 `hasSession` 时渲染 ——
+它读 status，而这种情况下 status 是 `idle`，显示出来就是一行谎话。
 
 ⚠️ 箭头按钮的行为跟着上面这条分叉：有决策时它折叠决策，没有决策时它开关那组开关。
 两种情况都接 `collapsed` 的话，整个跑动过程里它是个死控件 —— 没有待决策，点几次都不出东西。
@@ -521,28 +610,65 @@ execute-tools 逐个处理 tool call
 
 `executedCalls` 保留但降级为**纯展示** —— 卡片用它显示「已执行 / 执行失败 / 已拒绝」。
 
-### 历史卡片的状态从对话里读回来，不落盘
+### 卡片状态有三个来源，按「第一手程度」排序
+
+```
+executedCalls        →  agent_tool_calls 表   →  deriveToolOutcomes
+（当前 tab 的会话）       （落盘的账本）             （从对话里推）
+```
 
 `executedCalls` 只认识**当前这个 tab 里正在跑的会话**：`start()` 会清空它，刷新页面也没了。
 所以以前打开旧对话，每张卡片都写着「未执行」—— 而那次调用的输出就在下面一条消息里。
 
-真正的历史记录是**结果消息本身**。④ 把结果作为一条真实的 user 消息发回给 AI
-（`<bs_agent_result>` … `### label` … body），所以对话 DOM 就是持久层。比落盘一份账本好两点：
-覆盖得到在别的浏览器里跑过、或者这个功能上线之前的会话；而且它带着真实输出而不只是一个 boolean。
+**中间那层是 `agent_tool_calls` 表**，见下面「落盘的是我们干了什么」。它第一手但可能过期。
+
+**最后一层是结果消息本身。** ④ 把结果作为一条真实的 user 消息发回给 AI
+（`<bs_agent_result>` … `### label [[bs:key]]` … body），所以对话 DOM 也是一份持久层。
+它排最后但**不能删**，因为只有它覆盖得到：在别的浏览器里跑过的、这个功能上线之前的、
+以及库被清掉之后的会话。
+
+⚠️ 三层的顺序不能反。账本知道「跑了但结果从没进过消息」这种调用，对话不知道；
+对话知道那些没有账本行的历史，账本不知道。谁在自己覆盖不到的地方让位，就是这个顺序。
 
 ```
 renderer/helpers/tool-outcomes.ts   ← engine/stages/handoff/formatter.ts 的逆运算
-  parseToolResults()    拆出 ### 段落
+  parseToolResults()    拆出 ### 段落，顺手读出每段的 join key
   deriveToolOutcomes()  把 model 轮的 tool calls 和下一条 user 消息的段落对齐
 ```
 
-对齐规则：**先按 label，位置只作兜底**。label 就是 `description || name`，和
-`formatter.section()` 写 header 用的是同一个表达式，正常都能命中。但 description 是 AI 写的，
-可能重复；而且这一轮可能多出一条不属于任何 call 的 `### ⚠️ Loop Warning` 段落 ——
-纯按位置的话它后面全部错一位，所以只在**条数相等**时才信位置。
+### join key：段落自己说它答的是哪个 call
+
+每个 `### ` 标题末尾带一个 `[[bs:xxxxxxxxxx]]`，就是那个 call 的
+`buildToolCallKey()` —— `buildToolCallFingerprint` 的 10 位十六进制摘要。
+卡片**自己算得出**这个 key（它手里就有那个 call），所以对齐是一次查表。
+
+为什么是摘要而不是随机 id：随机 id 只在「DB 行还在」的前提下有意义，换个浏览器、
+重装、或者恢复备份没带上这两张表，它就是个悬空指针。摘要自描述，对话本身就够。
+
+⚠️ **于是 `buildToolCallFingerprint` 变成了 wire format。** 改它对 params 的归一化方式，
+所有已经写进对话的 key 全部失配。失配会降级到下面的启发式，所以不会静默出错，但这是一道单向门。
+
+⚠️ **写一种形式，读要宽松。** payload 要经过 Quill → Gemini 渲染 → `htmlToMarkdown`
+才被解析，这趟往返已经有过塞进零宽字符、空行塌陷的前科（`SECTION_SEPARATOR` 也是因此
+只能按形状匹配）。所以 `KEY_RE` 只找标题行里的 `bs:` 标记，不管周围的括号、反引号、
+大小写还剩下什么。
+
+⚠️ **token 不能进 label。** `splitSections` 拿 label 当 capsule 的显示文字，`stripSectionKey`
+必须先把它摘掉，否则用户会在输入框的胶囊上看到一串十六进制。
+
+### 对不上的时候还是走启发式
+
+`### ⚠️ Loop Warning` 这种不属于任何 call 的段落故意**不带 key**，所以它在第一趟里
+天然被忽略 —— 这正是它以前会把纯位置匹配整体错开一位的那个坑。
+
+第二趟是老规则，只在两边的剩余项上跑：**先按 label，条数相等才信位置**。它留着不是为了
+兜格式意外，主要是为了**没有 key 的历史对话**：别的浏览器跑的、功能上线前的。
 
 对不上就是 `null`（显示「未执行」）。在一个真的跑过的调用上写「未执行」，比在一个没跑过的
 调用上写「已执行」要小的谎。
+
+⚠️ 实测过：key 真正比老启发式强的场景是**段落顺序和 call 顺序不一致**。重复 label、
+结果正文里的表格边框这两种，老规则其实扛得住 —— 别拿它们当引入 key 的理由。
 
 卡片的取值顺序是 `executedCalls[fingerprint] ?? derivedOutcome`：账本是第一手的，而且知道
 那些结果从没进过消息的调用；其余情况由对话回答，刷新之后它是唯一的来源。
@@ -568,6 +694,110 @@ renderer/helpers/tool-outcomes.ts   ← engine/stages/handoff/formatter.ts 的�
 ⚠️ 审批门在**引擎**里，不在工具里。以前 `execute-sql` 自己调
 `requestUserConfirmation` —— 工具去开 UI，而且请求里只有 SQL 字符串，没有任何东西
 能说清"这是哪一次调用"，所以批准只能是一个转述式的独立弹窗，没法长在卡片上。
+
+### 落盘的是「我们干了什么」，不是消息
+
+两张表，建在 `shared/workers/migrations.ts` 的 `create agent ledger tables` 里：
+
+| 表 | 装什么 |
+|----|--------|
+| `agent_sessions` | 一次任务：conversation_id / title / status / end_reason / rounds / 起止时间 |
+| `agent_tool_calls` | 一次调用：join_key / round / order_index / tool_name / params / status / result_body / delivered |
+
+**故意不复制 message。** 对话仍然是「说了什么」的记录，这两张表只装从对话里推不出来的东西：
+这条调用有没有跑过，以及它的结果有没有到过 AI 手里。理由有三条，从弱到强：
+
+1. AI 的上下文是 Gemini 的对话，不是我们的库。payload 还是得拼成那个格式塞进输入框，
+   `formatResults` / 31998 预算 / staging / send-watcher 一行都省不掉 —— 落盘省不掉这些。
+2. 两份真相没有对账机制。用户能在 Gemini 里删一轮、编辑重发、切 response 草稿。
+   对话当真相有个天然好处：永远和用户眼前看到的一致，不需要维护。
+3. `SYNC_TABLES` 已经明确排除了 `messages`。复制一份同样面临「同不同步」，
+   同步是体积和隐私，不同步换浏览器就是空的 —— 于是还得留 DOM 兜底，比现在更复杂。
+
+**也不进 `SYNC_TABLES`。** `result_body` 大且私密，和 `messages` 同一个理由。
+换台机器打开同一个对话就是没有账本行，退回读对话。
+
+写入时机三个，缺一不可（`agent-loop/records.ts` 的 `toolCallRecorder`）：
+
+```
+① 批准通过、执行之前   → INSERT status='running'      ← await，行必须早于工具
+② 执行完                → UPDATE status + result_body   ← fire-and-forget
+③ 送达确认（'sent'）    → delivered=1, result_body=NULL ← handoff 的 settle()
+```
+
+⚠️ **① 必须 await，而且必须在工具之前。** 「执行写操作的中途刷新」是唯一没有任何其它
+线索能还原的情形：库已经变了，结果不存在于任何地方。留在 `running` 的行就是下次加载时
+唯一的证据，卡片据此显示「可能执行了」而不是「未执行」—— 后者会招来重跑。
+
+⚠️ **③ 顺手把正文清掉。** 送达之后对话里就有了，留第二份是这张表唯一会无界增长的来源。
+反过来说，`delivered = 0` 期间那份正文是**世上唯一的一份**（payload 在已经不存在的输入框里）。
+
+### 什么样的行才算「欠着」
+
+`result_body` 的含义是**「AI 还需要这个」**，不是「这是执行结果」。这个区分踩过一次坑：
+`complete_task` 也被存了正文，于是刷新回来 Dock 弹出一张卡，问你要不要把 AI 自己发的
+`__TASK_COMPLETE__` 标记发给它 —— 而任务在上一条消息里已经明明白白结束了。
+
+两道闸，缺一不可：
+
+| 闸 | 规则 |
+|----|------|
+| 写入时 | `deliversResultToAI(name)` 为 false 的工具**不存正文**。`complete_task`（CONTROL_TOOLS）和 handoff 工具就地结束会话，结果永远不回传，所以它们不欠任何东西 |
+| 结束时 | `endSession()` 把这个 session 剩下的 `delivered = 0` 全部清掉 —— **结束了的会话不欠任何东西** |
+
+第二道闸管的是另一半：一轮里 `[UPDATE, UPDATE, complete_task]`，那两条 UPDATE 的正文也存了
+而且永远不会回传。它们的正确归宿是被丢弃，不是被当成待补发。
+
+⚠️ 真正会产生欠账的只有**页面中途消失**（刷新），而那条路径压根到不了 `finish()` ——
+这正是这条规则成立的原因。`pauseAndEnd`（熔断）也不走 `endSession`，因为它手上那份报告
+就是等着 Retry 去送的。
+
+⚠️ **`markRoundDelivered` 按轮，不按条。** 一轮所有段落在同一条消息里走，送达是一个事件。
+`ResultHandoff` 为此专门记了 `pendingRound` —— 不能读 store 的当前轮，重试路径上
+两者会错开，标错轮会让真正欠着的那一轮永远欠着。
+
+⚠️ **所有写都是 best-effort，异常一律吞掉。** 账本是辅助不是机制：丢一行只是退回读对话，
+而让一个失败的 INSERT 抛出去，会掐掉一个已经成功的工具调用 —— 从那段本来是为了
+「记住它成功了」的代码里。
+
+### 「跑了但没送出去」怎么恢复
+
+这是这张表存在的首要理由。场景：用户批准了写操作，执行完，结果 staged 在输入框里，
+还没发送就刷新了页面。库已经改了，payload 只活在那个输入框里，等回复的引擎也没了。
+
+**恢复动作是补发，不是重跑。** auto-pickup 干的恰好相反：它看到一条 model 回复的 tool call
+后面没有对应结果，就起一个新 session 把它们执行掉 —— 对写操作就是做第二遍。更别扭的是
+第二遍还会再问一次批准，用户刚批过，大概率再批一次，于是界面主动引导出这次重复写。
+
+```
+AgentLoopFeature 加载 agent-record-store
+     ↓ recordsReady（⚠️ 见下）
+pickup 的守卫：账本里有这些 key → 直接不 pickup
+     ↓
+Dock 出 AgentOwedResults 卡（⚠️ 这是唯一没有 session 也会显示的卡）
+     ↓ 用户点「发给它」
+emit('recovery:deliver-owed')  ← 走事件，因为刷新后压根没有 engine
+     ↓ AgentLoopFeature 建 engine
+buildOwedPayload(rows)         ← recovery.ts，重走 formatResults 复用语法和预算
+engine.deliverOwedResults()    ← holdForRetry + resend + advanceRound + runRounds
+     ↓ 返回「送出去了没」
+confirmOwedDelivered(rowIds)   ← ⚠️ 按 id，见下
+```
+
+⚠️ **`recordsReady` 这道门是必需的。** 读库要过一趟 worker，而 pickup 那个 effect 由 DOM
+驱动 —— DOM 先到。少了这道门，守卫会在最要紧的那一帧读到一个空账本，然后重跑掉它本来
+要保护的调用。判据是拿 store 自己的 `conversationId` 比，所以「导航快过查询」也算没就绪，
+而不是算成「没有记录」。
+
+⚠️ **收尾要按 row id，不能用 `markRoundDelivered`。** 补发的行属于**被中断的那个 session**，
+而这次发送发生在一个新 session 名下。按 session+round 标记够不到它们，结果是下次加载
+又把同一批结果拿出来问一遍 —— 而 AI 早就读过了。
+
+⚠️ **`deliverOwedResults` 的返回值只表示「送出去了没」**，不代表后面几轮的成败。
+结果一到 AI 手里就算结清，三轮之后报错不该把它们退回欠账堆。
+
+⚠️ **`pauseAndEnd` 故意不关账本 session。** 那条路径总是还欠 AI 一份报告
+（`holdForRetry` 正拿着），Retry 就是去送它的，关掉会让重试要 settle 的行变成孤儿。
 
 ### 会话与对话的绑定
 
@@ -788,8 +1018,55 @@ ROUND_BUDGET        = 29998
 而不是 boolean，理由会拼进回传给 AI 的 `CANCELLED:` 段落里，并附一句
 "不要重试同一条语句，改方案或者 complete_task('infeasible')"。
 
+### 判词只看第一行
+
+`execute-sql` 的结果里，**只有开头那一截是判词，后面全是数据**。所有读结果的地方都必须用
+`startsWith`，不能用 `includes` / 多行搜索：
+
+| 判词 | 常量 | 谁读 |
+|------|------|------|
+| `ERROR:` | — | `isSuccess`、`readOutcome` |
+| `CANCELLED:` | — | 同上 |
+| `ERROR: PAYWALL` | `PAYWALL_SIGNAL`（execute-sql 导出） | ③ 的付费拦截分支 |
+
+⚠️ 这三个都栽过同一个跟头。`readOutcome` 早期用多行搜索找 `ERROR`，而查询输出里出现
+ERROR 这个词太正常了；付费拦截用的是 `result.includes('PAYWALL')`，于是一条普通 SELECT
+只要行里带这个词，会话就结束并弹升级卡 —— 而 dump `messages.content` 是 agent 的日常，
+一段聊订阅的对话就够触发。
+
+⚠️ `PAYWALL_SIGNAL` 从 `tools/execute-sql` **import**，别重打。产生方和判定方漂了，
+后果是付费拦截静默失效（写操作直接放过去）。
+
 ### 数据库层
-- `@/shared/db` 的 `runQuery(sql)` 和 `runCommand(sql)` 通过 message passing 与 Web Worker 通信
+
+⚠️⚠️ **content script 里不能 import `@/shared/db`。** 这条是整个模块最容易犯、代价最大的错。
+
+那个 bridge 发 `DB_REQUEST`（offscreen 收得到），但回程的 `DB_RESPONSE` 走
+`runtime.sendMessage` —— **content script 收不到**。所以调用不会报错，而是一直挂到
+`REQUEST_TIMEOUT_MS`（30 秒）。
+
+实际踩过一次：账本第一版在 `records.ts` 里直接调 repo，而 `begin()` 是在每个工具执行前
+`await` 的，于是**每一次 tool call 都要等 30 秒** —— 包括 `activate_skill` 这种压根不碰
+数据的。表现是「执行 SQL 要十几二十秒」，但真正的原因跟 SQL 一点关系都没有。
+
+所以 agent-loop 里所有库访问都走 background 消息：
+
+| 用途 | 通道 |
+|------|------|
+| AI 的 SQL 工具 | `EXECUTE_SQL` → `handlers/db-admin.ts`（带 paywall / blocklist / undo 快照） |
+| tool call 账本 | `AGENT_LEDGER` → `handlers/agent-ledger.ts`（`ledger-client.ts` 是唯一出口） |
+
+⚠️ 账本**不要**并进 `EXECUTE_SQL`。那是 AI 自己驱动的工具面，带付费拦截、语句黑名单和撤销
+快照 —— 我们自己的记账没理由受这些约束。
+
+⚠️ 走 background 顺带解决了另一件事：`ensureDbForTab` 在那边跑。直接在 content script 写库
+会写进「当前恰好开着的那个库」，多账号多标签时是错的 profile。
+
+⚠️ `ledger-client` 给每次调用加了 3 秒上限，超时就当没记上。账本是辅助不是机制 ——
+少一行只是卡片少个徽章，而等下去是卡住每一次工具调用。**别把这个上限去掉**，它是上面那个
+故障不会再次变成 30 秒的唯一保险。
+
+- `@/shared/db` 的 `runQuery(sql)` / `runCommand(sql)` 只能在 background / offscreen 里用
 - Worker 使用 `@subframe7536/sqlite-wasm`，存储在 OPFS 或 IndexedDB
 
 ### 付费系统
@@ -888,11 +1165,23 @@ export function shouldAutoSend(toolCalls: ParsedToolCall[]): boolean {
 
 ## 开发常见操作
 
+### 在 agent-loop 里访问数据库
+
+**别 import `@/shared/db`**，理由见上面「数据库层」（症状是每个工具调用挂 30 秒）。
+
+新增一种账本操作：`shared/types/messages.ts` 的 `AGENT_LEDGER` payload 加一个 `op` →
+`handlers/agent-ledger.ts` 加一个 case → `ledger-client.ts` 加一个方法。别的都不用动。
+
+自检一条：**`grep -c DB_REQUEST .output/chrome-mv3/content-scripts/overlay.js` 必须是 0。**
+不是 0 就说明有人把库桥接打进 content script 了。
+
 ### 新增一个 Tool
 
 1. `mcp/providers/` 下创建 provider（schema + execute）
 2. 挂到 `mcp/builtin-mcp.ts` 的 `tools` 数组
 3. `engine/parser/tool-schema.ts` 的 `SUPPORTED_TOOLS` + `REQUIRED_PARAMS` 注册
+3.5. 如果新加的 param 是**给人看的**（像 `change_summary`），加进 `NON_IDENTITY_PARAMS`
+   —— 否则它会参与重复调用检测和 join key，见「它不能参与谁是同一个调用的判定」
 4. 如果它是控制循环而不是干活的（像 `complete_task`），加进 `ENGINE_ONLY_TOOLS`
    —— 否则消息卡片上会出现批准按钮，而这类工具没有什么可批准的
 
@@ -926,6 +1215,19 @@ agentEventBus.emit('launcher:run-entry', { entryId, userInput, autoSend });
 把卡片和输入框置灰，并给一个「停掉当前任务」的出口 —— `AgentTab` 的注释一直声称有这个守卫，
 实际上没有，这就是「第一个技能好使、后面点的技能只把 skill 原文发出去」的来源。
 
+### 改 tool 结果的回传格式
+
+`engine/stages/handoff/formatter.ts` 是唯一的语法定义处，三个消费者：`splitSections`
+（切 capsule）、`renderer/helpers/tool-outcomes.ts`（读回历史）、`recovery.ts`（补发时重拼）。
+后两个从这里 **import** 常量，不要重打一遍 —— 两头一漂，症状是所有卡片悄悄退回「未执行」。
+
+动 `### ` 标题那一行之前，先确认这四件事还成立：
+
+1. `formatSectionHeading` 写的 key，`readSectionKey` 读得回来（读侧要保持宽松）
+2. `stripSectionKey` 把 key 从 label 里摘干净（否则胶囊上出现十六进制）
+3. `budget.ts` 的 `truncateSection` 保留整行 header —— key 不能被截断切掉
+4. `soul.ts` 里那段「忽略这个标记」还对得上实际写出去的形状
+
 ### 修改编辑器交互逻辑
 
 **只改 `quill-editor.ts`**。所有消费者（adapter、engine、renderer、useEditorIntegration）都通过它操作编辑器。
@@ -944,6 +1246,12 @@ agentEventBus.emit('launcher:run-entry', { entryId, userInput, autoSend });
 3.5. 手动放行挂起的批准: `useAgentLoopStore.getState().pendingApproval?.resolve({ approved: true, scope: 'once' })`
 4. 验证 Quill Delta 是否同步: 在 DevTools 里对比 `.ql-editor` 的 innerHTML 和发送的实际内容
 5. 强制停止循环: `getActiveEngine()?.stop()`（只调 store 的 `stop()` 停不掉引擎）
+5.1. 看账本: `useAgentRecordStore.getState()` —— `records` 是 joinKey → 结果，
+     `owed` 非空说明有跑完但没送出去的结果。库里直接查:
+     `SELECT round, order_index, tool_name, status, delivered FROM agent_tool_calls WHERE conversation_id = '...' ORDER BY round, order_index`
+5.2. 复现「跑了但没送出去」: 让它执行一个写操作、在 `awaiting_send` 卡住的时候（结果已在
+     输入框、还没按回车）刷新页面。预期是 Dock 出补发卡、卡片显示「已执行 · 未回传」，
+     **不是**重新问你一遍批准
 6. 测试 capsule 展开: 手动调用 `expandCapsules(editor, 'bs-prompt-capsule')` 看编辑器内容是否变成真实 prompt
 
 ---
@@ -955,7 +1263,8 @@ agentEventBus.emit('launcher:run-entry', { entryId, userInput, autoSend });
 | DB Snapshot / 撤销 | 占位 | `snapshot-manager.ts` 全部返回 false；撤销 UI 已移除，等实现后再加回 |
 | sync_conversation_messages | 已做 | `tools/sync/`：对话间走 Gemini 自己的路由（`shared/lib/navigation`，同 explorer），整个 run 活在一个 JS 上下文里，所以有常驻进度 toast（`sync-progress.ts`）和即时生效的 Stop。job 仍存 `chrome.storage.local`，供路由打不开时的整页兜底和关标签后 `resumeSyncRun()` 续跑（续跑同样先立进度条，可中断）。到站判据是「message 列表指纹变了」而不是「有没有 message」——旧对话的 DOM 会滞留一拍。滚动目标是 `chat-window infinite-scroller`（同 SmartScrollbar），往上滚到高度不再变为止；选不到该元素时降级为 `no-scroller`，只录打开时那一页，entry 记 `partial`。未在真实长对话上验证过 |
 | handoff 工具 | 已做 | `HANDOFF_TOOLS`（目前只有 sync）：调用成功即结束 session，因为页面会被导航走。approval 强制要问一次，见 `requiresApproval()`。**它的 tool 结果永远不会回传**，所以 `toolOutcomes` 恒为 null——任何扫「有没有没人执行的 tool call」的地方都必须用 `renderer/helpers/session-end.ts` 的 `endsSession()` 排除它，否则每次回到该对话都会把 sync 整趟重跑一遍 |
-| auto-pickup（idle 时接手 tool call） | 已做 | `AgentLoopFeature.tsx`：session 结束后用户直接追问，AI 仍用 tool 格式回答，这里起一个新 session（`startFromExistingResponse`）。两个坑：① 闩锁必须按「对话 + turn + tool call 指纹」做 key，不能用 per-mount 布尔——SPA 跳转后组件永不卸载，布尔一旦置上就把整个标签页后续的 pickup 全废了；② session 绑的 conversationId 要用 `readConversationIdFromPath()` 现读 URL，不能用 `useCurrentConversationId()`（走 500ms 轮询，路由跳转瞬间是旧值），绑错了 Dock 的 `belongsToCurrent` 会判定不属于当前对话，approval 直接没地方显示 |
+| tool call 落盘 + 补发 | 已做 | `agent_sessions` / `agent_tool_calls` 两张表，见「落盘的是我们干了什么」和「跑了但没送出去怎么恢复」。不进 `SYNC_TABLES` |
+| auto-pickup（idle 时接手 tool call） | 已做 | `AgentLoopFeature.tsx`：session 结束后用户直接追问，AI 仍用 tool 格式回答，这里起一个新 session（`startFromExistingResponse`）。⚠️ **第三个坑最贵**：刷新后页面看起来和「没跑过」一模一样，所以它会把已经执行过的写操作再跑一遍 —— 现在靠 `recordsReady` + 查账本的 `anyRecorded` 守卫挡住，改这个 effect 前先读那两段。另外两个坑：① 闩锁必须按「对话 + turn + tool call 指纹」做 key，不能用 per-mount 布尔——SPA 跳转后组件永不卸载，布尔一旦置上就把整个标签页后续的 pickup 全废了；② session 绑的 conversationId 要用 `readConversationIdFromPath()` 现读 URL，不能用 `useCurrentConversationId()`（走 500ms 轮询，路由跳转瞬间是旧值），绑错了 Dock 的 `belongsToCurrent` 会判定不属于当前对话，approval 直接没地方显示 |
 | settings UI | 未做 | 需在设置面板加 agentLoop 独立开关（现复用 slashCommand）；`AgentPolicyControls` 那三个持久开关按理也该搬过去，现在暂居 Dock 的齿轮里 |
 | AI Studio 支持 | 未做 | 需写 adapter + entry component |
 | 自动继续 | 已做 | `autoContinue` 开关（默认开）∩ 本轮批准情况，见 `shouldAutoSend()` |

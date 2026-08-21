@@ -18,7 +18,11 @@ interface NewChatButtonProps {
 
 export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
   const { t } = useI18n();
-  const { createPendingAndFocus, onNewChat: explorerNewChat } = useExplorerContext();
+  const {
+    createPendingAndFocus,
+    onNewChat: explorerNewChat,
+    resolveNewChatFolder,
+  } = useExplorerContext();
 
   const lastSelectedGemId = useSettingsStore((s) => s.lastSelectedGemId);
   const lastSelectedNotebookId = useSettingsStore((s) => s.lastSelectedNotebookId);
@@ -34,21 +38,14 @@ export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
     [notebooks, lastSelectedNotebookId],
   );
 
-  /** Resolve the target folder for a new chat based on context (gem/notebook default or inbox) */
-  const resolveTargetFolder = (gemId?: string | null, notebookId?: string | null): string => {
-    const platform = useAppStore.getState().ui.overlay.currentPlatform;
-    const { gems: allGems, notebooks: allNotebooks } = useAppStore.getState();
-
-    if (gemId) {
-      const gem = allGems.find((g) => g.id === gemId);
-      if (gem?.default_folder_id) return gem.default_folder_id;
-    }
-    if (notebookId) {
-      const notebook = allNotebooks.find((n) => n.id === notebookId);
-      if (notebook?.default_folder_id) return notebook.default_folder_id;
-    }
-    return INBOX_FOLDER_ID(platform);
-  };
+  /**
+   * Resolve the target folder for a new chat.
+   * Priority (owned by the explorer, which holds the selection state):
+   * selected folder → gem/notebook default folder → inbox.
+   */
+  const resolveTargetFolder = (gemId?: string | null, notebookId?: string | null): string =>
+    resolveNewChatFolder?.(gemId, notebookId)
+    ?? INBOX_FOLDER_ID(useAppStore.getState().ui.overlay.currentPlatform);
 
   const handleNewChat = () => {
     if (newChatBehavior === 'new-tab') {

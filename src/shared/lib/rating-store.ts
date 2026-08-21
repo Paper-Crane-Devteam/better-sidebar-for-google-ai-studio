@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 
+/**
+ * Rating prompt round. Increase by 1 whenever you want to ask existing users
+ * for a review again (e.g. after a big release).
+ */
+export const RATING_PROMPT_ROUND = 2;
+
 interface RatingState {
   hasPrompted: boolean;
   installedAt: number | null;
@@ -49,6 +55,17 @@ export const useRatingStore = create<RatingState>()(
     {
       name: 'better-sidebar-rating-settings',
       storage: createJSONStorage(() => storage),
+      // Bump this version to re-run the rating prompt for existing users.
+      // Each bump clears `hasPrompted` while keeping installedAt/openCount,
+      // so users who already meet the usage thresholds get asked again.
+      version: RATING_PROMPT_ROUND,
+      migrate: (persistedState) => {
+        const state = (persistedState ?? {}) as Partial<RatingState>;
+        return {
+          ...state,
+          hasPrompted: false,
+        } as RatingState;
+      },
     }
   )
 );

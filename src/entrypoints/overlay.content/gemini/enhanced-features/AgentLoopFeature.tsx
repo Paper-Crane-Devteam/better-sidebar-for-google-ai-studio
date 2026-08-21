@@ -47,7 +47,12 @@ import { assembleFinalPrompt } from '@/entrypoints/overlay.content/shared/module
 import { getEnabledSkills } from '@/entrypoints/overlay.content/shared/modules/agent-loop/skills/skill-registry';
 import { initMCPRegistry } from '@/entrypoints/overlay.content/shared/modules/agent-loop/mcp/setup';
 import { getAgentEntryById } from '@/entrypoints/overlay.content/shared/modules/agent-loop/agent-entry';
-import { buildToolCallFingerprint } from '@/entrypoints/overlay.content/shared/modules/agent-loop/execution-policy';
+import {
+  buildToolCallFingerprint,
+  buildToolCallKey,
+} from '@/entrypoints/overlay.content/shared/modules/agent-loop/execution-policy';
+import { useAgentRecordStore } from '@/entrypoints/overlay.content/shared/modules/agent-loop/agent-record-store';
+import { buildOwedPayload } from '@/entrypoints/overlay.content/shared/modules/agent-loop/recovery';
 import type { AgentPlatformAdapter } from '@/entrypoints/overlay.content/shared/modules/agent-loop';
 import {
   useEditorIntegration,
@@ -113,6 +118,33 @@ export const AgentLoopFeature: React.FC = () => {
     close,
     getSelectedEntry,
   } = useAgentTrigger(isSlashCommandActive);
+
+  /**
+   * Load the tool call ledger for whichever conversation is open.
+   *
+   * Done here, at the page level, rather than in the conversation overlay: the cards
+   * need it, but so does the dock's recovery prompt, and the dock has to work with the
+   * sidebar closed and in Gemini's native rendering.
+   */
+  const loadRecords = useAgentRecordStore((s) => s.load);
+  useEffect(() => {
+    void loadRecords(conversationId);
+  }, [conversationId, loadRecords]);
+
+  /**
+   * Whether the ledger for *this* conversation has arrived.
+   *
+   * Auto-pickup must not run before it does. Reading the database is a round trip
+   * through the worker, and the pickup effect is driven by the DOM — which is ready
+   * first. Without this gate the guard below reads an empty ledger on the very render
+   * where it matters most, and re-executes the calls it was added to protect.
+   *
+   * The comparison is against the store's own `conversationId`, so a navigation that
+   * outpaces the query also reads as "not ready" rather than as "nothing recorded".
+   */
+  const recordsReady = useAgentRecordStore(
+    (s) => !s.loading && s.conversationId === conversationId,
+  );
 
   const handleCapsuleClick = useCallback((info: CapsuleClickInfo) => {
     showCapsuleDetailModal(t('agent.tool.promptTitle', { defaultValue: 'Prompt content' }), info.content);
@@ -236,6 +268,10 @@ export const AgentLoopFeature: React.FC = () => {
     const status = useAgentLoopStore.getState().status;
     if (status !== 'idle') return;
 
+    // The ledger decides whether these calls already ran, so nothing may be picked up
+    // until it is here. See `recordsReady`.
+    if (!recordsReady) return;
+
     // Find the last model turn
     const lastModel = [...messages].reverse().find((m) => m.role === 'model');
     if (!lastModel) return;
@@ -300,6 +336,28 @@ export const AgentLoopFeature: React.FC = () => {
     });
     if (anyKnown) return;
 
+    /**
+     * The stored ledger says these already ran. Do not run them again.
+     *
+     * This is the guard the whole ledger exists for. Everything above reads the page,
+     * and after a reload the page looks identical whether a call ran or not: the tool
+     * calls are there, no results follow them, `executedCalls` is empty. So pickup used
+     * to re-execute — and for a write, that is the same statement applied twice. Worse,
+     * the second run asks for approval again, on a statement the user just approved, so
+     * the interface actively invites the duplicate.
+     *
+     * What the results actually need is delivering, which the dock offers separately
+     * (see `owed`). Re-running is never the recovery.
+     */
+    const recorded = useAgentRecordStore.getState().records;
+    const anyRecorded = lastModel.toolCalls.some(
+      (tc) => recorded[buildToolCallKey(tc.toolCall)] !== undefined,
+    );
+    if (anyRecorded) {
+      console.log('[AgentLoop] Auto-pickup skipped: these calls are in the ledger already');
+      return;
+    }
+
     // We need the actual DOM element to pass to the engine
     const adapter = getAdapter();
     if (!adapter) return;
@@ -321,7 +379,7 @@ export const AgentLoopFeature: React.FC = () => {
       conversationId: liveConversationId,
       title: 'Follow-up task',
     });
-  }, [messages, getAdapter]);
+  }, [messages, getAdapter, recordsReady]);
 
   // ─── Capsule insertion (from the `>` popup) ─────────────────────────
 
@@ -606,6 +664,86 @@ export const AgentLoopFeature: React.FC = () => {
       }
     });
   }, [getAdapter]);
+
+  // ─── Recovery bridge (dock → engine) ────────────────────────────────
+
+  /**
+   * Deliver results that ran in a previous page life and never reached the AI.
+   *
+   * Lives here because after a reload there is no engine — the dock has a button but
+   * nothing to call, exactly like the launcher. The payload is rebuilt from the stored
+   * result bodies, so what goes out is what actually happened rather than a second run
+   * of it.
+   */
+  useEffect(() => {
+    return agentEventBus.on('recovery:deliver-owed', async ({ conversationId: owedIn }) => {
+      const store = useAgentRecordStore.getState();
+      const owed = store.owed;
+      if (!owed || owed.conversationId !== owedIn) return;
+
+      if (useAgentLoopStore.getState().status !== 'idle') {
+        // A session started between the click and this handler; it owns the composer.
+        toast.error(
+          t('agent.owed.busy', {
+            defaultValue: 'A task is already running — stop it first.',
+          }),
+        );
+        return;
+      }
+
+      const adapter = getAdapter();
+      if (!adapter?.getEditor()) {
+        toast.error(
+          t('agent.owed.noEditor', { defaultValue: 'Open the chat first.' }),
+        );
+        return;
+      }
+
+      const payload = buildOwedPayload(owed.rows);
+      if (!payload) {
+        // Nothing left to send — the bodies are gone, so the offer is stale.
+        void store.dismissOwed();
+        return;
+      }
+
+      /**
+       * Clear the offer before sending, not after.
+       *
+       * The rows are marked delivered by the handoff once the send is confirmed, but
+       * that is seconds away and the card is a button the user can press again. Two
+       * presses would stage the same payload twice.
+       */
+      useAgentRecordStore.setState({ owed: null });
+
+      const engine = new AgentLoopEngine(adapter);
+      engineRef.current = engine;
+      setActiveEngine(engine);
+
+      const delivered = await engine.deliverOwedResults(payload, 20, {
+        conversationId: owedIn,
+        title: t('agent.owed.sessionTitle', { defaultValue: 'Recovered task' }),
+      });
+
+      if (!delivered) {
+        // Never left the composer, so the results are still owed — put the offer back
+        // rather than stranding them behind a card that is gone.
+        void useAgentRecordStore.getState().load(owedIn, true);
+        return;
+      }
+
+      /**
+       * Settle the rows we just delivered, by id.
+       *
+       * The handoff's own bookkeeping marks a round of the *current* session, and these
+       * rows belong to the interrupted one — so without this they would stay undelivered
+       * and be re-offered on the next load, with results the AI has already read.
+       */
+      await useAgentRecordStore
+        .getState()
+        .confirmOwedDelivered(owed.rows.map((row) => row.id));
+      void useAgentRecordStore.getState().load(owedIn, true);
+    });
+  }, [getAdapter, t]);
 
   // ─── Monitor slash command popup for mutual exclusion ───────────────
 

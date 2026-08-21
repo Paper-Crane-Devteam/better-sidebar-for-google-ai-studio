@@ -15,9 +15,17 @@ import type { ParsedToolCall } from '../../types';
 import type { LoopContext } from '../context';
 import { executeToolCall } from '../../tools/tool-registry';
 import { parseCompleteTaskSignal } from '../../tools/complete-task';
-import { buildToolCallFingerprint, getToolRisk, requiresApproval } from '../../execution-policy';
-import { isHandoffTool } from '../parser/tool-schema';
+import { PAYWALL_SIGNAL } from '../../tools/execute-sql';
+import {
+  buildToolCallFingerprint,
+  buildToolCallKey,
+  getToolRisk,
+  requiresApproval,
+} from '../../execution-policy';
+import { deliversResultToAI, isHandoffTool } from '../parser/tool-schema';
+import { formatSectionHeading } from './handoff/formatter';
 import { AUTO_APPROVED, requestApproval } from './approval-gate';
+import { toolCallRecorder } from '../../records';
 
 export type ExecuteOutcome =
   /** Round finished; feed these sections back to the AI */
@@ -40,8 +48,14 @@ function isSuccess(result: string): boolean {
   return !result.startsWith('ERROR:') && !result.startsWith('CANCELLED:');
 }
 
-function section(toolCall: ParsedToolCall, body: string): string {
-  return `### ${toolCall.description || toolCall.name}\n${body}`;
+/**
+ * One tool's outcome as the AI will read it.
+ *
+ * The heading carries `key` — the digest of this very call — so that reading the
+ * conversation back later is a lookup rather than a guess. See `formatter.ts`.
+ */
+function section(toolCall: ParsedToolCall, key: string, body: string): string {
+  return `${formatSectionHeading(toolCall.description || toolCall.name, key)}\n${body}`;
 }
 
 export async function executeTools(
@@ -54,15 +68,28 @@ export async function executeTools(
   ctx.breaker.beginRound();
   const results: string[] = [];
 
+  /**
+   * Calls in this round that failed or were refused, by label.
+   *
+   * Collected for one purpose: to refuse a `complete_task` that arrives in the same
+   * response. See the completion branch below.
+   */
+  const trouble: string[] = [];
+
   for (const [index, toolCall] of toolCalls.entries()) {
     ctx.abort.check();
+
+    // Computed before any branch: every section written below carries the key, the
+    // breaker's hard stop included.
+    const fingerprint = buildToolCallFingerprint(toolCall);
+    const key = buildToolCallKey(toolCall);
 
     // ── Guard: is the AI repeating itself? ─────────────────────────────────
     const loopCheck = ctx.breaker.checkRepeatedToolCall(toolCall.name, toolCall.params);
 
     if (loopCheck.action === 'stop') {
       console.warn('[AgentLoop] Circuit breaker: loop hard stop');
-      results.push(section(toolCall, loopCheck.message));
+      results.push(section(toolCall, key, loopCheck.message));
       return halt(
         ctx,
         results,
@@ -71,11 +98,11 @@ export async function executeTools(
     }
 
     if (loopCheck.action === 'warn') {
-      // Warn but still run it once more — the AI gets a chance to self-correct
+      // Warn but still run it once more — the AI gets a chance to self-correct.
+      // No key: this section answers no call, which is exactly the case that used to
+      // knock the old positional matching one out of step.
       results.push(`### ⚠️ Loop Warning\n${loopCheck.message}`);
     }
-
-    const fingerprint = buildToolCallFingerprint(toolCall);
 
     // ── Gate: does the user have to say go? ────────────────────────────────
     const decision = requiresApproval(toolCall)
@@ -114,7 +141,23 @@ export async function executeTools(
         timestamp: Date.now(),
         source: 'engine',
       });
-      results.push(section(toolCall, refusal));
+      // `record`, not `settle`: a refusal skips `begin` — nothing ran, so there was
+      // no window to guard — but it still needs a row, because "you turned this down"
+      // is an outcome the card must be able to show after a reload.
+      void toolCallRecorder.record(
+        {
+          key,
+          round: ctx.round,
+          orderIndex: index,
+          toolName: toolCall.name,
+          description: toolCall.description,
+          params: toolCall.params,
+          isWrite: getToolRisk(toolCall) === 'write',
+        },
+        { status: 'rejected', resultBody: refusal },
+      );
+      results.push(section(toolCall, key, refusal));
+      trouble.push(`${toolCall.description || toolCall.name} (refused)`);
       continue;
     }
 
@@ -122,6 +165,24 @@ export async function executeTools(
     ctx.store.setCurrentTool(toolCall.name);
     console.log(`[AgentLoop] Executing: ${toolCall.name}`, toolCall.params);
     ctx.events.emit('tool:executing', { toolName: toolCall.name, params: toolCall.params });
+
+    /**
+     * Filed as `running` *before* the call, not after.
+     *
+     * A write that lands and then loses its tab — a reload mid-execution — is the one
+     * case nothing else can reconstruct: the database already changed and no result
+     * exists anywhere. A row left at `running` is how the next page load knows to say
+     * "this may have gone through" instead of quietly offering to run it again.
+     */
+    await toolCallRecorder.begin({
+      key,
+      round: ctx.round,
+      orderIndex: index,
+      toolName: toolCall.name,
+      description: toolCall.description,
+      params: toolCall.params,
+      isWrite: getToolRisk(toolCall) === 'write',
+    });
 
     const result = await executeToolCall(toolCall);
     const success = isSuccess(result);
@@ -156,7 +217,9 @@ export async function executeTools(
           result: body,
           timestamp: Date.now(),
         });
-        results.push(section(toolCall, `${body}\n\n${failure.message}`));
+        const haltedSection = section(toolCall, key, `${body}\n\n${failure.message}`);
+        void toolCallRecorder.settle(key, { status: 'failed', resultBody: body });
+        results.push(haltedSection);
         return halt(ctx, results, 'Too many failures in a row. Review the errors above, then retry.');
       }
 
@@ -181,7 +244,22 @@ export async function executeTools(
       source: 'engine',
     });
 
-    results.push(section(toolCall, body));
+    /**
+     * ⚠️ No body for a tool whose result is never reported back.
+     *
+     * `result_body` means "the AI is still owed this", and a leftover one is read as
+     * unfinished business the dock offers to send. `complete_task` and the handoff
+     * tools end the session where they stand, so they are owed nothing — storing their
+     * body produced a card offering to send the AI its own `__TASK_COMPLETE__` marker,
+     * one message after the task had visibly finished.
+     */
+    void toolCallRecorder.settle(key, {
+      status: success ? 'ok' : 'failed',
+      resultBody: deliversResultToAI(toolCall.name) ? body : null,
+    });
+
+    results.push(section(toolCall, key, body));
+    if (!success) trouble.push(`${toolCall.description || toolCall.name} (failed)`);
 
     // ── Session-ending signals ─────────────────────────────────────────────
 
@@ -196,6 +274,50 @@ export async function executeTools(
     }
 
     const completion = parseCompleteTaskSignal(result);
+
+    /**
+     * A completion announced on top of something that just went wrong is not accepted.
+     *
+     * The AI regularly issues several writes and a `complete_task` in one response.
+     * Results are only sent back on the *next* round, so when the round ends here it
+     * never learns whether those writes landed — and it has already told the user they
+     * did. If one of them failed, or the user refused it, the transcript ends with a
+     * confident success over a database that was not changed.
+     *
+     * So the round is handed off instead of finishing: the AI reads what actually
+     * happened and either fixes it or reports honestly. Only the failure case is
+     * intercepted — when everything worked, its verdict stands and the session ends
+     * normally, because second-guessing a clean run would just cost an extra round.
+     *
+     * The prompt asks for the same thing (see `soul.ts`), but a prompt cannot be the
+     * only defence here: this is the class of mistake that leaves wrong data behind
+     * while telling the user it didn't.
+     */
+    if (completion && trouble.length > 0) {
+      console.warn(
+        '[AgentLoop] complete_task arrived alongside failures; reporting instead of ending',
+        trouble,
+      );
+      // The completion marker itself is not a result — drop it and say why, or the AI
+      // reads its own `__TASK_COMPLETE__` back and treats the task as closed.
+      results.pop();
+      results.push(
+        `### ⚠️ Completion Not Accepted\n` +
+          `You called complete_task in the same response as ${trouble.length} step(s) that did not ` +
+          `succeed: ${trouble.join('; ')}.\n\n` +
+          `Their results are above — you had not seen them when you declared the task done, so that ` +
+          `verdict was premature and has been discarded. Read what actually happened, then either ` +
+          `fix it and continue, or call complete_task again with an honest status ("partial" or ` +
+          `"infeasible") describing what did not work. Do not simply repeat the same completion.`,
+      );
+      ctx.store.setCurrentTool(null);
+      ctx.events.emit('loop:round-completed', {
+        round: ctx.round,
+        toolCallCount: toolCalls.length,
+      });
+      return { kind: 'results', results };
+    }
+
     if (completion) {
       console.log(`[AgentLoop] Task explicitly ended (${completion.status}):`, completion.summary);
       ctx.store.addResult({
@@ -212,7 +334,16 @@ export async function executeTools(
       return { kind: 'ended' };
     }
 
-    if (result.includes('PAYWALL')) {
+    /**
+     * ⚠️ `startsWith`, not `includes`.
+     *
+     * `includes('PAYWALL')` searched the entire result, so an ordinary SELECT whose
+     * rows contained the word ended the session and showed the upgrade card — and
+     * dumping `messages.content` is routine, so any conversation discussing
+     * subscriptions was enough to trigger it. Only the first line is the verdict; the
+     * rest is data the AI asked for.
+     */
+    if (result.startsWith(PAYWALL_SIGNAL)) {
       console.log('[AgentLoop] Paywall hit, stopping');
       ctx.store.setCurrentTool(null);
       ctx.finish('paywall');

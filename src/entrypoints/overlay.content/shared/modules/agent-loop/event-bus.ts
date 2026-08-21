@@ -97,6 +97,16 @@ export interface AgentEventMap {
     reason: 'no-editor' | 'unknown-entry' | 'composer-busy' | 'session-busy';
   };
 
+  // ── Recovery (dock → editor) ───────────────────────────────────────────
+  /**
+   * Send results that ran in a previous page life but never reached the AI.
+   *
+   * Routed through the bus for the same reason the launcher is: only the platform
+   * feature owns an engine and the editor. After a reload there is no engine at all,
+   * so the dock cannot simply call one — it asks, and the feature builds it.
+   */
+  'recovery:deliver-owed': { conversationId: string };
+
   // ── Generic ────────────────────────────────────────────────────────────
   'debug:log': { level: 'info' | 'warn' | 'error'; message: string; data?: unknown };
 }

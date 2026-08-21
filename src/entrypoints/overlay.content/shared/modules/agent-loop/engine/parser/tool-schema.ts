@@ -67,6 +67,55 @@ export function isHandoffTool(name: string): boolean {
 }
 
 /**
+ * Params that exist for the user, not for the tool.
+ *
+ * `change_summary` is prose the AI writes so a person can decide whether to allow a
+ * write. It has no effect on what runs, and it is freely reworded — so it must not
+ * count towards "is this the same call as before".
+ *
+ * ⚠️ Two things break if it does. The circuit breaker compares whole param objects to
+ * catch an AI stuck re-issuing one statement; a reworded summary makes each attempt
+ * look new and the loop detector goes blind. And `buildToolCallKey` is written into the
+ * conversation as a join key — varying prose would give the same effective call a
+ * different key every time, so a card could no longer find its own result.
+ */
+export const NON_IDENTITY_PARAMS: readonly string[] = ['change_summary'];
+
+/**
+ * The params that decide what actually runs, with the human-facing ones removed.
+ *
+ * One helper for both consumers, so they cannot disagree about what identity means.
+ */
+export function identityParams(
+  params: Record<string, string>,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const key of Object.keys(params)) {
+    if (NON_IDENTITY_PARAMS.includes(key)) continue;
+    out[key] = params[key];
+  }
+  return out;
+}
+
+/**
+ * Whether this tool's result will ever be sent back to the AI.
+ *
+ * False for the two kinds that end the session on the spot: `complete_task` (the loop
+ * stops, so there is no next turn to report into) and a handoff (the page is being
+ * navigated away). Both push a section into the round's results, and that array is
+ * then discarded along with the session — by design.
+ *
+ * Exists because the ledger has to know. It keeps a result body only while the AI is
+ * still owed it, and treats a leftover body as "this ran but was never reported",
+ * offering to send it. For these tools that offer is nonsense: it produced a card
+ * asking whether to send the AI its own `__TASK_COMPLETE__` marker, one message after
+ * the task had visibly finished.
+ */
+export function deliversResultToAI(name: string): boolean {
+  return !CONTROL_TOOLS.includes(name) && !isHandoffTool(name);
+}
+
+/**
  * Whether the response looks cut off mid tool call.
  *
  * An unclosed opening tag is the one unambiguous signal, and it needs its own

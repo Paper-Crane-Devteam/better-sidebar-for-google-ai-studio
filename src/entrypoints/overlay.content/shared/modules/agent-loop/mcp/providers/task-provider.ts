@@ -11,7 +11,12 @@ export const taskProvider: ToolDefinition = {
     description:
       'End the agent loop. Call this when the request is fulfilled, and also when you have concluded it ' +
       'cannot be fulfilled — use the status parameter to say which. Never end a session by simply ' +
-      'explaining the outcome in prose.',
+      'explaining the outcome in prose. ' +
+      'IMPORTANT: put this in a response of its own, never alongside other tool calls. You do not see ' +
+      "the results of the tools in the response you are writing, so a completion issued next to them " +
+      'reports an outcome you have not actually observed. Issue the work, read the results on your next ' +
+      'turn, then call this. A completion sent in a response where anything failed or was refused is ' +
+      'discarded and the results are returned to you instead.',
     parameters: {
       type: 'object',
       properties: {

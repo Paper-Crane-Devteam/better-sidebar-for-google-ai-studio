@@ -1,75 +1,66 @@
-# 🤖 v2.9.0 — The Agent Has Landed
+# 🤖 v2.9.0 — The AI Agent is Here
 
-Remember what I promised in v2.8.0? *"The Agent is still in the oven."* Well, the timer just went off. 🔔
+After a period of development and architectural updates, we are excited to introduce a brand new feature: **the AI Agent**. 🎉
 
-Two and a half months. A lot of coffee. An engine rewritten more times than I'd like to admit in public. **The AI Agent is officially live.**
+We hope to provide you with a more practical **intelligent assistant**, rather than just a few shortcut buttons. You can tell it what you need in plain language, and it will attempt to search your data, analyze it, execute steps, and report back to you. All of this runs entirely locally in your browser using your current Gemini session. There are no API keys required, no extra tokens consumed, and your data never leaves your device, ensuring privacy and security.
 
-Here's the thing I want you to understand about this release: every other sidebar extension out there gives you *buttons*. You click, it does one thing. This one gives you an **operator**. You describe what you want in plain English, and the AI actually goes and does it — reading your data, making decisions, executing multi-step work, and reporting back. Inside your own browser. Using your own Gemini session. No API keys, no extra tokens, no data leaving your machine.
+## 🚀 Core Update: AI Agent
 
-Let me show you what that means.
+Simply type `>` in the Gemini input box to bring it up.
 
-## 🚀 The Headliner: AI Agent
+A list will appear where you can select a **preset skill**, or you can choose not to and just naturally describe your request, letting the AI determine how to execute it.
 
-Type `>` in the Gemini input box. That's it. That's the whole interface.
+**We have prepared the following basic skills for you to try:**
 
-A list pops up: pick a **Skill**, or just hit the first option and let the AI figure out which skill fits your request. Then describe your task like you'd describe it to a competent intern, and watch it work.
+*   **🗂️ Auto-Organize:** "Sort my last 200 conversations into folders and tag them." It will automatically analyze titles, attempt categorization, create folders, and move the items, helping you organize backlogged chat records.
+*   **🔄 Complete Search Index:** You might have noticed that full-text search sometimes misses earlier conversations. This is because old chats from before the extension was installed only have titles in the database by default. This skill helps find these "empty" chats and syncs their contents automatically. If they remain empty after syncing, it means they are no longer available in the cloud, and the Agent will help you clean up this invalid data.
+*   **📊 Data Query:** "Which folder had the most conversations last month?" Just ask, and it will query the local data to give you an answer.
+*   **📝 Batch Manage Prompts and Snippets:** It assists with rewriting, recategorizing, deduplicating, or reorganizing to help tidy up your library.
+*   **🛠️ Custom Skills:** In **Settings → Agent**, you can use your own instructions to define new skills. If you have repetitive workflows, you can try teaching them to the Agent, so you can run them with a single click later.
 
-**A few Skills ship in the box to get you started:**
+### 🔓 Exploring More Possibilities
 
-*   **🗂️ Auto-Organize:** "Sort my last 200 chats into folders and tag them." It reads your titles, figures out the taxonomy, creates the folders, moves everything. Your 6-month backlog of untitled chaos, handled in one pass.
-*   **🔄 Backfill Your Search Index:** Here's a thing you probably didn't know: a conversation's messages only get recorded while you have it open. Every chat you had *before* installing this extension is sitting in the database as a title with no content — which is exactly why full-text search sometimes comes up empty. This skill finds every one of them and syncs the actual messages in, so search and export finally see everything. Run it once, then run it again — and if a chat *still* has no messages after a real sync attempt, that means it doesn't exist on Google's side anymore. Ghost entry. Just tell the Agent to clean those up.
-*   **📊 Query Your Own Data:** Ask questions about your conversation history like it's a database — because it is one. "Which folder has the most chats from last month?" It'll tell you.
-*   **📝 Manage Prompts & Snippets:** Rewrite, reorganize, deduplicate, and refactor your Prompt Library and Snippets in bulk. Turn a messy pile into an actual library.
-*   **🛠️ Write Your Own Skills:** Go to **Settings → Agent** and define custom Skills with your own instructions. If you can describe a repeatable workflow, you can teach it to the Agent — and it becomes a permanent one-click card.
+In addition to preset skills, the Agent can directly query the extension's database, including conversations, messages, folders, tags, Prompts, and Snippets. It can automatically write queries based on your needs, analyze the results, and decide the next step. As long as it involves your local data and can be clearly described, you can try asking it to help.
 
-### 🔓 But please don't stop at that list
+You might want to try these approaches:
 
-Those Skills are **presets, not limits.** I want to be really clear about this, because it's the whole point.
+*   Type `>` and **just ask it**: "What can you do with my data?" or "Are there areas in my workspace that need organizing?" See what it suggests.
+*   **Interact with it like an assistant through multi-turn conversations.** It maintains context. For example: "Interesting, break that down by month please." "Do the same for starred chats." "Actually, just merge those two folders."
+*   Try requests we haven't created presets for: "What topics do I talk about the most?" "Find conversations about the auth bug from March and group them." "Which of my Prompts have I never used?"
+*   If you discover interesting use cases, you are very welcome to share them with us.
 
-Under the hood, the Agent has genuine query access to your extension's database — every conversation, message, folder, tag, prompt, and snippet, all of it queryable. It's not picking from a menu of five canned actions. It writes its own queries against your actual data, looks at what comes back, and decides what to do next. So the real answer to "what can it do?" is: **whatever you can describe about your own data.**
+**Regarding Security and Control:**
 
-Which means the best way to find the ceiling is to go looking for it:
+*   **🛑 You decide.** By default, any action that modifies data will ask for your confirmation first, while read operations can execute directly. You can adjust these policies in the settings at any time.
+*   **⚡ Ludicrous Mode.** If you are familiar with and trust its operations, you can enable Ludicrous Mode so it stops asking for confirmation. (All actions can still be undone.)
+*   **🎛️ Agent Dock.** The status bar is pinned above the input box, so you can see the current progress even when the sidebar is closed. Status, stop buttons, and approvals are clearly visible.
+*   **🔌 Smart Circuit Breaker.** If the Agent gets stuck in a loop or progresses slowly, the engine will automatically interrupt and notify you of the reason. If it runs for too long, it will pause and ask for your input instead of running endlessly in the background.
 
-*   Just hit `>` and *ask* it. "What can you actually do with my data?" "What's messy in here that I haven't noticed?" It knows what tables it can see and what tools it has, so let it pitch you.
-*   **Talk to it like a colleague, not a search box.** It's a real multi-turn conversation — it reports back, you push further. "Interesting, now break that down by month." "Okay, do the same for the ones I starred." "Actually, merge those two folders instead." Each round it already has the context from the last one.
-*   Ask it things no feature I could design would cover: "Which topics do I keep coming back to?" "Find chats about the auth bug from March and pull them into one folder." "Which of my prompts have I never actually used?" "Summarize what I worked on last quarter."
+**💚 To all early Powerpack adopters — this feature is now unlocked for you for free.** Thank you for your continued trust and support.
 
-Honestly, the coolest uses of this will be ones I never thought of. Go poke at it and tell me what you find.
+## ✨ More Improvements
 
-**And here's the part I'm actually proud of — the safety rails:**
+*   **⚡ Gemini Spark Integration:** If Google has enabled Spark on your account, the sidebar will automatically display a Spark tab.
+*   **🎨 Visual Refresh:** The overall interface has been retuned—spacing is more compact, and contrast is more comfortable. We also added transition animations when switching themes, hoping to provide a better visual experience.
+*   **🎛️ Quick Settings Access:** Clicking the extension icon in the browser toolbar now opens a control panel to quickly switch platforms or toggle features.
+*   **⌨️ AI Studio `/` Support:** The `/` shortcut to bring up the Prompt library was previously limited to Gemini; now it can be used in AI Studio as well.
+*   **💾 Auto Local Backups:** Extension data now supports scheduled automatic backups, and you can create manual snapshots at any time to improve data safety.
+*   **📜 Smart Scrollbar Enhancements:** Clicking the Smart Scrollbar expands it into a message list for easier browsing of long conversations.
+*   **📁 New Folder Button:** Added a button to create new folders directly within the "Move to folder" modal.
 
-*   **🛑 You're always in the loop.** Anything that *writes* to your data asks for approval first. Reads run free. You decide the policy, and you can flip it per-session.
-*   **⚡ Speed Mode** if you trust it. One toggle, and it stops asking. (With an undo, because I'm not a monster.)
-*   **🎛️ The Agent Dock** lives right above your input box — it follows you even when the sidebar is closed. Status, Stop button, approvals, everything in one place. No more "wait, is it still running?"
-*   **🔌 Circuit breakers everywhere.** If it loops, repeats itself, or stops making progress, the engine kills the run and tells you why. It also checks in with you after long unattended stretches instead of silently grinding away.
+## 🐛 Bug Fixes
 
-**💚 If you bought the Powerpack at the Early Bird price — this is yours, free, right now.** You bet on this before it existed. Thank you. Go type `>` and see what you paid for.
-
-## ✨ Also Landing in This Release
-
-*   **⚡ Gemini Spark Integration:** If Google has rolled Spark out to your account, it now shows up as a native tab in the sidebar. Nothing to configure — if you have it, it's there.
-*   **🎨 A Cleaner, Calmer UI:** I went through the whole interface and turned down the noise. Tighter spacing rhythm, better contrast, refined themes. It just feels less busy now. Plus a smooth **animated transition when you switch themes**, because tiny delights matter.
-*   **🎛️ Click the Extension Icon for Settings:** The browser toolbar icon now opens a real control panel — toggle platforms and features without digging through menus.
-*   **⌨️ Slash Commands in AI Studio:** The `/` Prompt Library shortcut was Gemini-only. Now AI Studio has it too. Type `/`, pick a prompt, go.
-*   **💾 Automatic Local Backups:** Your extension data now backs itself up on a schedule — and you can trigger a manual snapshot anytime. If something ever goes sideways, you can roll back to a previous state. Peace of mind, finally shipped.
-*   **📜 Smart Scrollbar, Now Expandable:** Click to expand the scrollbar into a full list of your messages. Long conversations just became navigable. Scroll less, jump more.
-*   **📁 Create Folders Without Leaving the Dialog:** The "Move to folder" dialog now has a **New Folder** button. Small thing. Fixes a genuinely annoying dead-end.
-
-## 🐛 Fixes — And One Important One
-
-*   **☁️ Google Drive sync no longer eats your data.** This is the big one, and I want to be straight with you: the old auto-merge logic could overwrite local data in bad ways. **It's gone.** Drive will never silently overwrite or merge into your local data again — restoring is now a deliberate, manual download that you initiate. Uploads still happen automatically if you've enabled sync. Your local data is the source of truth, full stop.
-*   **🔍 Gemini conversation scanning fixed.** Scanning your chat list works reliably again.
-*   **😴 No more "waking up dead."** If you left a tab open for hours and came back to a zombie sidebar — fixed. It reconnects properly now.
-*   **📐 Gemini page no longer randomly shifts upward.** That intermittent layout jump is gone.
-*   **⌨️ Spaces don't cancel renames anymore.** Typing a space while renaming no longer kicks you out of edit mode. Multi-word names are back on the menu.
-*   **🕒 Correct timestamps.** Conversation creation time and last-active time now display accurately instead of making things up.
-*   **💎 Gems & Notebooks detected on creation.** New Gems and Notebooks show up immediately instead of requiring a refresh ritual.
-*   **⚪ No more dead grey dots.** Fixed the Smart Scrollbar occasionally rendering unclickable dots.
+*   **☁️ Google Drive Sync Logic:** Improved the previous auto-merge logic. Drive will no longer automatically overwrite or merge into your local data. To restore data, you must manually initiate a download. Uploads remain automatic (if sync is enabled). This ensures your local data is always your most reliable source of truth.
+*   **🔍 Gemini Conversation Scan:** Fixed an issue where scanning the conversation list would occasionally fail.
+*   **😴 Sleep Disconnect Issue:** Fixed an issue where the sidebar became unresponsive after the tab was left idle for a long time. It can now reconnect normally.
+*   **📐 Page Jumping:** Resolved occasional layout jitter in the Gemini interface.
+*   **⌨️ Spacebar Rename Exit:** Typing a space while renaming will no longer accidentally exit edit mode.
+*   **🕒 Time Display Errors:** Conversation creation times and last active times now display correctly.
+*   **💎 Real-time Gem/Notebook Detection:** New Gems or Notebooks are now instantly detected by the extension after creation.
+*   **⚪ Gray Dead Pixel:** Fixed an unclickable dot that occasionally appeared on the Smart Scrollbar.
 
 ***
 
-This one took a while, and it's the biggest thing I've built for this extension. The Agent isn't a demo — it's the engine I'll be building on for the next several releases, and it's going to get sharper fast.
+This version is a significant update for us recently, and the Agent engine will continue to be refined in future versions.
 
-So please: go break it. Point it at your messiest folder. Write a weird custom Skill. Then tell me what happened — Discord, email, wherever. Every bug report from you all made this version better than I could have made it alone.
-
-Now go type `>` and let it cook. 🚀
+If you are interested, you are welcome to type `>` to bring up the panel and experience this new feature yourself. If you encounter any issues or have suggestions for improvement, please feel free to let us know via Discord or email.

@@ -31,7 +31,15 @@ export const markImportChatListTriggered = async () => {
   }
 };
 
-export const ImportChatListTip = () => {
+export const ImportChatListTip = ({
+  onImport,
+}: {
+  /**
+   * When provided, the parent owns the scan trigger (so it can show its own
+   * loading state). Otherwise the tip sends the scan message itself.
+   */
+  onImport?: () => void;
+} = {}) => {
   const { t } = useI18n();
   const [visible, setVisible] = useState(false);
 
@@ -74,9 +82,14 @@ export const ImportChatListTip = () => {
   };
 
   const handleImport = () => {
+    setVisible(false);
+    if (onImport) {
+      // Parent handles marking + sending, and shows the scanning overlay
+      onImport();
+      return;
+    }
     // Mark as triggered so tip won't appear again
     markImportChatListTriggered();
-    setVisible(false);
     // Trigger scan library
     browser.runtime.sendMessage({ type: 'SCAN_LIBRARY' });
   };

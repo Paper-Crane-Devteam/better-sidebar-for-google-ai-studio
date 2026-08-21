@@ -19,6 +19,7 @@
 
 import { triggerSend } from '@/entrypoints/overlay.content/shared/lib/quill-editor';
 import type { LoopContext } from '../../context';
+import { toolCallRecorder } from '../../../records';
 import { isStaged, stageResults, type StagedShape } from './staging';
 import { waitForSend, type SendOutcome } from './send-watcher';
 
@@ -29,6 +30,16 @@ export class ResultHandoff {
 
   /** Staged but not yet confirmed sent — kept so a retry can re-stage it */
   private pending: string | null = null;
+
+  /**
+   * The round `pending` reports on.
+   *
+   * Tracked separately from the store's current round because the two drift apart on
+   * every retry path: the loop can advance, pause, and come back to deliver results
+   * that belong to an earlier round. The ledger has to close out that round, not
+   * whichever one happens to be current when the send finally lands.
+   */
+  private pendingRound: number | null = null;
 
   /**
    * The last payload that *was* confirmed delivered.
@@ -79,6 +90,7 @@ export class ResultHandoff {
     console.log('[AgentLoop] Inserting results into editor, length:', text.length);
 
     this.pending = text;
+    this.pendingRound = this.ctx.round;
     this.shape = await stageResults(this.ctx.adapter, text);
 
     // A normal checkpoint, not a fault — hence its own status. The flag says whether
@@ -98,8 +110,7 @@ export class ResultHandoff {
       return false;
     }
 
-    this.pending = null;
-    this.lastDelivered = text;
+    this.settle();
     return true;
   }
 
@@ -116,6 +127,7 @@ export class ResultHandoff {
    */
   holdForRetry(text: string): void {
     this.pending = text;
+    this.pendingRound = this.ctx.round;
     console.log('[AgentLoop] Holding undelivered results for retry, length:', text.length);
   }
 
@@ -134,9 +146,28 @@ export class ResultHandoff {
     const outcome = await this.watchSend(() => triggerSend({ humanDelay: false }));
     if (outcome !== 'sent') return false;
 
+    this.settle();
+    return true;
+  }
+
+  /**
+   * The payload is out. Clear the in-memory pending state and close the ledger's
+   * copy of it.
+   *
+   * Both directions of the same fact, which is why they live in one method: from here
+   * on the conversation carries the results, so the rows no longer need their bodies
+   * and must not be offered up as unfinished business on the next page load.
+   *
+   * ⚠️ Uses the round the results *belong to*, not the current one. `advanceRound` runs
+   * after this, but a retry path can reach it later — reading the store's round here
+   * would mark the wrong round delivered and leave the real one owed forever.
+   */
+  private settle(): void {
+    const round = this.pendingRound ?? this.ctx.round;
     this.lastDelivered = this.pending;
     this.pending = null;
-    return true;
+    this.pendingRound = null;
+    toolCallRecorder.markRoundDelivered(round);
   }
 
   /**
@@ -157,6 +188,7 @@ export class ResultHandoff {
   /** Forget the pending payload (new session) */
   reset(): void {
     this.pending = null;
+    this.pendingRound = null;
     this.lastDelivered = null;
     this.shape = 'capsule';
   }

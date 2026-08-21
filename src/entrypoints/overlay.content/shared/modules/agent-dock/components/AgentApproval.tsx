@@ -13,6 +13,7 @@
 import React, { useState } from 'react';
 import { AlertTriangle, FastForward, Play, Search } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAgentLoopStore } from '../../agent-loop/agent-loop-store';
@@ -33,6 +34,26 @@ export const AgentApproval: React.FC = () => {
   const detail = params.query || params.summary || params.ids || '';
   /** What the AI said it's doing, falling back to a label when it said nothing. */
   const summary = description || getToolLabel(toolName, t, params.query);
+
+  /**
+   * The AI's plain-language account of what this changes — the thing the decision is
+   * actually made on.
+   *
+   * `description` is a one-line label of the *step* ("link candidate conversations to
+   * tags"); it never says which conversations, which tags, or how many, so there is
+   * nothing in it to approve or refuse. This field is asked for precisely to fill that
+   * gap, and it is why the SQL can move out of the way.
+   */
+  const changeSummary = params.change_summary?.trim();
+
+  /**
+   * Fall back to the raw statement only when the AI didn't explain itself.
+   *
+   * SQL in front of someone who cannot read SQL is not a safeguard, it is furniture —
+   * so it is gone whenever there is something better to show. But *nothing* readable is
+   * worse than SQL, so the toggle comes back when the summary is missing.
+   */
+  const showSqlFallback = !changeSummary && !!detail;
 
   const decide = (approved: boolean, scope: ApprovalScope = 'once') => {
     resolve({ approved, scope, reason: approved ? undefined : reason.trim() || undefined });
@@ -60,13 +81,24 @@ export const AgentApproval: React.FC = () => {
         </span>
       </div>
 
-      {/* What you're actually deciding on, in words. */}
+      {/* The headline: which step this is. */}
       <p className="text-sm font-medium leading-relaxed text-foreground">{summary}</p>
 
-      {/* The statement itself is folded away: it's SQL, and being shown SQL you can't
-          read is no help in deciding. Still one click away, because a write you can't
-          inspect is worse. */}
-      {detail && (
+      {/* What it will actually do, in the user's language. Shown in full rather than
+          folded — this is the decision, not a detail behind it. Capped in height because
+          the AI writes it and a long list shouldn't push the buttons off screen. */}
+      {changeSummary && (
+        <div className="max-h-[220px] overflow-y-auto rounded border border-border/40 bg-background/50 px-2.5 py-2">
+          <MarkdownRenderer className="text-xs text-foreground">
+            {changeSummary}
+          </MarkdownRenderer>
+        </div>
+      )}
+
+      {/* No explanation from the AI, so the statement is all there is. Ugly, but a write
+          you cannot inspect at all is worse — see the note on `showSqlFallback`. To read
+          the SQL when a summary *was* given, expand the call's card in the agent view. */}
+      {showSqlFallback && (
         <div className="space-y-1.5">
           <button
             type="button"

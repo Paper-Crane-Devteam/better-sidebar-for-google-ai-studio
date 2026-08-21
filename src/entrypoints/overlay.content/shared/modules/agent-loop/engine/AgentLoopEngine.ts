@@ -23,6 +23,7 @@
 
 import type { AgentPlatformAdapter } from '../adapters/types';
 import { isUnattendedAllowed, shouldAutoSend } from '../execution-policy';
+import { toolCallRecorder } from '../records';
 import { resetSnapshots } from '../undo';
 import { LoopContext } from './context';
 import { isAbortError } from './guards/abort';
@@ -74,6 +75,10 @@ export class AgentLoopEngine {
     // the user could meaningfully revert to once a new task starts changing things.
     resetSnapshots();
     this.ctx.store.start(maxRounds, session);
+    toolCallRecorder.startSession({
+      conversationId: session?.conversationId,
+      title: session?.title,
+    });
 
     console.log('[AgentLoop] Engine started, max rounds:', maxRounds);
     this.ctx.events.emit('loop:started', { maxRounds, timestamp: Date.now() });
@@ -101,11 +106,86 @@ export class AgentLoopEngine {
     this.unattendedStreak = 0;
     resetSnapshots();
     this.ctx.store.start(maxRounds, session);
+    toolCallRecorder.startSession({
+      conversationId: session?.conversationId,
+      title: session?.title,
+    });
 
     console.log('[AgentLoop] Engine started from existing response, max rounds:', maxRounds);
     this.ctx.events.emit('loop:started', { maxRounds, timestamp: Date.now() });
 
     await this.runFromResponse(responseElement);
+  }
+
+  /**
+   * Resume a session whose results ran but never reached the AI.
+   *
+   * The case: a tool was approved and executed, its result was staged in the composer,
+   * and the page went away before the send. The work is done and the database already
+   * changed — but the payload lived only in that composer, so the AI has no idea, and
+   * there is no engine left waiting for a reply.
+   *
+   * The recovery is to **deliver, not re-execute**. Auto-pickup would do the opposite:
+   * it sees a model turn whose tool calls have no matching results and starts a fresh
+   * session over them, which for a write means doing it twice. Hence the ledger, and
+   * hence this entry point — `payload` is rebuilt from the stored result bodies, so the
+   * AI receives what actually happened rather than a repeat of it.
+   *
+   * ⚠️ Starts a *new* ledger session. The rows being recovered belong to the old one
+   * and are settled by conversation id, not by session, so nothing is orphaned; and a
+   * new session is the honest description — the rounds ahead are a different run.
+   */
+  async deliverOwedResults(
+    payload: string,
+    maxRounds: number = 20,
+    session?: { conversationId?: string | null; title?: string },
+  ): Promise<boolean> {
+    this.ctx.abort.renew();
+    this.ctx.breaker.reset();
+    this.handoff.reset();
+    this.unattendedStreak = 0;
+    resetSnapshots();
+    this.ctx.store.start(maxRounds, session);
+    toolCallRecorder.startSession({
+      conversationId: session?.conversationId,
+      title: session?.title,
+    });
+
+    console.log('[AgentLoop] Delivering results owed from a previous page life');
+    this.ctx.events.emit('loop:started', { maxRounds, timestamp: Date.now() });
+
+    // `holdForRetry` then `resend` rather than `deliver`: the payload has to reach the
+    // composer and be confirmed sent before the loop may wait for an answer, and that
+    // is exactly the sequence the retry path already implements.
+    this.handoff.holdForRetry(payload);
+
+    let delivered = false;
+    try {
+      delivered = await this.handoff.resend();
+      if (!delivered) {
+        this.ctx.pause(
+          'Could not re-send the results from the last run. Send them from the chat input.',
+          'Owed results not sent',
+        );
+        return false;
+      }
+      this.ctx.advanceRound();
+      await this.runRounds();
+    } catch (e) {
+      if (isAbortError(e)) return delivered;
+      console.error('[AgentLoop] Engine error while delivering owed results:', e);
+      this.ctx.fail((e as Error).message);
+    }
+
+    /**
+     * Reports the *send*, not the run.
+     *
+     * The caller uses this to decide whether the recovered rows are settled, and they
+     * are settled the moment the AI has them — whatever the rounds that follow do. An
+     * error three rounds later must not put those results back on the owed pile, or the
+     * next reload offers to send the AI something it already read.
+     */
+    return delivered;
   }
 
   /** Stop the loop; the pending wait unwinds through its abort signal */

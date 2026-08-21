@@ -16,6 +16,7 @@ import type { AgentPlatformAdapter } from '../adapters/types';
 import type { AgentEndReason, AgentLoopStatus } from '../types';
 import { useAgentLoopStore } from '../agent-loop-store';
 import { agentEventBus } from '../event-bus';
+import { toolCallRecorder } from '../records';
 import { AbortToken } from './guards/abort';
 import { CircuitBreaker } from './guards/circuit-breaker';
 
@@ -120,7 +121,13 @@ export class LoopContext {
     this.events.emit('loop:paused', { reason: 'step check-in' });
   }
 
-  /** Pause *and* declare the session over — guards that shouldn't silently retry */
+  /**
+   * Pause *and* declare the session over — guards that shouldn't silently retry.
+   *
+   * ⚠️ The ledger session is deliberately left open here. This path always owes the AI
+   * a report (`holdForRetry` is holding it), and Retry is expected to deliver it, so
+   * closing the session would orphan the very rows the retry needs to settle.
+   */
   pauseAndEnd(reason: string, endReason: AgentEndReason, totalRounds = this.round): void {
     this.store.pause(reason);
     this.events.emit('loop:ended', { reason: endReason, totalRounds });
@@ -129,12 +136,14 @@ export class LoopContext {
   /** Clean end of a session (complete_task, paywall, user stop) */
   finish(endReason: AgentEndReason, totalRounds = this.round): void {
     this.store.stop(endReason);
+    toolCallRecorder.endSession(endReason, totalRounds);
     this.events.emit('loop:ended', { reason: endReason, totalRounds });
   }
 
   /** Report an engine-level exception */
   fail(message: string): void {
     this.store.setError(message);
+    toolCallRecorder.endSession('error', this.round);
     this.events.emit('loop:ended', { reason: 'error', totalRounds: this.round });
   }
 }

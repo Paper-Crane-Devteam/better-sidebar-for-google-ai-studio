@@ -28,12 +28,19 @@ import {
   XCircle,
   FastForward,
   Ban,
+  HelpCircle,
 } from 'lucide-react';
+import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import type { ParsedToolCall } from '../../types';
 import { parseToolCallFromText, extractToolInfo } from '../helpers/tool-parser';
 import type { DerivedToolOutcome } from '../helpers/tool-outcomes';
 import { useAgentLoopStore } from '../../agent-loop-store';
-import { buildToolCallFingerprint, isControlTool } from '../../execution-policy';
+import { useAgentRecordStore } from '../../agent-record-store';
+import {
+  buildToolCallFingerprint,
+  buildToolCallKey,
+  isControlTool,
+} from '../../execution-policy';
 import { getToolLabel } from '../../tool-labels';
 
 interface ToolCallWidgetProps {
@@ -70,6 +77,13 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
   const toolName = propToolName || info.toolName;
   const description = propDescription || info.description;
   const query = propQuery || info.query;
+  /**
+   * The AI's plain-language account of what this call changes.
+   *
+   * The approval decision rests on this rather than on the SQL, so it is also what the
+   * card leads with when opened — the statement follows underneath for whoever wants it.
+   */
+  const changeSummary = info.changeSummary;
 
   /**
    * The card's headline. The AI's own description reads as an intent ("find chats
@@ -83,21 +97,47 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
     () => (parsed ? buildToolCallFingerprint(parsed) : null),
     [parsed],
   );
+  /**
+   * The same identity, digested — this is how the card finds its own row, and the same
+   * value the engine wrote into the result section it sent to the AI. Recomputed here
+   * rather than passed in, which is the whole point of using a digest instead of a
+   * random id: the card needs nothing but the call it is already rendering.
+   */
+  const joinKey = useMemo(() => (parsed ? buildToolCallKey(parsed) : null), [parsed]);
 
   const executedCall = useAgentLoopStore((s) =>
     fingerprint ? s.executedCalls[fingerprint] : undefined,
   );
+  const recorded = useAgentRecordStore((s) => (joinKey ? s.records[joinKey] : undefined));
   const pendingApproval = useAgentLoopStore((s) => s.pendingApproval);
   const currentTool = useAgentLoopStore((s) => s.currentTool);
 
   /**
-   * The ledger wins where it exists — it is first-hand and knows about calls whose
-   * results never made it into a message. Everywhere else the conversation answers,
-   * which is the only source left after a reload.
+   * Three sources, narrowest first.
+   *
+   * The live session's ledger is first-hand and current. The stored row is first-hand
+   * but from a previous page life. The transcript is a reconstruction, and last —
+   * though it is the only one that covers a conversation run on another machine or
+   * before any of this was recorded.
    */
   const status: { success: boolean; rejected: boolean } | null = executedCall
     ? { success: executedCall.success, rejected: Boolean(executedCall.rejected) }
-    : outcome;
+    : recorded?.settled
+      ? { success: recorded.success, rejected: recorded.rejected }
+      : outcome;
+
+  /**
+   * A row still marked `running` after a reload: the tool was invoked and the page
+   * went away before the result came back.
+   *
+   * Reported as uncertain rather than resolved, and this is the case the row exists
+   * for. Falling back to "Not run" on a write would invite running it a second time,
+   * which is exactly the double-write this ledger is here to prevent.
+   */
+  const indeterminate = !status && recorded?.status === 'running';
+
+  /** The result is still owed to the AI — it never made it into the conversation */
+  const undelivered = Boolean(recorded && recorded.settled && !recorded.delivered);
 
   // Control tools never take an approval: `complete_task` just ends the session, so
   // there is nothing to allow or refuse. The policy agrees — `requiresApproval` is
@@ -109,7 +149,16 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
     fingerprint !== null &&
     pendingApproval?.fingerprint === fingerprint;
 
-  const running = !status && currentTool === toolName && isLatestResponse;
+  const running = !status && !indeterminate && currentTool === toolName && isLatestResponse;
+
+  /**
+   * The output to show when the card is opened.
+   *
+   * Normally the transcript's copy. For a call whose result never got sent, the stored
+   * row is holding the only copy there is — the payload was staged in a composer that
+   * no longer exists.
+   */
+  const output = outcome?.content ?? recorded?.content ?? null;
 
   const decide = (approved: boolean, scope: 'once' | 'round' | 'task' = 'once') => {
     if (!pendingApproval) return;
@@ -148,6 +197,21 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
       );
     }
 
+    if (indeterminate) {
+      return (
+        <span
+          className="ml-auto inline-flex shrink-0 items-center gap-1 px-2 py-1 text-xs text-warning"
+          title={t('agent.tool.interruptedTitle', {
+            defaultValue:
+              'This was started but the page reloaded before the result came back, so we cannot tell whether it finished.',
+          })}
+        >
+          <HelpCircle className="h-3 w-3" />{' '}
+          {t('agent.tool.interrupted', { defaultValue: 'May have run' })}
+        </span>
+      );
+    }
+
     if (!status) {
       return (
         <span className="ml-auto shrink-0 px-2 py-1 text-xs text-muted-foreground">
@@ -179,6 +243,18 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
             <XCircle className="h-3 w-3 text-destructive" />{' '}
             {t('agent.tool.failed', { defaultValue: 'Failed' })}
           </>
+        )}
+        {/* Ran, but the AI never heard about it. Worth saying on the card as well as
+            in the dock's recovery prompt: this is the card whose work is stranded. */}
+        {undelivered && (
+          <span
+            className="text-warning"
+            title={t('agent.tool.undeliveredTitle', {
+              defaultValue: 'This ran, but its result never reached the AI.',
+            })}
+          >
+            · {t('agent.tool.undelivered', { defaultValue: 'not reported' })}
+          </span>
         )}
       </span>
     );
@@ -226,25 +302,35 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
         </span>
       </div>
 
-      {/* Approval. The statement stays folded, matching AgentApproval in the dock:
-          the headline above already says what this does in words, and SQL you can't
-          read doesn't help you decide. One click away rather than gone, because a
-          write you can't inspect is the worse failure. */}
+      {/* Approval. Kept deliberately like AgentApproval in the dock, so answering from
+          either reads the same: the plain-language account of the change is shown in
+          full, and the SQL only stands in when the AI didn't write one. The statement is
+          still reachable either way by expanding the card. */}
       {isPending && (
         <div className="space-y-2 bg-background/60 px-3 py-2">
-          <button
-            type="button"
-            onClick={() => setShowDetail(!showDetail)}
-            className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-          >
-            {showDetail
-              ? t('agent.approve.hideDetail', { defaultValue: 'Hide what will run' })
-              : t('agent.approve.showDetail', { defaultValue: 'Show what will run' })}
-          </button>
-          {showDetail && (
-            <pre className="max-h-[200px] overflow-auto whitespace-pre-wrap break-all rounded border border-border/50 bg-background/60 p-2 font-mono text-xs text-foreground">
-              {query || rawText}
-            </pre>
+          {changeSummary ? (
+            <div className="max-h-[240px] overflow-y-auto rounded border border-border/40 bg-background/50 px-2.5 py-2">
+              <MarkdownRenderer className="text-xs text-foreground">
+                {changeSummary}
+              </MarkdownRenderer>
+            </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => setShowDetail(!showDetail)}
+                className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+              >
+                {showDetail
+                  ? t('agent.approve.hideDetail', { defaultValue: 'Hide what will run' })
+                  : t('agent.approve.showDetail', { defaultValue: 'Show what will run' })}
+              </button>
+              {showDetail && (
+                <pre className="max-h-[200px] overflow-auto whitespace-pre-wrap break-all rounded border border-border/50 bg-background/60 p-2 font-mono text-xs text-foreground">
+                  {query || rawText}
+                </pre>
+              )}
+            </>
           )}
 
           {rejecting ? (
@@ -329,14 +415,29 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
           <div className="mb-1.5 font-sans text-[11px] uppercase tracking-wide text-muted-foreground/70">
             {t('agent.tool.nameLabel', { defaultValue: 'Action' })} · {toolName}
           </div>
+
+          {/* What it changed, in words, above the statement that did it. This is the
+              expansion the agent view exists to offer: the dock shows the same text at
+              approval time but hides the SQL, so this is where it can be read. */}
+          {changeSummary && (
+            <div className="mb-2 font-sans whitespace-normal">
+              <MarkdownRenderer className="text-xs text-foreground">
+                {changeSummary}
+              </MarkdownRenderer>
+              <div className="mt-2 border-t border-border/40" />
+              <span className="mt-2 block text-[11px] uppercase tracking-wide text-muted-foreground/70">
+                {t('agent.tool.statement', { defaultValue: 'Statement' })}
+              </span>
+            </div>
+          )}
           {rawText}
-          {outcome?.content && (
+          {output && (
             <>
               <div className="my-2 border-t border-border/40" />
               <span className="font-sans text-[11px] uppercase tracking-wide text-muted-foreground/70">
                 {t('agent.tool.output', { defaultValue: 'Output' })}
               </span>
-              <div className="mt-1">{outcome.content}</div>
+              <div className="mt-1">{output}</div>
             </>
           )}
         </div>

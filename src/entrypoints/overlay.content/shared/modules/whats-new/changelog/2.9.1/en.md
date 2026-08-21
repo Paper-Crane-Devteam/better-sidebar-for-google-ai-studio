@@ -1,21 +1,21 @@
-# ✨ v2.9.1 — Default Folders & Selection Toolbar
+# ✨ v2.9.1 — Default Folders and Selection Toolbar
 
-A quick follow-up to 2.9.0, built almost entirely from your feedback. Thank you for the reports. 🙏
+This is a fast iteration release based directly on your feedback. Thank you to everyone who provided suggestions. 🙏
 
-## ✨ New
+## ✨ New Features
 
-*   **📁 Default Folder for Gems & Notebooks:** Assign a default folder to any Gem or Notebook. Start a new chat from it and the conversation lands in that folder automatically — no dragging afterwards.
-*   **⚡ Manage default folders from the folder side:** Folder settings now lists every Gem and Notebook that defaults into that folder, so you can bind or unbind them right there. And when a folder is someone's default, its hover row gets an extra button to start that Gem's or Notebook's chat directly.
-*   **🗑️ Optional: delete conversations without confirmation:** Off by default. Turn it on in Settings → General and deleting a single conversation skips the dialog entirely — immediate, permanent, no undo, removed both here and on the platform. Batch delete still asks.
-*   **🖍️ Text Selection Toolbar:** Select any text in a conversation and a small toolbar appears right above it. Ask the AI to explain or summarize the selection, save it as a snippet, or copy it. Configurable in settings — pick which actions show up, or turn the whole thing off.
+*   **📁 Default Folders for Gems & Notebooks:** You can now assign a default folder to any Gem or Notebook. When you start a new conversation using that preset, it will automatically be placed into the assigned folder, saving you from manually moving it later.
+*   **⚡ Manage Default Associations from Folders:** The folder settings panel now lists all Gems and Notebooks that use it as their default folder, allowing you to bind or unbind them directly. Additionally, when a folder is set as a default, a shortcut button is added to its hover action bar, letting you create a related conversation with a single click.
+*   **🗑️ Optional: Skip Delete Confirmation:** This feature is disabled by default. Once enabled in "Settings → General", deleting a single conversation will skip the confirmation dialog. Please note: This action is immediate, permanent, and cannot be undone; it will delete the data from both the extension and the cloud platform. Bulk deletions will still prompt for confirmation.
+*   **🖍️ Text Selection Toolbar:** When you highlight text in a conversation, a compact toolbar will appear above it. You can have the AI explain or summarize the selection, save it as a Snippet, or simply copy it. You can customize which actions are displayed or disable the toolbar entirely in the settings.
 
-## 🐛 Fixes
+## 🐛 Bug Fixes
 
-*   **⚪ Grey dots in older conversations, finally cleanable.** v2.9.0 stopped new chats from leaving dead dots behind, but existing threads kept theirs, and I held off on a cleanup script because I didn't want to risk anyone's history. Here's the safe version: when a conversation has leftover records, a cleanup button appears at the top of the Smart Scrollbar. One click to arm it, one to confirm, done. It only ever removes records the conversation itself no longer refers to, it never touches history it hasn't verified, and it backs out entirely if anything looks off.
-*   **⋯ Gemini's native 3-dot menu was misplaced.** You were right, this one was on me — some of the extension's CSS was leaking into Google's own action menu and pushing it out of position. Patched.
-*   **📂 Folder action buttons blending into long names.** Long folder names used to show through the hover buttons and turn into visual mush. The name now truncates cleanly behind them.
-*   **📝 Snippets losing Markdown formatting.** Saved snippets kept the text but dropped the formatting. Tracked down and fixed — headings, lists, code blocks and the rest now survive the save.
+*   **⚪ Cleaning Invalid Gray Dots in Historical Chats:** In v2.9.0, we optimized the rendering for new conversations to prevent leftover invalid record dots. To ensure the absolute safety of your historical data, we now provide a safe cleanup method: When residual records exist in a conversation, a cleanup button will appear at the top of the Smart Scrollbar. After you click and confirm, the system will only delete unreferenced, invalid records without affecting any normal history. If data anomalies are detected, the cleanup operation will automatically abort.
+*   **⋯ Fixed Gemini Native Menu Misalignment:** Fixed an issue where extension CSS conflicts caused Google's native "More actions" menu to be misaligned.
+*   **📂 Fixed Display Issues with Long Folder Names:** Fixed an issue where long folder names would overlap with the hover action buttons. Overly long names are now properly truncated and hidden.
+*   **📝 Fixed Loss of Markdown Formatting in Snippets:** Fixed an issue where text formatting was lost when saving a Snippet. All Markdown formatting, including headers, lists, and code blocks, is now fully preserved.
 
 ***
 
-Small release, quick turnaround. Keep the reports coming — this one exists because of them.
+Thank you for your ongoing support and feedback. We will continue listening to your suggestions to optimize the extension experience.

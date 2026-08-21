@@ -27,6 +27,14 @@ import {
   PinOff,
 } from 'lucide-react';
 import { modal } from '@/shared/lib/modal';
+import { UIcon } from '@/shared/components/ui/icon';
+import { usePopoverPickerStore } from '@/shared/lib/popover-picker';
+import { navigateToGem, navigateToNotebook } from '@/shared/lib/navigation';
+import { useSettingsStore } from '@/shared/lib/settings-store';
+import { GemPickerContent } from '../../../gems/components/GemPickerContent';
+import { NotebookPickerContent } from '../../../notebooks/components/NotebookPickerContent';
+import { useExplorerContext } from '../../ExplorerContext';
+import type { Gem, Notebook } from '@/shared/types/db';
 import { MoveItemsDialog } from '../batch/MoveItemsDialog';
 import { detectPlatform, PLATFORM_CONFIG } from '@/shared/types/platform';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
@@ -71,6 +79,45 @@ export function useExplorerMenuItems({
   const { t } = useI18n();
   const { tags, conversationTags } = useAppStore();
   const { exportItem } = useExport({ obsidianFolder: 'Conversations' });
+  const { createPendingAndFocus } = useExplorerContext();
+  const lastSelectedGemId = useSettingsStore((s) => s.lastSelectedGemId);
+  const lastSelectedNotebookId = useSettingsStore((s) => s.lastSelectedNotebookId);
+
+  /**
+   * Resolve an anchor rect for the popover picker.
+   * Must be read synchronously before the menu unmounts.
+   */
+  const getAnchorRect = (e?: React.MouseEvent): DOMRect => {
+    const el = e?.currentTarget as HTMLElement | undefined;
+    if (el?.getBoundingClientRect) return el.getBoundingClientRect();
+    return new DOMRect(window.innerWidth / 2 - 140, window.innerHeight / 3, 280, 0);
+  };
+
+  /** Open the gem picker, then start a new chat inside this folder */
+  const handleNewGemChatInFolder = async (e?: React.MouseEvent) => {
+    const anchorRect = getAnchorRect(e);
+    const gem = await usePopoverPickerStore.getState().open<Gem>({
+      anchorRect,
+      content: <GemPickerContent lastSelectedGemId={lastSelectedGemId} />,
+      width: 280,
+    });
+    if (!gem) return;
+    createPendingAndFocus?.(node.data.id);
+    navigateToGem(gem.id);
+  };
+
+  /** Open the notebook picker, then start a new chat inside this folder */
+  const handleNewNotebookChatInFolder = async (e?: React.MouseEvent) => {
+    const anchorRect = getAnchorRect(e);
+    const notebook = await usePopoverPickerStore.getState().open<Notebook>({
+      anchorRect,
+      content: <NotebookPickerContent lastSelectedNotebookId={lastSelectedNotebookId} />,
+      width: 280,
+    });
+    if (!notebook) return;
+    createPendingAndFocus?.(node.data.id);
+    navigateToNotebook(notebook.id);
+  };
 
   const isFile = node.data.type === 'file';
 
@@ -179,6 +226,28 @@ export function useExplorerMenuItems({
 
   // Folder-specific items
   if (node.data.type === 'folder') {
+    // — New chat with Gem / Notebook (picker) —
+    items.push({
+      type: 'item',
+      key: 'new-gem-chat',
+      icon: <UIcon icon="tabler:diamond" className="h-4 w-4" />,
+      label: t('newChatButton.newGemChat'),
+      onClick: (e) => {
+        e?.stopPropagation();
+        void handleNewGemChatInFolder(e);
+      },
+    });
+    items.push({
+      type: 'item',
+      key: 'new-notebook-chat',
+      icon: <UIcon icon="tabler:notebook" className="h-4 w-4" />,
+      label: t('newChatButton.newNotebookChat'),
+      onClick: (e) => {
+        e?.stopPropagation();
+        void handleNewNotebookChatInFolder(e);
+      },
+    });
+    items.push({ type: 'separator', key: 'sep-folder-new-chat' });
     items.push({
       type: 'item',
       key: 'new-folder',

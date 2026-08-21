@@ -33,9 +33,14 @@ export function tryParseJson(block: string): ParsedToolCall | null {
   if (direct) return direct;
 
   // Second pass on a repaired copy. Only reached when the block is already broken,
-  // which is what keeps the repair from touching correctly-escaped JSON.
-  const repaired = unquoteJsonArrays(trimmed);
+  // which is what keeps the repairs from touching correctly-escaped JSON.
+  const repaired = repairJson(trimmed);
   return repaired === trimmed ? null : buildCall(repaired);
+}
+
+/** Every repair, applied in turn. Order doesn't matter — they touch different faults. */
+function repairJson(json: string): string {
+  return escapeRawControlChars(unquoteJsonArrays(json));
 }
 
 function buildCall(json: string): ParsedToolCall | null {
@@ -87,6 +92,69 @@ function unquoteJsonArrays(json: string): string {
 }
 
 /**
+ * Escape raw newlines and tabs that ended up *inside* a JSON string.
+ *
+ * The failure this exists for arrived with `change_summary`, which asks for markdown —
+ * bullet lists, blank lines between paragraphs. To put that in a JSON string the model
+ * has to write `\\n` escapes, and over a multi-paragraph value it regularly writes a
+ * real line break instead:
+ *
+ *     "params": {"query": "DELETE ...", "change_summary": "Deletes 3 folders:
+ *     - Work
+ *     - Study"}
+ *
+ * A raw control character inside a string is invalid JSON, so `JSON.parse` rejects the
+ * **whole block** — meaning a write call is discarded for a formatting slip in the part
+ * that was only ever meant for the user to read.
+ *
+ * Safe by construction: a literal newline inside a JSON string is *always* invalid, so
+ * escaping one can only turn unparseable into parseable. Newlines between tokens are
+ * legal and are left alone, which is why this tracks string state rather than replacing
+ * globally.
+ */
+function escapeRawControlChars(json: string): string {
+  let out = '';
+  let inString = false;
+
+  for (let i = 0; i < json.length; i++) {
+    const ch = json[i];
+
+    if (inString && ch === '\\') {
+      // Copy the escape and whatever it escapes, so `\"` can't be read as the end
+      // of the string and `\n` isn't double-escaped into `\\n`.
+      out += ch + (json[i + 1] ?? '');
+      i++;
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = !inString;
+      out += ch;
+      continue;
+    }
+
+    if (inString) {
+      if (ch === '\n') {
+        out += '\\n';
+        continue;
+      }
+      if (ch === '\r') {
+        out += '\\r';
+        continue;
+      }
+      if (ch === '\t') {
+        out += '\\t';
+        continue;
+      }
+    }
+
+    out += ch;
+  }
+
+  return out;
+}
+
+/**
  * A hint for the AI about *why* its JSON was rejected.
  *
  * The generic "re-send as valid JSON" told it nothing it didn't already believe, so
@@ -98,6 +166,15 @@ export function describeJsonFault(block: string): string | null {
     return (
       'a list param was wrapped in quotes (`"ids": "[...]"`), which leaves the inner quotes ' +
       'unescaped and breaks the whole block — pass a real JSON array instead: `"ids": ["a","b"]`'
+    );
+  }
+  // Detected by the repair itself rather than a second pattern, so the two cannot
+  // disagree about what counts as this fault.
+  if (escapeRawControlChars(block) !== block) {
+    return (
+      'a param value contained a real line break. Inside a JSON string those must be written ' +
+      'as `\\n` — a literal newline is invalid JSON and discards the entire tool call. This ' +
+      'usually happens in `change_summary`: keep the markdown, but escape every line break'
     );
   }
   return null;

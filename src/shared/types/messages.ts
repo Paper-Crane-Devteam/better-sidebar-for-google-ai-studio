@@ -109,6 +109,43 @@ export type ExtensionMessage = (
       };
     }
   | { type: 'EXECUTE_SQL'; payload: { sql: string } }
+  /**
+   * Agent tool call ledger, from the content script.
+   *
+   * Routed through the background rather than called directly, because `@/shared/db`
+   * does not work in a content script: `DB_REQUEST` reaches the offscreen document but
+   * the `DB_RESPONSE` never comes back to a content script, so every call sat until its
+   * 30-second timeout. The background is also where `ensureDbForTab` runs, so this is
+   * additionally the only path that writes to the right profile in a multi-account setup.
+   */
+  | {
+      type: 'AGENT_LEDGER';
+      payload:
+        | { op: 'sessionCreate'; session: { id: string; conversationId: string | null; title: string | null; skillId?: string | null } }
+        | { op: 'sessionClaim'; sessionId: string; conversationId: string }
+        | { op: 'sessionEnd'; sessionId: string; endReason: string; rounds: number }
+        | {
+            op: 'callBegin';
+            call: {
+              id: string;
+              sessionId: string | null;
+              conversationId: string | null;
+              joinKey: string;
+              round: number;
+              orderIndex: number;
+              toolName: string;
+              description?: string;
+              params?: Record<string, string>;
+              isWrite: boolean;
+            };
+          }
+        | { op: 'callSettle'; id: string; status: 'running' | 'ok' | 'failed' | 'rejected'; resultBody: string | null }
+        | { op: 'roundDelivered'; sessionId: string; round: number }
+        | { op: 'sessionDiscardUndelivered'; sessionId: string }
+        | { op: 'markDelivered'; ids: string[] }
+        | { op: 'listByConversation'; conversationId: string }
+        | { op: 'clearUndelivered'; conversationId: string };
+    }
   | { type: 'RESET_DATABASE' }
   | { type: 'OPEN_URL'; payload: { url: string } }
   | {

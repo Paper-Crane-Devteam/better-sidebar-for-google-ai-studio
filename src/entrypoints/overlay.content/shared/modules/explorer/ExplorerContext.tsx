@@ -15,6 +15,11 @@ interface ExplorerContextValue {
   createPendingEntry?: (folderId: string | null) => void;
   /** Create a pending entry, expand the folder, and scroll to it */
   createPendingAndFocus?: (folderId: string | null) => void;
+  /**
+   * Resolve the target folder for a new gem/notebook chat.
+   * Priority: currently selected folder → gem/notebook default folder → inbox.
+   */
+  resolveNewChatFolder?: (gemId?: string | null, notebookId?: string | null) => string;
   /** Update the title of the pending entry */
   updatePendingTitle?: (title: string) => void;
   /** Commit editing (blur) — transition to idle */

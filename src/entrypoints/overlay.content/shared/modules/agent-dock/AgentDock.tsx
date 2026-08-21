@@ -24,6 +24,7 @@
 import React, { useEffect, useState } from 'react';
 import { cn } from '@/shared/lib/utils/utils';
 import { useAgentLoopStore } from '../agent-loop/agent-loop-store';
+import { useAgentRecordStore } from '../agent-loop/agent-record-store';
 import { useUndoAvailable, useUndoWasUndone } from '../agent-loop/undo';
 import { useCurrentConversationId } from '../../hooks/useCurrentConversationId';
 import { useComposerAnchor } from './useComposerAnchor';
@@ -35,6 +36,7 @@ import { AgentInterruptNotice } from './components/AgentInterruptNotice';
 import { AgentSessionSummary } from './components/AgentSessionSummary';
 import { AgentPolicyControls } from './components/AgentPolicyControls';
 import { AgentInstructionInput } from './components/AgentInstructionInput';
+import { AgentOwedResults } from './components/AgentOwedResults';
 
 /** Never wider than this, however wide the composer is */
 const MAX_WIDTH_PX = 420;
@@ -57,6 +59,7 @@ export const AgentDock: React.FC<AgentDockProps> = ({ hidden }) => {
   const awaitingUserSend = useAgentLoopStore((s) => s.awaitingUserSend);
   const sessionConversationId = useAgentLoopStore((s) => s.sessionConversationId);
   const history = useAgentLoopStore((s) => s.history);
+  const owed = useAgentRecordStore((s) => s.owed);
   const undoAvailable = useUndoAvailable();
   const undone = useUndoWasUndone();
   const conversationId = useCurrentConversationId();
@@ -95,8 +98,21 @@ export const AgentDock: React.FC<AgentDockProps> = ({ hidden }) => {
     endReason !== 'complete' || failedSteps > 0 || undoAvailable || undone;
   const isFinished = !isRunning && endReason !== null;
 
+  /**
+   * Results a previous page life ran but never sent.
+   *
+   * The one thing the dock shows with **no session at all**, so it gets its own limb in
+   * the visibility rule rather than being folded into `hasSession`. Scoped to the open
+   * conversation for the same reason a session is: the offer is to send a payload into
+   * *this* chat.
+   */
+  const hasOwedResults =
+    owed !== null && owed.conversationId === conversationId && !isRunning;
+
   const visible =
-    hasSession && belongsToCurrent && !hidden && (!isFinished || finishedNeedsAttention);
+    !hidden &&
+    ((hasSession && belongsToCurrent && (!isFinished || finishedNeedsAttention)) ||
+      hasOwedResults);
   const anchor = useComposerAnchor(visible);
 
   // Adopt the conversation id once the platform assigns one — including after the
@@ -191,7 +207,7 @@ export const AgentDock: React.FC<AgentDockProps> = ({ hidden }) => {
     >
       {/* Hide the status pill once the task is done — it only adds noise next to the
           summary card. Still shown while the session is running or paused. */}
-      {!isFinished && (
+      {hasSession && !isFinished && (
         <AgentDockPill
           expanded={expanded}
           onToggleExpanded={toggleExpanded}
@@ -205,13 +221,18 @@ export const AgentDock: React.FC<AgentDockProps> = ({ hidden }) => {
 
       {/* `pt-3` only when the pill is gone: with it there, the pill's own bottom
           padding already separates the two, and adding more doubles the gap. */}
-      {(expanded || isFinished) && (
+      {/* No pill above when there is no session, so the body carries the top padding
+          in that case too. */}
+      {(expanded || isFinished || !hasSession) && (
         <div
           className={cn(
             'max-h-[50vh] space-y-2 overflow-y-auto px-3 pb-3',
-            isFinished && 'pt-3',
+            (isFinished || !hasSession) && 'pt-3',
           )}
         >
+          {/* First: it is about work that already happened, and it is the only card
+              here that can be the sole reason the dock is on screen. */}
+          <AgentOwedResults />
           <AgentApproval />
           <AgentContinuePrompt />
           <AgentCheckIn />

@@ -482,6 +482,69 @@ export const runMigrations = async (db: any) => {
       }
     });
 
+    /**
+     * Migration: agent session / tool call ledger.
+     *
+     * What the agent did is our own bookkeeping, and it had no home: it was encoded
+     * into the prose sent back to the AI (`### label`, an `ERROR:` prefix) and parsed
+     * out of the conversation again on every read. That round trip is what made a
+     * reloaded page fall back to guessing which result belonged to which call.
+     *
+     * Deliberately *not* a copy of the messages. The conversation stays the record of
+     * what was said; these tables only hold what cannot be re-derived from it —
+     * whether a call ran, and whether its result ever reached the AI.
+     *
+     * Not in SYNC_TABLES either, for the same reason `messages` isn't: result bodies
+     * are large and private. A conversation opened on another machine has no rows
+     * here and falls back to reading the transcript.
+     */
+    await step('create agent ledger tables', async () => {
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS agent_sessions (
+          id TEXT PRIMARY KEY,
+          conversation_id TEXT,
+          title TEXT,
+          skill_id TEXT,
+          status TEXT DEFAULT 'running',
+          end_reason TEXT,
+          rounds INTEGER DEFAULT 0,
+          started_at INTEGER DEFAULT (unixepoch()),
+          ended_at INTEGER
+        )
+      `);
+      await db.run(
+        'CREATE INDEX IF NOT EXISTS idx_agent_sessions_conversation ON agent_sessions(conversation_id)',
+      );
+
+      await db.run(`
+        CREATE TABLE IF NOT EXISTS agent_tool_calls (
+          id TEXT PRIMARY KEY,
+          session_id TEXT,
+          conversation_id TEXT,
+          join_key TEXT NOT NULL,
+          round INTEGER DEFAULT 0,
+          order_index INTEGER DEFAULT 0,
+          tool_name TEXT,
+          description TEXT,
+          params TEXT,
+          is_write INTEGER DEFAULT 0,
+          status TEXT NOT NULL,
+          result_body TEXT,
+          delivered INTEGER DEFAULT 0,
+          created_at INTEGER DEFAULT (unixepoch()),
+          updated_at INTEGER DEFAULT (unixepoch())
+        )
+      `);
+      // The card looks a call up by conversation + key; the recovery check looks for
+      // undelivered rows in a conversation. Both are covered by this pair.
+      await db.run(
+        'CREATE INDEX IF NOT EXISTS idx_agent_tool_calls_lookup ON agent_tool_calls(conversation_id, join_key)',
+      );
+      await db.run(
+        'CREATE INDEX IF NOT EXISTS idx_agent_tool_calls_session ON agent_tool_calls(session_id, round, order_index)',
+      );
+    });
+
     // ── One-time data fix (v2.9.0): fix conversation created_at from first message ──
     // A previous bug caused conversations.created_at to be incorrect.
     // For existing users: set created_at = first message's timestamp (MIN(timestamp)).
