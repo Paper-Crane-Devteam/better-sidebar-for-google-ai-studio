@@ -55,7 +55,6 @@ export const geminiDomAdapter: PlatformDomAdapter = {
       conversationId,
       messages: parsed,
       replaceAfterMessageId: detail?.replaceAfterMessageId,
-      source: detail?.source === 'history' ? 'history' : undefined,
     };
   },
 };

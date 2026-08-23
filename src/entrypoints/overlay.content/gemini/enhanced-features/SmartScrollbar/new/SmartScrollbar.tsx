@@ -3,7 +3,7 @@ import { List } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
 import { useConversationNodes } from './useConversationNodes';
-import { StaleCleanupButton } from './StaleCleanupButton';
+import { EraseMessagesButton } from './EraseMessagesButton';
 import type { ConversationNode } from './types';
 import { Z_INDEX } from '@/shared/lib/z-index';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -83,9 +83,10 @@ export const SmartScrollbar: React.FC = () => {
           maxHeight: expanded ? `${MAX_PANEL_HEIGHT}px` : `${MAX_DOT_HEIGHT}px`,
         }}
       >
-        {/* Header: outline toggle, plus the stale-cleanup button when there is
-            something to clean. Stacks vertically while collapsed (the bar is
-            only 32px wide) and sits on one row once expanded. */}
+        {/* Header: outline toggle, plus the erase escape hatch. The erase button
+            only exists in the expanded panel — the collapsed bar is 32px wide and
+            a destructive control does not belong next to the dots people click
+            constantly. */}
         <div
           className={cn(
             'flex shrink-0',
@@ -111,7 +112,7 @@ export const SmartScrollbar: React.FC = () => {
             )}
           </button>
 
-          <StaleCleanupButton expanded={expanded} />
+          {expanded && <EraseMessagesButton />}
         </div>
 
         {/* Content area */}

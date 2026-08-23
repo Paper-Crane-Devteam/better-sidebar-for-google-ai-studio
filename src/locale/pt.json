@@ -928,16 +928,12 @@
     "restoreToCompactView": "Restaurar para vista compacta",
     "collapseToIcon": "Recolher para ícone",
     "expandToFullOutline": "Expandir para esboço completo",
-    "staleFound": "{{count}} mensagens residuais encontradas nesta conversa — clique para revisar",
-    "staleConfirm": "Clique novamente para remover {{count}} mensagens residuais",
-    "staleCleaning": "Removendo...",
-    "staleCleaned": "{{count}} mensagens residuais removidas",
-    "staleCleanupFailed": "Não foi possível remover as mensagens residuais",
-    "staleFound": "{{count}} mensagens residuais encontradas nesta conversa — clique para revisar",
-    "staleConfirm": "Clique novamente para remover {{count}} mensagens residuais",
-    "staleCleaning": "Removendo...",
-    "staleCleaned": "{{count}} mensagens residuais removidas",
-    "staleCleanupFailed": "Não foi possível remover as mensagens residuais"
+    "eraseTooltip": "O esboço não corresponde à página? Limpe as mensagens salvas desta conversa e recarregue para capturá-las de novo.",
+    "eraseConfirmTitle": "Limpar as mensagens salvas?",
+    "eraseConfirmContent": "Exclui todas as mensagens que esta extensão salvou para a conversa atual e recarrega a página para capturá-las novamente do chat. A conversa no Gemini não é alterada.",
+    "eraseConfirmAction": "Limpar e recarregar",
+    "eraseNoConversation": "Nenhuma conversa carregada ainda",
+    "eraseFailed": "Não foi possível limpar as mensagens salvas"
   },
   "firstInstall": {
     "title": "Importar lista de conversas?",
