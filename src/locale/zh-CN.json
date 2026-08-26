@@ -546,6 +546,9 @@
     "selectColor": "选择颜色"
   },
   "moveItemsDialog": {
+    "searchFolders": "搜索文件夹...",
+    "noMatchingFolders": "没有匹配的文件夹",
+    "clearSearch": "清除搜索",
     "rootLevel": "根目录（顶层）",
     "createFolder": "新建文件夹"
   },

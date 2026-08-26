@@ -546,6 +546,9 @@
     "selectColor": "Выбрать цвет"
   },
   "moveItemsDialog": {
+    "searchFolders": "Поиск папок...",
+    "noMatchingFolders": "Нет подходящих папок",
+    "clearSearch": "Очистить поиск",
     "rootLevel": "Корень (верхний уровень)",
     "createFolder": "Новая папка"
   },

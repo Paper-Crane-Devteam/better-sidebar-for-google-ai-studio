@@ -546,6 +546,9 @@
     "selectColor": "Selecionar Cor"
   },
   "moveItemsDialog": {
+    "searchFolders": "Buscar pastas...",
+    "noMatchingFolders": "Nenhuma pasta correspondente",
+    "clearSearch": "Limpar busca",
     "rootLevel": "Raiz (Nível Superior)",
     "createFolder": "Nova Pasta"
   },

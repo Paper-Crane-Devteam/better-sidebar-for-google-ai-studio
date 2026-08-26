@@ -546,6 +546,9 @@
     "selectColor": "選擇顏色"
   },
   "moveItemsDialog": {
+    "searchFolders": "搜尋資料夾...",
+    "noMatchingFolders": "沒有符合的資料夾",
+    "clearSearch": "清除搜尋",
     "rootLevel": "根目錄（頂層）",
     "createFolder": "新建資料夾"
   },

@@ -533,6 +533,9 @@
     "selectColor": "Select Color"
   },
   "moveItemsDialog": {
+    "searchFolders": "Search folders...",
+    "noMatchingFolders": "No matching folders",
+    "clearSearch": "Clear search",
     "rootLevel": "Root (Top Level)",
     "createFolder": "New Folder"
   },

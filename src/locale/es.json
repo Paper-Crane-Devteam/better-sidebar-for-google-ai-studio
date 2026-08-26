@@ -546,6 +546,9 @@
     "selectColor": "Seleccionar Color"
   },
   "moveItemsDialog": {
+    "searchFolders": "Buscar carpetas...",
+    "noMatchingFolders": "No hay carpetas coincidentes",
+    "clearSearch": "Borrar búsqueda",
     "rootLevel": "Raíz (Nivel Superior)",
     "createFolder": "Nueva Carpeta"
   },

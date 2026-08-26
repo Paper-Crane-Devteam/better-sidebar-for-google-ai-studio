@@ -546,6 +546,9 @@
     "selectColor": "色を選択"
   },
   "moveItemsDialog": {
+    "searchFolders": "フォルダーを検索...",
+    "noMatchingFolders": "一致するフォルダーがありません",
+    "clearSearch": "検索をクリア",
     "rootLevel": "ルート（トップレベル）",
     "createFolder": "新しいフォルダー"
   },
