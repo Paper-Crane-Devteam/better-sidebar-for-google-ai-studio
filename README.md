@@ -47,7 +47,7 @@ The Agent has genuine query access to your local database (conversations, messag
 ### 🐛 Notable Fixes
 
 - **☁️ Google Drive sync no longer overwrites local data.** The old auto-merge logic is gone. Uploads still run automatically if sync is on, but restoring is now a deliberate, manual download. Your local data is the source of truth.
-- **⚪ Grey dots cleanup** — a guarded one-click cleanup button appears in the Smart Scrollbar when a conversation has leftover records
+- **⚪ Grey dots cleanup** — the Smart Scrollbar's expanded panel has an eraser button that clears this conversation's saved messages and reloads, so they are captured again from the chat
 - **📝 Snippets keep their Markdown** — headings, lists, and code blocks survive the save
 - **😴 Zombie sidebar** after leaving a tab open for hours — it reconnects properly now
 - **🕒 Accurate timestamps**, **💎 Gems & Notebooks detected on creation**, **📐 no more Gemini page shifting**, **⌨️ spaces no longer cancel renames**

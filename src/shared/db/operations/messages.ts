@@ -82,8 +82,7 @@ export const messageRepo = {
    *
    * The `conversation_id` predicate is not redundant: ids arrive from the content
    * script, and scoping the statement means a wrong id can only ever affect the
-   * conversation the caller is actually looking at. Used by the stale-row cleanup
-   * (see `shared/lib/stale-messages.ts`).
+   * conversation the caller is actually looking at.
    *
    * Returns the number of rows actually removed.
    */

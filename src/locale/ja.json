@@ -931,16 +931,12 @@
     "restoreToCompactView": "コンパクトビューに戻す",
     "collapseToIcon": "アイコンに折りたたむ",
     "expandToFullOutline": "完全なアウトラインに展開",
-    "staleFound": "この会話に {{count}} 件の残存メッセージが見つかりました。クリックして確認してください",
-    "staleConfirm": "もう一度クリックすると {{count}} 件の残存メッセージを削除します",
-    "staleCleaning": "削除中...",
-    "staleCleaned": "{{count}} 件の残存メッセージを削除しました",
-    "staleCleanupFailed": "残存メッセージを削除できませんでした",
-    "staleFound": "この会話に {{count}} 件の残留メッセージがあります — クリックして確認",
-    "staleConfirm": "もう一度クリックして {{count}} 件の残留メッセージを削除",
-    "staleCleaning": "削除中...",
-    "staleCleaned": "{{count}} 件の残留メッセージを削除しました",
-    "staleCleanupFailed": "残留メッセージを削除できませんでした"
+    "eraseTooltip": "アウトラインがページと合わない場合：この会話の保存済みメッセージを消去して再読み込みし、もう一度取得します。",
+    "eraseConfirmTitle": "保存済みメッセージを消去しますか？",
+    "eraseConfirmContent": "この拡張機能が現在の会話について保存したすべてのメッセージを削除し、ページを再読み込みしてチャットから再取得します。Gemini 上の会話自体は変更されません。",
+    "eraseConfirmAction": "消去して再読み込み",
+    "eraseNoConversation": "まだ会話が読み込まれていません",
+    "eraseFailed": "保存済みメッセージを消去できませんでした"
   },
   "firstInstall": {
     "title": "会話リストをインポートしますか？",

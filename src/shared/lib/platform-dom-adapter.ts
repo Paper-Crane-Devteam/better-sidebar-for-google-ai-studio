@@ -33,13 +33,6 @@ export interface PlatformDomAdapter {
     messages: ConversationMessage[];
     /** When set, indicates a regeneration — delete all messages after this ID before merging */
     replaceAfterMessageId?: string;
-    /**
-     * `'history'` means the payload is an authoritative page of the conversation's
-     * live history (the platform returned the whole active branch, not just the
-     * turn that was streamed). Only such payloads may be diffed against the DB
-     * to find stale rows. Anything else (a single new turn) must not be.
-     */
-    source?: 'history';
   } | null;
 }
 

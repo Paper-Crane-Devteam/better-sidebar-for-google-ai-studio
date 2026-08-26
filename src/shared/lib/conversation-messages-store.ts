@@ -14,10 +14,6 @@
 
 import { create } from 'zustand';
 import { getPlatformDomAdapter } from '@/shared/lib/platform-dom-adapter';
-import {
-  computeStaleMessageIds,
-  type StaleCandidateRow,
-} from '@/shared/lib/stale-messages';
 
 // ── ID detection helper (inlined to avoid Gemini-specific import) ────
 
@@ -53,24 +49,12 @@ interface ConversationMessagesState {
   /** Whether currently on a conversation page */
   isOnConversation: boolean;
 
-  // ── Stale-row detection (see lib/stale-messages.ts) ──────────────
   /**
-   * The `conversations.id` the rows belong to — NOT the id in the URL. Kept so
-   * the cleanup can scope its DELETE without re-resolving external_id → id.
+   * The `conversations.id` of the conversation currently in view — NOT the id in
+   * the URL. Kept so features acting on the stored rows (the SmartScrollbar erase
+   * button) can scope their write without re-resolving external_id → id.
    */
   conversationDbId: string | null;
-  /**
-   * Lightweight snapshot of the DB rows for this conversation, kept only so the
-   * stale diff has `order_index` values to work with. Set once per DB fetch.
-   */
-  dbRows: StaleCandidateRow[];
-  /**
-   * Union of message ids seen in authoritative history responses. Grows as the
-   * user scrolls older pages into view, which widens the diff window.
-   */
-  liveIds: string[];
-  /** Ids that the diff says are dead branches, safe to delete. */
-  staleIds: string[];
 
   // ── Actions ──────────────────────────────────────────────────────
   /** Replace all messages (used after initial DB fetch) */
@@ -89,13 +73,8 @@ interface ConversationMessagesState {
   setFetchedForUrl: (url: string | null) => void;
   /** Set whether on a conversation page */
   setIsOnConversation: (on: boolean) => void;
-
-  /** Record the DB row snapshot for stale detection, then re-run the diff */
-  setDbRows: (conversationDbId: string, rows: StaleCandidateRow[]) => void;
-  /** Add ids from an authoritative history page, then re-run the diff */
-  addLiveIds: (ids: string[]) => void;
-  /** Drop the given ids from every slice of state (called after a successful delete) */
-  forgetMessages: (ids: string[]) => void;
+  /** Record which conversation row the current messages belong to */
+  setConversationDbId: (conversationDbId: string | null) => void;
 }
 
 // ── Merge logic (ported from SmartScrollbar's merge-nodes.ts) ────────
@@ -196,9 +175,6 @@ export const useConversationMessagesStore = create<ConversationMessagesState>((s
   fetchedForUrl: null,
   isOnConversation: false,
   conversationDbId: null,
-  dbRows: [],
-  liveIds: [],
-  staleIds: [],
 
   setMessages: (messages) => set({ messages }),
 
@@ -213,12 +189,8 @@ export const useConversationMessagesStore = create<ConversationMessagesState>((s
       messages: [],
       isLoading: false,
       fetchedForUrl: null,
-      // Stale state is per-conversation: a window computed for the previous
-      // conversation must never leak into the next one.
+      // Per-conversation: must never leak into the next conversation.
       conversationDbId: null,
-      dbRows: [],
-      liveIds: [],
-      staleIds: [],
     }),
 
   removeMessagesAfter: (anchorMessageId: string) => {
@@ -251,38 +223,5 @@ export const useConversationMessagesStore = create<ConversationMessagesState>((s
   setIsLoading: (loading) => set({ isLoading: loading }),
   setFetchedForUrl: (url) => set({ fetchedForUrl: url }),
   setIsOnConversation: (on) => set({ isOnConversation: on }),
-
-  setDbRows: (conversationDbId, rows) => {
-    set({
-      conversationDbId,
-      dbRows: rows,
-      staleIds: computeStaleMessageIds(rows, get().liveIds),
-    });
-  },
-
-  addLiveIds: (ids) => {
-    if (ids.length === 0) return;
-    const merged = new Set(get().liveIds);
-    let added = false;
-    for (const id of ids) {
-      if (!merged.has(id)) {
-        merged.add(id);
-        added = true;
-      }
-    }
-    if (!added) return;
-    const liveIds = Array.from(merged);
-    set({ liveIds, staleIds: computeStaleMessageIds(get().dbRows, merged) });
-  },
-
-  forgetMessages: (ids) => {
-    if (ids.length === 0) return;
-    const drop = new Set(ids);
-    const { messages, dbRows, staleIds } = get();
-    set({
-      messages: messages.filter((m) => !drop.has(m.id)),
-      dbRows: dbRows.filter((r) => !drop.has(r.id)),
-      staleIds: staleIds.filter((id) => !drop.has(id)),
-    });
-  },
+  setConversationDbId: (conversationDbId) => set({ conversationDbId }),
 }));

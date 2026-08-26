@@ -1,46 +1,43 @@
 The all-in-one chat organizer, prompt manager & productivity toolkit for Google Gemini and AI Studio.
-Organize conversations into folders, search across all messages, export chats, sync to Google Drive, and now — let an AI Agent manage your data for you.
+Organize conversations into folders, search across all messages, export chats, sync to Google Drive, and optionally let an AI Agent help manage your data.
 
-Meet BETTER SIDEBAR FOR GEMINI & AI STUDIO — the ultimate workflow booster for developers, prompt engineers, and AI power users.
-
-We transform the default interface into a powerful, organized knowledge base. Stop scrolling endlessly through conversation history and start working efficiently.
+Meet BETTER SIDEBAR FOR GEMINI & AI STUDIO — designed to help developers, prompt engineers, and AI power users streamline their daily workflows. We aim to transform the default interface into a more organized knowledge base, helping you find what you need without endless scrolling.
 
 🔥 WHAT'S NEW (v2.9.0)
 
-🤖 AI Agent — The Headliner:
-• Type ">" in the Gemini input box and describe what you want done. The AI reads your data, makes decisions, executes multi-step tasks, and reports back.
-• Built-in Skills: Auto-organize chats into folders, backfill search index for old conversations, query your data like a database, batch-manage Prompts & Snippets.
-• Write your own custom Skills in Settings → Agent.
-• Not limited to presets — the Agent can query your full database and do whatever you can describe about your data.
-• Multi-turn conversations: push it further round by round, context carries over.
-• Safety: write operations require approval, reads are free. Speed Mode for trusted runs. Circuit breakers kill stuck loops automatically.
-• Agent Dock floats above your input box even with the sidebar closed.
-• Powerpack Early Bird buyers get Agent for free.
+🤖 AI Agent (New Experimental Feature):
+• We've introduced an AI Agent to help with your workflow. Simply type ">" in the Gemini input box, describe what you need, and the Agent will try its best to execute the tasks for you.
+• Built-in Skills: It comes with practical skills like auto-organizing chats, backfilling search indexes, querying data, and batch-managing Prompts & Snippets.
+• Custom Skills: You can write your own custom Skills in Settings → Agent to suit your specific needs.
+• Multi-turn Support: The Agent maintains context across multiple rounds of conversation, helping you break down complex tasks step by step.
+• Safety & Control: Your data safety is our priority. Write operations require your explicit approval (Speed Mode is available for trusted scenarios). A circuit breaker is built in to prevent endless loops.
+• Always Accessible: The Agent Dock rests quietly above your input box, ready to help even when the sidebar is closed.
+• A Token of Gratitude: Early Bird Powerpack supporters will receive access to the Agent as our way of saying thanks.
 
 ⚡ Gemini Spark Integration:
-• If Spark is available on your account, it appears as a native tab in the sidebar automatically.
+• If your Google account has Spark enabled, a dedicated tab will smoothly appear in the sidebar—no extra configuration needed.
 
-🎨 Cleaner UI & Theme Animations:
-• Tighter spacing, better contrast, refined themes. Smooth animated transition when switching themes.
+🎨 UI Refinements & Animations:
+• We've polished the spacing, contrast, and overall theme details. Switching themes now comes with a smooth transition animation for a more pleasant visual experience.
 
-🎛️ Extension Icon Settings Panel:
-• Click the toolbar icon to open a real control panel — toggle platforms and features without menus.
+🎛️ Extension Icon Panel:
+• Clicking the extension icon in your browser toolbar now opens a quick control panel, making it easier to toggle features without diving into menus.
 
 ⌨️ Slash Commands in AI Studio:
-• The "/" Prompt Library shortcut now works in AI Studio too.
+• The popular "/" shortcut to open the Prompt Library is now fully supported in AI Studio.
 
 💾 Automatic Local Backups:
-• Extension data backs up on a schedule. Manual snapshots available. Roll back anytime.
+• Extension data is now backed up locally on a schedule. You can also create manual snapshots to easily restore your data if things go wrong.
 
-📜 Smart Scrollbar — Expandable:
-• Click to expand into a full message list. Jump through long conversations instantly.
+📜 Smart Scrollbar Enhancements:
+• Clicking the smart scrollbar now expands it into a full message list, helping you navigate long conversations effortlessly.
 
-� Create Folder in Move Dialog:
-• "Move to folder" dialog now has a New Folder button.
+📁 Improved Folder Organization:
+• We've added a "New Folder" button directly within the "Move to folder" dialog for a smoother organizing experience.
 
-🐛 Key Fixes:
-• Google Drive sync no longer overwrites local data — restore is now manual download only.
-• Fixed Gemini conversation scanning, zombie sidebar on tab sleep, page layout jump, space cancelling rename, incorrect timestamps, Gem/Notebook detection, and dead scrollbar dots.
+🐛 Details & Fixes:
+• Google Drive sync has been adjusted to protect your local data; it no longer overwrites local files automatically (restore is now a manual download).
+• Fixed several issues, including Gemini conversation scanning glitches, frozen sidebars after tab sleep, and layout jumping. Thank you for your continued feedback that helps us improve.
 
 ---
 
@@ -48,7 +45,7 @@ We transform the default interface into a powerful, organized knowledge base. St
 
 🤖 AI AGENT (NEW)
 
-Type ">" to summon the Agent. Describe tasks in plain language and it executes them — auto-organize, query data, manage prompts, sync missing messages, and more. Write custom Skills. Multi-turn conversation with full context. Approval-gated writes, speed mode, circuit breakers. Works even with the sidebar closed via the Agent Dock.
+Type ">" to summon the Agent. Describe your tasks in everyday language, and it will try its best to help you execute them — auto-organize, query data, manage prompts, sync missing messages, and more. Write custom Skills. Multi-turn conversation with full context. Approval-gated writes, speed mode, circuit breakers. Works even with the sidebar closed via the Agent Dock.
 
 📂 SIDEBAR & ORGANIZATION
 
@@ -103,7 +100,7 @@ AI Studio:
 • Slash "/" command for Prompt Library
 
 🎨 Themes
-13+ exclusive themes available via Supporter Pack (including AI-generated custom themes). Light/dark mode auto-detected. Smooth animated transitions.
+13+ carefully crafted themes available in the Supporter Pack (including AI-generated custom themes). Light/dark mode auto-detected. We've added smooth animated transitions for a more comfortable experience.
 
 ---
 
@@ -122,7 +119,7 @@ Build your personal library of reusable prompts. Supports option variables, prom
 Upload settings and prompts to Google Drive automatically. Restore is manual-only — your local data is always the source of truth.
 
 🔗 Powerpack — Export to Notion & Obsidian
-Seamlessly export conversations and snippets to Notion and Obsidian with full formatting preserved. Batch export available. AI Agent included. 7-day no-questions-asked refund.
+Seamlessly export conversations and snippets to Notion and Obsidian, doing our best to preserve full formatting. Batch export available. AI Agent included. 7-day no-questions-asked refund.
 
 ---
 
