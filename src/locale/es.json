@@ -337,7 +337,7 @@
     "switchToOriginalUI": "Cambiar a Barra Lateral Original",
     "temporaryChat": "Chat temporal",
     "toggleMenu": "Alternar menú",
-    "newChatCta": "Clic: Nuevo chat · Clic derecho: Chat privado"
+    "newChatCta": "Clic: Nuevo chat · Clic derecho: Chat privado · Clic central: Nuevo chat en nueva pestaña"
   },
   "newChatButton": {
     "dropdownTooltip": "Más opciones de chat",

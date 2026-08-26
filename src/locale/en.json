@@ -343,7 +343,7 @@
     "switchToOriginalUI": "Switch to Original Sidebar",
     "temporaryChat": "Temporary chat",
     "toggleMenu": "Toggle Menu",
-    "newChatCta": "Click: New chat · Right-click: Private chat"
+    "newChatCta": "Click: New chat · Right-click: Private chat · Middle-click: New chat in new tab"
   },
   "newChatButton": {
     "dropdownTooltip": "More chat options",

@@ -337,7 +337,7 @@
     "switchToOriginalUI": "切换到原始侧边栏",
     "temporaryChat": "临时对话",
     "toggleMenu": "切换菜单",
-    "newChatCta": "点击：新建对话 · 右键：私密对话"
+    "newChatCta": "点击：新建对话 · 右键：私密对话 · 中键：在新标签页新建对话"
   },
   "newChatButton": {
     "dropdownTooltip": "更多新建选项",

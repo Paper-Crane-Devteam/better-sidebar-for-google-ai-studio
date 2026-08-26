@@ -47,9 +47,14 @@ export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
     resolveNewChatFolder?.(gemId, notebookId)
     ?? INBOX_FOLDER_ID(useAppStore.getState().ui.overlay.currentPlatform);
 
+  // Middle click: always open a new chat in a new tab
+  const handleNewChatInNewTab = () => {
+    window.open('https://gemini.google.com/app', '_blank');
+  };
+
   const handleNewChat = () => {
     if (newChatBehavior === 'new-tab') {
-      window.open('https://gemini.google.com/app', '_blank');
+      handleNewChatInNewTab();
     } else {
       // Use explorer's unified handler which creates pending entry,
       // expands the target folder, and navigates
@@ -107,6 +112,7 @@ export const NewChatButton = ({ onPrivateChat }: NewChatButtonProps) => {
         tooltip={onPrivateChat ? t('tooltip.newChatCta') : t('tooltip.newChat')}
         onClick={handleNewChat}
         onContextMenu={onPrivateChat ? () => onPrivateChat() : undefined}
+        onMiddleClick={handleNewChatInNewTab}
         dropdownTooltip={t('newChatButton.dropdownTooltip')}
         dropdownItems={[
           {

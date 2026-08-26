@@ -337,7 +337,7 @@
     "switchToOriginalUI": "元のサイドバーに切り替え",
     "temporaryChat": "一時チャット",
     "toggleMenu": "メニューを切り替え",
-    "newChatCta": "クリック：新しいチャット · 右クリック：プライベートチャット"
+    "newChatCta": "クリック：新しいチャット · 右クリック：プライベートチャット · 中クリック：新しいタブで開く"
   },
   "newChatButton": {
     "dropdownTooltip": "その他のチャットオプション",
