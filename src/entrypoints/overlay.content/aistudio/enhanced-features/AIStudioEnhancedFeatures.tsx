@@ -4,6 +4,7 @@ import { SlashCommandFeature } from './SlashCommandFeature';
 import { SaveSnippetFeature } from './SaveSnippetFeature';
 import { SnippetDragDrawer } from '@/entrypoints/overlay.content/shared/modules/snippets/components/SnippetDragFolderView';
 import { GlobalModal } from '@/shared/components/GlobalModal';
+import { GlobalPopoverPicker } from '@/shared/components/GlobalPopoverPicker';
 import { GlobalToast } from '@/shared/components/GlobalToast';
 import { SnippetReaderDrawer } from '@/entrypoints/overlay.content/shared/modules/snippets/components/SnippetReaderDrawer';
 import { SettingsModal } from '@/entrypoints/overlay.content/shared/modules/settings/SettingsModal';
@@ -42,6 +43,7 @@ export const AIStudioEnhancedFeatures = () => {
       <PowerPackPaywall />
       <HotkeyCheatsheet />
       <GlobalModal />
+      <GlobalPopoverPicker />
       <GlobalToast />
     </>
   );

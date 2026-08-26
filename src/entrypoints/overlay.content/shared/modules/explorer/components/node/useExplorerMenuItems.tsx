@@ -20,7 +20,6 @@ import {
   Braces,
   FolderInput,
   Palette,
-  Check,
   Settings,
   TextCursorInput,
   Pin,
@@ -37,8 +36,7 @@ import { useExplorerContext } from '../../ExplorerContext';
 import type { Gem, Notebook } from '@/shared/types/db';
 import { MoveItemsDialog } from '../batch/MoveItemsDialog';
 import { detectPlatform, PLATFORM_CONFIG } from '@/shared/types/platform';
-import { SimpleTooltip } from '@/shared/components/ui/tooltip';
-import { FOLDER_COLOR_PRESETS } from '@/shared/lib/folder-colors';
+import { ColorPickerGrid } from '@/entrypoints/overlay.content/shared/components/ColorPickerGrid';
 import obsidianIcon from '@/assets/icons/obsidian.svg';
 import notionIcon from '@/assets/icons/notion.svg';
 import { useExport } from '@/entrypoints/overlay.content/shared/features/export/useExport';
@@ -412,33 +410,11 @@ export function useExplorerMenuItems({
       label: t('node.changeColor'),
       contentClassName: 'w-auto p-2',
       children: (
-        <div className="flex flex-wrap gap-1.5 max-w-[180px]">
-          <SimpleTooltip content={t('folderSettings.defaultColor')}>
-            <button
-              type="button"
-              className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center hover:scale-110 transition-transform"
-              onClick={() => onColorChange(null)}
-            >
-              {folderColor === null && (
-                <Check className="w-3 h-3 text-muted-foreground" />
-              )}
-            </button>
-          </SimpleTooltip>
-          {FOLDER_COLOR_PRESETS.map((preset) => (
-            <SimpleTooltip key={preset.value} content={t(preset.labelKey)}>
-              <button
-                type="button"
-                className="w-6 h-6 rounded-full border-2 border-transparent flex items-center justify-center hover:scale-110 transition-transform"
-                style={{ backgroundColor: preset.value }}
-                onClick={() => onColorChange(preset.value)}
-              >
-                {folderColor === preset.value && (
-                  <Check className="w-3 h-3 text-white drop-shadow-sm" />
-                )}
-              </button>
-            </SimpleTooltip>
-          ))}
-        </div>
+        <ColorPickerGrid
+          selectedColor={folderColor}
+          onColorChange={onColorChange}
+          allowCustom
+        />
       ),
     });
 

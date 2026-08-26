@@ -46,7 +46,7 @@
 -45. auto backup mechanism
 ---
 46. custom color in right click
-47. search folder in folder selection modal
+-47. search folder in folder selection modal
 48. middle click new chat open new tab
 49. when renaming chat in current chat, refresh the chat
 50. branch new chat mess with chat history
