@@ -171,7 +171,7 @@ export const FolderPicker = ({
           )}
         </div>
       </div>
-      <div className="min-h-[300px] max-h-[80vh] w-full border rounded-md">
+      <div className="min-h-[300px] max-h-[80vh] w-full rounded-md">
         <ScrollArea className="h-full w-full p-2">
           {/* Root level option — hidden while filtering, it never matches a query */}
           {!isSearching && (
