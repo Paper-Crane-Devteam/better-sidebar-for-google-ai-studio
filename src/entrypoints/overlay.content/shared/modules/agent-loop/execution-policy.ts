@@ -49,10 +49,34 @@ export function isControlTool(toolName: string): boolean {
  */
 export function getToolRisk(toolCall: ParsedToolCall): ToolRisk {
   if (isControlTool(toolCall.name)) return 'control';
+  if (WORKSPACE_WRITE_TOOLS.includes(toolCall.name)) return 'write';
+  if (WORKSPACE_READ_TOOLS.includes(toolCall.name)) return 'read';
   if (toolCall.name !== 'execute_sql') return 'read';
   const sql = (toolCall.params.query || '').trim().toUpperCase();
   return /^(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE)/.test(sql) ? 'write' : 'read';
 }
+
+/**
+ * Workspace tools that change files, and so answer to the write switch.
+ *
+ * `manage_files` is here on the strength of its worst action: it takes `action` as a
+ * runtime param, and `delete` with `recursive` removes a subtree with no undo. Risk
+ * is what the user is deciding about, so it is classified by what the call *could*
+ * do, not by parsing the param to find out that this particular one is an `mkdir`.
+ */
+const WORKSPACE_WRITE_TOOLS: readonly string[] = [
+  'write_file',
+  'edit_file',
+  'manage_files',
+];
+
+/** Workspace tools that only look at files. */
+const WORKSPACE_READ_TOOLS: readonly string[] = [
+  'read_file',
+  'list_files',
+  'glob_files',
+  'grep_files',
+];
 
 /** Whether a tool call is a database write operation */
 export function isWriteOperation(toolCall: ParsedToolCall): boolean {

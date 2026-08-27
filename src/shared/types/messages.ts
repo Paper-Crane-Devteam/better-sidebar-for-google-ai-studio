@@ -124,6 +124,8 @@ export type ExtensionMessage = (
         | { op: 'sessionCreate'; session: { id: string; conversationId: string | null; title: string | null; skillId?: string | null } }
         | { op: 'sessionClaim'; sessionId: string; conversationId: string }
         | { op: 'sessionEnd'; sessionId: string; endReason: string; rounds: number }
+        | { op: 'sessionBindWorkspace'; sessionId: string; workspaceId: string }
+        | { op: 'boundWorkspace'; conversationId: string }
         | {
             op: 'callBegin';
             call: {
@@ -523,6 +525,51 @@ export type ExtensionMessage = (
   | {
       type: 'REMOVE_HOST_PERMISSION';
       payload: { origin: string };
+    }
+  /**
+   * Agent workspace filesystem, from the content script.
+   *
+   * Routed through the background because OPFS is origin-scoped: a content script's
+   * `navigator.storage` belongs to gemini.google.com, so calling it there would put
+   * the workspace in Google's quota and give each platform a separate one. The
+   * background runs at the extension origin, which is the only place the workspace
+   * can live and be shared across platforms.
+   */
+  | {
+      type: 'WORKSPACE_FS';
+      /**
+       * Which workspace to operate in.
+       *
+       * Sent per call rather than remembered by the background: the selection lives in
+       * a content-script store, and a background copy could lag behind a switch —
+       * landing the next tool call in the workspace the user just left.
+       */
+      workspaceId: string;
+      payload:
+        | { op: 'read'; path: string; offset?: number; limit?: number }
+        | { op: 'write'; path: string; content: string }
+        | {
+            op: 'edit';
+            path: string;
+            oldString: string;
+            newString: string;
+            replaceAll?: boolean;
+          }
+        | { op: 'list'; path?: string; recursive?: boolean }
+        | { op: 'glob'; pattern: string; base?: string }
+        | {
+            op: 'grep';
+            pattern: string;
+            path?: string;
+            include?: string;
+            caseSensitive?: boolean;
+          }
+        | { op: 'delete'; path: string; recursive?: boolean }
+        | { op: 'mkdir'; path: string }
+        | { op: 'move'; from: string; to: string }
+        | { op: 'stat'; path: string }
+        | { op: 'stats' }
+        | { op: 'clear' };
     }
 ) & { platform?: string };
 

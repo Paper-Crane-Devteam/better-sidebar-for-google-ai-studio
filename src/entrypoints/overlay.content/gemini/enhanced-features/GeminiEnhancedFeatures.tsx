@@ -14,6 +14,7 @@ import { GlobalModal } from '@/shared/components/GlobalModal';
 import { GlobalPopoverPicker } from '@/shared/components/GlobalPopoverPicker';
 import { GlobalToast } from '@/shared/components/GlobalToast';
 import { SnippetReaderDrawer } from '@/entrypoints/overlay.content/shared/modules/snippets/components/SnippetReaderDrawer';
+import { WorkspaceFileDrawer } from '@/entrypoints/overlay.content/shared/modules/agent-tab/workspace/WorkspaceFileDrawer';
 import { SettingsModal } from '@/entrypoints/overlay.content/shared/modules/settings/SettingsModal';
 import { WhatsNewDialog } from '@/entrypoints/overlay.content/shared/modules/whats-new/WhatsNewDialog';
 import { useAppStore } from '@/shared/lib/store';
@@ -60,6 +61,7 @@ export const GeminiEnhancedFeatures = () => {
       <SelectionToolbarFeature />
       <SnippetDragDrawer />
       <SnippetReaderDrawer />
+      <WorkspaceFileDrawer />
       <SettingsModal open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
       <WhatsNewDialog />
       <ProfilePickerDialog />

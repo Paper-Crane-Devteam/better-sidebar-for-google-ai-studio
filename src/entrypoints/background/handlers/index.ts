@@ -15,3 +15,4 @@ export { handleNotebooks } from './notebooks';
 export { handleSnippets } from './snippets';
 export { handleNotionProxy } from './notion-proxy';
 export { handleBackup } from './backup';
+export { handleWorkspace } from './workspace';

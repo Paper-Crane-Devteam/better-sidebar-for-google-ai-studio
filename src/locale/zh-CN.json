@@ -1120,7 +1120,8 @@
       "freeTier": "免费版只能读取。升级后 Agent 才能修改数据。",
       "manage": "管理技能与工具",
       "newChatHint": "在你打开的聊天中运行。开个新聊天可以保持整洁。",
-      "triggerHint": "在聊天输入框输入 > 也能从那里启动智能体。"
+      "triggerHint": "在聊天输入框输入 > 也能从那里启动智能体。",
+      "workspace": "工作区"
     },
     "send": {
       "sessionBusy": "已经有任务在执行了，这条没有发出去。先停止它，然后再按一次回车。",
@@ -1230,7 +1231,14 @@
       "viewPrompt": "点击查看完整提示词",
       "systemPrompt": "系统提示词",
       "resultsTitle": "工具结果",
-      "promptTitle": "提示词内容"
+      "promptTitle": "提示词内容",
+      "readFile": "读取文件",
+      "writeFile": "写入文件",
+      "editFile": "编辑文件",
+      "listFiles": "查看工作区",
+      "globFiles": "查找文件",
+      "grepFiles": "搜索文件内容",
+      "manageFiles": "管理文件"
     },
     "sync": {
       "progress": "正在获取对话内容 — {{current}}/{{total}}",
@@ -1354,6 +1362,10 @@
       "manageSnippets": {
         "title": "管理片段",
         "description": "整理、去重和搜索已保存的片段 — 包括全文内容"
+      },
+      "workspace": {
+        "title": "工作区助手",
+        "description": "在私有工作区中读写、编辑和搜索文件"
       }
     },
     "mcp": {
@@ -1367,11 +1379,30 @@
         "sync_conversation_messages": "为没有消息记录的对话补录历史",
         "export": "将对话导出为文件",
         "complete_task": "结束智能体循环并汇报结果"
+      },
+      "workspace": {
+        "name": "AI 助手工作区",
+        "description": "在私有工作区中读写、编辑和搜索文件"
       }
     },
     "entry": {
       "autoTitle": "Better Sidebar 智能体",
       "autoDescription": "描述一个任务，让智能体选择合适的工具"
+    },
+    "workspace": {
+      "title": "工作区",
+      "create": "新建工作区",
+      "delete": "删除此工作区",
+      "clearAll": "清空所有文件",
+      "clearTitle": "清空工作区",
+      "deleteTitle": "删除工作区",
+      "namePlaceholder": "工作区名称",
+      "empty": "暂无文件。让 AI 助手写入内容后会显示在这里。",
+      "emptyFile": "文件为空。",
+      "lockedHint": "此对话已使用\"{name}\"工作区，如需切换请开启新对话。",
+      "busyHint": "任务运行中，请完成或停止后再切换。",
+      "clearWarning": "删除\"{name}\"中的所有 {fileCount} 个文件？此操作无法撤销。",
+      "deleteWarning": "删除工作区\"{name}\"及其中 {fileCount} 个文件？已使用此工作区的对话将无法再读写文件。此操作无法撤销。"
     }
   },
   "backup": {

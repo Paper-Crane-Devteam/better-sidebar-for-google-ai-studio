@@ -1126,7 +1126,8 @@
       "triggerHint": "Typing > in the chat input starts the agent from there too.",
       "safety": "Only your local database is touched. Changes are confirmed before they run.",
       "freeTier": "Free plan is read-only. Upgrade to let the agent make changes.",
-      "manage": "Manage skills & tools"
+      "manage": "Manage skills & tools",
+      "workspace": "Workspace"
     },
     "send": {
       "sessionBusy": "A task is already running, so this one was not sent. Stop it, then press Enter again.",
@@ -1248,7 +1249,14 @@
       "viewPrompt": "Click to see the full prompt",
       "systemPrompt": "System prompt",
       "resultsTitle": "Tool results",
-      "promptTitle": "Prompt content"
+      "promptTitle": "Prompt content",
+      "readFile": "Reading a file",
+      "writeFile": "Writing a file",
+      "editFile": "Editing a file",
+      "listFiles": "Looking through the workspace",
+      "globFiles": "Finding files",
+      "grepFiles": "Searching in files",
+      "manageFiles": "Reorganizing files"
     },
     "sync": {
       "progress": "Fetching conversation content — {{current}}/{{total}}",
@@ -1352,6 +1360,10 @@
       "manageSnippets": {
         "title": "Manage Snippets",
         "description": "Organize, dedupe and search saved snippets — including their full text"
+      },
+      "workspace": {
+        "title": "Workspace Agent",
+        "description": "Read, write, edit, and search files in your private workspace"
       }
     },
     "mcp": {
@@ -1365,11 +1377,30 @@
         "sync_conversation_messages": "Record message history for conversations that have none",
         "export": "Download conversations as files",
         "complete_task": "End the agent loop and report results"
+      },
+      "workspace": {
+        "name": "Agent Workspace",
+        "description": "Read, write, edit and search files in your private workspace"
       }
     },
     "entry": {
       "autoTitle": "Better Sidebar Agent",
       "autoDescription": "Describe a task and let the agent pick the right tools"
+    },
+    "workspace": {
+      "title": "Workspace",
+      "create": "New workspace",
+      "delete": "Delete this workspace",
+      "clearAll": "Clear all files",
+      "clearTitle": "Clear workspace",
+      "deleteTitle": "Delete workspace",
+      "namePlaceholder": "Workspace name",
+      "empty": "No files yet. Ask the agent to write something and it will show up here.",
+      "emptyFile": "This file is empty.",
+      "lockedHint": "This conversation is using \"{name}\". Start a new chat to switch.",
+      "busyHint": "A task is running. Finish or stop it before switching.",
+      "clearWarning": "Delete all {fileCount} file(s) in \"{name}\"? This cannot be undone.",
+      "deleteWarning": "Delete \"{name}\" and all {fileCount} file(s) in it? Conversations that already used this workspace will no longer be able to read or write files. This cannot be undone."
     }
   },
   "backup": {

@@ -23,6 +23,9 @@ export interface AgentConfigStoreState {
   /** IDs of builtin skills that user has disabled */
   disabledBuiltinSkills: string[];
 
+  /** IDs of MCP servers that user has disabled (not applied to required core servers) */
+  disabledMcpServers: string[];
+
   // ─── Actions ─────────────────────────────────────────────────────────
 
   addCustomSkill: (
@@ -35,6 +38,7 @@ export interface AgentConfigStoreState {
   removeCustomSkill: (id: string) => void;
   setCustomSkillEnabled: (id: string, enabled: boolean) => void;
   toggleBuiltinSkill: (id: string) => void;
+  toggleMcpServer: (id: string) => void;
 }
 
 export const useAgentConfigStore = create<AgentConfigStoreState>()(
@@ -42,6 +46,7 @@ export const useAgentConfigStore = create<AgentConfigStoreState>()(
     (set, get) => ({
       customSkills: [],
       disabledBuiltinSkills: [],
+      disabledMcpServers: [],
 
       addCustomSkill: (data) => {
         const now = Date.now();
@@ -80,6 +85,15 @@ export const useAgentConfigStore = create<AgentConfigStoreState>()(
           set({ disabledBuiltinSkills: current.filter((i) => i !== id) });
         } else {
           set({ disabledBuiltinSkills: [...current, id] });
+        }
+      },
+
+      toggleMcpServer: (id) => {
+        const current = get().disabledMcpServers;
+        if (current.includes(id)) {
+          set({ disabledMcpServers: current.filter((i) => i !== id) });
+        } else {
+          set({ disabledMcpServers: [...current, id] });
         }
       },
     }),

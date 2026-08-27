@@ -8,7 +8,7 @@
  */
 
 import React, { useState } from 'react';
-import { Bot, Keyboard, Lock, Send, Settings, ShieldCheck } from 'lucide-react';
+import { Bot, FolderOpen, Keyboard, Lock, Send, Settings, ShieldCheck } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { UIcon } from '@/shared/components/ui/icon';
 import { useI18n } from '@/shared/hooks/useI18n';
@@ -19,12 +19,22 @@ import { getAgentEntries, AGENT_AUTO_ID } from '../../agent-loop/agent-entry';
 import { agentEventBus } from '../../agent-loop/event-bus';
 import { useAgentLoopStore } from '../../agent-loop/agent-loop-store';
 import { getActiveEngine } from '../../agent-loop/engine/engine-registry';
+import { useAgentConfigStore } from '../../agent-loop/agent-config-store';
+import { WORKSPACE_MCP_ID } from '../../agent-loop/mcp/workspace-mcp';
 
+interface AgentLauncherProps {
+  /** Switch the tab over to the workspace file browser. */
+  onOpenWorkspace?: () => void;
+}
 
-
-export const AgentLauncher: React.FC = () => {
+export const AgentLauncher: React.FC<AgentLauncherProps> = ({ onOpenWorkspace }) => {
   const { t } = useI18n();
   const setSettingsOpen = useAppStore((s) => s.setSettingsOpen);
+  // Offering a workspace browser while the file tools are switched off would advertise
+  // a capability the agent does not currently have.
+  const workspaceEnabled = !useAgentConfigStore((s) =>
+    s.disabledMcpServers.includes(WORKSPACE_MCP_ID),
+  );
   const tier = useLicenseStore((s) => s.tier);
   const canWrite = tier === 'power_pack' || tier === 'pro' || tier === 'support_pack';
 
@@ -271,15 +281,29 @@ export const AgentLauncher: React.FC = () => {
           </div>
         )}
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 gap-1 text-xs text-muted-foreground"
-          onClick={() => setSettingsOpen(true, 'agent')}
-        >
-          <Settings className="h-3 w-3" />
-          {t('agent.launcher.manage', { defaultValue: 'Manage skills & tools' })}
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 gap-1 text-xs text-muted-foreground"
+            onClick={() => setSettingsOpen(true, 'agent')}
+          >
+            <Settings className="h-3 w-3" />
+            {t('agent.launcher.manage', { defaultValue: 'Manage skills & tools' })}
+          </Button>
+
+          {workspaceEnabled && onOpenWorkspace && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1 text-xs text-muted-foreground"
+              onClick={onOpenWorkspace}
+            >
+              <FolderOpen className="h-3 w-3" />
+              {t('agent.launcher.workspace', { defaultValue: 'Workspace' })}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

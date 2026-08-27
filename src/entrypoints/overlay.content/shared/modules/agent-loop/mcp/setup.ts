@@ -7,28 +7,60 @@
 
 import { mcpRegistry } from './registry';
 import { BUILTIN_MCP } from './builtin-mcp';
+import { WORKSPACE_MCP, WORKSPACE_MCP_ID } from './workspace-mcp';
+import { useAgentConfigStore } from '../agent-config-store';
+
+/**
+ * Servers the agent cannot run without.
+ *
+ * `builtin-bettersidebar` holds `complete_task` and `activate_skill` — the loop has
+ * no way to end or to specialise without them, so it is not offered as a toggle.
+ * Everything else is the user's choice.
+ */
+const REQUIRED_SERVER_IDS: readonly string[] = [BUILTIN_MCP.id];
 
 /**
  * Initialize the MCP registry with builtin server(s).
  */
 export function initMCPRegistry(): void {
-  // Register builtin
   mcpRegistry.registerServer({ ...BUILTIN_MCP });
+  mcpRegistry.registerServer({ ...WORKSPACE_MCP });
 
   syncMCPEnabledState();
 }
 
 /**
- * Sync MCP server enabled states.
+ * Sync MCP server enabled states from the config store.
  *
- * Builtin servers (Better Sidebar) carry the Agent's core tools and can never
- * be disabled, so they are always forced on. Custom servers, once supported,
- * will read their state from the config store here.
+ * Required servers are forced on regardless of what is persisted. Optional ones —
+ * currently the workspace — read `disabledMcpServers`, so seven file-tool schemas
+ * stay out of the prompt for users who don't want them.
+ *
+ * ⚠️ Must be called after any change to `disabledMcpServers`: the registry holds its
+ * own `enabled` flag, and the store alone does not reach it.
  */
 export function syncMCPEnabledState(): void {
+  const { disabledMcpServers } = useAgentConfigStore.getState();
+
   for (const server of mcpRegistry.getServers()) {
-    if (server.type === 'builtin') {
-      mcpRegistry.setServerEnabled(server.id, true);
-    }
+    const required = REQUIRED_SERVER_IDS.includes(server.id);
+    mcpRegistry.setServerEnabled(
+      server.id,
+      required || !disabledMcpServers.includes(server.id),
+    );
   }
+}
+
+/** Whether the workspace file tools are currently available to the agent. */
+export function isWorkspaceEnabled(): boolean {
+  return !useAgentConfigStore.getState().disabledMcpServers.includes(WORKSPACE_MCP_ID);
+}
+
+/** Turn the workspace server on or off, and push the change into the registry. */
+export function setWorkspaceEnabled(enabled: boolean): void {
+  const { disabledMcpServers, toggleMcpServer } = useAgentConfigStore.getState();
+  const currentlyDisabled = disabledMcpServers.includes(WORKSPACE_MCP_ID);
+  if (currentlyDisabled === !enabled) return; // already in the requested state
+  toggleMcpServer(WORKSPACE_MCP_ID);
+  syncMCPEnabledState();
 }

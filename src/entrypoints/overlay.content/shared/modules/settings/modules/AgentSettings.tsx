@@ -11,6 +11,8 @@ import { modal } from '@/shared/lib/modal';
 import { useAgentConfigStore } from '../../agent-loop/agent-config-store';
 import { BUILTIN_SKILLS } from '../../agent-loop/skills/builtin-skills';
 import { BUILTIN_MCP } from '../../agent-loop/mcp/builtin-mcp';
+import { WORKSPACE_MCP, WORKSPACE_MCP_ID } from '../../agent-loop/mcp/workspace-mcp';
+import { syncMCPEnabledState } from '../../agent-loop/mcp/setup';
 import { openSkillEditorModal } from './agent/SkillEditorModal';
 import { SwitchItem } from '../components/SwitchItem';
 
@@ -19,10 +21,24 @@ export const AgentSettings: React.FC = () => {
   const {
     customSkills,
     disabledBuiltinSkills,
+    disabledMcpServers,
     toggleBuiltinSkill,
+    toggleMcpServer,
     setCustomSkillEnabled,
     removeCustomSkill,
   } = useAgentConfigStore();
+
+  const workspaceEnabled = !disabledMcpServers.includes(WORKSPACE_MCP_ID);
+
+  /**
+   * The registry keeps its own `enabled` flag, and prompt assembly reads the
+   * registry rather than the store — so flipping the switch has to push the change
+   * through, or the tools stay in the prompt until the next page load.
+   */
+  const handleToggleWorkspace = () => {
+    toggleMcpServer(WORKSPACE_MCP_ID);
+    syncMCPEnabledState();
+  };
 
   const handleDeleteSkill = async (id: string, title: string) => {
     const confirmed = await modal.confirmDelete({
@@ -146,6 +162,30 @@ export const AgentSettings: React.FC = () => {
                 </span>
               </div>
             ))}
+          </div>
+
+          {/* Workspace MCP — optional, seven tool schemas is real prompt cost */}
+          <div className="pt-2">
+            <SwitchItem
+              label={t('agent.mcp.workspace.name', { defaultValue: WORKSPACE_MCP.name })}
+              description={`${t('agent.settings.mcpToolCount', { count: WORKSPACE_MCP.tools.length })} — ${t('agent.mcp.workspace.description', { defaultValue: WORKSPACE_MCP.description })}`}
+              checked={workspaceEnabled}
+              onCheckedChange={handleToggleWorkspace}
+            />
+
+            {workspaceEnabled && (
+              <div className="ml-8 space-y-1">
+                {WORKSPACE_MCP.tools.map((tool) => (
+                  <div key={tool.schema.name} className="flex items-center gap-2 py-1">
+                    <div className="h-1 w-1 rounded-full bg-muted-foreground/40" />
+                    <span className="text-xs text-muted-foreground">{tool.schema.name}</span>
+                    <span className="text-[10px] text-muted-foreground/60 truncate">
+                      — {tool.schema.description.slice(0, 60)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

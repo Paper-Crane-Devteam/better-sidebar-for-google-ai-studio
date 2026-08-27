@@ -24,6 +24,7 @@ import {
   handleNotionProxy,
   handleBackup,
   handleAgentLedger,
+  handleWorkspace,
 } from './handlers';
 
 const handlers = [
@@ -69,6 +70,13 @@ export async function handleMessage(
     // OPEN_PERMISSION_PAGE and OPEN_URL just need to interact with browser APIs
     const miscResult = await handleMisc(message, sender);
     if (miscResult !== null) return miscResult;
+
+    // The agent workspace is OPFS, not SQLite. Answering it before
+    // `ensureDbReady()` keeps file operations working while the database is still
+    // opening (or has failed to open), and avoids `ensureDbForTab` switching
+    // profiles for a call that reads no profile-scoped data.
+    const workspaceResult = await handleWorkspace(message);
+    if (workspaceResult !== null) return workspaceResult;
 
     await ensureDbReady();
 

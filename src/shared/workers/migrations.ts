@@ -545,6 +545,24 @@ export const runMigrations = async (db: any) => {
       );
     });
 
+    /**
+     * Which workspace a conversation is bound to.
+     *
+     * A conversation picks a workspace once — on its first successful workspace tool
+     * call — and is locked to it from then on. The lock has to survive a reload and
+     * still be there tomorrow, which rules out memory; and it is keyed by conversation,
+     * which rules out a plain preference: `chrome.storage` would need its own
+     * conversation → workspace map, i.e. this column with extra steps.
+     *
+     * Nullable, and null is the common case — only conversations that actually touched
+     * a file carry a value. `hasColumn` makes the step safe to re-run.
+     */
+    await step('add workspace_id to agent_sessions', async () => {
+      if (await hasColumn('agent_sessions', 'workspace_id')) return;
+      console.log('Worker: Migrating agent_sessions - adding workspace_id');
+      await db.run('ALTER TABLE agent_sessions ADD COLUMN workspace_id TEXT');
+    });
+
     // ── One-time data fix (v2.9.0): fix conversation created_at from first message ──
     // A previous bug caused conversations.created_at to be incorrect.
     // For existing users: set created_at = first message's timestamp (MIN(timestamp)).

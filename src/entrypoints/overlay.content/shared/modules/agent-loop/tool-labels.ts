@@ -34,6 +34,20 @@ export function getToolLabel(toolName: string, t: Translate, query?: string): st
       return t('agent.tool.export', { defaultValue: 'Exporting' });
     case 'complete_task':
       return t('agent.tool.complete', { defaultValue: 'Wrapping up' });
+    case 'read_file':
+      return t('agent.tool.readFile', { defaultValue: 'Reading a file' });
+    case 'write_file':
+      return t('agent.tool.writeFile', { defaultValue: 'Writing a file' });
+    case 'edit_file':
+      return t('agent.tool.editFile', { defaultValue: 'Editing a file' });
+    case 'list_files':
+      return t('agent.tool.listFiles', { defaultValue: 'Looking through the workspace' });
+    case 'glob_files':
+      return t('agent.tool.globFiles', { defaultValue: 'Finding files' });
+    case 'grep_files':
+      return t('agent.tool.grepFiles', { defaultValue: 'Searching in files' });
+    case 'manage_files':
+      return t('agent.tool.manageFiles', { defaultValue: 'Reorganizing files' });
     default:
       return t('agent.tool.generic', { defaultValue: 'Running a step' });
   }

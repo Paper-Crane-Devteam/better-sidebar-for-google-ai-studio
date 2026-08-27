@@ -22,6 +22,19 @@ export const SUPPORTED_TOOLS = [
   'export',
   'complete_task',
   'activate_skill',
+  // Workspace file tools (see mcp/workspace-mcp.ts). Listed here even when the
+  // workspace server is disabled: the parser's job is to recognise the name, and
+  // availability is the registry's call — `tool-registry.ts` answers a disabled
+  // tool with CANCELLED, which tells the AI something useful. Dropping it at the
+  // parser instead produces "unknown tool", which reads as a format error and
+  // makes the model resend the whole response.
+  'read_file',
+  'write_file',
+  'edit_file',
+  'list_files',
+  'glob_files',
+  'grep_files',
+  'manage_files',
 ] as const;
 
 /** Params that must be present and non-empty, per tool */
@@ -33,6 +46,17 @@ export const REQUIRED_PARAMS: Record<string, string[]> = {
   export: ['ids'],
   complete_task: ['summary'],
   activate_skill: ['skill_id'],
+  read_file: ['path'],
+  // `content` is absent on purpose: an empty string is a legitimate file body, and
+  // requiring it here would reject `write_file` calls that create a placeholder.
+  write_file: ['path'],
+  // `new_string` likewise — empty means "delete this text", which is a normal edit.
+  edit_file: ['path', 'old_string'],
+  // `list_files` with no path lists the workspace root, which is the common first call.
+  list_files: [],
+  glob_files: ['pattern'],
+  grep_files: ['pattern'],
+  manage_files: ['action'],
 };
 
 /**
