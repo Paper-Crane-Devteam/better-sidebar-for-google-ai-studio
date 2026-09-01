@@ -53,3 +53,4 @@
 51. agent can open new chat
 52. keyboard delete and rename
 53. agent can open new chat
+54. switch timeline view mode in hover tab icon

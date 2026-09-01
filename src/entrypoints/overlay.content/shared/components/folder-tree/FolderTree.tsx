@@ -28,6 +28,7 @@ export const FolderTree = forwardRef<FolderTreeHandle, FolderTreeProps>(
       onRename,
       onDelete,
       handleToggle,
+      handleKeyDown,
     } = useFolderTree(hookOptions);
 
     const rowHeight = rowHeightProp ?? 32;
@@ -49,7 +50,13 @@ export const FolderTree = forwardRef<FolderTreeHandle, FolderTreeProps>(
     }));
 
     return (
-      <div ref={containerRef} className="h-full w-full pl-1">
+      <div
+        ref={containerRef}
+        className="h-full w-full pl-1"
+        // Capture phase so Delete/F2 are claimed before react-arborist's own
+        // container handler feeds them into its type-ahead search buffer.
+        onKeyDownCapture={handleKeyDown}
+      >
         <Tree
           padding={2}
           ref={treeRef}
