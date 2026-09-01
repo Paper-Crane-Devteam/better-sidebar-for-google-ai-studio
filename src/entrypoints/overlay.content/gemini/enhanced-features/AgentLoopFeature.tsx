@@ -38,7 +38,7 @@ import {
   useCurrentConversationId,
 } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
 import { useConversationMessages } from '@/entrypoints/overlay.content/shared/modules/agent-loop/renderer/useConversationMessages';
-import { endsSession } from '@/entrypoints/overlay.content/shared/modules/agent-loop/renderer/helpers/session-end';
+import { hasUnrunToolWork } from '@/entrypoints/overlay.content/shared/modules/agent-loop/renderer/helpers/session-end';
 import {
   createAdapterForCurrentPlatform,
   getCurrentPlatformId,
@@ -50,6 +50,7 @@ import { getAgentEntryById } from '@/entrypoints/overlay.content/shared/modules/
 import {
   buildToolCallFingerprint,
   buildToolCallKey,
+  getToolRisk,
 } from '@/entrypoints/overlay.content/shared/modules/agent-loop/execution-policy';
 import { useAgentRecordStore } from '@/entrypoints/overlay.content/shared/modules/agent-loop/agent-record-store';
 import { buildOwedPayload } from '@/entrypoints/overlay.content/shared/modules/agent-loop/recovery';
@@ -283,17 +284,13 @@ export const AgentLoopFeature: React.FC = () => {
     if (lastModel.toolOutcomes.some((o) => o !== null)) return;
 
     /**
-     * A turn that ended its session is not unfinished business.
+     * Is there anything here worth running?
      *
-     * Neither `complete_task` nor a handoff tool ever gets its result sent back, so
-     * their outcomes stay null forever and this check used to read the last turn of
-     * every finished task as "tool calls nobody ran". For `complete_task` that spun up
-     * a session which re-parsed the completion and ended again — the stray summary
-     * card. For a handoff it is worse: re-running it books the tab for the entire sync
-     * road trip a second time, which is what greeted the user on getting back from the
-     * first one.
+     * Judged per call rather than per turn — `complete_task` and handoff tools are
+     * never work, and a turn that mixes real statements with a completion (the AI's
+     * favourite shape) still owes the statements. See `hasUnrunToolWork`.
      */
-    if (endsSession(lastModel)) return;
+    if (!hasUnrunToolWork(lastModel)) return;
 
     /**
      * A sync run is driving the tab — none of these conversations were opened by the
@@ -328,33 +325,45 @@ export const AgentLoopFeature: React.FC = () => {
     ].join('|');
     if (pickedUpKeyRef.current === pickupKey) return;
 
-    // Also skip if the ledger already knows these calls (current live session)
-    const store = useAgentLoopStore.getState();
-    const anyKnown = lastModel.toolCalls.some((tc) => {
-      const fp = buildToolCallFingerprint(tc.toolCall);
-      return store.executedCalls[fp] !== undefined;
-    });
-    if (anyKnown) return;
-
     /**
-     * The stored ledger says these already ran. Do not run them again.
+     * Has a *write* in this response already been through the ledger? Then stop.
      *
      * This is the guard the whole ledger exists for. Everything above reads the page,
      * and after a reload the page looks identical whether a call ran or not: the tool
      * calls are there, no results follow them, `executedCalls` is empty. So pickup used
      * to re-execute — and for a write, that is the same statement applied twice. Worse,
      * the second run asks for approval again, on a statement the user just approved, so
-     * the interface actively invites the duplicate.
+     * the interface actively invites the duplicate. What those results need is
+     * delivering, which the dock offers separately (see `owed`); re-running is never the
+     * recovery.
      *
-     * What the results actually need is delivering, which the dock offers separately
-     * (see `owed`). Re-running is never the recovery.
+     * ⚠️ Writes only, and the narrowing is the point. Identity is name-plus-params, so
+     * an ordinary repeated question — "show me the biggest chats again" — produces
+     * byte-identical SQL to one the conversation already ran, and the guard read that as
+     * the double-write it is here to stop. The response was skipped whole: statements
+     * never ran, no results, nothing sent, and the transcript closed with a tick. On a
+     * follow-up after a finished task this was easy to hit, because the AI naturally
+     * reaches for the query it just used.
+     *
+     * Re-running a read costs a query and can't corrupt anything, so it is the cheaper
+     * mistake by a wide margin. A write still gets the full stop, matched per call
+     * rather than per response — one recorded write disqualifies the response, since
+     * pickup replays it as a unit and cannot leave that one statement out.
+     *
+     * Both ledgers are consulted the same way: the live store first-hand for this tab,
+     * the stored rows for everything before the last reload.
      */
+    const executed = useAgentLoopStore.getState().executedCalls;
     const recorded = useAgentRecordStore.getState().records;
-    const anyRecorded = lastModel.toolCalls.some(
-      (tc) => recorded[buildToolCallKey(tc.toolCall)] !== undefined,
-    );
-    if (anyRecorded) {
-      console.log('[AgentLoop] Auto-pickup skipped: these calls are in the ledger already');
+    const writeAlreadyRan = lastModel.toolCalls.some((tc) => {
+      if (getToolRisk(tc.toolCall) !== 'write') return false;
+      return (
+        executed[buildToolCallFingerprint(tc.toolCall)] !== undefined ||
+        recorded[buildToolCallKey(tc.toolCall)] !== undefined
+      );
+    });
+    if (writeAlreadyRan) {
+      console.log('[AgentLoop] Auto-pickup skipped: a write in this response is already in the ledger');
       return;
     }
 

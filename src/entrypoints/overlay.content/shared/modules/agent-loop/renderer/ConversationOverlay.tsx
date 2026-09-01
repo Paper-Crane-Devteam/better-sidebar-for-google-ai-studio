@@ -11,14 +11,8 @@ import { createPortal } from 'react-dom';
 import { useAgentLoopStore } from '../agent-loop-store';
 import { findConversationScroller } from './constants';
 import { useAgentViewState } from './useAgentViewState';
-import {
-  readSessionEnd,
-  weighSession,
-  isLightSession,
-  type SessionEnd,
-  type SessionWeight,
-} from './helpers/session-end';
-import { useUndoAvailable } from '../undo';
+import { readSessionEnd, type SessionEnd } from './helpers/session-end';
+import { hasOwnProse } from './helpers/model-prose';
 import { CustomUserMessage } from './components/CustomUserMessage';
 import { CustomModelResponse } from './components/CustomModelResponse';
 import { SessionEndCard } from './components/SessionEndCard';
@@ -36,9 +30,6 @@ export const ConversationOverlay: React.FC = () => {
   const { messages, isActive: isCustomActive } = useAgentViewState();
   const setAgentViewActive = useAgentLoopStore((s) => s.setAgentViewActive);
   const chatWidth = usePegasusStore((s) => s.enhancedFeatures.gemini?.chatWidth ?? 46);
-  // Only feeds the end marker's size: a session with an undo offer is never "light",
-  // or the compact form would swallow the button.
-  const undoAvailable = useUndoAvailable();
 
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
   const [nativeScroller, setNativeScroller] = useState<HTMLElement | null>(null);
@@ -147,12 +138,13 @@ export const ConversationOverlay: React.FC = () => {
    * the only thing standing in for it.
    */
   const sessionEnds = useMemo(() => {
-    const ends = new Map<string, SessionEnd & { weight: SessionWeight }>();
-    messages.forEach((message, index) => {
+    const ends = new Map<string, SessionEnd & { hasOwnText: boolean }>();
+    messages.forEach((message) => {
       const end = readSessionEnd(message);
-      // Weighed here rather than in the card: it takes the surrounding messages, which
-      // only this component has, and the marker's size depends on the answer.
-      if (end) ends.set(message.id, { ...end, weight: weighSession(messages, index) });
+      // Whether the turn already spoke decides whether the marker shows itself at all,
+      // and answering that means splitting the turn's content — so it is answered once
+      // here rather than inside the marker.
+      if (end) ends.set(message.id, { ...end, hasOwnText: hasOwnProse(message) });
     });
     return ends;
   }, [messages]);
@@ -337,17 +329,12 @@ export const ConversationOverlay: React.FC = () => {
                 {sessionEnds.has(msg.id) &&
                   (() => {
                     const end = sessionEnds.get(msg.id)!;
-                    const isLatest = msg.id === lastEndedMessageId;
                     return (
                       <SessionEndCard
                         outcome={end.outcome}
                         summary={end.summary}
-                        isLatest={isLatest}
-                        light={isLightSession(
-                          end.outcome,
-                          end.weight,
-                          undoAvailable && isLatest,
-                        )}
+                        isLatest={msg.id === lastEndedMessageId}
+                        hasOwnText={end.hasOwnText}
                       />
                     );
                   })()}
