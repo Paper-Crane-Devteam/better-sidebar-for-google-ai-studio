@@ -8,7 +8,16 @@
 import type { ThemePreset } from './types';
 
 const THEME_STYLE_ID = 'better-sidebar-custom-theme';
-const THEME_FONT_ID = 'better-sidebar-custom-theme-fonts';
+/**
+ * Marker attribute for theme webfont <link> elements.
+ *
+ * Font stylesheets are kept keyed by URL and are never swapped while switching
+ * themes: removing and re-adding a Google Fonts stylesheet makes the browser
+ * re-resolve every @font-face, and the resulting full-page reflow is what makes
+ * the theme transition animation stall halfway. An unreferenced font stylesheet
+ * costs nothing, so they are only cleaned up when themes are turned off.
+ */
+const THEME_FONT_ATTR = 'data-bs-theme-fonts';
 const THEME_CLASS_PREFIX = 'bs-theme--';
 
 let currentThemeId: string | null = null;
@@ -54,27 +63,43 @@ export function clearSidebarTheme(container: HTMLElement): void {
  * loads fonts, and adds extra CSS.
  */
 export function applyTheme(preset: ThemePreset): void {
-  removeTheme(); // Clean up previous theme first
-
   const body = document.body;
   if (!body) return;
 
-  // 1. Add theme class to body for identification
-  body.classList.add(`${THEME_CLASS_PREFIX}${preset.id}`);
-  currentThemeId = preset.id;
+  const themeClass = `${THEME_CLASS_PREFIX}${preset.id}`;
 
-  // 2. Build CSS variable block with high specificity
+  // 1. Build CSS variable block with high specificity
   //    Using body[class] to beat :root .light-theme specificity
   const variablesCss = preset.variables
     .map((v) => `  ${v.property}: ${v.value} !important;`)
     .join('\n');
 
-  let css = `body.${THEME_CLASS_PREFIX}${preset.id} {\n${variablesCss}\n}`;
+  let css = `body.${themeClass} {\n${variablesCss}\n}`;
 
-  // 3. Append extra CSS if provided
+  // 2. Append extra CSS if provided
   if (preset.extraCss) {
     css += `\n\n/* Theme extra styles: ${preset.id} */\n${preset.extraCss}`;
   }
+
+  // 3. Bail out if this exact theme CSS is already live.
+  //    A theme switch reaches applyTheme() more than once (store subscriber +
+  //    the view-transition callback); re-injecting the <style> would force a
+  //    second full-page style recalc for nothing. Comparing the CSS text keeps
+  //    live-editing a user theme working.
+  const existingStyle = document.getElementById(THEME_STYLE_ID);
+  if (
+    currentThemeId === preset.id &&
+    existingStyle?.textContent === css &&
+    body.classList.contains(themeClass)
+  ) {
+    ensureThemeFonts(preset.fonts);
+    return;
+  }
+
+  removeTheme({ keepFonts: true }); // Clean up previous theme first
+
+  body.classList.add(themeClass);
+  currentThemeId = preset.id;
 
   // 4. Inject style element
   const style = document.createElement('style');
@@ -82,7 +107,7 @@ export function applyTheme(preset: ThemePreset): void {
   style.textContent = css;
   document.head.appendChild(style);
 
-  // 5. Load Google Fonts if specified
+  // 5. Load Google Fonts if specified (no-op when already loaded)
   if (preset.fonts && preset.fonts.length > 0) {
     loadFonts(preset.fonts);
   }
@@ -92,15 +117,19 @@ export function applyTheme(preset: ThemePreset): void {
 
 /**
  * Remove the currently applied theme, restoring original styles.
+ *
+ * @param options.keepFonts - Keep the theme webfont stylesheets in place.
+ *   Used when applyTheme() is about to apply another theme — see THEME_FONT_ATTR.
  */
-export function removeTheme(): void {
+export function removeTheme(options?: { keepFonts?: boolean }): void {
   // Remove style element
   const style = document.getElementById(THEME_STYLE_ID);
   if (style) style.remove();
 
-  // Remove font link
-  const fontLink = document.getElementById(THEME_FONT_ID);
-  if (fontLink) fontLink.remove();
+  // Remove font links
+  if (!options?.keepFonts) {
+    clearThemeFonts();
+  }
 
   // Remove theme class from body
   if (currentThemeId) {
@@ -148,17 +177,110 @@ export function getCurrentThemeId(): string | null {
   return currentThemeId;
 }
 
+/** Build the Google Fonts CSS URL for a list of font specs. */
+function buildFontsHref(fonts: string[]): string {
+  const families = fonts.map((f) => `family=${f.replace(/ /g, '+')}`).join('&');
+  return `https://fonts.googleapis.com/css2?${families}&display=swap`;
+}
+
 /**
  * Load Google Fonts via a <link> element.
+ * Idempotent per URL: an already-present stylesheet is reused instead of being
+ * removed and re-added, so switching themes never re-resolves loaded fonts.
  */
-function loadFonts(fonts: string[]): void {
-  const existing = document.getElementById(THEME_FONT_ID);
-  if (existing) existing.remove();
+function loadFonts(fonts: string[]): HTMLLinkElement {
+  const href = buildFontsHref(fonts);
 
-  const families = fonts.map((f) => `family=${f.replace(/ /g, '+')}`).join('&');
+  for (const el of document.querySelectorAll<HTMLLinkElement>(
+    `link[${THEME_FONT_ATTR}]`,
+  )) {
+    if (el.href === href) return el;
+  }
+
   const link = document.createElement('link');
-  link.id = THEME_FONT_ID;
+  link.setAttribute(THEME_FONT_ATTR, '');
   link.rel = 'stylesheet';
-  link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
+  link.href = href;
   document.head.appendChild(link);
+  return link;
+}
+
+/**
+ * Public wrapper around loadFonts() for platform adapters, so every platform
+ * shares one set of font stylesheets instead of injecting its own copies.
+ */
+export function ensureThemeFonts(fonts: string[] | undefined): void {
+  if (!fonts?.length) return;
+  loadFonts(fonts);
+}
+
+/** Drop every theme webfont stylesheet. Only used when themes are turned off. */
+export function clearThemeFonts(): void {
+  for (const link of document.querySelectorAll(`link[${THEME_FONT_ATTR}]`)) {
+    link.remove();
+  }
+}
+
+/** Parse 'Nunito+Sans:wght@300;400;700' into a family name and its weights. */
+function parseFontSpec(spec: string): { family: string; weights: string[] } {
+  const [rawFamily, axes] = spec.split(':');
+  const family = rawFamily.replace(/\+/g, ' ').trim();
+  const wght = axes?.match(/wght@([\d;.]+)/);
+  const weights = wght
+    ? wght[1].split(';').filter(Boolean)
+    : ['400'];
+  return { family, weights };
+}
+
+const delay = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Download a theme's webfonts BEFORE the theme is applied.
+ *
+ * Without this, the fonts start downloading at the moment the theme <style> is
+ * injected. They arrive a few hundred ms later — right in the middle of the
+ * theme transition animation — and force a full-page relayout (themes set
+ * font-family on `body *`), which freezes the animation for the length of that
+ * relayout. Paying the cost up front keeps the animation window quiet.
+ *
+ * Resolves early if the fonts are already available, and never blocks longer
+ * than `budgetMs`.
+ */
+export async function preloadThemeFonts(
+  preset: ThemePreset,
+  budgetMs = 400,
+): Promise<void> {
+  if (!preset.fonts?.length) return;
+  if (typeof document === 'undefined' || !document.fonts) return;
+
+  const descriptors = preset.fonts
+    .map(parseFontSpec)
+    .flatMap(({ family, weights }) =>
+      weights.map((w) => `${w} 1em "${family}"`),
+    );
+
+  // Fonts already loaded resolve immediately below, so there is no fast path
+  // to take here — document.fonts.load() is the reliable "is it ready?" check.
+  const deadline = delay(budgetMs);
+  const link = loadFonts(preset.fonts);
+
+  // document.fonts.load() only sees @font-face rules that are already parsed,
+  // so wait for the stylesheet first.
+  if (!link.sheet) {
+    await Promise.race([
+      new Promise<void>((resolve) => {
+        link.addEventListener('load', () => resolve(), { once: true });
+        link.addEventListener('error', () => resolve(), { once: true });
+      }),
+      deadline,
+    ]);
+  }
+
+  await Promise.race([
+    Promise.all(
+      descriptors.map((d) => document.fonts.load(d).catch(() => undefined)),
+    ),
+    deadline,
+  ]);
 }

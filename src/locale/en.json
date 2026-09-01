@@ -212,6 +212,8 @@
     "scanChatList": "Import Chat List",
     "scanning": "Scanning...",
     "sqlQuery": "SQL Query",
+    "hideIconBar": "Hide Icon Bar",
+    "showIconBar": "Show Icon Bar",
     "settings": "Settings"
   },
   "about": {

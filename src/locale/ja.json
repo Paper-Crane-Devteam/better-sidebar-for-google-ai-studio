@@ -206,6 +206,8 @@
     "scanChatList": "チャットリストをインポート",
     "scanning": "スキャン中...",
     "sqlQuery": "SQL クエリ",
+    "hideIconBar": "アイコンバーを非表示",
+    "showIconBar": "アイコンバーを表示",
     "settings": "設定"
   },
   "about": {

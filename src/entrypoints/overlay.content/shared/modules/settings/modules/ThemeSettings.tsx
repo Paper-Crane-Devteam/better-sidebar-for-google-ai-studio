@@ -19,6 +19,7 @@ import {
   themePresetIds,
   useUserThemeStore,
   refreshThemeRegistry,
+  preloadThemeFonts,
   type ThemePresetId,
   type BuiltinThemePresetId,
 } from '@/themes';
@@ -493,6 +494,7 @@ function PaginatedThemeGrid({
       isPreviewing?: boolean;
       isUserTheme?: boolean;
       onClick: (event: React.MouseEvent) => void;
+      onPointerEnter?: () => void;
       onDelete?: () => void;
     }> = [];
 
@@ -532,6 +534,9 @@ function PaginatedThemeGrid({
         isPremium: preset.isPremium,
         isPreviewing: isPreviewActive && previewThemeId === id,
         onClick: (e) => handleThemeClick(id, e),
+        // Warm the theme's webfonts on hover so the switch animation has no
+        // font download landing in the middle of it.
+        onPointerEnter: () => void preloadThemeFonts(preset, 5000),
       });
     }
 
@@ -553,6 +558,10 @@ function PaginatedThemeGrid({
         isActive: customTheme === ut.id,
         isUserTheme: true,
         onClick: (e) => handleThemeClick(ut.id, e),
+        onPointerEnter: () => {
+          const preset = themeRegistry[ut.id];
+          if (preset) void preloadThemeFonts(preset, 5000);
+        },
         onDelete: () => handleDeleteUserTheme(ut.id),
       });
     }
@@ -587,6 +596,7 @@ function PaginatedThemeGrid({
             isPreviewing={card.isPreviewing}
             isUserTheme={card.isUserTheme}
             onClick={card.onClick}
+            onPointerEnter={card.onPointerEnter}
             onDelete={card.onDelete}
           />
         ))}
@@ -641,6 +651,7 @@ function ThemeCard({
   isPreviewing,
   isUserTheme,
   onClick,
+  onPointerEnter,
   onDelete,
 }: {
   name: string;
@@ -652,11 +663,13 @@ function ThemeCard({
   isPreviewing?: boolean;
   isUserTheme?: boolean;
   onClick: (event: React.MouseEvent) => void;
+  onPointerEnter?: () => void;
   onDelete?: () => void;
 }) {
   return (
     <button
       onClick={onClick}
+      onPointerEnter={onPointerEnter}
       className={`
         relative flex flex-col rounded-lg p-3 text-left transition-all
         hover:shadow-md

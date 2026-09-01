@@ -59,6 +59,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const { path } = useUrl();
 
   const shortcuts = useSettingsStore((state) => state.shortcuts);
+  const showIconBar = useSettingsStore((state) => state.showIconBar);
   const sparkAvailable = isSparkAvailable();
   const hasSettingsBadge = useBadgeStore((s) => s.isGroupVisible('settings.'));
 
@@ -184,8 +185,14 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     <div
       className={`flex bg-background text-foreground ${className || 'h-full'} relative overflow-hidden`}
     >
-      {/* Sidebar Tabs */}
-      <div className="sidebar-nav flex flex-col items-center shrink-0">
+      {/* Sidebar Tabs — hidden in expanded view when the user opts for a
+          clutter-free tree. Kept in collapsed view since it is the only
+          entry point there. */}
+      <div
+        className={`sidebar-nav flex flex-col items-center shrink-0 ${
+          isSidebarExpanded && !showIconBar ? 'hidden' : ''
+        }`}
+      >
         <SimpleTooltip content={t('tooltip.toggleMenu')}>
           <Button
             variant="ghost"
@@ -431,12 +438,19 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Content Area.
+          With the icon bar hidden, useGeminiUI already shrank
+          --bard-sidenav-open-width by the icon bar's width, so taking the full
+          open width here yields the exact same content width as the
+          `open - closed` expression below. Net effect: the tree keeps its
+          width and only the sidebar's right edge moves. */}
       <div
         className={`flex flex-col px-1 pt-1`}
         style={{
           width:
-            'calc(var(--bard-sidenav-open-width, 360px) - var(--bard-sidenav-closed-width, 64px))',
+            isSidebarExpanded && !showIconBar
+              ? 'var(--bard-sidenav-open-width, 360px)'
+              : 'calc(var(--bard-sidenav-open-width, 360px) - var(--bard-sidenav-closed-width, 64px))',
           flexShrink: 0,
         }}
       >

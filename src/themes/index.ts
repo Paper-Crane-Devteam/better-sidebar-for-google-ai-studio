@@ -8,7 +8,7 @@
  */
 
 export type { ThemePreset, ThemePresetId, BuiltinThemePresetId, ThemePresetMeta, ThemeVariable, ThemeRegistry } from './types';
-export { applyTheme, removeTheme, getCurrentThemeId, applySidebarTheme, clearSidebarTheme } from './engine';
+export { applyTheme, removeTheme, getCurrentThemeId, applySidebarTheme, clearSidebarTheme, preloadThemeFonts } from './engine';
 export { bindShadowRootToTheme } from './platforms/gemini';
 export { initAiStudioThemeSync, bindAiStudioShadowRootToTheme } from './platforms/aistudio';
 export { useUserThemeStore, validateUserTheme, userThemeToPreset, onUserThemeStoreHydrated } from './user-themes';

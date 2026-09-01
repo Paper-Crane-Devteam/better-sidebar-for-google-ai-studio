@@ -5,6 +5,13 @@ import { detectPlatform, Platform } from '../types/platform';
 interface SettingsState {
   /** Gemini sidebar base style: 'default' (v2) or 'classic' (pre-v2 blue-tinted) */
   geminiStyle: 'default' | 'classic';
+  /**
+   * When false, the sidebar's left icon/tab bar is hidden, leaving only the
+   * active tab's content (e.g. the conversation tree) for a cleaner view.
+   * Defaults to true. Only affects the expanded panel; the collapsed strip
+   * (which is the sole entry point when collapsed) is always kept.
+   */
+  showIconBar: boolean;
   newChatBehavior: 'current-tab' | 'new-tab';
   autoScanLibrary: boolean;
   /**
@@ -57,6 +64,7 @@ interface SettingsState {
 
   // Actions
   setGeminiStyle: (style: 'default' | 'classic') => void;
+  setShowIconBar: (visible: boolean) => void;
   setNewChatBehavior: (behavior: 'current-tab' | 'new-tab') => void;
   setAutoScanLibrary: (enabled: boolean) => void;
   setSkipDeleteConfirm: (enabled: boolean) => void;
@@ -127,6 +135,7 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       geminiStyle: 'default',
+      showIconBar: true,
       newChatBehavior: 'current-tab',
       autoScanLibrary: false,
       skipDeleteConfirm: false,
@@ -170,6 +179,7 @@ export const useSettingsStore = create<SettingsState>()(
       setGeminiStyle: (style) => {
         set({ geminiStyle: style });
       },
+      setShowIconBar: (showIconBar) => set({ showIconBar }),
       setNewChatBehavior: (newChatBehavior) => set({ newChatBehavior }),
       setAutoScanLibrary: (autoScanLibrary) => set({ autoScanLibrary }),
       setSkipDeleteConfirm: (skipDeleteConfirm) => set({ skipDeleteConfirm }),

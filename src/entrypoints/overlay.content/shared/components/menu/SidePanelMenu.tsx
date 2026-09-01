@@ -9,8 +9,9 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
+import { useSettingsStore } from '@/shared/lib/settings-store';
 import { navigate } from '@/shared/lib/navigation';
-import { MoreVertical, Settings, Database, History, Layout, RefreshCw, FolderPlus, ListCollapse, ArrowDownAZ, Clock, Calendar, Folder, Upload, Eye } from 'lucide-react';
+import { MoreVertical, Settings, Database, History, Layout, RefreshCw, FolderPlus, ListCollapse, ArrowDownAZ, Clock, Calendar, Folder, Upload, Eye, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useBadgeStore } from '@/shared/lib/badge-store';
 import { BadgeDot } from '@/shared/components/ui/badge-dot';
 
@@ -51,6 +52,8 @@ export const SidePanelMenu = ({
   } = useAppStore();
   const { isScanning } = ui.overlay;
   const hasSettingsBadge = useBadgeStore((s) => s.isGroupVisible('settings.'));
+  const showIconBar = useSettingsStore((s) => s.showIconBar);
+  const setShowIconBar = useSettingsStore((s) => s.setShowIconBar);
 
   const handleScanLibrary = menuActions?.handleScanLibrary;
 
@@ -189,6 +192,15 @@ export const SidePanelMenu = ({
             <span>{t('menu.sqlQuery')}</span>
           </DropdownMenuItem>
         )}
+
+        <DropdownMenuItem onClick={() => setShowIconBar(!showIconBar)}>
+          {showIconBar ? (
+            <PanelLeftClose className="mr-2 h-4 w-4" />
+          ) : (
+            <PanelLeftOpen className="mr-2 h-4 w-4" />
+          )}
+          <span>{showIconBar ? t('menu.hideIconBar') : t('menu.showIconBar')}</span>
+        </DropdownMenuItem>
 
         <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
           <Settings className="mr-2 h-4 w-4" />

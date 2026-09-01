@@ -206,6 +206,8 @@
     "scanChatList": "Importar Lista de Chats",
     "scanning": "Escaneando...",
     "sqlQuery": "Consulta SQL",
+    "hideIconBar": "Ocultar barra de ícones",
+    "showIconBar": "Mostrar barra de ícones",
     "settings": "Configurações"
   },
   "about": {

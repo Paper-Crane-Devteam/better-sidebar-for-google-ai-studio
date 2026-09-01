@@ -206,6 +206,8 @@
     "scanChatList": "匯入聊天清單",
     "scanning": "掃描中...",
     "sqlQuery": "SQL 查詢",
+    "hideIconBar": "隱藏圖示列",
+    "showIconBar": "顯示圖示列",
     "settings": "設定"
   },
   "about": {

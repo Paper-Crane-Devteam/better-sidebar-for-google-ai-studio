@@ -10,10 +10,17 @@ import { ShadowRootProvider } from '@/shared/components/ShadowRootContext';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
 import { applyShadowStyles, querySelectorDeep, waitForElement } from '@/shared/lib/utils';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
+import { useSettingsStore } from '@/shared/lib/settings-store';
 import { initAiStudioThemeSync, bindAiStudioShadowRootToTheme } from '@/themes/platforms/aistudio';
 import { useExclusiveContextMenuStore } from '../shared/components/ui/exclusive-context-menu';
 import { registerPlatformDomAdapter } from '@/shared/lib/platform-dom-adapter';
 import { aistudioDomAdapter } from './lib/aistudio-dom-adapter';
+
+/**
+ * Width of the sidebar's left icon bar. Mirrors `--sidebar-width` in
+ * _aistudio.scss.
+ */
+const ICON_BAR_WIDTH = 56;
 
 export async function initAiStudioOverlay(mainStyles: string): Promise<void> {
   // Register AI Studio DOM adapter (must be before any React tree mounts)
@@ -109,16 +116,36 @@ export async function initAiStudioOverlay(mainStyles: string): Promise<void> {
     `;
   };
 
-  // Initial width based on current store value
-  const initialWidth = usePegasusStore.getState().enhancedFeatures.aistudio?.sidebarWidth ?? 320;
-  updateSidebarWidth(initialWidth);
+  /**
+   * Resolve the wrapper width from both stores.
+   *
+   * Hiding the icon bar shrinks the whole wrapper by the icon bar's width
+   * instead of letting the content area stretch into the freed space. The
+   * content area is `flex-1`, so it ends up exactly as wide as it was with the
+   * icon bar visible — toggling never reflows the tree, only the sidebar's
+   * right edge moves.
+   */
+  let lastAppliedWidth: number | null = null;
+  const applySidebarWidth = () => {
+    const baseWidth =
+      usePegasusStore.getState().enhancedFeatures.aistudio?.sidebarWidth ?? 320;
+    const { showIconBar } = useSettingsStore.getState();
+    const width = showIconBar
+      ? baseWidth
+      : Math.max(baseWidth - ICON_BAR_WIDTH, 0);
+    // Both stores fire on unrelated changes too; skip redundant style writes.
+    if (width === lastAppliedWidth) return;
+    lastAppliedWidth = width;
+    updateSidebarWidth(width);
+  };
+
+  applySidebarWidth();
   document.head.appendChild(sidebarStyle);
 
-  // Subscribe to sidebarWidth changes from the store
-  usePegasusStore.subscribe((state) => {
-    const width = state.enhancedFeatures.aistudio?.sidebarWidth ?? 320;
-    updateSidebarWidth(width);
-  });
+  // Width depends on the pegasus store (user slider) and the settings store
+  // (icon bar visibility), so react to both.
+  usePegasusStore.subscribe(applySidebarWidth);
+  useSettingsStore.subscribe(applySidebarWidth);
 
   // Prevent keyboard/mouse events from bubbling to AI Studio's native listeners
   const stopPropagation = (e: Event) => {

@@ -45,6 +45,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const [, setContainer] = useState<HTMLDivElement | null>(null);
   const newChatBehavior = useSettingsStore((state) => state.newChatBehavior);
   const shortcuts = useSettingsStore((state) => state.shortcuts);
+  const showIconBar = useSettingsStore((state) => state.showIconBar);
   const {
     fetchData,
     ui,
@@ -168,7 +169,11 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       className={`flex bg-background text-foreground ${className || 'h-full'} relative`}
     >
       {/* Sidebar Tabs */}
-      <div className="sidebar-nav flex flex-col items-center bg-muted/20 shrink-0">
+      <div
+        className={`sidebar-nav flex flex-col items-center bg-muted/20 shrink-0 ${
+          !showIconBar ? 'hidden' : ''
+        }`}
+      >
         <SimpleTooltip content={t('tabs.files')}>
           <Button
             variant={activeTab === 'files' ? 'secondary' : 'ghost'}

@@ -15,12 +15,12 @@
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useLicenseStore, isLicenseValid } from '@/shared/lib/license-store';
 import { themeRegistry, applySidebarTheme, refreshThemeRegistry } from '@/themes';
+import { ensureThemeFonts, clearThemeFonts } from '../engine';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
 import { syncAiStudioTheme } from '@/shared/lib/utils/utils';
 import type { ThemePreset, ThemeVariable } from '../types';
 
 const AISTUDIO_THEME_STYLE_ID = 'better-sidebar-aistudio-custom-theme';
-const AISTUDIO_THEME_FONT_ID = 'better-sidebar-aistudio-custom-theme-fonts';
 const AISTUDIO_THEME_CLASS_PREFIX = 'bs-theme--';
 
 let currentAiStudioThemeId: string | null = null;
@@ -204,7 +204,7 @@ function mapPresetToAiStudioVariables(preset: ThemePreset): ThemeVariable[] {
  * Apply a theme preset to AI Studio page.
  */
 function applyAiStudioTheme(preset: ThemePreset): void {
-  removeAiStudioTheme();
+  removeAiStudioTheme({ keepFonts: true });
 
   const body = document.body;
   if (!body) return;
@@ -231,31 +231,26 @@ function applyAiStudioTheme(preset: ThemePreset): void {
   style.textContent = css;
   document.head.appendChild(style);
 
-  // Load Google Fonts if specified
-  if (preset.fonts && preset.fonts.length > 0) {
-    const existing = document.getElementById(AISTUDIO_THEME_FONT_ID);
-    if (existing) existing.remove();
-
-    const families = preset.fonts.map((f) => `family=${f.replace(/ /g, '+')}`).join('&');
-    const link = document.createElement('link');
-    link.id = AISTUDIO_THEME_FONT_ID;
-    link.rel = 'stylesheet';
-    link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
-    document.head.appendChild(link);
-  }
+  // Load Google Fonts if specified — shared with the engine, keyed by URL so
+  // switching themes never re-resolves fonts that are already loaded.
+  ensureThemeFonts(preset.fonts);
 
   console.log(`Better Sidebar: AI Studio theme "${preset.id}" applied`);
 }
 
 /**
  * Remove the currently applied AI Studio theme.
+ *
+ * @param options.keepFonts - Keep the theme webfont stylesheets; used when
+ *   another theme is about to be applied (see applyAiStudioTheme).
  */
-function removeAiStudioTheme(): void {
+function removeAiStudioTheme(options?: { keepFonts?: boolean }): void {
   const style = document.getElementById(AISTUDIO_THEME_STYLE_ID);
   if (style) style.remove();
 
-  const fontLink = document.getElementById(AISTUDIO_THEME_FONT_ID);
-  if (fontLink) fontLink.remove();
+  if (!options?.keepFonts) {
+    clearThemeFonts();
+  }
 
   if (currentAiStudioThemeId) {
     document.body?.classList.remove(`${AISTUDIO_THEME_CLASS_PREFIX}${currentAiStudioThemeId}`);

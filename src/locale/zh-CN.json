@@ -206,6 +206,8 @@
     "scanChatList": "导入聊天列表",
     "scanning": "扫描中...",
     "sqlQuery": "SQL 查询",
+    "hideIconBar": "隐藏图标栏",
+    "showIconBar": "显示图标栏",
     "settings": "设置"
   },
   "about": {
