@@ -5,7 +5,7 @@
  * loading Google Fonts, and injecting extra CSS (textures, backdrop-filter, etc.)
  */
 
-import type { ThemePreset } from './types';
+import type { ThemePreset, ThemeVariable } from './types';
 
 const THEME_STYLE_ID = 'better-sidebar-custom-theme';
 /**
@@ -20,7 +20,21 @@ const THEME_STYLE_ID = 'better-sidebar-custom-theme';
 const THEME_FONT_ATTR = 'data-bs-theme-fonts';
 const THEME_CLASS_PREFIX = 'bs-theme--';
 
+/** Style element holding the current theme's typography rules */
+const THEME_FONT_CSS_ID = 'better-sidebar-custom-theme-fonts-css';
+/** Body class that activates the typography rules (see ThemePreset.fontCss) */
+const FONT_CLASS_PREFIX = 'bs-fonts--';
+
+/**
+ * Sidebar font variable. Written in the typography step rather than with the
+ * rest of the sidebar variables, so the sidebar and the page change typeface in
+ * the same frame. It cannot be inherited from body: the sidebar's own
+ * stylesheet declares --font-sans on its root container, which wins.
+ */
+const DEFERRED_SIDEBAR_FONT_PROP = '--font-sans';
+
 let currentThemeId: string | null = null;
+let currentFontThemeId: string | null = null;
 
 /** All CSS custom properties that sidebar themes may set on a container. */
 const SIDEBAR_VARIABLE_PROPS = [
@@ -58,9 +72,10 @@ export function clearSidebarTheme(container: HTMLElement): void {
 }
 
 /**
- * Apply a theme preset to the page.
- * Injects CSS variables onto body via a high-specificity selector,
- * loads fonts, and adds extra CSS.
+ * Apply a theme preset to the page: CSS variables + extraCss, synchronously.
+ *
+ * Typography is NOT applied here. Call applyThemeFontCss() for that — it waits
+ * for the switch animation and the webfont download first.
  */
 export function applyTheme(preset: ThemePreset): void {
   const body = document.body;
@@ -92,7 +107,6 @@ export function applyTheme(preset: ThemePreset): void {
     existingStyle?.textContent === css &&
     body.classList.contains(themeClass)
   ) {
-    ensureThemeFonts(preset.fonts);
     return;
   }
 
@@ -107,10 +121,10 @@ export function applyTheme(preset: ThemePreset): void {
   style.textContent = css;
   document.head.appendChild(style);
 
-  // 5. Load Google Fonts if specified (no-op when already loaded)
-  if (preset.fonts && preset.fonts.length > 0) {
-    loadFonts(preset.fonts);
-  }
+  // Webfonts are deliberately NOT requested here. Registering @font-face rules
+  // invalidates the document's font cache and forces a full relayout, and the
+  // stylesheet arrives at an unpredictable moment — mid-animation, typically.
+  // applyThemeFontCss() loads them once the animation is over.
 
   console.log(`Better Sidebar: Theme "${preset.id}" applied`);
 }
@@ -118,17 +132,20 @@ export function applyTheme(preset: ThemePreset): void {
 /**
  * Remove the currently applied theme, restoring original styles.
  *
- * @param options.keepFonts - Keep the theme webfont stylesheets in place.
- *   Used when applyTheme() is about to apply another theme — see THEME_FONT_ATTR.
+ * @param options.keepFonts - Keep the webfont stylesheets AND the typography
+ *   rules in place. Used when another theme is about to be applied, or when the
+ *   caller will hand typography over to applyThemeFontCss(): dropping font
+ *   rules synchronously would flip the whole page back to its default typeface
+ *   for the duration of the switch animation.
  */
 export function removeTheme(options?: { keepFonts?: boolean }): void {
   // Remove style element
   const style = document.getElementById(THEME_STYLE_ID);
   if (style) style.remove();
 
-  // Remove font links
   if (!options?.keepFonts) {
     clearThemeFonts();
+    clearThemeFontCss();
   }
 
   // Remove theme class from body
@@ -146,8 +163,18 @@ export function applySidebarTheme(
   container: HTMLElement,
   preset: ThemePreset | null,
 ): void {
+  // The sidebar typeface changes together with the page typeface, so the
+  // outgoing value is kept across the clear and handed to the deferred step.
+  const outgoingFont = container.style.getPropertyValue(
+    DEFERRED_SIDEBAR_FONT_PROP,
+  );
+
   // Always clear previous theme first to prevent property leaking between themes
   clearSidebarTheme(container);
+  if (outgoingFont) {
+    container.style.setProperty(DEFERRED_SIDEBAR_FONT_PROP, outgoingFont);
+  }
+  void applyDeferredSidebarFont(container, preset);
 
   if (!preset || (!preset.sidebarVariables?.length && !preset.sidebarStyles)) {
     return;
@@ -155,9 +182,12 @@ export function applySidebarTheme(
 
   container.setAttribute('data-custom-theme', preset.id);
 
-  // Apply CSS variables
+  // Apply CSS variables. --font-sans is left to the deferred step for themes
+  // that carry typography rules, so the sidebar and the page switch typeface
+  // in the same frame.
   if (preset.sidebarVariables) {
     for (const v of preset.sidebarVariables) {
+      if (v.property === DEFERRED_SIDEBAR_FONT_PROP && preset.fontCss) continue;
       container.style.setProperty(v.property, v.value);
     }
   }
@@ -205,20 +235,174 @@ function loadFonts(fonts: string[]): HTMLLinkElement {
   return link;
 }
 
-/**
- * Public wrapper around loadFonts() for platform adapters, so every platform
- * shares one set of font stylesheets instead of injecting its own copies.
- */
-export function ensureThemeFonts(fonts: string[] | undefined): void {
-  if (!fonts?.length) return;
-  loadFonts(fonts);
-}
-
 /** Drop every theme webfont stylesheet. Only used when themes are turned off. */
 export function clearThemeFonts(): void {
   for (const link of document.querySelectorAll(`link[${THEME_FONT_ATTR}]`)) {
     link.remove();
   }
+}
+
+// ─── Typography (applied separately from colours) ───────────────────────────
+
+/**
+ * Gate that the typography step waits on. The theme switch animation sets it
+ * so font rules — the most expensive part of a theme, and the part that waits
+ * on a network download — land after the animation instead of during it.
+ */
+let typographyGate: Promise<unknown> = Promise.resolve();
+
+/** Bumped on every request so a slow one can tell it has been superseded. */
+let typographyGeneration = 0;
+
+/**
+ * Hold back typography until `gate` settles. Called by the theme transition
+ * with its `finished` promise. Resets itself once the gate settles, so
+ * non-animated theme changes are not delayed.
+ */
+export function setTypographyGate(gate: Promise<unknown>): void {
+  const settled = gate.catch(() => undefined);
+  typographyGate = settled;
+  void settled.then(() => {
+    if (typographyGate === settled) typographyGate = Promise.resolve();
+  });
+}
+
+/**
+ * Build the full typography stylesheet: font variables (as a body rule) plus
+ * the preset's own font rules. Returns null when the theme has no typography.
+ */
+function buildFontCss(
+  preset: ThemePreset | null,
+  extraFontVariables?: ThemeVariable[],
+): string | null {
+  if (!preset) return null;
+
+  const vars = [...(preset.fontVariables ?? []), ...(extraFontVariables ?? [])];
+  const blocks: string[] = [];
+
+  if (vars.length > 0) {
+    const declarations = vars
+      .map((v) => `  ${v.property}: ${v.value} !important;`)
+      .join('\n');
+    blocks.push(
+      `body.${FONT_CLASS_PREFIX}${preset.id} {\n${declarations}\n}`,
+    );
+  }
+
+  if (preset.fontCss) blocks.push(preset.fontCss);
+
+  return blocks.length > 0 ? blocks.join('\n\n') : null;
+}
+
+/** Swap the typography stylesheet and the body class that activates it. */
+function injectFontCss(themeId: string | null, fontCss: string | null): void {
+  const body = document.body;
+  if (!body) return;
+
+  const existing = document.getElementById(THEME_FONT_CSS_ID);
+  const nextClass = themeId && fontCss ? `${FONT_CLASS_PREFIX}${themeId}` : null;
+
+  // Nothing to do — avoids a pointless full-page style recalc
+  if (
+    currentFontThemeId === themeId &&
+    (existing?.textContent ?? null) === fontCss
+  ) {
+    return;
+  }
+
+  if (currentFontThemeId) {
+    body.classList.remove(`${FONT_CLASS_PREFIX}${currentFontThemeId}`);
+  }
+  currentFontThemeId = null;
+  existing?.remove();
+
+  if (!nextClass || !fontCss) return;
+
+  const style = document.createElement('style');
+  style.id = THEME_FONT_CSS_ID;
+  style.textContent = fontCss;
+  document.head.appendChild(style);
+  body.classList.add(nextClass);
+  currentFontThemeId = themeId;
+}
+
+/** Drop the typography stylesheet and its body class. */
+export function clearThemeFontCss(): void {
+  typographyGeneration++;
+  injectFontCss(null, null);
+}
+
+/**
+ * Per-container guard for the deferred sidebar font. A WeakMap so a detached
+ * container is collected normally instead of being kept alive by a registry.
+ */
+const sidebarFontGeneration = new WeakMap<HTMLElement, number>();
+
+/**
+ * Set the sidebar's --font-sans once the animation is over and the fonts are
+ * ready. The value cannot be inherited from body: the sidebar's own stylesheet
+ * declares --font-sans on its root container, which wins over inheritance.
+ */
+async function applyDeferredSidebarFont(
+  container: HTMLElement,
+  preset: ThemePreset | null,
+): Promise<void> {
+  const generation = (sidebarFontGeneration.get(container) ?? 0) + 1;
+  sidebarFontGeneration.set(container, generation);
+
+  const target = preset?.sidebarVariables?.find(
+    (v) => v.property === DEFERRED_SIDEBAR_FONT_PROP,
+  )?.value;
+
+  await typographyGate;
+  if (sidebarFontGeneration.get(container) !== generation) return;
+
+  if (preset?.fonts?.length) {
+    await preloadThemeFonts(preset);
+  }
+
+  if (sidebarFontGeneration.get(container) !== generation) return; // superseded
+  if (!container.isConnected) return;
+
+  const current = container.style.getPropertyValue(DEFERRED_SIDEBAR_FONT_PROP);
+  if (current === (target ?? '')) return;
+
+  if (target) {
+    container.style.setProperty(DEFERRED_SIDEBAR_FONT_PROP, target);
+  } else {
+    container.style.removeProperty(DEFERRED_SIDEBAR_FONT_PROP);
+  }
+}
+
+/**
+ * Apply a theme's typography — the second half of a theme switch.
+ *
+ * Waits for the switch animation (see setTypographyGate) and for the webfonts
+ * to finish downloading, then swaps the font stylesheet in one step. Pass null
+ * to go back to the page's own typography.
+ *
+ * Safe to call repeatedly and from several places for the same switch: it is
+ * idempotent, and a stale call is dropped as soon as a newer one starts.
+ */
+export async function applyThemeFontCss(
+  preset: ThemePreset | null,
+  extraFontVariables?: ThemeVariable[],
+): Promise<void> {
+  const generation = ++typographyGeneration;
+
+  // Wait for the animation BEFORE touching fonts. Requesting a Google Fonts
+  // stylesheet registers @font-face rules, which invalidates the document's
+  // font cache and forces a full relayout — the exact stall this whole split
+  // exists to avoid.
+  await typographyGate;
+  if (generation !== typographyGeneration) return;
+
+  if (preset?.fonts?.length) {
+    await preloadThemeFonts(preset, 10_000);
+    if (generation !== typographyGeneration) return;
+  }
+
+  injectFontCss(preset?.id ?? null, buildFontCss(preset, extraFontVariables));
 }
 
 /** Parse 'Nunito+Sans:wght@300;400;700' into a family name and its weights. */
@@ -236,20 +420,18 @@ const delay = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /**
- * Download a theme's webfonts BEFORE the theme is applied.
+ * Download a theme's webfonts and resolve once they are usable.
  *
- * Without this, the fonts start downloading at the moment the theme <style> is
- * injected. They arrive a few hundred ms later — right in the middle of the
- * theme transition animation — and force a full-page relayout (themes set
- * font-family on `body *`), which freezes the animation for the length of that
- * relayout. Paying the cost up front keeps the animation window quiet.
+ * Used by applyThemeFontCss() to make sure the font stylesheet is applied only
+ * when the typeface is actually available — otherwise text would reflow twice:
+ * once to the fallback font, once to the real one.
  *
- * Resolves early if the fonts are already available, and never blocks longer
- * than `budgetMs`.
+ * Resolves immediately for fonts that are already loaded, and never waits
+ * longer than `budgetMs`.
  */
 export async function preloadThemeFonts(
   preset: ThemePreset,
-  budgetMs = 400,
+  budgetMs = 10_000,
 ): Promise<void> {
   if (!preset.fonts?.length) return;
   if (typeof document === 'undefined' || !document.fonts) return;

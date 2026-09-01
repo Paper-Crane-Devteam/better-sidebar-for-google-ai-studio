@@ -37,12 +37,34 @@ export interface ThemePresetMeta {
   fonts?: string[];
   /** Extra CSS rules beyond variables (e.g. backdrop-filter, noise texture) */
   extraCss?: string;
+  /**
+   * Typography rules, kept separate from `extraCss` on purpose.
+   *
+   * Font rules are the expensive half of a theme: they match large parts of the
+   * page and they depend on a webfont that may still be downloading. They are
+   * therefore applied in a second step, after the theme switch animation has
+   * finished and the fonts are ready — see applyThemeFontCss().
+   *
+   * Selectors here must be keyed on `body.bs-fonts--<id>`, NOT on
+   * `body.bs-theme--<id>`: the two classes are added at different moments, and
+   * the font class of the previous theme stays in place until the new theme's
+   * fonts are ready, so text never flickers back to the page default.
+   */
+  fontCss?: string;
 }
 
 /** Platform-specific variable overrides for a theme */
 export interface ThemePreset extends ThemePresetMeta {
   /** CSS variables to inject on body (overrides Gemini's :root .light-theme / .dark-theme) */
   variables: ThemeVariable[];
+  /**
+   * Font-related CSS variables (e.g. --mat-*-text-font).
+   *
+   * These belong with `fontCss`, not with `variables`: a token pointing at a
+   * webfont makes the page reflow the moment that font finishes downloading, so
+   * it must not be set while the theme switch animation is running.
+   */
+  fontVariables?: ThemeVariable[];
   /**
    * CSS variables to inject into the sidebar Shadow DOM root container.
    * These override the sidebar's own design tokens (--background, --foreground, --primary, etc.)

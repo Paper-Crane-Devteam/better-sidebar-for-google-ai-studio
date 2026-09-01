@@ -42,15 +42,6 @@ body.bs-theme--retro-terminal::after {
   );
 }
 
-/* Monospace font override */
-body.bs-theme--retro-terminal {
-  font-family: 'Fira Code', 'JetBrains Mono', 'Cascadia Code', 'Consolas', 'Microsoft YaHei', monospace !important;
-}
-
-body.bs-theme--retro-terminal *:not(.material-symbols-outlined):not(.material-symbols-rounded):not(.material-symbols-sharp):not(.google-symbols):not(mat-icon):not(.mat-icon):not([class*="material-symbols"]):not([class*="google-symbols"]) {
-  font-family: inherit;
-}
-
 /* Pixel border style */
 body.bs-theme--retro-terminal .mat-mdc-list-item {
   border-bottom: 1px solid #1a3a1a !important;
@@ -72,6 +63,23 @@ body.bs-theme--retro-terminal rich-textarea {
   caret-shape: block;
 }
 `,
+  fontCss: `
+/* Monospace font override */
+body.bs-fonts--retro-terminal {
+  font-family: 'Fira Code', 'JetBrains Mono', 'Cascadia Code', 'Consolas', 'Microsoft YaHei', monospace !important;
+}
+
+body.bs-fonts--retro-terminal *:not(.material-symbols-outlined):not(.material-symbols-rounded):not(.material-symbols-sharp):not(.google-symbols):not(mat-icon):not(.mat-icon):not([class*="material-symbols"]):not([class*="google-symbols"]) {
+  font-family: inherit;
+}
+`,
+  fontVariables: [
+    { property: '--mat-menu-item-label-text-font', value: '"Fira Code", "JetBrains Mono", "Cascadia Code", monospace' },
+    { property: '--mat-list-list-item-label-text-font', value: '"Fira Code", "JetBrains Mono", "Cascadia Code", monospace' },
+    { property: '--mat-list-list-item-supporting-text-font', value: '"Fira Code", "JetBrains Mono", "Cascadia Code", monospace' },
+    { property: '--mat-button-text-label-text-font', value: '"Fira Code", "JetBrains Mono", "Cascadia Code", monospace' },
+    { property: '--mat-button-filled-label-text-font', value: '"Fira Code", "JetBrains Mono", "Cascadia Code", monospace' },
+  ],
   variables: [
     // ─── Surface / Background (纯黑) ────────────────────────────────
     { property: '--gem-sys-color--surface', value: '#0a0a0a' },
@@ -212,28 +220,6 @@ body.bs-theme--retro-terminal rich-textarea {
     {
       property: '--bard-color-zero-state-prompt-chip-text',
       value: '#00ff41',
-    },
-
-    // ─── Font override via CSS variable ─────────────────────────────
-    {
-      property: '--mat-menu-item-label-text-font',
-      value: '"Fira Code", "JetBrains Mono", "Cascadia Code", monospace',
-    },
-    {
-      property: '--mat-list-list-item-label-text-font',
-      value: '"Fira Code", "JetBrains Mono", "Cascadia Code", monospace',
-    },
-    {
-      property: '--mat-list-list-item-supporting-text-font',
-      value: '"Fira Code", "JetBrains Mono", "Cascadia Code", monospace',
-    },
-    {
-      property: '--mat-button-text-label-text-font',
-      value: '"Fira Code", "JetBrains Mono", "Cascadia Code", monospace',
-    },
-    {
-      property: '--mat-button-filled-label-text-font',
-      value: '"Fira Code", "JetBrains Mono", "Cascadia Code", monospace',
     },
 
     // ─── Shadows (green glow) ───────────────────────────────────────

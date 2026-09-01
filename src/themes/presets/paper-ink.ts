@@ -29,15 +29,6 @@ body.bs-theme--paper-ink::before {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 }
 
-/* Elegant serif font */
-body.bs-theme--paper-ink {
-  font-family: 'Literata', 'Source Serif 4', 'Georgia', 'Noto Serif SC', 'Source Han Serif SC', serif !important;
-}
-
-body.bs-theme--paper-ink *:not(.material-symbols-outlined):not(.material-symbols-rounded):not(.material-symbols-sharp):not(.google-symbols):not(mat-icon):not(.mat-icon):not([class*="material-symbols"]):not([class*="google-symbols"]) {
-  font-family: inherit;
-}
-
 /* Refined paragraph spacing */
 body.bs-theme--paper-ink p,
 body.bs-theme--paper-ink .message-content {
@@ -45,6 +36,23 @@ body.bs-theme--paper-ink .message-content {
   letter-spacing: 0.01em;
 }
 `,
+  fontCss: `
+/* Elegant serif font */
+body.bs-fonts--paper-ink {
+  font-family: 'Literata', 'Source Serif 4', 'Georgia', 'Noto Serif SC', 'Source Han Serif SC', serif !important;
+}
+
+body.bs-fonts--paper-ink *:not(.material-symbols-outlined):not(.material-symbols-rounded):not(.material-symbols-sharp):not(.google-symbols):not(mat-icon):not(.mat-icon):not([class*="material-symbols"]):not([class*="google-symbols"]) {
+  font-family: inherit;
+}
+`,
+  fontVariables: [
+    { property: '--mat-menu-item-label-text-font', value: '"Literata", "Source Serif 4", Georgia, serif' },
+    { property: '--mat-list-list-item-label-text-font', value: '"Literata", "Source Serif 4", Georgia, serif' },
+    { property: '--mat-list-list-item-supporting-text-font', value: '"Literata", "Source Serif 4", Georgia, serif' },
+    { property: '--mat-button-text-label-text-font', value: '"Literata", "Source Serif 4", Georgia, serif' },
+    { property: '--mat-button-filled-label-text-font', value: '"Literata", "Source Serif 4", Georgia, serif' },
+  ],
   variables: [
     // ─── Surface / Background (Warm White Paper) ────────────────────
     { property: '--gem-sys-color--surface', value: '#faf9f6' },
@@ -139,12 +147,6 @@ body.bs-theme--paper-ink .message-content {
     { property: '--bard-color-zero-state-prompt-chip-background', value: '#e8ecf4' },
     { property: '--bard-color-zero-state-prompt-chip-text', value: '#2c3e6b' },
 
-    // ─── Font override via CSS variable ─────────────────────────────
-    { property: '--mat-menu-item-label-text-font', value: '"Literata", "Source Serif 4", Georgia, serif' },
-    { property: '--mat-list-list-item-label-text-font', value: '"Literata", "Source Serif 4", Georgia, serif' },
-    { property: '--mat-list-list-item-supporting-text-font', value: '"Literata", "Source Serif 4", Georgia, serif' },
-    { property: '--mat-button-text-label-text-font', value: '"Literata", "Source Serif 4", Georgia, serif' },
-    { property: '--mat-button-filled-label-text-font', value: '"Literata", "Source Serif 4", Georgia, serif' },
   ],
   sidebarVariables: [
     { property: '--background', value: '245 244 240' },       // #f5f4f0

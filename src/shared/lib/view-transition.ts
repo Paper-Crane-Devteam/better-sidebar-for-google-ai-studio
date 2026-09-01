@@ -11,9 +11,14 @@
  *
  * For this to work correctly, the theme DOM changes MUST happen synchronously
  * within the startViewTransition callback.
+ *
+ * One exception: typography. Font rules match most of the page and depend on a
+ * webfont that may still be downloading, so they are held back until the reveal
+ * is over (see setTypographyGate / applyThemeFontCss). Keeping them out of the
+ * animation window is what stops the circle from stalling halfway.
  */
 
-import { applyTheme, removeTheme, preloadThemeFonts } from '@/themes';
+import { applyTheme, removeTheme, setTypographyGate, applyThemeFontCss } from '@/themes';
 import { themeRegistry } from '@/themes';
 import { syncGeminiTheme, syncAiStudioTheme } from '@/shared/lib/utils/utils';
 import { detectPlatform, Platform } from '@/shared/types/platform';
@@ -70,6 +75,10 @@ function applyThemeSync(
     const preset = themeRegistry[themeId];
     const platform = detectPlatform();
 
+    // Typography lands after the animation. Requested here as well as from the
+    // store subscriber, in case the subscriber runs late; the call is idempotent.
+    void applyThemeFontCss(preset);
+
     // Force page to theme's preferred mode synchronously
     if (platform === Platform.GEMINI) {
       syncGeminiTheme(preset.preferredMode);
@@ -77,7 +86,10 @@ function applyThemeSync(
       syncAiStudioTheme(preset.preferredMode);
     }
   } else {
-    removeTheme();
+    // keepFonts: typography is reverted by applyThemeFontCss(null) after the
+    // animation instead of mid-way through it.
+    removeTheme({ keepFonts: true });
+    void applyThemeFontCss(null);
     const platform = detectPlatform();
     if (platform === Platform.GEMINI) {
       syncGeminiTheme(lightDarkTheme);
@@ -95,14 +107,14 @@ function applyThemeSync(
  * @param updateCallback - The function that performs the store state update
  * @param themeId - The new theme preset ID (null = default/no custom theme)
  * @param lightDarkTheme - The light/dark/system setting for fallback
- * @param duration - Animation duration in ms (default 500)
+ * @param duration - Animation duration in ms (default 300)
  */
 export function startViewTransition(
   event: React.MouseEvent | MouseEvent,
   updateCallback: () => void,
   themeId?: string | null,
   lightDarkTheme?: 'light' | 'dark' | 'system',
-  duration = 500,
+  duration = 300,
 ): void {
   // Fallback: just apply the change immediately
   if (!document.startViewTransition) {
@@ -110,41 +122,11 @@ export function startViewTransition(
     return;
   }
 
-  // Read click coordinates now — the event object is reused/pooled and the
-  // work below is async.
   const x = event.clientX;
   const y = event.clientY;
 
-  void runThemeTransition({ x, y, updateCallback, themeId, lightDarkTheme, duration });
-}
-
-async function runThemeTransition({
-  x,
-  y,
-  updateCallback,
-  themeId,
-  lightDarkTheme,
-  duration,
-}: {
-  x: number;
-  y: number;
-  updateCallback: () => void;
-  themeId?: string | null;
-  lightDarkTheme?: 'light' | 'dark' | 'system';
-  duration: number;
-}): Promise<void> {
   // Inject CSS rules into host document (not Shadow DOM)
   ensureViewTransitionStyles();
-
-  // Download the theme's webfonts BEFORE the transition starts.
-  // Otherwise they land mid-animation and the resulting full-page relayout
-  // freezes the expanding circle for as long as the relayout takes.
-  const preset = themeId ? themeRegistry[themeId] : null;
-  if (preset) {
-    // Short budget: the click should not feel unresponsive if the network is
-    // slow. Cards also warm their fonts on hover, so this is usually instant.
-    await preloadThemeFonts(preset, 300);
-  }
 
   // Compute the radius needed to cover the entire viewport
   const endRadius = Math.hypot(
@@ -158,6 +140,23 @@ async function runThemeTransition({
   root.style.setProperty('--bs-vt-y', `${y}px`);
   root.classList.add(VT_ACTIVE_CLASS);
 
+  // Hold typography (webfonts + the font rules that match most of the page)
+  // until the reveal is over, so nothing heavy lands mid-animation. The gate
+  // must be armed before the update callback runs, because the store
+  // subscribers that request typography fire inside it.
+  let openGate = () => {};
+  setTypographyGate(
+    new Promise<void>((resolve) => {
+      openGate = resolve;
+    }),
+  );
+  // Safety net: never leave typography waiting if the transition never settles.
+  const gateTimer = setTimeout(() => openGate(), duration + 2000);
+  const releaseGate = () => {
+    clearTimeout(gateTimer);
+    openGate();
+  };
+
   const transition = document.startViewTransition(() => {
     // 1. Update store state (this triggers subscriber which also calls applyTheme,
     //    but since applyTheme is idempotent with removeTheme() first, it's fine)
@@ -169,12 +168,14 @@ async function runThemeTransition({
     }
   });
 
+  let reveal: Animation | undefined;
+
   transition.ready
     .then(() => {
       // Must stay synchronous inside this callback: the browser ends the
       // transition once no animations are attached to the pseudo-elements,
       // so deferring this (rAF/timeout) can drop the animation entirely.
-      document.documentElement.animate(
+      reveal = document.documentElement.animate(
         {
           clipPath: [
             `circle(0px at ${x}px ${y}px)`,
@@ -183,10 +184,7 @@ async function runThemeTransition({
         },
         {
           duration,
-          // Ease-out: most of the visible progress happens early, so a late
-          // main-thread hiccup reads as settling rather than as a freeze
-          // followed by a jump to full screen.
-          easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
           // Hold the end state so the CSS fallback clip (circle(0)) doesn't
           // snap back before the transition tears down.
           fill: 'both',
@@ -198,9 +196,14 @@ async function runThemeTransition({
       // Transition was skipped (e.g. another one started) — nothing to animate.
     });
 
-  // Drop the marker once the transition is over (or was skipped) so host-page
-  // view transitions are never affected.
+  // Once the transition is over (or was skipped): drop the marker class so
+  // host-page view transitions are never affected, and let typography land.
   transition.finished.finally(() => {
     root.classList.remove(VT_ACTIVE_CLASS);
+    releaseGate();
+    // The pseudo-element is gone by now; cancelling detaches the filling
+    // animation from the timeline instead of leaving one behind per switch.
+    reveal?.cancel();
+    reveal = undefined;
   });
 }

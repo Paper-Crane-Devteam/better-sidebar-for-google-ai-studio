@@ -15,7 +15,11 @@
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useLicenseStore, isLicenseValid } from '@/shared/lib/license-store';
 import { themeRegistry, applySidebarTheme, refreshThemeRegistry } from '@/themes';
-import { ensureThemeFonts, clearThemeFonts } from '../engine';
+import {
+  clearThemeFonts,
+  clearThemeFontCss,
+  applyThemeFontCss,
+} from '../engine';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
 import { syncAiStudioTheme } from '@/shared/lib/utils/utils';
 import type { ThemePreset, ThemeVariable } from '../types';
@@ -180,24 +184,36 @@ function mapPresetToAiStudioVariables(preset: ThemePreset): ThemeVariable[] {
     add('--mat-menu-container-elevation-shadow', menuShadow);
   }
 
-  // ─── Font overrides ─────────────────────────────────────────────
-  const menuFont = get('--mat-menu-item-label-text-font');
-  if (menuFont) {
-    add('--mat-sys-label-large-font', menuFont);
-    add('--mat-sys-label-medium-font', menuFont);
-    add('--mat-sys-body-large-font', menuFont);
-    add('--mat-sys-body-medium-font', menuFont);
-    add('--mat-sys-body-small-font', menuFont);
-    add('--mat-sys-title-medium-font', menuFont);
-    add('--mat-menu-item-label-text-font', menuFont);
-    add('--mat-form-field-filled-label-text-font', menuFont);
-    add('--mat-form-field-outlined-label-text-font', menuFont);
-    add('--mat-form-field-subscript-text-font', menuFont);
-    add('--mat-form-field-container-text-font', menuFont);
-    add('--mat-option-label-text-font', menuFont);
-  }
+  // Font tokens are NOT mapped here — see mapPresetToAiStudioFontVariables().
+  // They point at a webfont, so they must not be applied while the theme
+  // switch animation is running.
 
   return vars;
+}
+
+/**
+ * Map a preset's font variables to AI Studio's typography token namespace.
+ * Applied in the deferred typography step, not with the colours.
+ */
+function mapPresetToAiStudioFontVariables(preset: ThemePreset): ThemeVariable[] {
+  const menuFont = preset.fontVariables?.find(
+    (v) => v.property === '--mat-menu-item-label-text-font',
+  )?.value;
+  if (!menuFont) return [];
+
+  return [
+    '--mat-sys-label-large-font',
+    '--mat-sys-label-medium-font',
+    '--mat-sys-body-large-font',
+    '--mat-sys-body-medium-font',
+    '--mat-sys-body-small-font',
+    '--mat-sys-title-medium-font',
+    '--mat-form-field-filled-label-text-font',
+    '--mat-form-field-outlined-label-text-font',
+    '--mat-form-field-subscript-text-font',
+    '--mat-form-field-container-text-font',
+    '--mat-option-label-text-font',
+  ].map((property) => ({ property, value: menuFont }));
 }
 
 /**
@@ -221,7 +237,8 @@ function applyAiStudioTheme(preset: ThemePreset): void {
 
   let css = `body.${AISTUDIO_THEME_CLASS_PREFIX}${preset.id} {\n${variablesCss}\n}`;
 
-  // Append extra CSS if provided (font overrides, textures, etc.)
+  // Append extra CSS if provided (textures, effects — typography lives in
+  // fontCss and is applied later by applyThemeFontCss)
   if (preset.extraCss) {
     css += `\n\n/* Theme extra styles: ${preset.id} */\n${preset.extraCss}`;
   }
@@ -231,9 +248,7 @@ function applyAiStudioTheme(preset: ThemePreset): void {
   style.textContent = css;
   document.head.appendChild(style);
 
-  // Load Google Fonts if specified — shared with the engine, keyed by URL so
-  // switching themes never re-resolves fonts that are already loaded.
-  ensureThemeFonts(preset.fonts);
+  // Webfonts are requested by the deferred typography step, not here.
 
   console.log(`Better Sidebar: AI Studio theme "${preset.id}" applied`);
 }
@@ -250,12 +265,24 @@ function removeAiStudioTheme(options?: { keepFonts?: boolean }): void {
 
   if (!options?.keepFonts) {
     clearThemeFonts();
+    clearThemeFontCss();
   }
 
   if (currentAiStudioThemeId) {
     document.body?.classList.remove(`${AISTUDIO_THEME_CLASS_PREFIX}${currentAiStudioThemeId}`);
     currentAiStudioThemeId = null;
   }
+}
+
+/**
+ * Apply a preset to the AI Studio page: colours now, typography once the switch
+ * animation is over and the webfonts have arrived.
+ */
+function applyAiStudioPreset(preset: ThemePreset): void {
+  applyAiStudioTheme(preset);
+  TooltipHelper.getInstance().setCustomThemeVariables(preset.sidebarVariables ?? null);
+  syncAiStudioTheme(preset.preferredMode);
+  void applyThemeFontCss(preset, mapPresetToAiStudioFontVariables(preset));
 }
 
 /**
@@ -275,30 +302,23 @@ export function initAiStudioThemeSync(): () => void {
       usePegasusStore.getState().setCustomTheme(null);
       useLicenseStore.getState().endPreview();
     } else {
-      applyAiStudioTheme(themeRegistry[initialThemeId]);
-      const preset = themeRegistry[initialThemeId];
-      TooltipHelper.getInstance().setCustomThemeVariables(preset.sidebarVariables ?? null);
-      syncAiStudioTheme(preset.preferredMode);
+      applyAiStudioPreset(themeRegistry[initialThemeId]);
     }
   } else if (initialThemeId && themeRegistry[initialThemeId]) {
-    applyAiStudioTheme(themeRegistry[initialThemeId]);
-    const preset = themeRegistry[initialThemeId];
-    TooltipHelper.getInstance().setCustomThemeVariables(preset.sidebarVariables ?? null);
-    syncAiStudioTheme(preset.preferredMode);
+    applyAiStudioPreset(themeRegistry[initialThemeId]);
   }
 
   // Subscribe to changes
   const unsubscribe = usePegasusStore.subscribe((state, prevState) => {
     if (state.customTheme !== prevState.customTheme) {
       if (state.customTheme && themeRegistry[state.customTheme]) {
-        applyAiStudioTheme(themeRegistry[state.customTheme]);
-        const preset = themeRegistry[state.customTheme];
-        TooltipHelper.getInstance().setCustomThemeVariables(preset.sidebarVariables ?? null);
-        // Force page to the theme's preferred mode
-        syncAiStudioTheme(preset.preferredMode);
+        applyAiStudioPreset(themeRegistry[state.customTheme]);
       } else {
-        removeAiStudioTheme();
+        // keepFonts: typography is handed over to applyThemeFontCss(null) so it
+        // reverts after the animation instead of mid-way through it.
+        removeAiStudioTheme({ keepFonts: true });
         TooltipHelper.getInstance().setCustomThemeVariables(null);
+        void applyThemeFontCss(null);
         // Restore user's chosen theme setting
         syncAiStudioTheme(state.theme);
       }

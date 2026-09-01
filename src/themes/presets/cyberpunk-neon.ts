@@ -38,23 +38,6 @@ body.bs-theme--cyberpunk-neon::before {
   background-size: 40px 40px;
 }
 
-/* Geometric font */
-body.bs-theme--cyberpunk-neon {
-  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
-}
-
-body.bs-theme--cyberpunk-neon *:not(.material-symbols-outlined):not(.material-symbols-rounded):not(.material-symbols-sharp):not(.google-symbols):not(mat-icon):not(.mat-icon):not([class*="material-symbols"]):not([class*="google-symbols"]) {
-  font-family: inherit;
-}
-
-/* Headings use Orbitron for extra futuristic feel */
-body.bs-theme--cyberpunk-neon h1,
-body.bs-theme--cyberpunk-neon h2,
-body.bs-theme--cyberpunk-neon h3 {
-  font-family: 'Orbitron', 'Space Grotesk', sans-serif !important;
-  letter-spacing: 0.5px;
-}
-
 /* Neon border glow on focus */
 body.bs-theme--cyberpunk-neon input:focus,
 body.bs-theme--cyberpunk-neon textarea:focus,
@@ -62,6 +45,31 @@ body.bs-theme--cyberpunk-neon [contenteditable="true"]:focus {
   box-shadow: 0 0 8px rgba(255, 0, 128, 0.4), 0 0 16px rgba(0, 200, 255, 0.2) !important;
 }
 `,
+  fontCss: `
+/* Geometric font */
+body.bs-fonts--cyberpunk-neon {
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+body.bs-fonts--cyberpunk-neon *:not(.material-symbols-outlined):not(.material-symbols-rounded):not(.material-symbols-sharp):not(.google-symbols):not(mat-icon):not(.mat-icon):not([class*="material-symbols"]):not([class*="google-symbols"]) {
+  font-family: inherit;
+}
+
+/* Headings use Orbitron for extra futuristic feel */
+body.bs-fonts--cyberpunk-neon h1,
+body.bs-fonts--cyberpunk-neon h2,
+body.bs-fonts--cyberpunk-neon h3 {
+  font-family: 'Orbitron', 'Space Grotesk', sans-serif !important;
+  letter-spacing: 0.5px;
+}
+`,
+  fontVariables: [
+    { property: '--mat-menu-item-label-text-font', value: '"Space Grotesk", -apple-system, sans-serif' },
+    { property: '--mat-list-list-item-label-text-font', value: '"Space Grotesk", -apple-system, sans-serif' },
+    { property: '--mat-list-list-item-supporting-text-font', value: '"Space Grotesk", -apple-system, sans-serif' },
+    { property: '--mat-button-text-label-text-font', value: '"Space Grotesk", -apple-system, sans-serif' },
+    { property: '--mat-button-filled-label-text-font', value: '"Space Grotesk", -apple-system, sans-serif' },
+  ],
   variables: [
     // ─── Surface / Background (Deep Black) ──────────────────────────
     { property: '--gem-sys-color--surface', value: '#0a0a0f' },
@@ -164,13 +172,6 @@ body.bs-theme--cyberpunk-neon [contenteditable="true"]:focus {
     // ─── Prompt Chips ───────────────────────────────────────────────
     { property: '--bard-color-zero-state-prompt-chip-background', value: '#2a0020' },
     { property: '--bard-color-zero-state-prompt-chip-text', value: '#ff66b2' },
-
-    // ─── Font override via CSS variable ─────────────────────────────
-    { property: '--mat-menu-item-label-text-font', value: '"Space Grotesk", -apple-system, sans-serif' },
-    { property: '--mat-list-list-item-label-text-font', value: '"Space Grotesk", -apple-system, sans-serif' },
-    { property: '--mat-list-list-item-supporting-text-font', value: '"Space Grotesk", -apple-system, sans-serif' },
-    { property: '--mat-button-text-label-text-font', value: '"Space Grotesk", -apple-system, sans-serif' },
-    { property: '--mat-button-filled-label-text-font', value: '"Space Grotesk", -apple-system, sans-serif' },
 
     // ─── Shadows (neon glow) ────────────────────────────────────────
     { property: '--mat-app-elevation-shadow-level-1', value: '0px 2px 8px rgba(255,0,128,0.08)' },
