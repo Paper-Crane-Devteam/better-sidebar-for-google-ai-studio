@@ -39,6 +39,15 @@ export type ExtensionMessage = (
         notebook_id?: string | null;
         /** When set, delete all messages after this ID before inserting the new ones (regeneration) */
         replaceAfterMessageId?: string;
+        /**
+         * Source conversation when this row is a branch (fork) of another chat.
+         *
+         * Two effects, and both apply only on first save: the new row inherits the
+         * parent's folder and gem/notebook membership, and the tree is told to
+         * refresh. The refresh is not redundant — a branch is the one case where a
+         * conversation appears without the user navigating anywhere.
+         */
+        branched_from_conversation_id?: string;
         messages: {
           id?: string;
           role: 'user' | 'model';
@@ -548,6 +557,17 @@ export type ExtensionMessage = (
       payload:
         | { op: 'read'; path: string; offset?: number; limit?: number }
         | { op: 'write'; path: string; content: string }
+        /**
+         * Raw bytes, base64-encoded, for upload and download.
+         *
+         * Separate ops rather than a flag on `read`/`write` because the encoding is
+         * not an option the caller picks — it follows from who is asking. The agent
+         * reads text and gets a string; a download needs the exact bytes and cannot
+         * survive a UTF-8 round trip. Base64 is what `runtime.sendMessage` will carry
+         * intact (see `workspace/base64.ts`).
+         */
+        | { op: 'readBytes'; path: string }
+        | { op: 'writeBytes'; path: string; base64: string }
         | {
             op: 'edit';
             path: string;

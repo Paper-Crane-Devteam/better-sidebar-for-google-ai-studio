@@ -13,6 +13,7 @@
 import type { ExtensionMessage, ExtensionResponse } from '@/shared/types/messages';
 import * as fs from '@/shared/workspace/fs';
 import { PathError } from '@/shared/workspace/paths';
+import { base64ToBytes, bytesToBase64 } from '@/shared/workspace/base64';
 
 export async function handleWorkspace(
   message: ExtensionMessage,
@@ -34,6 +35,29 @@ export async function handleWorkspace(
         return {
           success: true,
           data: { bytes: await fs.writeFile(scope, p.path, p.content) },
+        };
+
+      // Encoding happens at the boundary, not in `fs`: the filesystem layer deals in
+      // `Uint8Array`, and base64 is a property of the transport it happens to be
+      // behind. A future direct caller in this context would not want it.
+      case 'readBytes': {
+        const result = await fs.readBytes(scope, p.path);
+        return {
+          success: true,
+          data: {
+            base64: bytesToBase64(result.bytes),
+            size: result.size,
+            modified: result.modified,
+          },
+        };
+      }
+
+      case 'writeBytes':
+        return {
+          success: true,
+          data: {
+            bytes: await fs.writeBytes(scope, p.path, base64ToBytes(p.base64)),
+          },
         };
 
       case 'edit':

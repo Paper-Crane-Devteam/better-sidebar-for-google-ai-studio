@@ -5,6 +5,7 @@ import { handleListChatResponse } from './interceptors/list-chat';
 import { handleDeleteResponse } from './interceptors/delete';
 import { handleCNgdBeResponse } from './interceptors/create-gem';
 import { handleRenameResponse } from './interceptors/rename';
+import { handleBranchResponse } from './interceptors/branch';
 import { handleDeleteGemResponse } from './interceptors/delete-gem';
 import { handleDeleteNotebookResponse } from './interceptors/delete-notebook';
 import { handleRenameNotebookResponse } from './interceptors/rename-notebook';
@@ -98,6 +99,8 @@ export function initGeminiInterceptors() {
             handleCNgdBeResponse(response, url);
           } else if (url.includes('rpcids=MUAZcd')) {
             handleRenameResponse(response, url);
+          } else if (url.includes('rpcids=KDNZr')) {
+            handleBranchResponse(response, url);
           } else if (url.includes('rpcids=UXcSJb')) {
             handleDeleteGemResponse(response, url);
           } else if (url.includes('rpcids=Nwkn9')) {

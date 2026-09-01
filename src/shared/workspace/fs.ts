@@ -47,6 +47,16 @@ function scopeSegment(scope: Scope): string {
 /** Guard against an agent reading a binary blob into the conversation. */
 const MAX_READ_BYTES = 2 * 1024 * 1024;
 
+/**
+ * Cap on a single raw-byte transfer, for upload and download.
+ *
+ * Higher than `MAX_READ_BYTES` because the two limits protect different things: that
+ * one keeps a large file out of the model's context window, this one keeps a base64
+ * string inside what `runtime.sendMessage` will carry. A person downloading an
+ * attachment has no context window to blow.
+ */
+const MAX_TRANSFER_BYTES = 20 * 1024 * 1024;
+
 /** Cap on entries returned by a single list/glob call. */
 const MAX_ENTRIES = 1000;
 
@@ -195,6 +205,57 @@ export async function writeFile(
     await writable.close();
   }
   return new TextEncoder().encode(content).length;
+}
+
+/**
+ * Write raw bytes, creating parent directories as needed.
+ *
+ * The byte-level counterpart to `writeFile`, and the only correct way to store an
+ * uploaded file. `writeFile` takes a JS string, so anything that reached it would first
+ * have to be decoded as UTF-8 — and every invalid sequence in a PNG or a PDF becomes
+ * U+FFFD, which is not recoverable. Whatever arrives here is what comes back out.
+ */
+export async function writeBytes(
+  scope: Scope,
+  path: string,
+  bytes: Uint8Array,
+): Promise<number> {
+  if (bytes.byteLength > MAX_TRANSFER_BYTES) {
+    throw new Error(
+      `File is ${bytes.byteLength} bytes, over the ${MAX_TRANSFER_BYTES}-byte limit.`,
+    );
+  }
+  const handle = await resolveFile(scope, path, true);
+  const writable = await handle.createWritable();
+  try {
+    // `write` needs its own buffer view, not the caller's — a subarray of a larger
+    // buffer would otherwise write the whole backing store.
+    await writable.write(bytes);
+  } finally {
+    await writable.close();
+  }
+  return bytes.byteLength;
+}
+
+/** Read a file as raw bytes. Used for download, where a text decode would corrupt. */
+export async function readBytes(
+  scope: Scope,
+  path: string,
+): Promise<{ bytes: Uint8Array; size: number; modified: number }> {
+  const handle = await resolveFile(scope, path, false);
+  const file = await handle.getFile();
+
+  if (file.size > MAX_TRANSFER_BYTES) {
+    throw new Error(
+      `File is ${file.size} bytes, over the ${MAX_TRANSFER_BYTES}-byte transfer limit.`,
+    );
+  }
+
+  return {
+    bytes: new Uint8Array(await file.arrayBuffer()),
+    size: file.size,
+    modified: file.lastModified,
+  };
 }
 
 /**
@@ -431,24 +492,92 @@ export async function makeDir(scope: Scope, path: string): Promise<void> {
 }
 
 /**
- * Move or rename a file.
+ * Copy one file's bytes to a new path, creating parents.
  *
- * Implemented as copy-then-delete rather than via `FileSystemHandle.move()`: that
- * method is Chrome-only and still moving through the spec, and this path also has to
- * work for a cross-directory move where the destination's parents do not exist yet.
+ * Writes the `File` blob straight into the writable rather than reading it into memory
+ * first. That is what makes this size-unbounded: the browser streams it, so a move is
+ * not limited by whatever cap a read would impose. It is also the reason a move cannot
+ * corrupt anything — no text decode happens at any point.
+ */
+async function copyFileTo(
+  scope: Scope,
+  source: FileSystemFileHandle,
+  to: string,
+): Promise<void> {
+  const file = await source.getFile();
+  const target = await resolveFile(scope, to, true);
+  const writable = await target.createWritable();
+  try {
+    await writable.write(file);
+  } finally {
+    await writable.close();
+  }
+}
+
+/**
+ * Move or rename a file or a directory.
+ *
+ * Copy-then-delete rather than `FileSystemHandle.move()`: that method is Chrome-only
+ * and still moving through the spec, and this path also has to work for a
+ * cross-directory move where the destination's parents do not exist yet.
+ *
+ * Three things it refuses rather than attempts:
+ *
+ * - Moving a directory beneath itself, which would recurse into the copy it is making.
+ * - Writing over something already at the destination. OPFS would happily overwrite,
+ *   so a rename that collides with an existing name would destroy that file with no
+ *   indication — the tree offers no undo, and neither does the agent.
+ * - Touching the workspace root, which has no parent to be moved within.
  */
 export async function movePath(
   scope: Scope,
   from: string,
   to: string,
 ): Promise<void> {
-  const source = await resolveFile(scope, from, false);
-  const file = await source.getFile();
-  if (file.size > MAX_READ_BYTES) {
-    throw new Error(`File is too large to move (${file.size} bytes)`);
+  const fromSegments = splitPath(from);
+  const toSegments = splitPath(to);
+
+  if (fromSegments.length === 0) throw new Error('Cannot move the workspace root');
+  if (toSegments.length === 0) {
+    throw new Error('Cannot move something onto the workspace root');
   }
-  await writeFile(scope, to, await file.text());
-  await remove(scope, from);
+
+  const fromPath = fromSegments.join('/');
+  const toPath = toSegments.join('/');
+  if (fromPath === toPath) return;
+
+  const source = await stat(scope, fromPath);
+  if (!source) throw new Error(`Not found: "${fromPath}"`);
+
+  if (source.kind === 'directory' && toPath.startsWith(`${fromPath}/`)) {
+    throw new Error(`Cannot move "${fromPath}" into itself`);
+  }
+  if (await stat(scope, toPath)) {
+    throw new Error(`"${toPath}" already exists`);
+  }
+
+  if (source.kind === 'file') {
+    await copyFileTo(scope, await resolveFile(scope, fromPath, false), toPath);
+    await remove(scope, fromPath);
+    return;
+  }
+
+  // A directory move is the same operation applied to every descendant. `walk` yields
+  // a directory before its contents, so an empty subdirectory is recreated rather than
+  // dropped for having no files to imply it.
+  const dir = await resolveDir(scope, fromSegments, false);
+  await makeDir(scope, toPath);
+
+  for await (const { path, handle } of walk(dir, fromPath)) {
+    const target = `${toPath}/${path.slice(fromPath.length + 1)}`;
+    if (handle.kind === 'directory') {
+      await makeDir(scope, target);
+    } else {
+      await copyFileTo(scope, handle as FileSystemFileHandle, target);
+    }
+  }
+
+  await remove(scope, fromPath, true);
 }
 
 /** Whether a path exists, and what it is. */

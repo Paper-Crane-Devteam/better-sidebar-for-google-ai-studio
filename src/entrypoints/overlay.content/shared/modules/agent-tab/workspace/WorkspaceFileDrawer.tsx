@@ -22,6 +22,7 @@ import { toast } from '@/shared/lib/toast';
 import { cn } from '@/shared/lib/utils/utils';
 import { forWorkspace } from '@/shared/workspace/client';
 import { useFileViewerStore } from '../../agent-loop/workspace/file-viewer-store';
+import { downloadFile } from './workspace-io';
 
 /** Extensions rendered as Markdown rather than shown as source. */
 const MARKDOWN_EXTENSIONS = ['md', 'markdown', 'mdx'];
@@ -132,17 +133,18 @@ export const WorkspaceFileDrawer: React.FC = () => {
   /**
    * Save the file to disk.
    *
-   * The one route out of OPFS: nothing outside the browser can reach these bytes, so a
-   * workspace without this is a one-way store.
+   * Re-reads the file as bytes instead of saving the string on screen. The drawer's copy
+   * came through a UTF-8 decode, so anything the decoder could not represent is already
+   * a replacement character in it — writing that out produces a file that differs from
+   * the one stored. `downloadFile` goes back to the source bytes.
    */
-  const handleDownload = () => {
-    if (content == null) return;
-    const url = URL.createObjectURL(new Blob([content], { type: 'text/plain' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = name;
-    link.click();
-    URL.revokeObjectURL(url);
+  const handleDownload = async () => {
+    if (!workspaceId || !path) return;
+    try {
+      await downloadFile(workspaceId, path);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
   };
 
   return (

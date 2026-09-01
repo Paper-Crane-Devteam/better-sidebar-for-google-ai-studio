@@ -51,6 +51,5 @@
 49. when renaming chat in current chat, refresh the chat
 50. branch new chat mess with chat history
 51. agent can open new chat
-52. keyboard delete and rename
-53. agent can open new chat
+-52. keyboard delete and rename
 54. switch timeline view mode in hover tab icon

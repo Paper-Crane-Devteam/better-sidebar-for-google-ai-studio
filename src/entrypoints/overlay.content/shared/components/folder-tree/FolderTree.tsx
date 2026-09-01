@@ -2,6 +2,7 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 import { Tree, NodeRendererProps, RowRendererProps } from 'react-arborist';
 import { FolderTreeNodeData, FolderTreeHandle } from './types';
 import { useFolderTree, UseFolderTreeOptions } from './useFolderTree';
+import { getTreeDndManager } from './dnd-manager';
 
 export interface FolderTreeProps extends UseFolderTreeOptions {
   /** Tree data (already transformed into hierarchy) */
@@ -72,6 +73,11 @@ export const FolderTree = forwardRef<FolderTreeHandle, FolderTreeProps>(
           rowHeight={rowHeight}
           openByDefault={false}
           initialOpenState={initialOpenState}
+          // Our own manager, so react-dnd never falls back to its `window`-cached
+          // singleton. That cache is released on a ref count that does not track the
+          // HTML5 backend's teardown, and a tree mounting into the gap between the two
+          // throws "Cannot have two HTML5 backends at the same time." See `dnd-manager`.
+          dndManager={getTreeDndManager()}
 
           renderRow={renderRow}
         >

@@ -22,6 +22,7 @@
  */
 
 import type { FileEntry, GrepMatch, ReadResult, WorkspaceStats } from './fs';
+import { base64ToBytes, bytesToBase64 } from './base64';
 
 type Payload = Extract<
   import('@/shared/types/messages').ExtensionMessage,
@@ -51,6 +52,16 @@ export interface WorkspaceClient {
   readonly workspaceId: string;
   read(path: string, offset?: number, limit?: number): Promise<ReadResult>;
   write(path: string, content: string): Promise<{ bytes: number }>;
+  /**
+   * Read a file's exact bytes.
+   *
+   * For download and for zipping. `read` decodes as UTF-8, which replaces every
+   * invalid sequence with U+FFFD — fine for the text an agent reads, destructive for
+   * an image or an archive.
+   */
+  readBytes(path: string): Promise<{ bytes: Uint8Array; size: number; modified: number }>;
+  /** Write exact bytes. The only correct way to store an uploaded file. */
+  writeBytes(path: string, bytes: Uint8Array): Promise<{ bytes: number }>;
   edit(
     path: string,
     oldString: string,
@@ -88,6 +99,27 @@ export function forWorkspace(workspaceId: string): WorkspaceClient {
       run<ReadResult>({ op: 'read', path, offset, limit }),
 
     write: (path, content) => run<{ bytes: number }>({ op: 'write', path, content }),
+
+    // Base64 is an artefact of the bridge, so it is encoded and decoded here rather
+    // than exposed. Callers deal in `Uint8Array` and never see the wire format.
+    readBytes: async (path) => {
+      const data = await run<{ base64: string; size: number; modified: number }>({
+        op: 'readBytes',
+        path,
+      });
+      return {
+        bytes: base64ToBytes(data.base64),
+        size: data.size,
+        modified: data.modified,
+      };
+    },
+
+    writeBytes: (path, bytes) =>
+      run<{ bytes: number }>({
+        op: 'writeBytes',
+        path,
+        base64: bytesToBase64(bytes),
+      }),
 
     edit: (path, oldString, newString, replaceAll) =>
       run<{ replacements: number }>({
