@@ -30,6 +30,7 @@ import { BatchToolbar } from './batch/BatchToolbar';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { Input } from '@/entrypoints/overlay.content/shared/components/ui/input';
 import { CollapsibleSection } from '../../../components/CollapsibleSection';
+import { useSettingsStore } from '@/shared/lib/settings-store';
 
 // ── Type Filter Dropdown ────────────────────────────────────────────
 interface TypeFilterDropdownProps {
@@ -148,8 +149,11 @@ export const ExplorerHeader = ({
   onToggleChatsSection,
 }: ExplorerHeaderProps) => {
   const { t } = useI18n();
+  const compactMode = useSettingsStore((state) => state.compactMode);
+  const setCompactMode = useSettingsStore((state) => state.setCompactMode);
   const {
     ui,
+    setActiveTab,
     setExplorerSortOrder,
     setExplorerViewMode,
     setExplorerBatchMode,
@@ -158,6 +162,12 @@ export const ExplorerHeader = ({
   const { sortOrder, viewMode } = ui.explorer;
   const { isBatchMode } = ui.explorer.batch;
   const { gdriveSyncing } = usePegasusStore();
+
+  const handleToggleCompactMode = () => {
+    const nextCompactMode = !compactMode;
+    if (nextCompactMode) setActiveTab('files');
+    setCompactMode(nextCompactMode);
+  };
 
   // Local search state with debounce
   const [localQuery, setLocalQuery] = useState(filter.search.query);
@@ -259,69 +269,83 @@ export const ExplorerHeader = ({
     <div className="flex flex-col">
       {/* Row 1: Library title | cloud, (divider), sort, new folder, menu */}
       <div className="px-3 py-2 flex items-center justify-between h-12 shrink-0">
-        <h1 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground/70">
-          {t('explorerHeader.library')}
-        </h1>
+        <SimpleTooltip
+          content={compactMode ? t('tooltip.exitCompactMode') : t('tooltip.enterCompactMode')}
+        >
+          <button
+            type="button"
+            onClick={handleToggleCompactMode}
+            className="rounded-sm font-semibold text-sm uppercase tracking-wide text-muted-foreground/70 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+          >
+            {t('explorerHeader.library')}
+          </button>
+        </SimpleTooltip>
 
         <div className="flex items-center gap-1">
-          <SimpleTooltip content={gdriveSyncing ? t('data.gdriveAutoSyncing') : t('data.gdriveSync')}>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                useModalStore.getState().open({
-                  type: 'info',
-                  title: t('data.gdriveSync'),
-                  content: (
-                    <div className="py-2">
-                      <GDriveSyncSection hideTitle={true} />
-                    </div>
-                  ),
-                  modalClassName: 'max-w-md',
-                });
-              }}
-            >
-              {gdriveSyncing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Cloud className="h-4 w-4" />
-              )}
-            </Button>
-          </SimpleTooltip>
-
-          <SimpleTooltip
-            content={
-              sortOrder === 'alpha'
-                ? t('menu.sortByDate')
-                : t('menu.sortAlphabetically')
-            }
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground ml-2"
-              onClick={handleSort}
-            >
-              {sortOrder === 'alpha' ? (
-                <ArrowDownAZ className="h-4 w-4" />
-              ) : (
-                <Clock className="h-4 w-4" />
-              )}
-            </Button>
-          </SimpleTooltip>
-
-          {viewMode !== 'timeline' && (
-            <SimpleTooltip content={t('menu.newFolder')}>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                onClick={onNewFolder}
+          {!compactMode && (
+            <>
+              <SimpleTooltip
+                content={gdriveSyncing ? t('data.gdriveAutoSyncing') : t('data.gdriveSync')}
               >
-                <FolderPlus className="h-4 w-4" />
-              </Button>
-            </SimpleTooltip>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    useModalStore.getState().open({
+                      type: 'info',
+                      title: t('data.gdriveSync'),
+                      content: (
+                        <div className="py-2">
+                          <GDriveSyncSection hideTitle={true} />
+                        </div>
+                      ),
+                      modalClassName: 'max-w-md',
+                    });
+                  }}
+                >
+                  {gdriveSyncing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Cloud className="h-4 w-4" />
+                  )}
+                </Button>
+              </SimpleTooltip>
+
+              <SimpleTooltip
+                content={
+                  sortOrder === 'alpha'
+                    ? t('menu.sortByDate')
+                    : t('menu.sortAlphabetically')
+                }
+              >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground ml-2"
+                  onClick={handleSort}
+                >
+                  {sortOrder === 'alpha' ? (
+                    <ArrowDownAZ className="h-4 w-4" />
+                  ) : (
+                    <Clock className="h-4 w-4" />
+                  )}
+                </Button>
+              </SimpleTooltip>
+
+              {viewMode !== 'timeline' && (
+                <SimpleTooltip content={t('menu.newFolder')}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    onClick={onNewFolder}
+                  >
+                    <FolderPlus className="h-4 w-4" />
+                  </Button>
+                </SimpleTooltip>
+              )}
+            </>
           )}
 
           <SidePanelMenu

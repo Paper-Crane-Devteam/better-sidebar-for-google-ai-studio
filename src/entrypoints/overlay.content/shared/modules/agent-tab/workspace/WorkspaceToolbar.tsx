@@ -1,29 +1,40 @@
 /**
- * The workspace header: identity, search, and the actions that apply to the whole tree.
+ * The workspace header.
  *
- * Two rows, following `SnippetsHeader` — title and view controls above, search and
- * creation below — so the Agent tab's file browser reads as the same kind of panel as
- * Snippets and Library rather than a one-off.
+ * Two rows, following `SnippetsHeader`: identity and view controls above, search and
+ * everything that adds content below. Destructive and rare actions are not here at all —
+ * they live in the three-dot menu, where the rest of the sidebar keeps them.
  *
- * Upload is a dropdown rather than two buttons because files and folders are the same
- * intent reached through two different native pickers: `<input multiple>` cannot select a
- * directory and `<input webkitdirectory>` cannot select loose files, so the split exists
- * for the platform's reasons, not the user's. One button keeps that where it belongs.
+ * ## One button for four ways to get a file
+ *
+ * New file, new folder, import files, import folder — all behind a single `+`. The split
+ * between *new* and *import* is real and worth naming (one starts empty, one comes from
+ * disk), but it is not worth four buttons in a sidebar this narrow.
+ *
+ * Files and folders need separate entries whether we like it or not: an `<input>` is either
+ * `webkitdirectory` or it is not, and the File System Access API likewise has one method for
+ * each. There is no native dialog that offers both, so the choice has to be made before the
+ * dialog opens. Drag-and-drop has no such limitation and accepts either.
+ *
+ * ## What is deliberately absent
+ *
+ * - **Refresh.** Every mutation already re-lists, and the agent's writes arrive through the
+ *   same path. A button whose only job is to fetch what you are already looking at invites
+ *   the reading that the view might be stale.
+ * - **File and byte counts.** Nothing is decided by them. They filled a line with numbers
+ *   that changed on their own and never prompted an action.
  */
 
 import React from 'react';
 import {
   ArrowLeft,
-  FileArchive,
   FilePlus,
   FolderPlus,
   FolderUp,
-  Import,
   ListCollapse,
   Loader2,
-  RefreshCw,
+  Plus,
   Search,
-  Trash2,
   Upload,
   X,
 } from 'lucide-react';
@@ -34,51 +45,53 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { formatBytes } from '@/shared/workspace/file-kinds';
+import { WorkspaceMenu } from './WorkspaceMenu';
 
 export interface WorkspaceToolbarProps {
-  fileCount: number;
-  totalBytes: number;
+  /** No files: gates export and clear in the three-dot menu. */
+  isEmpty: boolean;
+  /** False for the default workspace, which can be cleared but not removed. */
+  canDelete: boolean;
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  /** Non-null while a transfer runs; replaces the counts line. */
+  /** Non-null while a transfer runs; shown as a status line under the rows. */
   progress: string | null;
   onBack: () => void;
-  onRefresh: () => void;
   onCollapseAll: () => void;
   onNewFolder: () => void;
   onNewFile: () => void;
-  onUploadFiles: () => void;
-  onUploadFolder: () => void;
+  onImportFiles: () => void;
+  onImportFolder: () => void;
   onExportZip: () => void;
   onClear: () => void;
+  onDelete: () => void;
 }
 
 export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({
-  fileCount,
-  totalBytes,
+  isEmpty,
+  canDelete,
   searchTerm,
   onSearchChange,
   progress,
   onBack,
-  onRefresh,
   onCollapseAll,
   onNewFolder,
   onNewFile,
-  onUploadFiles,
-  onUploadFolder,
+  onImportFiles,
+  onImportFolder,
   onExportZip,
   onClear,
+  onDelete,
 }) => {
   const { t } = useI18n();
-  const isEmpty = fileCount === 0;
 
   return (
     <div className="flex flex-col border-b border-border/60">
-      {/* Row 1: back, title, view controls */}
+      {/* Row 1: back, title, view controls, overflow menu */}
       <div className="flex items-center gap-1 px-2 pt-2">
         <SimpleTooltip content={t('common.back', { defaultValue: 'Back' })}>
           <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onBack}>
@@ -90,12 +103,6 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({
           {t('agent.workspace.title', { defaultValue: 'Workspace' })}
         </h1>
 
-        <SimpleTooltip content={t('common.refresh', { defaultValue: 'Refresh' })}>
-          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onRefresh}>
-            <RefreshCw className="h-3.5 w-3.5" />
-          </Button>
-        </SimpleTooltip>
-
         <SimpleTooltip content={t('menu.collapseAll', { defaultValue: 'Collapse all' })}>
           <Button
             variant="ghost"
@@ -103,44 +110,20 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({
             className="h-7 w-7 shrink-0"
             onClick={onCollapseAll}
           >
-            <ListCollapse className="h-3.5 w-3.5" />
+            <ListCollapse className="h-4 w-4" />
           </Button>
         </SimpleTooltip>
 
-        {/* The only way the whole workspace leaves the browser, so it stays a top-level
-            control rather than an item inside a menu. */}
-        <SimpleTooltip
-          content={t('agent.workspace.exportAll', {
-            defaultValue: 'Export everything as ZIP',
-          })}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0"
-            disabled={isEmpty}
-            onClick={onExportZip}
-          >
-            <FileArchive className="h-3.5 w-3.5" />
-          </Button>
-        </SimpleTooltip>
-
-        <SimpleTooltip
-          content={t('agent.workspace.clearAll', { defaultValue: 'Clear all files' })}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 shrink-0 text-destructive hover:text-destructive"
-            disabled={isEmpty}
-            onClick={onClear}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </SimpleTooltip>
+        <WorkspaceMenu
+          isEmpty={isEmpty}
+          canDelete={canDelete}
+          onExportZip={onExportZip}
+          onClear={onClear}
+          onDelete={onDelete}
+        />
       </div>
 
-      {/* Row 2: search, creation, upload */}
+      {/* Row 2: search, then everything that adds a file */}
       <div className="flex items-center gap-1 px-2 pb-2 pt-1">
         <div className="relative min-w-0 flex-1">
           <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -164,61 +147,54 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({
           )}
         </div>
 
-        <SimpleTooltip content={t('agent.workspace.newFolder', { defaultValue: 'New folder' })}>
-          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onNewFolder}>
-            <FolderPlus className="h-4 w-4" />
-          </Button>
-        </SimpleTooltip>
-
-        <SimpleTooltip content={t('agent.workspace.newFile', { defaultValue: 'New file' })}>
-          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onNewFile}>
-            <FilePlus className="h-4 w-4" />
-          </Button>
-        </SimpleTooltip>
-
-        {/* No tooltip on the trigger: nesting `SimpleTooltip`'s `asChild` inside the
-            trigger's own would have two wrappers competing for the Button's ref. The
-            menu's two items name themselves clearly enough. */}
+        {/*
+          No tooltip on the trigger: `SimpleTooltip` and `DropdownMenuTrigger` both use
+          `asChild`, and nesting them leaves two wrappers competing for the Button's ref.
+          The menu items name themselves.
+        */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
               className="h-7 w-7 shrink-0"
-              aria-label={t('agent.workspace.upload', { defaultValue: 'Upload' })}
+              aria-label={t('agent.workspace.add', { defaultValue: 'Add' })}
             >
-              <Import className="h-4 w-4" />
+              <Plus className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={onUploadFiles}>
-              <Upload className="mr-2 h-4 w-4" />
-              {t('agent.workspace.uploadFiles', { defaultValue: 'Upload files…' })}
+          <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuItem onClick={onNewFile}>
+              <FilePlus className="mr-2 h-4 w-4" />
+              {t('agent.workspace.newFile', { defaultValue: 'New file' })}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onUploadFolder}>
+            <DropdownMenuItem onClick={onNewFolder}>
+              <FolderPlus className="mr-2 h-4 w-4" />
+              {t('agent.workspace.newFolder', { defaultValue: 'New folder' })}
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            {/* "Import", not "Upload": nothing leaves the browser — the bytes are copied
+                into OPFS, which is local storage that happens to look like a filesystem. */}
+            <DropdownMenuItem onClick={onImportFiles}>
+              <Upload className="mr-2 h-4 w-4" />
+              {t('agent.workspace.importFiles', { defaultValue: 'Import files…' })}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onImportFolder}>
               <FolderUp className="mr-2 h-4 w-4" />
-              {t('agent.workspace.uploadFolder', { defaultValue: 'Upload folder…' })}
+              {t('agent.workspace.importFolder', { defaultValue: 'Import folder…' })}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {/* Row 3: progress while transferring, otherwise the counts */}
-      {progress ? (
+      {/* Progress, only while a transfer is running */}
+      {progress && (
         <div className="flex items-center gap-1.5 px-3 pb-1.5 text-[11px] text-muted-foreground">
           <Loader2 className="h-3 w-3 animate-spin" />
           {progress}
         </div>
-      ) : (
-        fileCount > 0 && (
-          <div className="px-3 pb-1.5 text-[11px] text-muted-foreground">
-            {t('agent.workspace.counts', {
-              defaultValue: `${fileCount} file(s) · ${formatBytes(totalBytes)}`,
-              count: fileCount,
-              size: formatBytes(totalBytes),
-            })}
-          </div>
-        )
       )}
     </div>
   );

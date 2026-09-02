@@ -25,8 +25,7 @@
  */
 
 import React, { useCallback, useRef, useState } from 'react';
-import { Loader2, Trash2, Upload } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
+import { Loader2, Upload } from 'lucide-react';
 import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { modal } from '@/shared/lib/modal';
@@ -82,8 +81,12 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ onBack }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const treeRef = useRef<WorkspaceFileTreeHandle>(null);
 
-  const { data, folders, fileCount, totalBytes, loading, error, reload } =
-    useWorkspaceFiles(shownId, searchTerm);
+  // `fileCount` is not displayed — it only decides whether the destructive menu items are
+  // reachable, and fills in the confirmation copy.
+  const { data, folders, fileCount, loading, error, reload } = useWorkspaceFiles(
+    shownId,
+    searchTerm,
+  );
 
   const transfer = useWorkspaceTransfer(shownId, reload);
   // Owned here, not by the tree: an empty workspace renders no tree, and that is exactly
@@ -251,20 +254,20 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ onBack }) => {
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
       <WorkspaceToolbar
-        fileCount={fileCount}
-        totalBytes={totalBytes}
+        isEmpty={fileCount === 0}
+        canDelete={!isDefault}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         progress={transfer.progress}
         onBack={onBack}
-        onRefresh={() => void reload()}
         onCollapseAll={() => treeRef.current?.collapseAll()}
         onNewFolder={() => void createFolder('')}
         onNewFile={() => void createFile('')}
-        onUploadFiles={() => transfer.pickFiles('')}
-        onUploadFolder={() => transfer.pickFolder('')}
+        onImportFiles={() => transfer.pickFiles('')}
+        onImportFolder={() => transfer.pickFolder('')}
         onExportZip={() => void transfer.exportZip('', workspaceName)}
         onClear={handleClear}
+        onDelete={handleDelete}
       />
 
       {/*
@@ -380,20 +383,8 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ onBack }) => {
         onChange={transfer.onInputChange}
       />
 
-      {/* Delete, for anything but the default workspace */}
-      {!isDefault && (
-        <div className="px-1.5 pb-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-full justify-start gap-1.5 text-[11px] text-muted-foreground hover:text-destructive"
-            onClick={handleDelete}
-          >
-            <Trash2 className="h-3 w-3" />
-            {t('agent.workspace.delete', { defaultValue: 'Delete this workspace' })}
-          </Button>
-        </div>
-      )}
+      {/* Deleting the workspace now lives in the header's three-dot menu, next to Clear.
+          A standing button for an irreversible action was too easy to reach for. */}
 
       <WorkspaceSwitcher
         currentId={shownId}

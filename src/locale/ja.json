@@ -206,8 +206,8 @@
     "scanChatList": "チャットリストをインポート",
     "scanning": "スキャン中...",
     "sqlQuery": "SQL クエリ",
-    "hideIconBar": "アイコンバーを非表示",
-    "showIconBar": "アイコンバーを表示",
+    "enterCompactMode": "コンパクトモードにする",
+    "exitCompactMode": "コンパクトモードを終了",
     "settings": "設定"
   },
   "about": {
@@ -339,6 +339,8 @@
     "switchToOriginalUI": "元のサイドバーに切り替え",
     "temporaryChat": "一時チャット",
     "toggleMenu": "メニューを切り替え",
+    "enterCompactMode": "クリックしてコンパクトモードにする",
+    "exitCompactMode": "クリックしてコンパクトモードを終了",
     "newChatCta": "クリック：新しいチャット · 右クリック：プライベートチャット · 中クリック：新しいタブで開く"
   },
   "newChatButton": {

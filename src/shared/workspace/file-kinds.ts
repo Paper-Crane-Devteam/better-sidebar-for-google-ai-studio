@@ -52,6 +52,21 @@ const TEXT_EXTENSIONS = new Set([
 export const MARKDOWN_EXTENSIONS = new Set(['md', 'markdown', 'mdx']);
 
 /**
+ * Largest file the reader will render.
+ *
+ * Not a storage limit — the file is stored, downloadable, and readable by the agent either
+ * way. This is only about the reader, where the cost lands twice: a `<pre>` of half a
+ * megabyte is one text node the layout engine has to measure in a single pass, and the
+ * Markdown path parses the whole string on the main thread before that. Both stall the
+ * sidebar with no way to cancel.
+ *
+ * 512 KB is far past any note or source file and well short of where the freeze becomes
+ * noticeable. Above it the reader shows the file's details instead, which is the honest
+ * offer: here is what this is, and here is the download.
+ */
+export const PREVIEW_BYTE_LIMIT = 512 * 1024;
+
+/**
  * A file's extension, lowercased, without the dot.
  *
  * Returns '' for a name with no extension and for a dotfile like `.gitignore` —

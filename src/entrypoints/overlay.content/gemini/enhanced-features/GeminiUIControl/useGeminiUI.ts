@@ -31,17 +31,17 @@ export const useGeminiUI = () => {
   const isGemsCreatePage = path.includes('/gems/create');
 
   const isSidebarExpanded = useAppStore((s) => s.ui.overlay.isSidebarExpanded);
-  const showIconBar = useSettingsStore((s) => s.showIconBar);
+  const compactMode = useSettingsStore((s) => s.compactMode);
 
   /**
-   * Hiding the icon bar shrinks the whole sidenav by the icon bar's width
+   * Compact mode shrinks the whole sidenav by the icon bar's width
    * rather than letting the content area stretch into the freed space. That
    * keeps the conversation tree exactly as wide as before, so toggling the
    * icon bar never reflows the tree — only the sidebar's right edge moves.
    */
-  const effectiveSidebarWidth = showIconBar
-    ? storeSidebarWidth
-    : storeSidebarWidth - ICON_BAR_WIDTH;
+  const effectiveSidebarWidth = compactMode
+    ? storeSidebarWidth - ICON_BAR_WIDTH
+    : storeSidebarWidth;
 
   const [showUpgradeOption, setShowUpgradeOption] = useState(false);
 

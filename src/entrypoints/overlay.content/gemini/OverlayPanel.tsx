@@ -59,7 +59,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const { path } = useUrl();
 
   const shortcuts = useSettingsStore((state) => state.shortcuts);
-  const showIconBar = useSettingsStore((state) => state.showIconBar);
+  const compactMode = useSettingsStore((state) => state.compactMode);
   const sparkAvailable = isSparkAvailable();
   const hasSettingsBadge = useBadgeStore((s) => s.isGroupVisible('settings.'));
 
@@ -83,6 +83,10 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     showSqlInterface,
     isSettingsOpen,
   } = ui.overlay;
+
+  useEffect(() => {
+    if (compactMode && activeTab !== 'files') setActiveTab('files');
+  }, [compactMode, activeTab, setActiveTab]);
 
   useEffect(() => {
     // Initial fetch
@@ -190,7 +194,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           entry point there. */}
       <div
         className={`sidebar-nav flex flex-col items-center shrink-0 ${
-          isSidebarExpanded && !showIconBar ? 'hidden' : ''
+          isSidebarExpanded && compactMode ? 'hidden' : ''
         }`}
       >
         <SimpleTooltip content={t('tooltip.toggleMenu')}>
@@ -448,7 +452,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
         className={`flex flex-col px-1 pt-1`}
         style={{
           width:
-            isSidebarExpanded && !showIconBar
+            isSidebarExpanded && compactMode
               ? 'var(--bard-sidenav-open-width, 360px)'
               : 'calc(var(--bard-sidenav-open-width, 360px) - var(--bard-sidenav-closed-width, 64px))',
           flexShrink: 0,

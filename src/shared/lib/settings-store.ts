@@ -6,12 +6,10 @@ interface SettingsState {
   /** Gemini sidebar base style: 'default' (v2) or 'classic' (pre-v2 blue-tinted) */
   geminiStyle: 'default' | 'classic';
   /**
-   * When false, the sidebar's left icon/tab bar is hidden, leaving only the
-   * active tab's content (e.g. the conversation tree) for a cleaner view.
-   * Defaults to true. Only affects the expanded panel; the collapsed strip
-   * (which is the sole entry point when collapsed) is always kept.
+   * Compact mode keeps only the Library content and its overflow menu visible.
+   * The left tab bar and secondary Library header actions are hidden.
    */
-  showIconBar: boolean;
+  compactMode: boolean;
   newChatBehavior: 'current-tab' | 'new-tab';
   autoScanLibrary: boolean;
   /**
@@ -64,7 +62,7 @@ interface SettingsState {
 
   // Actions
   setGeminiStyle: (style: 'default' | 'classic') => void;
-  setShowIconBar: (visible: boolean) => void;
+  setCompactMode: (enabled: boolean) => void;
   setNewChatBehavior: (behavior: 'current-tab' | 'new-tab') => void;
   setAutoScanLibrary: (enabled: boolean) => void;
   setSkipDeleteConfirm: (enabled: boolean) => void;
@@ -135,7 +133,7 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       geminiStyle: 'default',
-      showIconBar: true,
+      compactMode: false,
       newChatBehavior: 'current-tab',
       autoScanLibrary: false,
       skipDeleteConfirm: false,
@@ -179,7 +177,7 @@ export const useSettingsStore = create<SettingsState>()(
       setGeminiStyle: (style) => {
         set({ geminiStyle: style });
       },
-      setShowIconBar: (showIconBar) => set({ showIconBar }),
+      setCompactMode: (compactMode) => set({ compactMode }),
       setNewChatBehavior: (newChatBehavior) => set({ newChatBehavior }),
       setAutoScanLibrary: (autoScanLibrary) => set({ autoScanLibrary }),
       setSkipDeleteConfirm: (skipDeleteConfirm) => set({ skipDeleteConfirm }),
@@ -213,7 +211,7 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: getStorageName(),
       storage: createJSONStorage(() => storage),
-      version: 6,
+      version: 7,
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { themeGridPage, ...rest } = state;
@@ -240,6 +238,12 @@ export const useSettingsStore = create<SettingsState>()(
           // theme/customTheme moved to pegasus-store; strip from persisted settings
           delete persistedState.theme;
           delete persistedState.customTheme;
+        }
+        if (version < 7) {
+          // The former icon-bar toggle is now compact mode. Preserve the old
+          // hidden state, then remove the retired setting.
+          persistedState.compactMode = persistedState.showIconBar === false;
+          delete persistedState.showIconBar;
         }
         return persistedState;
       },

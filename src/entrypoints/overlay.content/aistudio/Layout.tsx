@@ -119,7 +119,7 @@ export async function initAiStudioOverlay(mainStyles: string): Promise<void> {
   /**
    * Resolve the wrapper width from both stores.
    *
-   * Hiding the icon bar shrinks the whole wrapper by the icon bar's width
+   * Compact mode shrinks the whole wrapper by the icon bar's width
    * instead of letting the content area stretch into the freed space. The
    * content area is `flex-1`, so it ends up exactly as wide as it was with the
    * icon bar visible — toggling never reflows the tree, only the sidebar's
@@ -129,10 +129,10 @@ export async function initAiStudioOverlay(mainStyles: string): Promise<void> {
   const applySidebarWidth = () => {
     const baseWidth =
       usePegasusStore.getState().enhancedFeatures.aistudio?.sidebarWidth ?? 320;
-    const { showIconBar } = useSettingsStore.getState();
-    const width = showIconBar
-      ? baseWidth
-      : Math.max(baseWidth - ICON_BAR_WIDTH, 0);
+    const { compactMode } = useSettingsStore.getState();
+    const width = compactMode
+      ? Math.max(baseWidth - ICON_BAR_WIDTH, 0)
+      : baseWidth;
     // Both stores fire on unrelated changes too; skip redundant style writes.
     if (width === lastAppliedWidth) return;
     lastAppliedWidth = width;

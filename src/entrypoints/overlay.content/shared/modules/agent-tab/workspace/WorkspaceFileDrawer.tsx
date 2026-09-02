@@ -13,7 +13,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Copy, Download, Loader2, X } from 'lucide-react';
+import { Copy, Download, File as FileIcon, FileText, Loader2, X } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { MarkdownRenderer } from '@/shared/components/MarkdownRenderer';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
@@ -21,17 +21,26 @@ import { useI18n } from '@/shared/hooks/useI18n';
 import { toast } from '@/shared/lib/toast';
 import { cn } from '@/shared/lib/utils/utils';
 import { forWorkspace } from '@/shared/workspace/client';
+import {
+  MARKDOWN_EXTENSIONS,
+  PREVIEW_BYTE_LIMIT,
+  extensionOf,
+  formatBytes,
+  isProbablyBinary,
+} from '@/shared/workspace/file-kinds';
 import { useFileViewerStore } from '../../agent-loop/workspace/file-viewer-store';
 import { downloadFile } from './workspace-io';
 
-/** Extensions rendered as Markdown rather than shown as source. */
-const MARKDOWN_EXTENSIONS = ['md', 'markdown', 'mdx'];
-
-function extensionOf(path: string): string {
-  const base = path.slice(path.lastIndexOf('/') + 1);
-  const dot = base.lastIndexOf('.');
-  return dot <= 0 ? '' : base.slice(dot + 1).toLowerCase();
-}
+/**
+ * Why a file is shown as a summary instead of its contents.
+ *
+ * - `binary` — decoding it as text produces replacement characters, so the "preview" would
+ *   be a screenful of noise that looks like corruption. The file is intact; it just is not
+ *   text.
+ * - `large` — it would render, slowly, and freeze the sidebar while it did. See
+ *   `PREVIEW_BYTE_LIMIT`.
+ */
+type SkipReason = 'binary' | 'large';
 
 export const WorkspaceFileDrawer: React.FC = () => {
   const { t } = useI18n();
@@ -39,6 +48,9 @@ export const WorkspaceFileDrawer: React.FC = () => {
   const close = useFileViewerStore((s) => s.close);
 
   const [content, setContent] = useState<string | null>(null);
+  const [skipped, setSkipped] = useState<{ reason: SkipReason; size: number } | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -59,18 +71,43 @@ export const WorkspaceFileDrawer: React.FC = () => {
 
     let cancelled = false;
     setContent(null);
+    setSkipped(null);
     setError(null);
 
-    forWorkspace(workspaceId)
-      .read(path)
-      .then((result) => {
+    const ws = forWorkspace(workspaceId);
+
+    /**
+     * Decide before reading, not after.
+     *
+     * Both reasons to refuse a preview are answerable from the name and the size, so `stat`
+     * settles it for one cheap call. Reading first and then deciding would mean paying
+     * exactly the cost the refusal exists to avoid — pulling megabytes across the message
+     * bridge, or decoding a binary into a string, only to throw it away.
+     */
+    void (async () => {
+      try {
+        const info = await ws.stat(path);
+        if (cancelled) return;
+
+        const size = info?.size ?? 0;
+
+        if (isProbablyBinary(path)) {
+          setSkipped({ reason: 'binary', size });
+          return;
+        }
+        if (size > PREVIEW_BYTE_LIMIT) {
+          setSkipped({ reason: 'large', size });
+          return;
+        }
+
+        const result = await ws.read(path);
         // The drawer can be closed, or switched to another file, while this is in
         // flight; writing then would show one file's body under another's name.
         if (!cancelled) setContent(result.content);
-      })
-      .catch((e) => {
+      } catch (e) {
         if (!cancelled) setError((e as Error).message);
-      });
+      }
+    })();
 
     return () => {
       cancelled = true;
@@ -122,7 +159,9 @@ export const WorkspaceFileDrawer: React.FC = () => {
   if (!open || !path) return null;
 
   const name = path.slice(path.lastIndexOf('/') + 1);
-  const isMarkdown = MARKDOWN_EXTENSIONS.includes(extensionOf(path));
+  const isMarkdown = MARKDOWN_EXTENSIONS.has(extensionOf(path));
+  /** Still deciding. Distinct from "decided not to render", which is `skipped`. */
+  const isLoading = content == null && skipped == null && error == null;
 
   const handleCopy = async () => {
     if (content == null) return;
@@ -194,7 +233,9 @@ export const WorkspaceFileDrawer: React.FC = () => {
               variant="ghost"
               size="icon"
               className="h-8 w-8 shrink-0"
-              disabled={content == null}
+              // Available for a skipped file too — for a binary or an oversized one it is
+              // the only thing left to do here, and the reason the drawer opens at all.
+              disabled={isLoading || error != null}
               onClick={handleDownload}
             >
               <Download className="h-4 w-4" />
@@ -212,10 +253,54 @@ export const WorkspaceFileDrawer: React.FC = () => {
         <div className="flex-1 overflow-y-auto px-6 pb-10">
           {error ? (
             <p className="text-sm text-destructive">{error}</p>
-          ) : content == null ? (
+          ) : isLoading ? (
             <div className="flex justify-center py-12">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
+          ) : skipped ? (
+            /*
+              Centred summary instead of a preview.
+
+              Deliberately not a partial render — no first-N-lines of a binary, no truncated
+              head of a large file. A fragment of noise still reads as a broken file, and a
+              truncated document invites scrolling for the rest. Saying plainly what the file
+              is, and offering the one action that makes sense, is less work to understand
+              than either.
+            */
+            <div className="flex h-full flex-col items-center justify-center gap-3 pb-16 text-center">
+              {skipped.reason === 'binary' ? (
+                <FileIcon className="h-10 w-10 text-muted-foreground/50" />
+              ) : (
+                <FileText className="h-10 w-10 text-muted-foreground/50" />
+              )}
+
+              <div className="max-w-md px-6">
+                <p className="truncate text-sm font-medium text-foreground">{name}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {skipped.size > 0 && formatBytes(skipped.size)}
+                </p>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  {skipped.reason === 'binary'
+                    ? t('agent.workspace.binaryNoPreview', {
+                        defaultValue:
+                          'This is a binary file. It is stored exactly as it came in, but it cannot be shown as text and the agent cannot read it.',
+                      })
+                    : t('agent.workspace.largeNoPreview', {
+                        defaultValue:
+                          'This file is too large to preview without freezing the sidebar. Download it to read it, or ask the agent — it reads files in slices.',
+                      })}
+                </p>
+              </div>
+
+              <Button variant="outline" size="sm" className="mt-1 gap-1.5" onClick={handleDownload}>
+                <Download className="h-3.5 w-3.5" />
+                {t('common.download', { defaultValue: 'Download' })}
+              </Button>
+            </div>
+          ) : content == null ? (
+            // Unreachable: `isLoading` already covers a null body. Spelled out so the
+            // branches below can rely on a string without a non-null assertion.
+            null
           ) : content === '' ? (
             <p className="text-sm text-muted-foreground">
               {t('agent.workspace.emptyFile', { defaultValue: 'This file is empty.' })}

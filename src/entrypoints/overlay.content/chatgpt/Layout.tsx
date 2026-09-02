@@ -92,7 +92,7 @@ export async function initChatGPTOverlay(mainStyles: string): Promise<void> {
   sidebarStyle.id = 'better-sidebar-for-google-ai-studio-sidebar-styles';
   
   /**
-   * Hiding the icon bar shrinks the whole wrapper by the icon bar's width
+   * Compact mode shrinks the whole wrapper by the icon bar's width
    * instead of letting the content area stretch into the freed space. The
    * content area is `flex-1`, so it stays exactly as wide as it was with the
    * icon bar visible — toggling never reflows the tree, only the sidebar's
@@ -100,10 +100,10 @@ export async function initChatGPTOverlay(mainStyles: string): Promise<void> {
    */
   let lastAppliedWidth: number | null = null;
   const applySidebarWidth = () => {
-    const { showIconBar } = useSettingsStore.getState();
-    const width = showIconBar
-      ? SIDEBAR_WIDTH
-      : Math.max(SIDEBAR_WIDTH - ICON_BAR_WIDTH, 0);
+    const { compactMode } = useSettingsStore.getState();
+    const width = compactMode
+      ? Math.max(SIDEBAR_WIDTH - ICON_BAR_WIDTH, 0)
+      : SIDEBAR_WIDTH;
     // The settings store fires on unrelated changes too; skip redundant writes.
     if (width === lastAppliedWidth) return;
     lastAppliedWidth = width;

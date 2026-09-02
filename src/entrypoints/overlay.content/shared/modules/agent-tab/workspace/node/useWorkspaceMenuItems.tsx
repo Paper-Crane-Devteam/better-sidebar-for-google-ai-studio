@@ -98,9 +98,9 @@ export function useWorkspaceMenuItems(
     });
     items.push({
       type: 'item',
-      key: 'upload',
+      key: 'import',
       icon: <Upload className="h-4 w-4" />,
-      label: t('agent.workspace.uploadHere', { defaultValue: 'Upload files here' }),
+      label: t('agent.workspace.importHere', { defaultValue: 'Import files here…' }),
       onClick: () => handlers.onUploadTo(path),
     });
     items.push({ type: 'separator', key: 'sep-create' });

@@ -50,7 +50,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const [, setContainer] = useState<HTMLDivElement | null>(null);
   const newChatBehavior = useSettingsStore((state) => state.newChatBehavior);
   const shortcuts = useSettingsStore((state) => state.shortcuts);
-  const showIconBar = useSettingsStore((state) => state.showIconBar);
+  const compactMode = useSettingsStore((state) => state.compactMode);
   const hasSettingsBadge = useBadgeStore((s) => s.isGroupVisible('settings.'));
   const {
     fetchData,
@@ -74,6 +74,10 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     tempHiddenToken,
     isSettingsOpen,
   } = ui.overlay;
+
+  useEffect(() => {
+    if (compactMode && activeTab !== 'files') setActiveTab('files');
+  }, [compactMode, activeTab, setActiveTab]);
 
   // Handle auto-switching UI based on URL
   useEffect(() => {
@@ -231,7 +235,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       {/* Sidebar Tabs */}
       <div
         className={`sidebar-nav flex flex-col items-center bg-muted/20 shrink-0 ${
-          !showIconBar ? 'hidden' : ''
+          compactMode ? 'hidden' : ''
         }`}
       >
         <SimpleTooltip content={t('tabs.files')}>

@@ -206,8 +206,8 @@
     "scanChatList": "Importar Lista de Chats",
     "scanning": "Escaneando...",
     "sqlQuery": "Consulta SQL",
-    "hideIconBar": "Ocultar barra de ícones",
-    "showIconBar": "Mostrar barra de ícones",
+    "enterCompactMode": "Ativar modo compacto",
+    "exitCompactMode": "Sair do modo compacto",
     "settings": "Configurações"
   },
   "about": {
@@ -339,6 +339,8 @@
     "switchToOriginalUI": "Alternar para Barra Lateral Original",
     "temporaryChat": "Chat temporário",
     "toggleMenu": "Alternar menu",
+    "enterCompactMode": "Clique para ativar o modo compacto",
+    "exitCompactMode": "Clique para sair do modo compacto",
     "newChatCta": "Clique: Novo chat · Clique direito: Chat privado · Clique do meio: Novo chat em nova aba"
   },
   "newChatButton": {

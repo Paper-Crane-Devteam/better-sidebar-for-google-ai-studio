@@ -46,16 +46,23 @@ export const SidePanelMenu = ({
   const { 
     ui, 
     setIsScanning, 
-    setShowSqlInterface, 
-    setSettingsOpen, 
-    setOverlayOpen 
+    setShowSqlInterface,
+    setSettingsOpen,
+    setOverlayOpen,
+    setActiveTab,
   } = useAppStore();
   const { isScanning } = ui.overlay;
   const hasSettingsBadge = useBadgeStore((s) => s.isGroupVisible('settings.'));
-  const showIconBar = useSettingsStore((s) => s.showIconBar);
-  const setShowIconBar = useSettingsStore((s) => s.setShowIconBar);
+  const compactMode = useSettingsStore((s) => s.compactMode);
+  const setCompactMode = useSettingsStore((s) => s.setCompactMode);
 
   const handleScanLibrary = menuActions?.handleScanLibrary;
+
+  const handleToggleCompactMode = () => {
+    const nextCompactMode = !compactMode;
+    if (nextCompactMode) setActiveTab('files');
+    setCompactMode(nextCompactMode);
+  };
 
   const [open, setOpen] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -193,13 +200,13 @@ export const SidePanelMenu = ({
           </DropdownMenuItem>
         )}
 
-        <DropdownMenuItem onClick={() => setShowIconBar(!showIconBar)}>
-          {showIconBar ? (
-            <PanelLeftClose className="mr-2 h-4 w-4" />
-          ) : (
+        <DropdownMenuItem onClick={handleToggleCompactMode}>
+          {compactMode ? (
             <PanelLeftOpen className="mr-2 h-4 w-4" />
+          ) : (
+            <PanelLeftClose className="mr-2 h-4 w-4" />
           )}
-          <span>{showIconBar ? t('menu.hideIconBar') : t('menu.showIconBar')}</span>
+          <span>{compactMode ? t('menu.exitCompactMode') : t('menu.enterCompactMode')}</span>
         </DropdownMenuItem>
 
         <DropdownMenuItem onClick={() => setSettingsOpen(true)}>

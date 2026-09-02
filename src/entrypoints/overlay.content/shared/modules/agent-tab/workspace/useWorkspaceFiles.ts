@@ -155,9 +155,15 @@ export interface UseWorkspaceFilesResult {
    * to describe a path.
    */
   folders: Array<{ id: string; parent_id: string | null }>;
+  /**
+   * How many files exist, across the whole workspace and ignoring the search filter.
+   *
+   * Not for display. It decides whether the destructive actions are reachable at all, and
+   * it fills in their confirmation copy ("delete all 12 files"). A running total of files
+   * and bytes used to sit in the header; it changed on its own, prompted nothing, and was
+   * removed.
+   */
   fileCount: number;
-  /** Total bytes across every file, for the header hint. */
-  totalBytes: number;
   loading: boolean;
   error: string | null;
   reload: () => Promise<void>;
@@ -206,16 +212,10 @@ export function useWorkspaceFiles(
     [entries],
   );
 
-  const { fileCount, totalBytes } = useMemo(() => {
-    let count = 0;
-    let bytes = 0;
-    for (const entry of entries) {
-      if (entry.kind !== 'file') continue;
-      count++;
-      bytes += entry.size ?? 0;
-    }
-    return { fileCount: count, totalBytes: bytes };
-  }, [entries]);
+  const fileCount = useMemo(
+    () => entries.reduce((n, entry) => (entry.kind === 'file' ? n + 1 : n), 0),
+    [entries],
+  );
 
-  return { data, folders, fileCount, totalBytes, loading, error, reload };
+  return { data, folders, fileCount, loading, error, reload };
 }

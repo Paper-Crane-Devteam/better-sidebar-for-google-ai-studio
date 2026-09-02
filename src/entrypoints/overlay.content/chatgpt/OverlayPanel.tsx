@@ -45,7 +45,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const [, setContainer] = useState<HTMLDivElement | null>(null);
   const newChatBehavior = useSettingsStore((state) => state.newChatBehavior);
   const shortcuts = useSettingsStore((state) => state.shortcuts);
-  const showIconBar = useSettingsStore((state) => state.showIconBar);
+  const compactMode = useSettingsStore((state) => state.compactMode);
   const {
     fetchData,
     ui,
@@ -64,6 +64,10 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
     isSettingsOpen,
     showSqlInterface,
   } = ui.overlay;
+
+  useEffect(() => {
+    if (compactMode && activeTab !== 'files') setActiveTab('files');
+  }, [compactMode, activeTab, setActiveTab]);
 
   useEffect(() => {
     // Initial fetch
@@ -171,7 +175,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       {/* Sidebar Tabs */}
       <div
         className={`sidebar-nav flex flex-col items-center bg-muted/20 shrink-0 ${
-          !showIconBar ? 'hidden' : ''
+          compactMode ? 'hidden' : ''
         }`}
       >
         <SimpleTooltip content={t('tabs.files')}>

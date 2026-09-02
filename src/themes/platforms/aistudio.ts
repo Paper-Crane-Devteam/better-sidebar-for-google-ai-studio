@@ -217,6 +217,58 @@ function mapPresetToAiStudioFontVariables(preset: ThemePreset): ThemeVariable[] 
 }
 
 /**
+ * Convert any browser-supported CSS colour to the RGB channel format used by
+ * the sidebar's Tailwind tokens (for example, "31 29 46").
+ */
+function toRgbChannels(color: string): string | null {
+  const probe = document.createElement('span');
+  probe.style.color = color;
+  if (!probe.style.color) return null;
+
+  probe.style.display = 'none';
+  (document.body ?? document.documentElement).appendChild(probe);
+  const computedColor = getComputedStyle(probe).color;
+  probe.remove();
+
+  const match = computedColor.match(
+    /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i,
+  );
+  return match ? `${match[1]} ${match[2]} ${match[3]}` : null;
+}
+
+/**
+ * AI Studio's page background is its surface-container token. Unlike Gemini,
+ * a darker dedicated sidebar surface looks visually disconnected here, so the
+ * custom sidebar uses the same surface as the page body.
+ */
+function mapPresetToAiStudioSidebar(preset: ThemePreset): ThemePreset {
+  const pageSurface =
+    preset.variables.find(
+      (variable) =>
+        variable.property === '--gem-sys-color--surface-container',
+    )?.value ??
+    preset.variables.find(
+      (variable) => variable.property === '--gem-sys-color--surface',
+    )?.value;
+  const background = pageSurface ? toRgbChannels(pageSurface) : null;
+  if (!background) return preset;
+
+  const sidebarVariables = [...(preset.sidebarVariables ?? [])];
+  const backgroundIndex = sidebarVariables.findIndex(
+    (variable) => variable.property === '--background',
+  );
+  const backgroundVariable = { property: '--background', value: background };
+
+  if (backgroundIndex >= 0) {
+    sidebarVariables[backgroundIndex] = backgroundVariable;
+  } else {
+    sidebarVariables.unshift(backgroundVariable);
+  }
+
+  return { ...preset, sidebarVariables };
+}
+
+/**
  * Apply a theme preset to AI Studio page.
  */
 function applyAiStudioTheme(preset: ThemePreset): void {
@@ -337,10 +389,13 @@ export function bindAiStudioShadowRootToTheme(container: HTMLElement): () => voi
   // Ensure user themes are in registry
   refreshThemeRegistry();
 
-  // Apply current theme
+  // Apply current theme with AI Studio's page-matched sidebar surface.
   const currentThemeId = usePegasusStore.getState().customTheme;
   if (currentThemeId && themeRegistry[currentThemeId]) {
-    applySidebarTheme(container, themeRegistry[currentThemeId]);
+    applySidebarTheme(
+      container,
+      mapPresetToAiStudioSidebar(themeRegistry[currentThemeId]),
+    );
   }
 
   // Subscribe to changes
@@ -348,7 +403,10 @@ export function bindAiStudioShadowRootToTheme(container: HTMLElement): () => voi
     if (state.customTheme !== prevState.customTheme) {
       refreshThemeRegistry();
       const preset = state.customTheme ? themeRegistry[state.customTheme] : null;
-      applySidebarTheme(container, preset);
+      applySidebarTheme(
+        container,
+        preset ? mapPresetToAiStudioSidebar(preset) : null,
+      );
     }
   });
 

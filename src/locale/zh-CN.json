@@ -206,8 +206,8 @@
     "scanChatList": "导入聊天列表",
     "scanning": "扫描中...",
     "sqlQuery": "SQL 查询",
-    "hideIconBar": "隐藏图标栏",
-    "showIconBar": "显示图标栏",
+    "enterCompactMode": "进入精简模式",
+    "exitCompactMode": "退出精简模式",
     "settings": "设置"
   },
   "about": {
@@ -339,6 +339,8 @@
     "switchToOriginalUI": "切换到原始侧边栏",
     "temporaryChat": "临时对话",
     "toggleMenu": "切换菜单",
+    "enterCompactMode": "点击进入精简模式",
+    "exitCompactMode": "点击退出精简模式",
     "newChatCta": "点击：新建对话 · 右键：私密对话 · 中键：在新标签页新建对话"
   },
   "newChatButton": {

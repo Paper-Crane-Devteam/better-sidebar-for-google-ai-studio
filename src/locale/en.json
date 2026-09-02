@@ -212,8 +212,8 @@
     "scanChatList": "Import Chat List",
     "scanning": "Scanning...",
     "sqlQuery": "SQL Query",
-    "hideIconBar": "Hide Icon Bar",
-    "showIconBar": "Show Icon Bar",
+    "enterCompactMode": "Enter Compact Mode",
+    "exitCompactMode": "Exit Compact Mode",
     "settings": "Settings"
   },
   "about": {
@@ -345,6 +345,8 @@
     "switchToOriginalUI": "Switch to Original Sidebar",
     "temporaryChat": "Temporary chat",
     "toggleMenu": "Toggle Menu",
+    "enterCompactMode": "Click to enter compact mode",
+    "exitCompactMode": "Click to exit compact mode",
     "newChatCta": "Click: New chat · Right-click: Private chat · Middle-click: New chat in new tab"
   },
   "newChatButton": {
