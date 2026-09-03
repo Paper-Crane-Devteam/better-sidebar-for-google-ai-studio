@@ -36,6 +36,12 @@ import { catppuccinMocha } from './presets/catppuccin-mocha';
 import { dracula } from './presets/dracula';
 import { oceanBreeze } from './presets/ocean-breeze';
 import { midnightPurple } from './presets/midnight-purple';
+import { gruvbox } from './presets/gruvbox';
+import { everforest } from './presets/everforest';
+import { highContrast } from './presets/high-contrast';
+import { solarizedLight } from './presets/solarized-light';
+import { sakura } from './presets/sakura';
+import { graphite } from './presets/graphite';
 import { useUserThemeStore, userThemeToPreset } from './user-themes';
 
 /** Built-in theme presets (static) */
@@ -53,6 +59,12 @@ const builtinRegistry: Record<BuiltinThemePresetId, ThemePreset> = {
   dracula,
   'ocean-breeze': oceanBreeze,
   'midnight-purple': midnightPurple,
+  gruvbox,
+  everforest,
+  'high-contrast': highContrast,
+  'solarized-light': solarizedLight,
+  sakura,
+  graphite,
 };
 
 /**
@@ -89,10 +101,18 @@ export const themePresetIds: BuiltinThemePresetId[] = [
   'cyberpunk-neon',
   'paper-ink',
   'solarized',
+  // Kept next to its dark half — people who know this palette expect the pair
+  'solarized-light',
   'rose-pine',
   'tokyo-night',
   'catppuccin-mocha',
   'dracula',
   'ocean-breeze',
   'midnight-purple',
+  'gruvbox',
+  'everforest',
+  'sakura',
+  'graphite',
+  // Last: this one is picked for legibility rather than looks
+  'high-contrast',
 ];

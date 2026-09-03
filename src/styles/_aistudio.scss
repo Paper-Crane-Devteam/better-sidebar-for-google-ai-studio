@@ -150,6 +150,21 @@
 }
 
 @layer components {
+  /**
+   * The seam between the sidebar and the chat body.
+   *
+   * AI Studio keeps its left nav on the same surface as the chat body and tells
+   * the two apart with a border, so this line is the only separation there is —
+   * but it has to read as quietly as the borders AI Studio draws itself, which
+   * sit one step softer than the sidebar's internal `--border`. Custom themes
+   * supply `--sidebar-edge-border` for that; with no theme applied it falls back
+   * to `--border`, which already matches AI Studio's native nav border.
+   */
+  .theme-aistudio .sidebar-edge,
+  :host(.theme-aistudio) .sidebar-edge {
+    border-right: 1px solid rgb(var(--sidebar-edge-border, var(--border)));
+  }
+
   /* Custom Slider Styles */
   .theme-aistudio .ui-slider,
   :host(.theme-aistudio) .ui-slider {

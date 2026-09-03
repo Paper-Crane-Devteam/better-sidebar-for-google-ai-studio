@@ -204,7 +204,7 @@ export async function initAiStudioOverlay(mainStyles: string): Promise<void> {
   const root = ReactDOM.createRoot(rootContainer);
   root.render(
     <ShadowRootProvider container={rootContainer}>
-      <div className="h-full w-full bg-background border-r text-foreground">
+      <div className="h-full w-full bg-background sidebar-edge text-foreground">
         <OverlayPanel className="h-full" />
       </div>
     </ShadowRootProvider>

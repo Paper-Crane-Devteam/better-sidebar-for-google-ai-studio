@@ -14,7 +14,12 @@
 
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { useLicenseStore, isLicenseValid } from '@/shared/lib/license-store';
-import { themeRegistry, applySidebarTheme, refreshThemeRegistry } from '@/themes';
+import {
+  themeRegistry,
+  applySidebarTheme,
+  refreshThemeRegistry,
+  onUserThemeStoreHydrated,
+} from '@/themes';
 import {
   clearThemeFonts,
   clearThemeFontCss,
@@ -60,11 +65,19 @@ function mapPresetToAiStudioVariables(preset: ThemePreset): ThemeVariable[] {
   const surfaceVariant = get('--gem-sys-color--surface-variant', surface);
 
   add('--color-surface', surface);
-  add('--color-v3-surface', surfaceBright);
+  // --color-v3-surface is AI Studio's base page surface (the chat body), the
+  // equivalent of Gemini's --gem-sys-color--surface. It must map to `surface`,
+  // not `surfaceBright`: every other token in a preset — cards, hover states,
+  // buttons — is authored as a step *away* from `surface`, so lifting the page
+  // background to a brighter value inverts those relationships.
+  add('--color-v3-surface', surface);
   add('--color-v3-surface-container', surfaceContainer);
   add('--color-v3-surface-container-high', surfaceContainerHigh);
   add('--color-v3-surface-container-highest', surfaceContainerHighest);
-  add('--color-v3-surface-left-nav', surfaceContainerHigh);
+  // AI Studio's left nav is flat against the page and separated by a border
+  // (--color-v3-surface-left-nav-border), unlike Gemini's dedicated darker
+  // sidenav surface. Keep it on the page surface so the seam stays a border.
+  add('--color-v3-surface-left-nav', surface);
   add('--color-surface-bright', surfaceBright);
   add('--color-loading-background', surfaceContainerLow);
   add('--mat-sys-surface', surface);
@@ -99,7 +112,10 @@ function mapPresetToAiStudioVariables(preset: ThemePreset): ThemeVariable[] {
 
   add('--color-v3-outline', outlineVariant);
   add('--color-v3-outline-var', outlineLow);
-  add('--color-v3-surface-left-nav-border', outlineVariant);
+  // Natively --color-v3-surface-left-nav-border and --color-v3-outline-var are
+  // the same colour (#262626 in dark, #e2e3e4/#d7d8da80 in light), one step
+  // softer than --color-v3-outline. Keep them on the same source token.
+  add('--color-v3-surface-left-nav-border', outlineLow);
   add('--mat-sys-outline', outline);
   add('--mat-sys-outline-variant', outlineVariant);
   add('--mat-divider-color', outlineLow);
@@ -216,53 +232,153 @@ function mapPresetToAiStudioFontVariables(preset: ThemePreset): ThemeVariable[] 
   ].map((property) => ({ property, value: menuFont }));
 }
 
-/**
- * Convert any browser-supported CSS colour to the RGB channel format used by
- * the sidebar's Tailwind tokens (for example, "31 29 46").
- */
-function toRgbChannels(color: string): string | null {
-  const probe = document.createElement('span');
-  probe.style.color = color;
-  if (!probe.style.color) return null;
-
-  probe.style.display = 'none';
-  (document.body ?? document.documentElement).appendChild(probe);
-  const computedColor = getComputedStyle(probe).color;
-  probe.remove();
-
-  const match = computedColor.match(
-    /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i,
-  );
-  return match ? `${match[1]} ${match[2]} ${match[3]}` : null;
+/** A colour split into the space-separated channel form CSS variables use. */
+interface ParsedColor {
+  /** Red, green and blue as "31 29 46". */
+  rgb: string;
+  /** Alpha in the 0–1 range; 1 when the source colour was opaque. */
+  alpha: number;
 }
 
 /**
- * AI Studio's page background is its surface-container token. Unlike Gemini,
- * a darker dedicated sidebar surface looks visually disconnected here, so the
- * custom sidebar uses the same surface as the page body.
+ * Parse any browser-supported CSS colour into RGB channels plus alpha.
+ *
+ * Alpha is reported separately rather than folded into the channel string
+ * because most sidebar tokens are consumed as `rgb(var(--token) / <alpha>)` by
+ * Tailwind — an alpha baked into the variable would produce invalid CSS there.
+ * Callers that own the whole declaration can opt into it.
+ */
+function parseColor(color: string): ParsedColor | null {
+  const trimmed = color.trim();
+
+  // Fast path for the formats presets actually use, so no DOM is needed.
+  const hex = trimmed.match(/^#([\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i);
+  if (hex) {
+    const digits = hex[1];
+    const short = digits.length <= 4;
+    const channel = (i: number) =>
+      short
+        ? parseInt(digits[i] + digits[i], 16)
+        : parseInt(digits.slice(i * 2, i * 2 + 2), 16);
+    const hasAlpha = digits.length === 4 || digits.length === 8;
+    return {
+      rgb: `${channel(0)} ${channel(1)} ${channel(2)}`,
+      alpha: hasAlpha ? channel(3) / 255 : 1,
+    };
+  }
+
+  const fromRgbFunction = (value: string): ParsedColor | null => {
+    const match = value.match(
+      /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:\s*[,/]\s*([\d.]+%?))?/i,
+    );
+    if (!match) return null;
+    const rawAlpha = match[4];
+    const alpha = rawAlpha
+      ? rawAlpha.endsWith('%')
+        ? parseFloat(rawAlpha) / 100
+        : parseFloat(rawAlpha)
+      : 1;
+    return {
+      rgb: `${match[1]} ${match[2]} ${match[3]}`,
+      alpha: Number.isFinite(alpha) ? alpha : 1,
+    };
+  };
+
+  const direct = fromRgbFunction(trimmed);
+  if (direct) return direct;
+
+  // Anything else (named colours, hsl, oklch…) goes through the browser.
+  const host = document.body ?? document.documentElement;
+  if (!host) return null;
+
+  const probe = document.createElement('span');
+  probe.style.color = trimmed;
+  if (!probe.style.color) return null;
+
+  probe.style.display = 'none';
+  host.appendChild(probe);
+  const computedColor = getComputedStyle(probe).color;
+  probe.remove();
+
+  return fromRgbFunction(computedColor);
+}
+
+/** Replace a sidebar variable if the preset declares it, otherwise add it. */
+function upsertSidebarVariable(
+  variables: ThemeVariable[],
+  property: string,
+  value: string,
+): ThemeVariable[] {
+  const next = [...variables];
+  const index = next.findIndex((variable) => variable.property === property);
+  if (index >= 0) next[index] = { property, value };
+  else next.unshift({ property, value });
+  return next;
+}
+
+/**
+ * Re-seat the sidebar on AI Studio's page surface.
+ *
+ * Presets author the sidebar's `--background` to sit slightly below
+ * `--gem-sys-color--surface`, because Gemini gives its sidenav a dedicated
+ * darker surface and the sidebar is supposed to blend into it. AI Studio has no
+ * such surface: its left nav is flat against the chat body and the two are told
+ * apart by a border. Reusing the Gemini value there reads as a dark slab glued
+ * to the page, so the sidebar takes the page surface instead and leans on its
+ * edge border for separation — the same thing `_aistudio.scss` does for the
+ * unthemed default (`--background` == `--color-v3-surface`).
+ *
+ * That makes the edge border the only thing dividing the two, so it also has to
+ * be pitched right. Presets set the sidebar's `--border` to
+ * `--gem-sys-color--outline`, the strongest of the three outline steps, while
+ * the quiet lines AI Studio draws between regions — `--color-v3-outline-var` and
+ * `--color-v3-surface-left-nav-border`, both `#262626` against a `#191919` page
+ * in the native dark theme — sit two steps down at `outline-low`. At `outline`
+ * the seam reads as a hard rule next to them, so `--sidebar-edge-border` pulls
+ * it onto the same token. Only the outer edge moves: the sidebar's internal
+ * borders stay on `--border`, which the light presets need to keep cards legible
+ * against a near-identical surface.
  */
 function mapPresetToAiStudioSidebar(preset: ThemePreset): ThemePreset {
-  const pageSurface =
-    preset.variables.find(
-      (variable) =>
-        variable.property === '--gem-sys-color--surface-container',
-    )?.value ??
-    preset.variables.find(
-      (variable) => variable.property === '--gem-sys-color--surface',
-    )?.value;
-  const background = pageSurface ? toRgbChannels(pageSurface) : null;
-  if (!background) return preset;
+  const find = (property: string) =>
+    preset.variables.find((variable) => variable.property === property)?.value;
 
-  const sidebarVariables = [...(preset.sidebarVariables ?? [])];
-  const backgroundIndex = sidebarVariables.findIndex(
-    (variable) => variable.property === '--background',
-  );
-  const backgroundVariable = { property: '--background', value: background };
+  // Must stay in sync with the --color-v3-surface mapping above.
+  const pageSurface = find('--gem-sys-color--surface');
+  // Must stay in sync with --color-v3-outline-var above.
+  const navBorder =
+    find('--gem-sys-color--outline-low') ??
+    find('--gem-sys-color--outline-variant') ??
+    find('--gem-sys-color--outline');
 
-  if (backgroundIndex >= 0) {
-    sidebarVariables[backgroundIndex] = backgroundVariable;
-  } else {
-    sidebarVariables.unshift(backgroundVariable);
+  // --background is read through Tailwind's `rgb(var(--background) / <alpha>)`,
+  // so it can only carry channels. The edge border owns its whole declaration,
+  // so it can keep the alpha.
+  const background = (pageSurface ? parseColor(pageSurface) : null)?.rgb ?? null;
+  // cupertino-glass writes its outlines as translucent black, and the light
+  // native token is #d7d8da80, so alpha has to survive the conversion here.
+  const parsedNavBorder = navBorder ? parseColor(navBorder) : null;
+  const edgeBorder = parsedNavBorder
+    ? parsedNavBorder.alpha < 1
+      ? `${parsedNavBorder.rgb} / ${parsedNavBorder.alpha}`
+      : parsedNavBorder.rgb
+    : null;
+  if (!background && !edgeBorder) return preset;
+
+  let sidebarVariables = preset.sidebarVariables ?? [];
+  if (background) {
+    sidebarVariables = upsertSidebarVariable(
+      sidebarVariables,
+      '--background',
+      background,
+    );
+  }
+  if (edgeBorder) {
+    sidebarVariables = upsertSidebarVariable(
+      sidebarVariables,
+      '--sidebar-edge-border',
+      edgeBorder,
+    );
   }
 
   return { ...preset, sidebarVariables };
@@ -332,7 +448,9 @@ function removeAiStudioTheme(options?: { keepFonts?: boolean }): void {
  */
 function applyAiStudioPreset(preset: ThemePreset): void {
   applyAiStudioTheme(preset);
-  TooltipHelper.getInstance().setCustomThemeVariables(preset.sidebarVariables ?? null);
+  TooltipHelper.getInstance().setCustomThemeVariables(
+    mapPresetToAiStudioSidebar(preset).sidebarVariables ?? null,
+  );
   syncAiStudioTheme(preset.preferredMode);
   void applyThemeFontCss(preset, mapPresetToAiStudioFontVariables(preset));
 }
@@ -396,6 +514,15 @@ export function bindAiStudioShadowRootToTheme(container: HTMLElement): () => voi
       container,
       mapPresetToAiStudioSidebar(themeRegistry[currentThemeId]),
     );
+  } else if (currentThemeId && !themeRegistry[currentThemeId]) {
+    // Theme ID is set but the user theme store has not hydrated yet.
+    onUserThemeStoreHydrated(() => {
+      refreshThemeRegistry();
+      const id = usePegasusStore.getState().customTheme;
+      if (id && themeRegistry[id]) {
+        applySidebarTheme(container, mapPresetToAiStudioSidebar(themeRegistry[id]));
+      }
+    });
   }
 
   // Subscribe to changes

@@ -43,6 +43,7 @@ const SIDEBAR_VARIABLE_PROPS = [
   '--secondary', '--secondary-foreground', '--muted', '--muted-foreground',
   '--accent', '--accent-foreground', '--destructive', '--destructive-foreground',
   '--border', '--input', '--ring', '--sidebar-icon-color', '--font-sans',
+  '--sidebar-edge-border',
   '--gem-sys-color--primary-container', '--gem-sys-color--on-primary-container',
   '--radius', '--popover-blur', '--popover-bg',
   '--panel-blur', '--panel-bg', '--overlay-bg', '--overlay-blur',

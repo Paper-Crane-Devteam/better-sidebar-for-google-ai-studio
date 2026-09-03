@@ -133,6 +133,42 @@ const themePreviewColors: Record<
     accent: '#8b5cf6',
     secondary: '#6366f1',
   },
+  gruvbox: {
+    bg: '#282828',
+    fg: '#ebdbb2',
+    accent: '#fabd2f',
+    secondary: '#fe8019',
+  },
+  everforest: {
+    bg: '#2d353b',
+    fg: '#d3c6aa',
+    accent: '#a7c080',
+    secondary: '#e69875',
+  },
+  'high-contrast': {
+    bg: '#000000',
+    fg: '#ffffff',
+    accent: '#ffd400',
+    secondary: '#00e5ff',
+  },
+  'solarized-light': {
+    bg: '#fdf6e3',
+    fg: '#586e75',
+    accent: '#268bd2',
+    secondary: '#cb4b16',
+  },
+  sakura: {
+    bg: '#fff7f8',
+    fg: '#4a3b40',
+    accent: '#c04f72',
+    secondary: '#7d9a76',
+  },
+  graphite: {
+    bg: '#fafafa',
+    fg: '#171717',
+    accent: '#262626',
+    secondary: '#8c8c8c',
+  },
 };
 
 /** Map theme preset ID to i18n keys */
@@ -188,6 +224,30 @@ const themeI18nKeys: Record<BuiltinThemePresetId, { name: string; description: s
   'midnight-purple': {
     name: 'themeSettings.midnightPurpleName',
     description: 'themeSettings.midnightPurpleDescription',
+  },
+  gruvbox: {
+    name: 'themeSettings.gruvboxName',
+    description: 'themeSettings.gruvboxDescription',
+  },
+  everforest: {
+    name: 'themeSettings.everforestName',
+    description: 'themeSettings.everforestDescription',
+  },
+  'high-contrast': {
+    name: 'themeSettings.highContrastName',
+    description: 'themeSettings.highContrastDescription',
+  },
+  'solarized-light': {
+    name: 'themeSettings.solarizedLightName',
+    description: 'themeSettings.solarizedLightDescription',
+  },
+  sakura: {
+    name: 'themeSettings.sakuraName',
+    description: 'themeSettings.sakuraDescription',
+  },
+  graphite: {
+    name: 'themeSettings.graphiteName',
+    description: 'themeSettings.graphiteDescription',
   },
 };
 
