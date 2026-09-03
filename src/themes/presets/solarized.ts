@@ -17,6 +17,7 @@ export const solarized: ThemePreset = {
   isPremium: true,
   preferredMode: 'dark',
   fonts: ['Inconsolata:wght@300;400;500;600;700'],
+  fontMono: `'Inconsolata', 'SF Mono', Menlo, monospace`,
   fontCss: `
 /* Monospace font override with Inconsolata */
 body.bs-fonts--solarized {

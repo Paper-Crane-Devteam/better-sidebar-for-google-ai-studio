@@ -26,12 +26,12 @@ const THEME_FONT_CSS_ID = 'better-sidebar-custom-theme-fonts-css';
 const FONT_CLASS_PREFIX = 'bs-fonts--';
 
 /**
- * Sidebar font variable. Written in the typography step rather than with the
+ * Sidebar font variables. Written in the typography step rather than with the
  * rest of the sidebar variables, so the sidebar and the page change typeface in
- * the same frame. It cannot be inherited from body: the sidebar's own
- * stylesheet declares --font-sans on its root container, which wins.
+ * the same frame. They cannot be inherited from body: the sidebar's own
+ * stylesheet declares these on its root container, which wins.
  */
-const DEFERRED_SIDEBAR_FONT_PROP = '--font-sans';
+const DEFERRED_SIDEBAR_FONT_PROPS = ['--font-sans', '--font-mono'] as const;
 
 let currentThemeId: string | null = null;
 let currentFontThemeId: string | null = null;
@@ -43,7 +43,7 @@ const SIDEBAR_VARIABLE_PROPS = [
   '--secondary', '--secondary-foreground', '--muted', '--muted-foreground',
   '--accent', '--accent-foreground', '--destructive', '--destructive-foreground',
   '--border', '--input', '--ring', '--sidebar-icon-color', '--font-sans',
-  '--sidebar-edge-border',
+  '--font-mono', '--sidebar-edge-border',
   '--gem-sys-color--primary-container', '--gem-sys-color--on-primary-container',
   '--radius', '--popover-blur', '--popover-bg',
   '--panel-blur', '--panel-bg', '--overlay-bg', '--overlay-blur',
@@ -165,15 +165,15 @@ export function applySidebarTheme(
   preset: ThemePreset | null,
 ): void {
   // The sidebar typeface changes together with the page typeface, so the
-  // outgoing value is kept across the clear and handed to the deferred step.
-  const outgoingFont = container.style.getPropertyValue(
-    DEFERRED_SIDEBAR_FONT_PROP,
+  // outgoing values are kept across the clear and handed to the deferred step.
+  const outgoingFonts = DEFERRED_SIDEBAR_FONT_PROPS.map(
+    (prop) => [prop, container.style.getPropertyValue(prop)] as const,
   );
 
   // Always clear previous theme first to prevent property leaking between themes
   clearSidebarTheme(container);
-  if (outgoingFont) {
-    container.style.setProperty(DEFERRED_SIDEBAR_FONT_PROP, outgoingFont);
+  for (const [prop, value] of outgoingFonts) {
+    if (value) container.style.setProperty(prop, value);
   }
   void applyDeferredSidebarFont(container, preset);
 
@@ -183,12 +183,17 @@ export function applySidebarTheme(
 
   container.setAttribute('data-custom-theme', preset.id);
 
-  // Apply CSS variables. --font-sans is left to the deferred step for themes
-  // that carry typography rules, so the sidebar and the page switch typeface
-  // in the same frame.
+  // Apply CSS variables. The font props are left to the deferred step for
+  // themes that carry typography rules, so the sidebar and the page switch
+  // typeface in the same frame.
   if (preset.sidebarVariables) {
     for (const v of preset.sidebarVariables) {
-      if (v.property === DEFERRED_SIDEBAR_FONT_PROP && preset.fontCss) continue;
+      if (
+        preset.fontCss &&
+        (DEFERRED_SIDEBAR_FONT_PROPS as readonly string[]).includes(v.property)
+      ) {
+        continue;
+      }
       container.style.setProperty(v.property, v.value);
     }
   }
@@ -268,6 +273,66 @@ export function setTypographyGate(gate: Promise<unknown>): void {
   });
 }
 
+/** Fallback monospace stack for themes that do not name one of their own. */
+const SYSTEM_MONO_STACK =
+  "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace";
+
+/**
+ * Elements whose glyphs come out of an icon font. They have to keep it — a
+ * theme font would render the ligature name as literal text.
+ */
+const ICON_FONT_EXCLUSIONS = [
+  '.material-symbols-outlined',
+  '.material-symbols-rounded',
+  '.material-symbols-sharp',
+  '.google-symbols',
+  'mat-icon',
+  '.mat-icon',
+  '[class*="material-symbols"]',
+  '[class*="google-symbols"]',
+]
+  .map((selector) => `:not(${selector})`)
+  .join('');
+
+/** Resolve the monospace stack a theme wants for code. */
+function resolveMonoStack(preset: ThemePreset): string {
+  return (
+    preset.fontMono ??
+    preset.sidebarVariables?.find((v) => v.property === '--font-mono')?.value ??
+    SYSTEM_MONO_STACK
+  );
+}
+
+/**
+ * Pull code elements back onto a monospace face.
+ *
+ * Every theme's `fontCss` re-points the page at its body font with a broad
+ * `*:not(<icons>) { font-family: inherit }` rule. That is right for prose and
+ * wrong for code: in `pre`/`code` the monospace advance width is load-bearing,
+ * and inheriting a serif or a rounded sans breaks column alignment outright.
+ *
+ * The rule is appended here instead of being written into each preset so that
+ * imported user themes are covered too — they arrive through
+ * userThemeToPreset() carrying their own `fontCss`, and nothing would otherwise
+ * protect their code blocks. `!important` is what makes this win: the inherit
+ * rule it corrects is unprefixed, so source order alone would not settle it.
+ *
+ * Descendants of `pre`/`code` are included because Gemini wraps syntax tokens
+ * in spans that carry their own font-family; the icon exclusions are reapplied
+ * there since copy buttons and the like live inside the code block chrome.
+ */
+function buildMonoCss(preset: ThemePreset): string {
+  const scope = `body.${FONT_CLASS_PREFIX}${preset.id}`;
+  const stack = resolveMonoStack(preset);
+  return [
+    '/* Code keeps a monospace face regardless of the theme body font. */',
+    `${scope} :is(pre, code, kbd, samp),`,
+    `${scope} :is(pre, code) *${ICON_FONT_EXCLUSIONS} {`,
+    `  font-family: ${stack} !important;`,
+    '}',
+  ].join('\n');
+}
+
 /**
  * Build the full typography stylesheet: font variables (as a body rule) plus
  * the preset's own font rules. Returns null when the theme has no typography.
@@ -290,7 +355,11 @@ function buildFontCss(
     );
   }
 
-  if (preset.fontCss) blocks.push(preset.fontCss);
+  if (preset.fontCss) {
+    blocks.push(preset.fontCss);
+    // Must come after the preset's own rules — see buildMonoCss().
+    blocks.push(buildMonoCss(preset));
+  }
 
   return blocks.length > 0 ? blocks.join('\n\n') : null;
 }
@@ -340,9 +409,9 @@ export function clearThemeFontCss(): void {
 const sidebarFontGeneration = new WeakMap<HTMLElement, number>();
 
 /**
- * Set the sidebar's --font-sans once the animation is over and the fonts are
- * ready. The value cannot be inherited from body: the sidebar's own stylesheet
- * declares --font-sans on its root container, which wins over inheritance.
+ * Set the sidebar's font props once the animation is over and the fonts are
+ * ready. The values cannot be inherited from body: the sidebar's own stylesheet
+ * declares them on its root container, which wins over inheritance.
  */
 async function applyDeferredSidebarFont(
   container: HTMLElement,
@@ -351,9 +420,16 @@ async function applyDeferredSidebarFont(
   const generation = (sidebarFontGeneration.get(container) ?? 0) + 1;
   sidebarFontGeneration.set(container, generation);
 
-  const target = preset?.sidebarVariables?.find(
-    (v) => v.property === DEFERRED_SIDEBAR_FONT_PROP,
-  )?.value;
+  const targets = DEFERRED_SIDEBAR_FONT_PROPS.map((prop) => {
+    const declared = preset?.sidebarVariables?.find(
+      (v) => v.property === prop,
+    )?.value;
+    // A theme that names a monospace stack but does not spell it out as a
+    // sidebar variable still gets it applied, so page and sidebar code agree.
+    const fallback =
+      prop === '--font-mono' && preset?.fontCss ? preset.fontMono : undefined;
+    return [prop, declared ?? fallback] as const;
+  });
 
   await typographyGate;
   if (sidebarFontGeneration.get(container) !== generation) return;
@@ -365,13 +441,12 @@ async function applyDeferredSidebarFont(
   if (sidebarFontGeneration.get(container) !== generation) return; // superseded
   if (!container.isConnected) return;
 
-  const current = container.style.getPropertyValue(DEFERRED_SIDEBAR_FONT_PROP);
-  if (current === (target ?? '')) return;
+  for (const [prop, target] of targets) {
+    const current = container.style.getPropertyValue(prop);
+    if (current === (target ?? '')) continue;
 
-  if (target) {
-    container.style.setProperty(DEFERRED_SIDEBAR_FONT_PROP, target);
-  } else {
-    container.style.removeProperty(DEFERRED_SIDEBAR_FONT_PROP);
+    if (target) container.style.setProperty(prop, target);
+    else container.style.removeProperty(prop);
   }
 }
 

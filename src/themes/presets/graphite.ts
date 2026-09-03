@@ -22,6 +22,8 @@ export const graphite: ThemePreset = {
     'Pure grayscale light theme where hierarchy comes from lightness alone, not hue',
   isPremium: true,
   preferredMode: 'light',
+  // zero-chroma theme; keep the wash faint so it stays achromatic
+  lmGlow: { intensity: 0.4 },
   fonts: ['Manrope:wght@300;400;500;600;700'],
   fontCss: `
 /* Neutral grotesk */

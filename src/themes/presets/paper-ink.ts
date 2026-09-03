@@ -16,6 +16,8 @@ export const paperInk: ThemePreset = {
     'Minimal reading-focused theme with warm paper tones and elegant serif typography',
   isPremium: true,
   preferredMode: 'light',
+  // reading theme — the glow should be barely there
+  lmGlow: { intensity: 0.25, blur: '150px' },
   fonts: ['Literata:wght@300;400;500;600;700', 'Source+Serif+4:wght@300;400;600'],
   extraCss: `
 /* Paper texture — very subtle grain */

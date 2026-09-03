@@ -20,6 +20,8 @@ export const highContrast: ThemePreset = {
     'Pure black and white with a single amber accent, tuned for WCAG AAA text contrast',
   isPremium: true,
   preferredMode: 'dark',
+  // a blurred haze is the opposite of what this theme is for
+  lmGlow: 'off',
   fonts: ['Atkinson+Hyperlegible:wght@400;700'],
   extraCss: `
 /* Always-visible focus ring — the whole point of a high contrast theme */

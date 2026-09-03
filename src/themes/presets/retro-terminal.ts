@@ -16,7 +16,10 @@ export const retroTerminal: ThemePreset = {
     'CRT terminal aesthetic with neon green text and monospace typography',
   isPremium: true,
   preferredMode: 'dark',
+  // CRT phosphor bloom: tighter and hotter than Gemini's soft wash
+  lmGlow: { blur: '80px', maxHeight: '220px' },
   fonts: ['Fira+Code:wght@300;400;500;600', 'JetBrains+Mono:wght@300;400;500;600'],
+  fontMono: `'Fira Code', 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace`,
   extraCss: `
 /* Remove all rounded corners */
 body.bs-theme--retro-terminal *,

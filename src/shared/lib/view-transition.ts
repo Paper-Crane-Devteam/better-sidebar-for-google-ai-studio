@@ -18,9 +18,13 @@
  * animation window is what stops the circle from stalling halfway.
  */
 
-import { applyTheme, removeTheme, setTypographyGate, applyThemeFontCss } from '@/themes';
+import { setTypographyGate } from '@/themes';
 import { themeRegistry } from '@/themes';
-import { syncGeminiTheme, syncAiStudioTheme } from '@/shared/lib/utils/utils';
+import { applyGeminiPreset, removeGeminiPreset } from '@/themes/platforms/gemini';
+import {
+  applyAiStudioPreset,
+  removeAiStudioPreset,
+} from '@/themes/platforms/aistudio';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 
 /** ID for the injected style element on the host page */
@@ -62,41 +66,32 @@ function ensureViewTransitionStyles(): void {
 }
 
 /**
- * Immediately apply a custom theme (or revert to default) in a synchronous manner.
- * This ensures the DOM is fully updated within the View Transition callback
- * so the browser captures the correct "new" snapshot.
+ * Immediately apply a custom theme (or revert to default) in a synchronous
+ * manner, so the browser captures the correct "new" snapshot for the transition.
+ *
+ * This delegates to the platform adapters rather than driving the engine
+ * directly. It used to do the latter, calling applyTheme() with the raw preset,
+ * which had two consequences: on Gemini it dropped every derived token (the
+ * avatar orb, the composer glow, the state layers) because those are filled in
+ * by the adapter, and on AI Studio it injected Gemini's token namespace, which
+ * that page does not read at all. Both were invisible until the next reload,
+ * when the adapters ran on their own.
  */
 function applyThemeSync(
   themeId: string | null,
   lightDarkTheme: 'light' | 'dark' | 'system',
 ): void {
-  if (themeId && themeRegistry[themeId]) {
-    applyTheme(themeRegistry[themeId]);
-    const preset = themeRegistry[themeId];
-    const platform = detectPlatform();
+  const platform = detectPlatform();
+  const preset = themeId ? themeRegistry[themeId] : undefined;
 
-    // Typography lands after the animation. Requested here as well as from the
-    // store subscriber, in case the subscriber runs late; the call is idempotent.
-    void applyThemeFontCss(preset);
-
-    // Force page to theme's preferred mode synchronously
-    if (platform === Platform.GEMINI) {
-      syncGeminiTheme(preset.preferredMode);
-    } else if (platform === Platform.AI_STUDIO) {
-      syncAiStudioTheme(preset.preferredMode);
-    }
-  } else {
-    // keepFonts: typography is reverted by applyThemeFontCss(null) after the
-    // animation instead of mid-way through it.
-    removeTheme({ keepFonts: true });
-    void applyThemeFontCss(null);
-    const platform = detectPlatform();
-    if (platform === Platform.GEMINI) {
-      syncGeminiTheme(lightDarkTheme);
-    } else if (platform === Platform.AI_STUDIO) {
-      syncAiStudioTheme(lightDarkTheme);
-    }
+  if (preset) {
+    if (platform === Platform.GEMINI) applyGeminiPreset(preset);
+    else if (platform === Platform.AI_STUDIO) applyAiStudioPreset(preset);
+    return;
   }
+
+  if (platform === Platform.GEMINI) removeGeminiPreset(lightDarkTheme);
+  else if (platform === Platform.AI_STUDIO) removeAiStudioPreset(lightDarkTheme);
 }
 
 /**

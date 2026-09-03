@@ -52,6 +52,11 @@
 
     /* Font Family Defaults */
     --font-sans: 'Inter', 'Microsoft YaHei', 'PingFang SC', 'Noto Sans SC', sans-serif;
+
+    /* Code face. Themes may override via `fontMono`; see ThemePresetMeta. */
+    --font-mono:
+      ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas,
+      'Liberation Mono', monospace;
   }
 
   .dark,

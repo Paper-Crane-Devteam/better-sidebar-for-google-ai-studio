@@ -446,7 +446,7 @@ function removeAiStudioTheme(options?: { keepFonts?: boolean }): void {
  * Apply a preset to the AI Studio page: colours now, typography once the switch
  * animation is over and the webfonts have arrived.
  */
-function applyAiStudioPreset(preset: ThemePreset): void {
+export function applyAiStudioPreset(preset: ThemePreset): void {
   applyAiStudioTheme(preset);
   TooltipHelper.getInstance().setCustomThemeVariables(
     mapPresetToAiStudioSidebar(preset).sidebarVariables ?? null,
@@ -484,18 +484,28 @@ export function initAiStudioThemeSync(): () => void {
       if (state.customTheme && themeRegistry[state.customTheme]) {
         applyAiStudioPreset(themeRegistry[state.customTheme]);
       } else {
-        // keepFonts: typography is handed over to applyThemeFontCss(null) so it
-        // reverts after the animation instead of mid-way through it.
-        removeAiStudioTheme({ keepFonts: true });
-        TooltipHelper.getInstance().setCustomThemeVariables(null);
-        void applyThemeFontCss(null);
-        // Restore user's chosen theme setting
-        syncAiStudioTheme(state.theme);
+        removeAiStudioPreset(state.theme);
       }
     }
   });
 
   return unsubscribe;
+}
+
+/**
+ * Drop the custom theme from the AI Studio page. Counterpart to
+ * applyAiStudioPreset(); both are shared with the switch animation so the two
+ * code paths cannot drift apart.
+ */
+export function removeAiStudioPreset(
+  fallbackTheme: 'light' | 'dark' | 'system',
+): void {
+  // keepFonts: typography is handed over to applyThemeFontCss(null) so it
+  // reverts after the animation instead of mid-way through it.
+  removeAiStudioTheme({ keepFonts: true });
+  TooltipHelper.getInstance().setCustomThemeVariables(null);
+  void applyThemeFontCss(null);
+  syncAiStudioTheme(fallbackTheme);
 }
 
 /**

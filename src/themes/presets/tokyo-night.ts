@@ -17,6 +17,7 @@ export const tokyoNight: ThemePreset = {
   isPremium: true,
   preferredMode: 'dark',
   fonts: ['JetBrains+Mono:wght@300;400;500;600'],
+  fontMono: `'JetBrains Mono', 'SF Mono', 'Fira Code', monospace`,
   fontCss: `
 /* Tokyo Night monospace font override */
 body.bs-fonts--tokyo-night {

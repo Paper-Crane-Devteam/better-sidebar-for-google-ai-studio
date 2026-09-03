@@ -17,6 +17,7 @@ export const dracula: ThemePreset = {
   isPremium: true,
   preferredMode: 'dark',
   fonts: ['Fira+Code:wght@300;400;500;600'],
+  fontMono: `'Fira Code', 'JetBrains Mono', 'SF Mono', monospace`,
   fontCss: `
 /* Dracula monospace font override */
 body.bs-fonts--dracula {

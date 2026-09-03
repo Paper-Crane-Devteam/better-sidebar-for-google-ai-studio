@@ -61,6 +61,11 @@
     /* ChatGPT Font */
     --font-sans:
       'Söhne', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+
+    /* Code face. Themes may override via `fontMono`; see ThemePresetMeta. */
+    --font-mono:
+      ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas,
+      'Liberation Mono', monospace;
   }
 
   .theme-chatgpt.dark,

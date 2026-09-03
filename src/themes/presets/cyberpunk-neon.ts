@@ -16,6 +16,8 @@ export const cyberpunkNeon: ThemePreset = {
     'Futuristic neon aesthetic with magenta and electric blue on deep black',
   isPremium: true,
   preferredMode: 'dark',
+  // neon signage wants a denser halo
+  lmGlow: { blur: '95px' },
   fonts: ['Space+Grotesk:wght@300;400;500;600;700', 'Orbitron:wght@400;500;600;700'],
   extraCss: `
 /* Neon glow on primary text and links */

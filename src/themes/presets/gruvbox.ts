@@ -18,6 +18,7 @@ export const gruvbox: ThemePreset = {
   isPremium: true,
   preferredMode: 'dark',
   fonts: ['IBM+Plex+Mono:wght@300;400;500;600'],
+  fontMono: `'IBM Plex Mono', 'SF Mono', 'JetBrains Mono', monospace`,
   fontCss: `
 /* Gruvbox monospace font override */
 body.bs-fonts--gruvbox {

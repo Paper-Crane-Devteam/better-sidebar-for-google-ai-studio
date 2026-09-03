@@ -22,6 +22,8 @@ export interface UserTheme {
   extraCss?: string;
   /** Typography rules, keyed on `body.bs-fonts--<id>` — see ThemePreset.fontCss */
   fontCss?: string;
+  /** Monospace stack for code — see ThemePresetMeta.fontMono */
+  fontMono?: string;
   /** Font-related CSS variables — see ThemePreset.fontVariables */
   fontVariables?: ThemeVariable[];
   variables: ThemeVariable[];
@@ -77,6 +79,7 @@ const ALLOWED_VARIABLE_PREFIXES = [
   '--radius',
   '--sidebar-icon-color',
   '--font-sans',
+  '--font-mono',
   '--overlay-',
   '--panel-',
   '--popover-',
@@ -205,6 +208,10 @@ export function validateUserTheme(input: unknown): ValidationResult {
     errors.push('"fontCss" must be a string if provided');
   }
 
+  if (obj.fontMono !== undefined && typeof obj.fontMono !== 'string') {
+    errors.push('"fontMono" must be a string if provided');
+  }
+
   if (obj.fontVariables !== undefined) {
     if (!Array.isArray(obj.fontVariables)) {
       errors.push('"fontVariables" must be an array if provided');
@@ -246,6 +253,11 @@ export function validateUserTheme(input: unknown): ValidationResult {
       : undefined,
     fontCss: typeof obj.fontCss === 'string'
       ? sanitizeExtraCss(obj.fontCss)
+      : undefined,
+    // A font stack goes straight into a declaration, so strip anything that
+    // could close it and start a new one.
+    fontMono: typeof obj.fontMono === 'string'
+      ? obj.fontMono.replace(/[;{}]/g, '').trim() || undefined
       : undefined,
     fontVariables: Array.isArray(obj.fontVariables)
       ? (obj.fontVariables as Array<{ property: string; value: string }>).map((v) => ({

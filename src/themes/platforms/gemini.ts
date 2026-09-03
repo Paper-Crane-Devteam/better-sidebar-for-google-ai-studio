@@ -14,14 +14,25 @@ import { useLicenseStore, isLicenseValid } from '@/shared/lib/license-store';
 import { themeRegistry, applyTheme, removeTheme, applySidebarTheme, refreshThemeRegistry, onUserThemeStoreHydrated, applyThemeFontCss } from '@/themes';
 import { TooltipHelper } from '@/shared/lib/tooltip-helper';
 import { syncGeminiTheme } from '@/shared/lib/utils/utils';
+import { withGeminiDerivedTokens } from './gemini-derived';
 import type { ThemePreset } from '../types';
 
 /**
  * Apply a preset to the Gemini page: colours now, typography once the switch
  * animation is over and the webfonts have arrived.
+ *
+ * Tokens presets do not declare — the avatar orb, the wordmark gradient, the
+ * skeleton shimmer, and ~70 interaction state layers — are derived from the
+ * palette they do declare. See gemini-derived.ts.
+ *
+ * Exported because the theme-switch animation has to apply the theme
+ * synchronously inside its own callback (see startViewTransition). That used to
+ * be a second, hand-rolled copy of these four steps, which silently dropped the
+ * derived tokens on every switch until the next page load. One entry point is
+ * what keeps the two paths from drifting again.
  */
-function applyGeminiPreset(preset: ThemePreset): void {
-  applyTheme(preset);
+export function applyGeminiPreset(preset: ThemePreset): void {
+  applyTheme(withGeminiDerivedTokens(preset));
   TooltipHelper.getInstance().setCustomThemeVariables(preset.sidebarVariables ?? null);
   syncGeminiTheme(preset.preferredMode);
   void applyThemeFontCss(preset);
@@ -67,18 +78,28 @@ export function initGeminiThemeSync(): () => void {
       if (state.customTheme && themeRegistry[state.customTheme]) {
         applyGeminiPreset(themeRegistry[state.customTheme]);
       } else {
-        // keepFonts: typography is handed over to applyThemeFontCss(null) so it
-        // reverts after the animation instead of mid-way through it.
-        removeTheme({ keepFonts: true });
-        TooltipHelper.getInstance().setCustomThemeVariables(null);
-        void applyThemeFontCss(null);
-        // Restore user's chosen theme setting
-        syncGeminiTheme(state.theme);
+        removeGeminiPreset(state.theme);
       }
     }
   });
 
   return unsubscribe;
+}
+
+/**
+ * Drop the custom theme from the Gemini page and hand the page back to the
+ * user's own light/dark choice. Counterpart to applyGeminiPreset(), and shared
+ * with the switch animation for the same reason.
+ */
+export function removeGeminiPreset(
+  fallbackTheme: 'light' | 'dark' | 'system',
+): void {
+  // keepFonts: typography is handed over to applyThemeFontCss(null) so it
+  // reverts after the animation instead of mid-way through it.
+  removeTheme({ keepFonts: true });
+  TooltipHelper.getInstance().setCustomThemeVariables(null);
+  void applyThemeFontCss(null);
+  syncGeminiTheme(fallbackTheme);
 }
 
 /**
