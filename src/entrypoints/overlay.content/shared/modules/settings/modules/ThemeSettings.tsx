@@ -9,7 +9,6 @@ import { useLicenseStore, isLicenseValid } from '@/shared/lib/license-store';
 import { openPurchasePage } from '@/shared/lib/license-links';
 import { useTheme } from '../hooks/useTheme';
 import { useI18n } from '@/shared/hooks/useI18n';
-import { detectPlatform, Platform } from '@/shared/types/platform';
 import { useModalStore } from '@/shared/lib/modal';
 import { useAppStore } from '@/shared/lib/store';
 import { toast } from '@/shared/lib/toast';
@@ -255,15 +254,11 @@ export const ThemeSettings = () => {
   const { t } = useI18n();
   const { theme, setTheme } = useTheme();
   const { customTheme, setCustomTheme } = usePegasusStore();
-  const { geminiStyle, setGeminiStyle } = useSettingsStore();
   const licenseState = useLicenseStore();
   const hasLicense = isLicenseValid(licenseState);
   const userThemes = useUserThemeStore((s) => s.themes);
 
-  const platform = detectPlatform();
-  const isGemini = platform === Platform.GEMINI;
-  const isDefaultTheme = customTheme === null && geminiStyle === 'default';
-  const isClassicTheme = customTheme === null && geminiStyle === 'classic';
+  const isDefaultTheme = customTheme === null;
 
   // Preview timer — resets to default after expiry for unlicensed premium themes
   const { isPreviewActive, previewThemeId, startPreview, endPreview } = licenseState;
@@ -272,8 +267,7 @@ export const ThemeSettings = () => {
     clearModulePreviewTimer();
     endPreview();
     setCustomTheme(null);
-    setGeminiStyle('default');
-  }, [endPreview, setCustomTheme, setGeminiStyle]);
+  }, [endPreview, setCustomTheme]);
 
   const handleThemeClick = (themeId: ThemePresetId, event: React.MouseEvent) => {
     const preset = themeRegistry[themeId];
@@ -281,7 +275,6 @@ export const ThemeSettings = () => {
     startViewTransition(event, () => {
       if (preset.isPremium && !hasLicense) {
         setCustomTheme(themeId);
-        setGeminiStyle('default');
         startPreview(themeId);
         startModulePreviewTimer(handlePreviewExpired);
       } else {
@@ -290,7 +283,6 @@ export const ThemeSettings = () => {
           endPreview();
         }
         setCustomTheme(themeId);
-        setGeminiStyle('default');
       }
     }, themeId, theme);
   };
@@ -302,18 +294,6 @@ export const ThemeSettings = () => {
         endPreview();
       }
       setCustomTheme(null);
-      setGeminiStyle('default');
-    }, null, theme);
-  };
-
-  const handleClassicClick = (event: React.MouseEvent) => {
-    startViewTransition(event, () => {
-      if (isPreviewActive) {
-        clearModulePreviewTimer();
-        endPreview();
-      }
-      setCustomTheme(null);
-      setGeminiStyle('classic');
     }, null, theme);
   };
 
@@ -362,10 +342,9 @@ export const ThemeSettings = () => {
     // If the deleted theme was active, revert to default
     if (usePegasusStore.getState().customTheme === themeId) {
       setCustomTheme(null);
-      setGeminiStyle('default');
     }
     toast.success(t('themeSettings.themeDeleted'));
-  }, [setCustomTheme, setGeminiStyle, t]);
+  }, [setCustomTheme, t]);
 
   return (
     <div className="space-y-6">
@@ -378,8 +357,8 @@ export const ThemeSettings = () => {
         <Separator />
       </div>
 
-      {/* Light/Dark/System Toggle — always visible when using default/classic */}
-      {(isDefaultTheme || isClassicTheme) && (
+      {/* Light/Dark/System Toggle — visible when using the default theme */}
+      {isDefaultTheme && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
@@ -436,14 +415,11 @@ export const ThemeSettings = () => {
         t={t}
         customTheme={customTheme}
         isDefaultTheme={isDefaultTheme}
-        isClassicTheme={isClassicTheme}
-        isGemini={isGemini}
         isPreviewActive={isPreviewActive}
         previewThemeId={previewThemeId}
         hasLicense={hasLicense}
         userThemes={userThemes}
         handleDefaultClick={handleDefaultClick}
-        handleClassicClick={handleClassicClick}
         handleThemeClick={handleThemeClick}
         handleDeleteUserTheme={handleDeleteUserTheme}
       />
@@ -513,28 +489,22 @@ function PaginatedThemeGrid({
   t,
   customTheme,
   isDefaultTheme,
-  isClassicTheme,
-  isGemini,
   isPreviewActive,
   previewThemeId,
   hasLicense,
   userThemes,
   handleDefaultClick,
-  handleClassicClick,
   handleThemeClick,
   handleDeleteUserTheme,
 }: {
   t: (key: string) => string;
   customTheme: string | null;
   isDefaultTheme: boolean;
-  isClassicTheme: boolean;
-  isGemini: boolean;
   isPreviewActive: boolean;
   previewThemeId: string | null;
   hasLicense: boolean;
   userThemes: Array<{ id: string; name: string; description: string; variables: Array<{ property: string; value: string }> }>;
   handleDefaultClick: (event: React.MouseEvent) => void;
-  handleClassicClick: (event: React.MouseEvent) => void;
   handleThemeClick: (id: string, event: React.MouseEvent) => void;
   handleDeleteUserTheme: (id: string) => void;
 }) {
@@ -565,18 +535,6 @@ function PaginatedThemeGrid({
       isActive: isDefaultTheme,
       onClick: (e) => handleDefaultClick(e),
     });
-
-    // Classic (Gemini only)
-    if (isGemini) {
-      cards.push({
-        key: '__classic__',
-        name: t('themeSettings.classic'),
-        description: t('themeSettings.classicDescription'),
-        colors: { bg: '#e9eef6', fg: '#1f1f1f', accent: '#0b57d0', secondary: '#d97706' },
-        isActive: isClassicTheme,
-        onClick: (e) => handleClassicClick(e),
-      });
-    }
 
     // Built-in presets
     for (const id of themePresetIds) {
@@ -618,7 +576,7 @@ function PaginatedThemeGrid({
     }
 
     return cards;
-  }, [t, customTheme, isDefaultTheme, isClassicTheme, isGemini, isPreviewActive, previewThemeId, hasLicense, userThemes, handleDefaultClick, handleClassicClick, handleThemeClick, handleDeleteUserTheme]);
+  }, [t, customTheme, isDefaultTheme, isPreviewActive, previewThemeId, hasLicense, userThemes, handleDefaultClick, handleThemeClick, handleDeleteUserTheme]);
 
   const totalPages = Math.ceil(allCards.length / THEMES_PER_PAGE);
   const pagedCards = allCards.slice(

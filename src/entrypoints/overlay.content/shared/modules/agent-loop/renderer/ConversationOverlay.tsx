@@ -21,7 +21,6 @@ import mainStyles from '@/index.scss?inline';
 import { applyShadowStyles } from '@/shared/lib/utils';
 import { bindShadowRootToTheme, bindAiStudioShadowRootToTheme } from '@/themes';
 import { usePegasusStore } from '@/shared/lib/pegasus-store';
-import { useSettingsStore } from '@/shared/lib/settings-store';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 
@@ -83,10 +82,7 @@ export const ConversationOverlay: React.FC = () => {
           shadowBody.classList.add('theme-aistudio');
           bindAiStudioShadowRootToTheme(shadowBody);
         } else {
-          const style = useSettingsStore.getState().geminiStyle;
-          shadowBody.classList.add(
-            style === 'classic' ? 'theme-gemini-classic' : 'theme-gemini',
-          );
+          shadowBody.classList.add('theme-gemini');
           bindShadowRootToTheme(shadowBody);
         }
 

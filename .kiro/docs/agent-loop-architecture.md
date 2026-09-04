@@ -9,7 +9,7 @@
 | 位置 | 角色 | 内容 |
 |------|------|------|
 | 设置 → Agent | 装备库 | Skills CRUD、MCP 开关（低频、跨会话） |
-| Agent Tab（侧边栏） | 起点 | **只有**「怎么开始一个任务」：技能卡 + 自由描述 |
+| Agent Tab（侧边栏） | 教学 | **只有**「怎么开始一个任务」：三步说明 + 范例句 + 工作区/设置入口 |
 | Agent Dock（贴输入框） | 决策 | 状态一行 + Stop、批准、继续、check-in、中断、结束卡 |
 | 聊天流内（renderer） | 内容 | 工具卡片、结果详情、Agent 定制视图 |
 
@@ -19,7 +19,12 @@
 于是所有决策都藏在两个前提后面：侧边栏是开的 **且** 停在 Agent tab 上。侧边栏一关，
 批准请求压根没有可见的出口，引擎就在后台永远挂着等一个用户看不见的按钮。
 
-Tab 唯一对运行中的让步是**启动器变灰**：`start()` 会清空 store，再点一张技能卡等于
+⚠️ **Tab 里没有输入框。** 唯一入口是聊天输入框打 `>`；Tab 只负责把这件事说清楚，
+并给出足够细的范例句。以前 Tab 自带 textarea + 技能卡，等于同一个动作有两个入口，
+侧边栏那个还得自己实现转发、清空和各种失败提示。范例句点击后只是**填进**输入框
+（不自动发送），入口依旧只有一个。
+
+Tab 唯一对运行中的让步是**范例变灰**：`start()` 会清空 store，运行中再填一条等于
 把正在跑的会话无声顶掉。以前靠「整个面板被状态面板替换」挡住了，现在必须显式拒绝。
 
 ```
@@ -80,9 +85,12 @@ src/entrypoints/overlay.content/shared/
 │   │   ├── mcp/                   # MCP registry + providers（工具真正的注册处）
 │   │   └── tools/                 # execute-sql / export / sync / complete-task
 │   ├── agent-tab/                 # 侧边栏 Agent Tab —— 只有启动器，永不变样
-│   │   ├── AgentTab.tsx           # 就是 <AgentLauncher />
+│   │   ├── AgentTab.tsx           # <AgentLauncher /> ⇆ <WorkspaceView />
 │   │   └── components/
-│   │       └── AgentLauncher.tsx          # 技能卡 + 自由描述任务（运行中变灰）
+│   │       ├── AgentLauncher.tsx          # 布局 + 工作区/设置入口 + 不可用提示
+│   │       ├── LauncherCta.tsx            # 「输入框打 > 」三步图示（唯一入口）
+│   │       ├── LauncherExamples.tsx       # 范例句轮播（7s 自动轮换，hover 暂停+出箭头）
+│   │       └── agent-examples.ts          # 范例句数据：每个模块一条，故意写得很细
 │   ├── agent-dock/                # ★ 贴在输入框右上角的决策浮层（页面级）
 │   │   ├── AgentDock.tsx          # 可见性 / 自动展开 / 会话与对话绑定
 │   │   ├── useComposerAnchor.ts   # 轮询输入框 rect（Angular 会换掉节点）
@@ -126,12 +134,13 @@ src/entrypoints/overlay.content/gemini/OverlayPanel.tsx   # 渲染 <AgentTab />
 ## 核心执行流程
 
 ```
-两个启动入口：
+唯一启动入口是聊天输入框：
   A. 用户输入 ">" → useAgentTrigger → AgentCommandPopup → 选择条目
-  B. Agent Tab 点技能卡 → emit('launcher:run-entry') → AgentLoopFeature 监听
+  B. Agent Tab 点范例句 → emit('launcher:run-entry', { autoSend: false })
+     → AgentLoopFeature 监听 → 只是替用户把 capsule + 句子填进同一个输入框
        ↓
 capsule 写入编辑器（insertCapsuleAtRange 或 appendCapsule）
-       ↓ 用户按 Enter / 点发送按钮（入口 B 可 autoSend）
+       ↓ 用户按 Enter / 点发送按钮（autoSend 目前只有恢复流程用）
 composeAndSend():
   读 capsule 的 data-prompt-id → getAgentEntryById()
   assembleFinalPrompt(soul + skill + tool schemas) → adapter.triggerSend()
@@ -1195,7 +1204,9 @@ Prompt 里的工具文档由 `mcp/schema-generator.ts` 自动生成，不用手�
 ### 新增一个内置 Skill
 
 1. 在 `skills/builtin-skills.ts` 追加一条 `Skill`
-2. 自动出现在 `>` 弹窗、Agent Tab 启动器卡片、设置里的 Skills 列表
+2. 自动出现在 `>` 弹窗和设置里的 Skills 列表（Agent Tab 不再列技能卡）
+3. 顺手在 `agent-tab/components/agent-examples.ts` 加一条范例句 —— Tab 靠范例句
+   而不是技能列表告诉用户「这个模块能干什么」，新技能不写范例等于没人知道
 
 ### 新增一个启动入口
 

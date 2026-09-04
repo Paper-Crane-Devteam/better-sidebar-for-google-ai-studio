@@ -3,8 +3,6 @@ import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { detectPlatform, Platform } from '../types/platform';
 
 interface SettingsState {
-  /** Gemini sidebar base style: 'default' (v2) or 'classic' (pre-v2 blue-tinted) */
-  geminiStyle: 'default' | 'classic';
   /**
    * Compact mode keeps only the Library content and its overflow menu visible.
    * The left tab bar and secondary Library header actions are hidden.
@@ -61,7 +59,6 @@ interface SettingsState {
   themeGridPage: number;
 
   // Actions
-  setGeminiStyle: (style: 'default' | 'classic') => void;
   setCompactMode: (enabled: boolean) => void;
   setNewChatBehavior: (behavior: 'current-tab' | 'new-tab') => void;
   setAutoScanLibrary: (enabled: boolean) => void;
@@ -132,7 +129,6 @@ const getStorageName = () => {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      geminiStyle: 'default',
       compactMode: false,
       newChatBehavior: 'current-tab',
       autoScanLibrary: false,
@@ -174,9 +170,6 @@ export const useSettingsStore = create<SettingsState>()(
       outlineHeight: 200,
       themeGridPage: 0,
 
-      setGeminiStyle: (style) => {
-        set({ geminiStyle: style });
-      },
       setCompactMode: (compactMode) => set({ compactMode }),
       setNewChatBehavior: (newChatBehavior) => set({ newChatBehavior }),
       setAutoScanLibrary: (autoScanLibrary) => set({ autoScanLibrary }),
@@ -211,7 +204,7 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: getStorageName(),
       storage: createJSONStorage(() => storage),
-      version: 7,
+      version: 8,
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { themeGridPage, ...rest } = state;
@@ -244,6 +237,10 @@ export const useSettingsStore = create<SettingsState>()(
           // hidden state, then remove the retired setting.
           persistedState.compactMode = persistedState.showIconBar === false;
           delete persistedState.showIconBar;
+        }
+        if (version < 8) {
+          // Gemini Classic was removed; strip its retired persisted selector.
+          delete persistedState.geminiStyle;
         }
         return persistedState;
       },

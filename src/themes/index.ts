@@ -92,27 +92,37 @@ export function refreshThemeRegistry(): void {
   }
 }
 
-/** Ordered list of built-in theme preset IDs for UI rendering */
+/**
+ * Ordered list for the theme picker: polished, broadly useful themes first;
+ * stronger or more specialized aesthetics last.
+ */
 export const themePresetIds: BuiltinThemePresetId[] = [
+  // First page (after Default): immediately attractive and easy to use daily
   'cupertino-glass',
-  'grimoire',
-  'retro-terminal',
-  'nord-aurora',
-  'cyberpunk-neon',
-  'paper-ink',
-  'solarized',
-  // Kept next to its dark half — people who know this palette expect the pair
-  'solarized-light',
-  'rose-pine',
   'tokyo-night',
-  'catppuccin-mocha',
-  'dracula',
   'ocean-breeze',
+
+  // Versatile dark themes
+  'catppuccin-mocha',
+  'nord-aurora',
+  'rose-pine',
   'midnight-purple',
-  'gruvbox',
   'everforest',
+  'dracula',
+
+  // Focused, practical light themes
+  'paper-ink',
   'sakura',
   'graphite',
-  // Last: this one is picked for legibility rather than looks
+
+  // Established developer palettes; keep the Solarized pair together
+  'solarized',
+  'solarized-light',
+  'gruvbox',
+
+  // Strongly stylized or accessibility-specific themes
+  'cyberpunk-neon',
+  'grimoire',
+  'retro-terminal',
   'high-contrast',
 ];

@@ -959,8 +959,6 @@
     "customThemesDescription": "Aplica un tema visual personalizado a la interfaz de Gemini. Estos temas anulan el esquema de colores predeterminado.",
     "default": "Predeterminado",
     "defaultDescription": "Tema predeterminado con soporte para modo claro/oscuro",
-    "classic": "Gemini Clásico",
-    "classicDescription": "Aspecto clásico de Gemini con superficies azuladas",
     "cupertinoGlassName": "Cupertino Glass",
     "cupertinoGlassDescription": "Estética de vidrio esmerilado con fuentes del sistema y paleta de colores mínima",
     "grimoireName": "The Grimoire",
@@ -1125,19 +1123,60 @@
     "launcher": {
       "title": "Agente",
       "subtitle": "Trabaja junto a la IA para gestionar tus chats, prompts y datos.",
-      "placeholder": "Describe lo que quieres conseguir...",
-      "run": "Ejecutar",
-      "skills": "O empieza con una habilidad",
-      "stageHint": "Opcional: describe tu tarea y el agente elegirá la habilidad adecuada por su cuenta. Si eliges una aquí, se añade al campo del chat para que puedas dar más detalles antes de enviarlo.",
+      "about": "Sobre el agente",
       "noEditor": "Abre primero un chat: el agente funciona a través del campo de entrada.",
       "composerBusy": "La tarea en marcha tiene resultados esperando en el campo del chat. Envíalos primero y vuelve a intentarlo.",
       "sessionBusy": "Ya hay una tarea en marcha. Termínala o detenla antes de empezar otra.",
       "stopRunning": "Detener la tarea en marcha",
       "safety": "Solo se toca tu base de datos local. Los cambios se confirman antes de ejecutarse.",
       "freeTier": "El plan gratuito es de solo lectura. Mejora tu plan para que el agente pueda hacer cambios.",
-      "manage": "Gestionar habilidades y herramientas",
-      "newChatHint": "Se ejecuta en el chat que tienes abierto. Abre uno nuevo para mantenerlo limpio.",
-      "triggerHint": "Escribir > en el campo del chat también inicia el agente desde ahí."
+      "manage": "Habilidades y herramientas",
+      "stepsTitle": "Cómo usarlo",
+      "step1": "Abre cualquier chat.",
+      "step2": "Escribe > en el cuadro de entrada y selecciona el Agente.",
+      "step3": "Escribe lo que necesites y pulsa Intro para enviarlo.",
+      "examplesTitle": "Prueba a pedirle esto",
+      "examplesHint": "Haz clic para insertarlo en el cuadro de entrada; puedes editarlo antes de enviar. Cuanto más específico seas, mejores serán los resultados.",
+      "examplesHintLabel": "Cómo usar estos ejemplos",
+      "examplePick": "Insertar en el chat",
+      "workspaceHint": "Espacio de trabajo del Agente para leer y guardar archivos",
+      "manageHint": "Configurar los permisos y confirmaciones del Agente",
+      "examplePrev": "Anterior",
+      "exampleNext": "Siguiente",
+      "examples": {
+        "classify": {
+          "label": "Organizar historial",
+          "text": "Organiza mis chats sin clasificar: agrúpalos por tema y muéstrame primero tu propuesta. Si las carpetas actuales no sirven, crea nuevas y muévelos ahí. Por último, etiqueta cada chat según su contenido intentando reutilizar las etiquetas que ya tengo para no duplicarlas."
+        },
+        "search": {
+          "label": "Búsqueda profunda",
+          "text": "Encuentra todo lo que mencione «despliegue en Docker». Busca a fondo en chats, mensajes y fragmentos de código, no solo en los títulos. Ordénalo del más reciente al más antiguo, dando un resumen de una línea de cada uno e indicando en qué carpeta están."
+        },
+        "export": {
+          "label": "Exportar y archivar",
+          "text": "Exporta todos los chats de mi carpeta «Trabajo» desde marzo a formato Markdown, un archivo por chat, y comprímelos en un zip. Si algún chat aún no tiene sus mensajes sincronizados, dímelo antes de empezar a exportar."
+        },
+        "sync": {
+          "label": "Sincronizar mensajes",
+          "text": "Comprueba cuántos chats tienen solo el título pero ningún mensaje guardado. Dame primero el número total, ordenados por los más recientes, y luego sincroniza los últimos 20 para que aparezcan en las búsquedas y exportaciones."
+        },
+        "prompts": {
+          "label": "Limpiar biblioteca de prompts",
+          "text": "Revisa mi biblioteca de prompts: renombra los que son difíciles de encontrar con / poniendo la palabra clave al principio. Extrae el bloque repetido de «rol + formato de salida» a un prompt compartido e impórtalo en los demás. Si una variable solo tiene unas pocas opciones fijas, cámbiala a un menú desplegable."
+        },
+        "snippets": {
+          "label": "Organizar fragmentos",
+          "text": "Mi bandeja de entrada de fragmentos es un caos. Agrúpalos en carpetas por tema y acorta los títulos que siguen siendo mi pregunta original a un breve resumen. Si el mismo contenido está guardado dos veces, quédate solo con el más antiguo. Enséñame la lista antes de borrar nada."
+        },
+        "workspace": {
+          "label": "Guardar decisiones",
+          "text": "Resume las conclusiones a las que hemos llegado en este chat en forma de lista de viñetas y guárdalo en notes/decisions.md en el espacio de trabajo. Añade al final las dudas que queden por resolver. Si el archivo ya existe, añade el contenido al final con la fecha de hoy, no lo sobrescribas."
+        },
+        "stats": {
+          "label": "Analizar estadísticas",
+          "text": "Hazme una tabla estadística: cuántos chats hay en cada carpeta, cuántos chats nuevos se han creado el último mes y qué carpetas llevan más de tres meses sin usarse. Con esos datos, recomiéndame qué carpetas podría fusionar."
+        }
+      }
     },
     "send": {
       "sessionBusy": "Ya hay una tarea en marcha, así que esta no se envió. Detenla y vuelve a pulsar Enter.",

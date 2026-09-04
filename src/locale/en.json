@@ -964,8 +964,6 @@
     "customThemesDescription": "Apply a custom visual theme to the Gemini interface. These themes override the default color scheme.",
     "default": "Default",
     "defaultDescription": "Default theme with light/dark mode support",
-    "classic": "Gemini Classic",
-    "classicDescription": "Classic Gemini look with cool blue-tinted surfaces",
     "cupertinoGlassName": "Cupertino Glass",
     "cupertinoGlassDescription": "Frosted glass aesthetic with system fonts and minimal color palette",
     "grimoireName": "The Grimoire",
@@ -1130,20 +1128,61 @@
     "launcher": {
       "title": "Agent",
       "subtitle": "Team up with AI to manage your chats, prompts and data.",
-      "placeholder": "Describe what you want to get done...",
-      "newChatHint": "It runs in the chat you have open. Start a fresh one to keep it clean.",
-      "run": "Run",
-      "skills": "Or start with a skill",
-      "stageHint": "Optional — just describe your task and the agent picks the right skill on its own. Pick one here and it fills the chat input, so you can still add your own details before sending.",
+      "about": "About the agent",
       "noEditor": "Open a chat first — the agent runs through the chat input.",
       "composerBusy": "The running task has results waiting in the chat input. Send those first, then try again.",
       "sessionBusy": "A task is already running. Finish it, or stop it, before starting another.",
       "stopRunning": "Stop the running task",
-      "triggerHint": "Typing > in the chat input starts the agent from there too.",
       "safety": "Only your local database is touched. Changes are confirmed before they run.",
       "freeTier": "Free plan is read-only. Upgrade to let the agent make changes.",
-      "manage": "Manage skills & tools",
-      "workspace": "Workspace"
+      "manage": "Skills & tools",
+      "workspace": "Workspace",
+      "stepsTitle": "How to use",
+      "step1": "Open any chat window.",
+      "step2": "Type > in the input box and select the Agent.",
+      "step3": "Write your request and press Enter.",
+      "examplesTitle": "Try asking this",
+      "examplesHint": "Click to fill the input box; you can edit it before sending. The more specific you are, the better the results.",
+      "examplesHintLabel": "How to use examples",
+      "examplePick": "Insert into chat",
+      "workspaceHint": "Agent's workspace for reading and saving files",
+      "manageHint": "Configure Agent permissions and confirmations",
+      "examplePrev": "Previous",
+      "exampleNext": "Next",
+      "examples": {
+        "classify": {
+          "label": "Organize history",
+          "text": "Organize my unfiled chats: group them by topic and show me the plan first. If current folders don't fit, create new ones and move the chats there. Finally, tag each chat based on its content, reusing my existing tags to avoid duplicates."
+        },
+        "search": {
+          "label": "Deep search",
+          "text": "Find all mentions of 'Docker deployment'. Search thoroughly across chats, message bodies, and code snippets, not just titles. Order them from newest to oldest, providing a one-line summary for each and indicating which folder it's in."
+        },
+        "export": {
+          "label": "Batch export & archive",
+          "text": "Export all chats in my 'Work' folder from March onwards to Markdown format, one file per chat, and pack them in a zip. If any chat doesn't have its messages synced yet, let me know before exporting."
+        },
+        "sync": {
+          "label": "Sync missing records",
+          "text": "Check how many chats only have a title with no saved messages. Give me the total first, ordered by most recent, and then sync the contents of the latest 20 chats so they appear in searches and exports."
+        },
+        "prompts": {
+          "label": "Refactor prompt library",
+          "text": "Clean up my prompt library: rename the ones that are hard to find via / by putting the keyword at the beginning. Extract the repeated 'role + output format' block into a shared prompt and import it into the others. If a variable only has a few fixed options, change it to a dropdown menu."
+        },
+        "snippets": {
+          "label": "Clean up snippets",
+          "text": "My snippet inbox is a mess. Group them into folders by topic, and shorten titles that are still my original question into a brief summary. If the same content is saved twice, keep only the oldest one. Show me the list before deleting anything."
+        },
+        "workspace": {
+          "label": "Record decisions",
+          "text": "Summarize our conclusions from this chat as a bulleted list and save it to notes/decisions.md in the workspace. Append any unresolved questions at the end. If the file already exists, append the content at the end with today's date instead of overwriting."
+        },
+        "stats": {
+          "label": "Analyze statistics",
+          "text": "Create a stats table for me: how many chats are in each folder, how many new chats were created last month, and which folders haven't been active for over three months. Based on this data, suggest which folders I should merge."
+        }
+      }
     },
     "send": {
       "sessionBusy": "A task is already running, so this one was not sent. Stop it, then press Enter again.",
