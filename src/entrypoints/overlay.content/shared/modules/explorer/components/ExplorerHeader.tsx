@@ -7,6 +7,7 @@ import {
   ArrowDownAZ,
   Clock,
   ListChecks,
+  CopyMinus,
   Cloud,
   Loader2,
   Crosshair,
@@ -259,7 +260,7 @@ export const ExplorerHeader = ({
           className="h-5 w-5 text-muted-foreground hover:text-foreground"
           onClick={() => onCollapseAll()}
         >
-          <UIcon icon="codicon:collapse-all" className="h-3.5 w-3.5" />
+          <CopyMinus className="h-3.5 w-3.5" />
         </Button>
       </SimpleTooltip>
     </>
