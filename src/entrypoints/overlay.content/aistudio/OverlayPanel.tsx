@@ -38,6 +38,10 @@ import { Platform } from '@/shared/types/platform';
 import { useBadgeStore } from '@/shared/lib/badge-store';
 import { BadgeDot } from '@/shared/components/ui/badge-dot';
 import { useHotkeyListener } from '@/shared/hooks/useHotkeyListener';
+import {
+  AccountButton,
+  AISTUDIO_ACCOUNT,
+} from '../shared/components/AccountButton';
 
 
 export const OverlayPanel = ({ className }: { className?: string }) => {
@@ -371,6 +375,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             <MessageSquare className="sidebar-icon" />
           </Button>
         </SimpleTooltip>
+        <AccountButton config={AISTUDIO_ACCOUNT} />
         <SimpleTooltip content={t('tabs.settings')}>
           <Button
             variant={isSettingsOpen ? 'secondary' : 'ghost'}

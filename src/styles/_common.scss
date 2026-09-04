@@ -71,6 +71,18 @@
     color: rgb(var(--sidebar-icon-color));
   }
 
+  /* Account avatar standing in for a sidebar icon. Sized a touch larger than
+     --sidebar-icon-size because a filled circle reads smaller than a line icon
+     of the same box, and given a hairline rim so a light photo does not bleed
+     into a light panel. */
+  .sidebar-avatar {
+    width: calc(var(--sidebar-icon-size) + 4px) !important;
+    height: calc(var(--sidebar-icon-size) + 4px) !important;
+    border-radius: 9999px;
+    object-fit: cover;
+    box-shadow: 0 0 0 1px rgb(var(--border));
+  }
+
   * {
     @apply border-border;
   }

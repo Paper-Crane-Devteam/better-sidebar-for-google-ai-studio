@@ -339,6 +339,10 @@
     "switchToOriginalUI": "元のサイドバーに切り替え",
     "temporaryChat": "一時チャット",
     "toggleMenu": "メニューを切り替え",
+    "account": "アカウント",
+    "signIn": "ログイン",
+    "account": "アカウント",
+    "signIn": "ログイン",
     "enterCompactMode": "クリックしてコンパクトモードにする",
     "exitCompactMode": "クリックしてコンパクトモードを終了",
     "newChatCta": "クリック：新しいチャット · 右クリック：プライベートチャット · 中クリック：新しいタブで開く"

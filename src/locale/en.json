@@ -345,6 +345,8 @@
     "switchToOriginalUI": "Switch to Original Sidebar",
     "temporaryChat": "Temporary chat",
     "toggleMenu": "Toggle Menu",
+    "account": "Account",
+    "signIn": "Sign in",
     "enterCompactMode": "Click to enter compact mode",
     "exitCompactMode": "Click to exit compact mode",
     "newChatCta": "Click: New chat · Right-click: Private chat · Middle-click: New chat in new tab"

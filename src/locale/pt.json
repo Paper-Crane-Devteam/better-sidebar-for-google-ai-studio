@@ -339,6 +339,10 @@
     "switchToOriginalUI": "Alternar para Barra Lateral Original",
     "temporaryChat": "Chat temporário",
     "toggleMenu": "Alternar menu",
+    "account": "Conta",
+    "signIn": "Entrar",
+    "account": "Conta",
+    "signIn": "Fazer login",
     "enterCompactMode": "Clique para ativar o modo compacto",
     "exitCompactMode": "Clique para sair do modo compacto",
     "newChatCta": "Clique: Novo chat · Clique direito: Chat privado · Clique do meio: Novo chat em nova aba"

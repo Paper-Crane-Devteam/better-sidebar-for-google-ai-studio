@@ -50,6 +50,10 @@ import { BadgeDot } from '@/shared/components/ui/badge-dot';
 import { useHotkeyListener } from '@/shared/hooks/useHotkeyListener';
 
 import { toggleGeminiSidebar } from '@/shared/lib/dom-selectors';
+import {
+  AccountButton,
+  GEMINI_ACCOUNT,
+} from '../shared/components/AccountButton';
 
 export const OverlayPanel = ({ className }: { className?: string }) => {
   const moduleConfig = useModuleConfig();
@@ -239,6 +243,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
               </Button>
             </SimpleTooltip>
           )}
+          <AccountButton config={GEMINI_ACCOUNT} />
           <SimpleTooltip content={t('tabs.settings')}>
             <Button
               variant={isSettingsOpen ? 'secondary' : 'ghost'}
@@ -427,6 +432,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
               <MessageSquare className="sidebar-icon" />
             </Button>
           </SimpleTooltip>
+          <AccountButton config={GEMINI_ACCOUNT} />
           <SimpleTooltip content={t('tabs.settings')}>
             <Button
               variant={isSettingsOpen ? 'secondary' : 'ghost'}
