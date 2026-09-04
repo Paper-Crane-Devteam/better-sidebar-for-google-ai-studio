@@ -1,4 +1,33 @@
 /**
+ * What the composer's send control is currently saying.
+ *
+ * The four values are not four shades of the same thing — `absent` and `unknown`
+ * mean opposite things and must not be merged:
+ *
+ * - `stop` — a turn is in flight. Authoritative.
+ * - `send` — there is content and it can go out. Authoritative.
+ * - `absent` — the platform is telling us nothing is generating *and* nobody is
+ *   typing. Gemini removes the button entirely in that state; AI Studio keeps it but
+ *   marks it `aria-disabled`. Different DOM, same authoritative fact, so both map
+ *   here — stage ① uses it to tell "went quiet" from "never got sent".
+ * - `unknown` — a control was found but none of the fallbacks could classify it,
+ *   i.e. our selectors are lost. Nothing about it can be trusted.
+ *
+ * Collapsing `absent` into `unknown` is what once made a provably idle page look
+ * identical to a broken selector, and the loop reported "the AI went silent" for
+ * messages that had never left the composer.
+ */
+export type ComposerState = 'send' | 'stop' | 'absent' | 'unknown';
+
+/** One tool result, as it will be shown to the user while it waits in the composer */
+export interface ResultSection {
+  /** Short human label — the tool's `description`, with the join key stripped */
+  label: string;
+  /** The full payload the AI will read */
+  content: string;
+}
+
+/**
  * Platform Adapter Interface.
  * Each supported platform implements this to allow the AgentLoopEngine
  * to interact with platform-specific DOM (editor, send button, AI responses).

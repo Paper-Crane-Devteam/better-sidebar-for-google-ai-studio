@@ -17,6 +17,8 @@ import { useCallback, useRef, useState } from 'react';
 import type { ChangeEvent, RefObject } from 'react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { toast } from '@/shared/lib/toast';
+import { showPowerPackPaywall } from '@/shared/lib/powerpack-paywall';
+import { fileBudget } from '@/shared/workspace/limits';
 import {
   collectFromDataTransfer,
   collectFromInput,
@@ -112,20 +114,53 @@ export function useWorkspaceTransfer(
     [t],
   );
 
+  /**
+   * Import, up to whatever the free tier still allows.
+   *
+   * Partial rather than all-or-nothing. Someone on the free plan dropping ten files into
+   * an empty workspace has five slots they are entitled to, and refusing the batch would
+   * withhold those to make a point about the other five. So the first `remaining` land
+   * normally — the usual toast reports them — and the paywall follows to account for the
+   * rest. Shown after the upload, so it is the last thing on screen rather than a modal
+   * over a progress line.
+   */
   const run = useCallback(
     async (picked: PickedFile[], destDir: string) => {
       if (picked.length === 0) return;
 
+      const budget = await fileBudget(workspaceId);
+      const allowed = budget.unlimited ? picked : picked.slice(0, budget.remaining);
+      const skipped = picked.length - allowed.length;
+
+      const overLimit = () => {
+        if (skipped === 0) return;
+        showPowerPackPaywall(
+          // `files` rather than `count`: a `count` param puts i18next into plural
+          // resolution, which then needs `_one`/`_other` variants in every locale for a
+          // string that reads the same either way.
+          t('agent.workspace.paywallFilesSkipped', {
+            defaultValue: `${skipped} file(s) not added — the free limit is ${budget.max} per workspace`,
+            files: skipped,
+            max: budget.max,
+          }),
+        );
+      };
+
+      if (allowed.length === 0) {
+        overLimit();
+        return;
+      }
+
       setProgress(
         t('agent.workspace.uploading', {
-          defaultValue: `Uploading 0/${picked.length}…`,
+          defaultValue: `Uploading 0/${allowed.length}…`,
           done: 0,
-          total: picked.length,
+          total: allowed.length,
         }),
       );
 
       try {
-        const report = await uploadFiles(workspaceId, picked, destDir, (done, total) => {
+        const report = await uploadFiles(workspaceId, allowed, destDir, (done, total) => {
           setProgress(
             t('agent.workspace.uploading', {
               defaultValue: `Uploading ${done}/${total}…`,
@@ -141,6 +176,8 @@ export function useWorkspaceTransfer(
       } finally {
         setProgress(null);
       }
+
+      overLimit();
     },
     [reload, reportUpload, t, workspaceId],
   );

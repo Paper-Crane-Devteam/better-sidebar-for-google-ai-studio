@@ -63,8 +63,12 @@ export function getToolRisk(toolCall: ParsedToolCall): ToolRisk {
  * runtime param, and `delete` with `recursive` removes a subtree with no undo. Risk
  * is what the user is deciding about, so it is classified by what the call *could*
  * do, not by parsing the param to find out that this particular one is an `mkdir`.
+ *
+ * Exported because the file panel needs the same list to know when what it is showing
+ * has gone stale (see `agent-tab/workspace/useWorkspaceRevision`). Keeping one list
+ * means a tool added here cannot be gated for approval and then forgotten by the tree.
  */
-const WORKSPACE_WRITE_TOOLS: readonly string[] = [
+export const WORKSPACE_WRITE_TOOLS: readonly string[] = [
   'write_file',
   'edit_file',
   'manage_files',

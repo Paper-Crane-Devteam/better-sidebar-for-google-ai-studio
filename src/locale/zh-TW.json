@@ -1320,6 +1320,7 @@
       "noToolCallDesc": "Agent 最後的回覆沒有執行任何操作。可以在聊天裡看看內容，如果任務還需要做，重新發起一次。",
       "ended": "工作階段結束",
       "paywallDesc": "免費版只允許 Agent 讀取資料，升級後可以修改。",
+      "paywallWorkspaceDesc": "免費版支援 1 個工作區（最多 {{max}} 個檔案）。升級即可無限制使用。",
       "paywallFeature": "Agent 資料庫寫入",
       "steps_one": "執行了 {{count}} 步",
       "steps_other": "執行了 {{count}} 步",
@@ -1432,6 +1433,11 @@
     "entry": {
       "autoTitle": "Better Sidebar 智慧體",
       "autoDescription": "描述一個任務，讓智慧體選擇合適的工具"
+    },
+    "workspace": {
+      "paywallWorkspaces": "建立多個工作區",
+      "paywallFiles": "工作區檔案數超過 {{max}} 個",
+      "paywallFilesSkipped": "已略過 {{files}} 個檔案 —— 免費版工作區最多支援 {{max}} 個檔案"
     }
   },
   "backup": {

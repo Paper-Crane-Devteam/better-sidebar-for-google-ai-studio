@@ -30,7 +30,9 @@ import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { modal } from '@/shared/lib/modal';
 import { toast } from '@/shared/lib/toast';
+import { showPowerPackPaywall } from '@/shared/lib/powerpack-paywall';
 import { forWorkspace } from '@/shared/workspace/client';
+import { canCreateWorkspace } from '@/shared/workspace/limits';
 import { useAgentLoopStore } from '../../agent-loop/agent-loop-store';
 import { toolCallRecorder } from '../../agent-loop/records';
 import {
@@ -116,6 +118,22 @@ export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ onBack }) => {
   }, [shownId, closeFile]);
 
   const handleCreate = async () => {
+    /**
+     * The free tier's one-workspace limit, answered before the name prompt.
+     *
+     * The switcher still offers "New workspace" — a hidden or disabled entry teaches
+     * nothing, and this is the one place where a second workspace is on someone's mind.
+     * Asking for a name first and refusing afterwards would be worse than either.
+     */
+    if (!canCreateWorkspace(workspaces.length)) {
+      showPowerPackPaywall(
+        t('agent.workspace.paywallWorkspaces', {
+          defaultValue: 'More than one workspace',
+        }),
+      );
+      return;
+    }
+
     const name = await promptWorkspaceName({
       title: t('agent.workspace.create', { defaultValue: 'New workspace' }),
       confirmText: t('common.create', { defaultValue: 'Create' }),

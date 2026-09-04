@@ -1320,6 +1320,7 @@
       "noToolCallDesc": "エージェントの最後の返答では何も実行されませんでした。チャットで内容を確認し、まだ必要ならもう一度実行してください。",
       "ended": "セッション終了",
       "paywallDesc": "無料プランではエージェントはデータの読み取りのみ可能です。書き込みを許可するにはアップグレードしてください。",
+      "paywallWorkspaceDesc": "無料プランでは 1 つのワークスペース（最大 {{max}} ファイル）を利用できます。アップグレードして無制限に。",
       "paywallFeature": "エージェントのデータベース書き込み",
       "steps_one": "{{count}} ステップ実行",
       "steps_other": "{{count}} ステップ実行",
@@ -1432,6 +1433,11 @@
     "entry": {
       "autoTitle": "Better Sidebar エージェント",
       "autoDescription": "タスクを説明すると、エージェントが適切なツールを選びます"
+    },
+    "workspace": {
+      "paywallWorkspaces": "複数のワークスペース",
+      "paywallFiles": "ワークスペースあたり {{max}} 件を超えるファイル",
+      "paywallFilesSkipped": "{{files}} 件のファイルをスキップしました — 無料プランはワークスペースごとに最大 {{max}} 件です"
     }
   },
   "backup": {

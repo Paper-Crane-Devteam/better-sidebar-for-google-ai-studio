@@ -1327,6 +1327,7 @@
       "noToolCallDesc": "Agent 最后的回复没有执行任何操作。可以在聊天里看看内容，如果任务还需要做，重新发起一次。",
       "ended": "会话结束",
       "paywallDesc": "免费版只允许 Agent 读取数据，升级后可以修改。",
+      "paywallWorkspaceDesc": "免费版支持 1 个工作区（最多 {{max}} 个文件）。升级即可无限制使用。",
       "paywallFeature": "Agent 数据库写入",
       "steps_one": "执行了 {{count}} 步",
       "steps_other": "执行了 {{count}} 步",
@@ -1460,6 +1461,9 @@
       "emptyFile": "文件为空。",
       "lockedHint": "此对话已使用\"{name}\"工作区，如需切换请开启新对话。",
       "busyHint": "任务运行中，请完成或停止后再切换。",
+      "paywallWorkspaces": "创建多个工作区",
+      "paywallFiles": "工作区文件数超过 {{max}} 个",
+      "paywallFilesSkipped": "已忽略 {{files}} 个文件 —— 免费版工作区最多支持 {{max}} 个文件",
       "clearWarning": "删除\"{name}\"中的所有 {fileCount} 个文件？此操作无法撤销。",
       "deleteWarning": "删除工作区\"{name}\"及其中 {fileCount} 个文件？已使用此工作区的对话将无法再读写文件。此操作无法撤销。"
     }

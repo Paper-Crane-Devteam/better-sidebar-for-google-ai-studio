@@ -1318,6 +1318,7 @@
       "noToolCallDesc": "La última respuesta del agente no ejecutó nada. Léela en el chat; si la tarea sigue pendiente, vuelve a empezarla.",
       "ended": "Sesión finalizada",
       "paywallDesc": "El plan gratuito permite al agente leer tus datos, pero no modificarlos. Mejora tu plan para permitir escrituras.",
+      "paywallWorkspaceDesc": "El plan gratuito incluye 1 espacio de trabajo con hasta {{max}} archivos. Mejora tu plan para acceso ilimitado.",
       "paywallFeature": "Escrituras del agente en la base de datos",
       "steps_one": "{{count}} paso ejecutado",
       "steps_other": "{{count}} pasos ejecutados",
@@ -1430,6 +1431,11 @@
     "entry": {
       "autoTitle": "Agente Better Sidebar",
       "autoDescription": "Describe una tarea y deja que el agente elija las herramientas adecuadas"
+    },
+    "workspace": {
+      "paywallWorkspaces": "Múltiples espacios de trabajo",
+      "paywallFiles": "Más de {{max}} archivos por espacio de trabajo",
+      "paywallFilesSkipped": "{{files}} archivo(s) omitido(s): el límite gratuito es de {{max}} por espacio de trabajo"
     }
   },
   "backup": {

@@ -30,6 +30,7 @@ import {
 } from '@/shared/workspace/file-kinds';
 import { useFileViewerStore } from '../../agent-loop/workspace/file-viewer-store';
 import { downloadFile } from './workspace-io';
+import { useWorkspaceRevision } from './useWorkspaceRevision';
 
 /**
  * Why a file is shown as a summary instead of its contents.
@@ -66,13 +67,29 @@ export const WorkspaceFileDrawer: React.FC = () => {
     }
   }, [open]);
 
+  /**
+   * Clearing is its own effect, keyed on the file rather than on the read below.
+   *
+   * The read runs again when the agent edits a file (see `revision`), and it must not
+   * blank the pane to do it: the reader is a fine place to watch a file being written, and
+   * flashing a spinner over prose the user is mid-sentence in is worse than the second of
+   * staleness it replaces. Opening a *different* file does have to clear — the previous
+   * body under the new name is a lie — and that is exactly what this effect covers.
+   *
+   * Declared before the read so it lands first when both run.
+   */
+  useEffect(() => {
+    setContent(null);
+    setSkipped(null);
+    setError(null);
+  }, [workspaceId, path]);
+
+  const revision = useWorkspaceRevision();
+
   useEffect(() => {
     if (!workspaceId || !path) return;
 
     let cancelled = false;
-    setContent(null);
-    setSkipped(null);
-    setError(null);
 
     const ws = forWorkspace(workspaceId);
 
@@ -112,7 +129,7 @@ export const WorkspaceFileDrawer: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [workspaceId, path]);
+  }, [workspaceId, path, revision]);
 
   /**
    * Where the sidebar ends — the drawer's left edge.

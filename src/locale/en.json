@@ -1345,6 +1345,7 @@
       "noToolCallDesc": "The agent's last reply didn't run anything. Read it in the chat — if the task still needs doing, start it again.",
       "ended": "Session ended",
       "paywallDesc": "The free plan lets the agent read your data but not change it. Upgrade to allow writes.",
+      "paywallWorkspaceDesc": "The free plan includes 1 workspace with up to {{max}} files. Upgrade for unlimited access.",
       "paywallFeature": "Agent database writes",
       "steps_one": "{{count}} step run",
       "steps_other": "{{count}} steps run",
@@ -1456,6 +1457,9 @@
       "emptyFile": "This file is empty.",
       "lockedHint": "This conversation is using \"{name}\". Start a new chat to switch.",
       "busyHint": "A task is running. Finish or stop it before switching.",
+      "paywallWorkspaces": "Multiple workspaces",
+      "paywallFiles": "More than {{max}} files per workspace",
+      "paywallFilesSkipped": "{{files}} file(s) skipped — the free limit is {{max}} per workspace",
       "clearWarning": "Delete all {fileCount} file(s) in \"{name}\"? This cannot be undone.",
       "deleteWarning": "Delete \"{name}\" and all {fileCount} file(s) in it? Conversations that already used this workspace will no longer be able to read or write files. This cannot be undone."
     }

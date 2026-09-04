@@ -18,8 +18,10 @@
  */
 
 import { forWorkspace, type WorkspaceClient } from '@/shared/workspace/client';
+import { fileBudget } from '@/shared/workspace/limits';
 import { resolveWorkspaceId, bindConversation } from '../workspace/workspace-binding';
 import { toolCallRecorder } from '../records';
+import { paywallResult } from './paywall-signal';
 
 /** Parse a param the model wrote as text. Returns undefined for absent/garbage. */
 function num(value: string | undefined): number | undefined {
@@ -114,6 +116,28 @@ export async function writeFileTool(params: Record<string, string>): Promise<str
   try {
     const ws = await openWorkspace();
     const existed = (await ws.stat(path)) !== null;
+
+    /**
+     * The free tier's file cap, checked only for a *new* file.
+     *
+     * Overwriting is always allowed: it does not change the count, and a cap that stopped
+     * the agent from correcting a file it had already written would break iteration
+     * halfway through a task rather than at its start. `write_file` is also the only tool
+     * that can add a file — `edit_file` needs one to exist, `move` conserves the count,
+     * and `mkdir` makes a directory, which is not counted.
+     */
+    if (!existed) {
+      const budget = await fileBudget(ws.workspaceId);
+      if (budget.remaining <= 0) {
+        return paywallResult(
+          `The workspace is at its free limit of ${budget.max} files, so ${path} was not ` +
+            'created. The user has been shown an upgrade prompt. Do not try another path — ' +
+            'the limit is on the workspace, not this file. Report what you still had to ' +
+            'write, or continue by editing a file that already exists.',
+        );
+      }
+    }
+
     const { bytes } = await ws.write(path, content);
     await lockIn(ws);
     const lines = content === '' ? 0 : content.split('\n').length;

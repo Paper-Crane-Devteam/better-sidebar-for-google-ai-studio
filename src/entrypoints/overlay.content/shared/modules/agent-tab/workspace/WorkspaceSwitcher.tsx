@@ -17,8 +17,10 @@ import React from 'react';
 import { Check, ChevronsUpDown, FolderOpen, Lock, Plus } from 'lucide-react';
 import { usePopoverPickerStore } from '@/shared/lib/popover-picker';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
+import { UIcon } from '@/shared/components/ui/icon';
 import { cn } from '@/shared/lib/utils/utils';
 import { useI18n } from '@/shared/hooks/useI18n';
+import { canCreateWorkspace } from '@/shared/workspace/limits';
 import { useWorkspaceStore } from '../../agent-loop/workspace/workspace-store';
 
 interface WorkspaceSwitcherProps {
@@ -46,6 +48,20 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
 
   const openPicker = (e: React.MouseEvent<HTMLButtonElement>) => {
     const anchorRect = e.currentTarget.getBoundingClientRect();
+
+    /**
+     * Whether "New workspace" is going to produce an upgrade card instead of a workspace.
+     *
+     * The entry stays live either way — `onCreate` shows the paywall, which is the only
+     * thing that explains the limit. This decides whether it carries the premium mark, so
+     * the answer is visible before the click rather than only after it.
+     *
+     * Read here rather than during render on purpose: the licence store is not subscribed
+     * to by this component, so a value computed in the render body would stay stale until
+     * something unrelated re-rendered it — and the first thing someone does after buying
+     * is come straight back to this menu.
+     */
+    const createIsPaid = !canCreateWorkspace(workspaces.length);
 
     void usePopoverPickerStore.getState().open({
       anchorRect,
@@ -86,7 +102,17 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
               className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent/40 hover:text-foreground"
             >
               <Plus className="h-3 w-3 shrink-0" />
-              {t('agent.workspace.create', { defaultValue: 'New workspace' })}
+              <span className="min-w-0 flex-1 truncate">
+                {t('agent.workspace.create', { defaultValue: 'New workspace' })}
+              </span>
+              {createIsPaid && (
+                <UIcon
+                  icon="fluent-color:premium-24"
+                  width={12}
+                  height={12}
+                  className="shrink-0"
+                />
+              )}
             </button>
           </div>
         </div>

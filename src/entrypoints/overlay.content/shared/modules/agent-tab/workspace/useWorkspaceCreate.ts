@@ -22,7 +22,9 @@ import { useCallback } from 'react';
 import type { RefObject } from 'react';
 import { useI18n } from '@/shared/hooks/useI18n';
 import { toast } from '@/shared/lib/toast';
+import { showPowerPackPaywall } from '@/shared/lib/powerpack-paywall';
 import { forWorkspace } from '@/shared/workspace/client';
+import { fileBudget } from '@/shared/workspace/limits';
 
 /** Minimum the tree has to expose for a new entry to be revealed and renamed. */
 export interface RevealTarget {
@@ -98,14 +100,37 @@ export function useWorkspaceCreate(
     [create, t, workspaceId],
   );
 
+  /**
+   * The free tier's file cap.
+   *
+   * Checked when the button is pressed rather than used to disable it. A greyed-out "New
+   * file" says only that something is wrong; the same button opening the upgrade card
+   * says what the limit is and what lifts it. Folders are not counted, so "New folder"
+   * stays unconditional — a cap on files that also stopped you organising the five you
+   * have would read as a bug rather than a plan.
+   */
+  const withinFileBudget = useCallback(async (): Promise<boolean> => {
+    const budget = await fileBudget(workspaceId);
+    if (budget.remaining > 0) return true;
+    showPowerPackPaywall(
+      t('agent.workspace.paywallFiles', {
+        defaultValue: `More than ${budget.max} files in a workspace`,
+        max: budget.max,
+      }),
+    );
+    return false;
+  }, [t, workspaceId]);
+
   const createFile = useCallback(
     // `.md` because the reader renders Markdown and the agent writes notes. Someone who
     // wanted a different extension types it into the rename input that opens next.
-    (parentPath: string) =>
-      create(parentPath, 'untitled.md', async (path) => {
+    async (parentPath: string) => {
+      if (!(await withinFileBudget())) return;
+      await create(parentPath, 'untitled.md', async (path) => {
         await forWorkspace(workspaceId).write(path, '');
-      }),
-    [create, workspaceId],
+      });
+    },
+    [create, withinFileBudget, workspaceId],
   );
 
   return { createFolder, createFile };

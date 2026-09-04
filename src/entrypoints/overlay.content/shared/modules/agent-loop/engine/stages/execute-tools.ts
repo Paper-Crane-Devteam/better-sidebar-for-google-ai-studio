@@ -15,7 +15,7 @@ import type { ParsedToolCall } from '../../types';
 import type { LoopContext } from '../context';
 import { executeToolCall } from '../../tools/tool-registry';
 import { parseCompleteTaskSignal } from '../../tools/complete-task';
-import { PAYWALL_SIGNAL } from '../../tools/execute-sql';
+import { PAYWALL_SIGNAL } from '../../tools/paywall-signal';
 import {
   buildToolCallFingerprint,
   buildToolCallKey,
