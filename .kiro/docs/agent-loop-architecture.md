@@ -1074,6 +1074,38 @@ ROUND_BUDGET        = 29998
 ⚠️ **instruction 和 errors 不裁只算**。它们本来就短，而且是 AI 最需要完整看到的部分；
 但它们占掉的字符会计入 `reserved`，所以工具输出会自动让位。
 
+### 开场那条消息也受同一个上限，而且它以前砍错了一头
+
+`>` 送出去的第一条消息是 `marker + system prompt + '\n\n## User Request\n\n' + 用户输入`，
+走的是同一个输入框，所以同一个 ~30k 上限。两个平台的 feature 里原本都是这么兜的：
+
+```ts
+if (full.length > MAX_MESSAGE_LENGTH) full = full.substring(0, MAX_MESSAGE_LENGTH);
+```
+
+⚠️ **用户输入拼在最后，从尾巴砍就是精准砍掉用户的活儿、留下一整套指令。** 而且是静默的：
+消息照常发出、`user-query` 照常出现、send-watcher 判送达、引擎照常开始跑一个没人交代过的任务。
+用户看到的现象是「命令没发出去，只有系统指令」，控制台里只有一行 `console.warn`。
+
+触发它只需要 prompt 长一点：实测 system prompt 已经在 **28.7k–29.9k**，占掉上限的 96% 以上，
+加一个 1249 字符的 tool schema（`doc_read` 的初版）就顶过线了。
+
+现在这段逻辑收在 `prompts/initial-message.ts`，policy 是三条：
+
+| 规则 | 为什么 |
+|------|------|
+| 用户输入永不为了指令让位 | 被截的指令还描述着大部分工具；被截的任务就是没人提过的任务 |
+| 指令最多让出 `USER_RESERVE = 8000` 字符 | 再往下让会砍掉「怎么结束循环」那段；超过这个长度的输入是粘贴的材料，该进工作区文件 |
+| 两种截断都在正文里留话 | 只说「有内容被删」模型会照跑；说「你需要的工具可能没写在上面，别猜」它才会问 |
+
+上限从两个文件里各写一遍的 `30000` 改成 import `budget.ts` 的 `ROUND_BUDGET`
+（= `COMPOSER_CHAR_LIMIT - SAFETY_MARGIN` = 29998）。同一个输入框，同一个实测数字，
+以前是三处真相。
+
+⚠️ **如果正常使用中看到了截断提示，要修的不是上限而是 prompt。** 现在的构成里
+`## Database Schema` 一段就 7636 字符（占 1/4），是最该动的地方。新增 tool schema 前
+先想清楚：schema 是**每一轮**都进 prompt 的，而放进 skill 的内容是按需加载的。
+
 ### prompt 那一层是「劝」，故意说得宽松
 
 `soul.ts` 的 `getResultBudgetBlock()` 把这个数字告诉 AI，口径是**「额度很大，放开用」**

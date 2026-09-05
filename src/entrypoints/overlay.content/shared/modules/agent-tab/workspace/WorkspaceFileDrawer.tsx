@@ -26,6 +26,7 @@ import {
   PREVIEW_BYTE_LIMIT,
   extensionOf,
   formatBytes,
+  isDocumentFormat,
   isProbablyBinary,
 } from '@/shared/workspace/file-kinds';
 import { useFileViewerStore } from '../../agent-loop/workspace/file-viewer-store';
@@ -40,8 +41,12 @@ import { useWorkspaceRevision } from './useWorkspaceRevision';
  *   text.
  * - `large` — it would render, slowly, and freeze the sidebar while it did. See
  *   `PREVIEW_BYTE_LIMIT`.
+ * - `document` — a Word file and friends. Also binary, but the message has to be the
+ *   opposite one: the agent *can* read this, so telling the user it cannot is wrong in the
+ *   direction that loses them the feature. Rendering it here is a separate job (see
+ *   `.kiro/docs/document-formats.md` §10, P4).
  */
-type SkipReason = 'binary' | 'large';
+type SkipReason = 'binary' | 'large' | 'document';
 
 export const WorkspaceFileDrawer: React.FC = () => {
   const { t } = useI18n();
@@ -108,6 +113,13 @@ export const WorkspaceFileDrawer: React.FC = () => {
 
         const size = info?.size ?? 0;
 
+        // Checked before the generic binary test, which would otherwise claim the file
+        // is unreadable — the one thing that is no longer true about it.
+        if (isDocumentFormat(path)) {
+          setSkipped({ reason: 'document', size });
+          setContent(null);
+          return;
+        }
         if (isProbablyBinary(path)) {
           setSkipped({ reason: 'binary', size });
           return;
@@ -288,6 +300,8 @@ export const WorkspaceFileDrawer: React.FC = () => {
               {skipped.reason === 'binary' ? (
                 <FileIcon className="h-10 w-10 text-muted-foreground/50" />
               ) : (
+                // A document and an oversized text file share the icon on purpose: both
+                // are readable content, just not here.
                 <FileText className="h-10 w-10 text-muted-foreground/50" />
               )}
 
@@ -297,15 +311,20 @@ export const WorkspaceFileDrawer: React.FC = () => {
                   {skipped.size > 0 && formatBytes(skipped.size)}
                 </p>
                 <p className="mt-3 text-xs text-muted-foreground">
-                  {skipped.reason === 'binary'
-                    ? t('agent.workspace.binaryNoPreview', {
+                  {skipped.reason === 'document'
+                    ? t('agent.workspace.documentNoPreview', {
                         defaultValue:
-                          'This is a binary file. It is stored exactly as it came in, but it cannot be shown as text and the agent cannot read it.',
+                          'Word documents are not shown here yet, but the agent can read this one — ask it to summarise the document or to look at a specific section.',
                       })
-                    : t('agent.workspace.largeNoPreview', {
-                        defaultValue:
-                          'This file is too large to preview without freezing the sidebar. Download it to read it, or ask the agent — it reads files in slices.',
-                      })}
+                    : skipped.reason === 'binary'
+                      ? t('agent.workspace.binaryNoPreview', {
+                          defaultValue:
+                            'This is a binary file. It is stored exactly as it came in, but it cannot be shown as text and the agent cannot read it.',
+                        })
+                      : t('agent.workspace.largeNoPreview', {
+                          defaultValue:
+                            'This file is too large to preview without freezing the sidebar. Download it to read it, or ask the agent — it reads files in slices.',
+                        })}
                 </p>
               </div>
 

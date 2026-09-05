@@ -20,6 +20,7 @@
  */
 
 import { isPowerPackUser } from '@/shared/lib/license-store';
+import { isHistoryPath } from '@/shared/documents/history-path';
 import { forWorkspace } from './client';
 
 /** Workspaces a free user may keep. The bundled `default` one is the whole allowance. */
@@ -104,7 +105,14 @@ export async function fileBudget(workspaceId: string): Promise<FileBudget> {
 async function countFiles(workspaceId: string): Promise<number> {
   try {
     const { entries } = await forWorkspace(workspaceId).list('', true);
-    return entries.reduce((n, entry) => (entry.kind === 'file' ? n + 1 : n), 0);
+    return entries.reduce(
+      // `.history/` holds the pre-edit copies the document engine takes before it
+      // rewrites a file. ⚠️ Counting them would mean editing a document three times
+      // pushes a free user into the paywall — a safety net that charges for itself is a
+      // safety net people learn to switch off.
+      (n, entry) => (entry.kind === 'file' && !isHistoryPath(entry.path) ? n + 1 : n),
+      0,
+    );
   } catch {
     return 0;
   }

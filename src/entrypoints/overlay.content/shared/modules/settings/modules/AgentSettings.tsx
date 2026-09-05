@@ -12,6 +12,7 @@ import { useAgentConfigStore } from '../../agent-loop/agent-config-store';
 import { BUILTIN_SKILLS } from '../../agent-loop/skills/builtin-skills';
 import { BUILTIN_MCP } from '../../agent-loop/mcp/builtin-mcp';
 import { WORKSPACE_MCP, WORKSPACE_MCP_ID } from '../../agent-loop/mcp/workspace-mcp';
+import { DOCUMENT_MCP, DOCUMENT_MCP_ID } from '../../agent-loop/mcp/document-mcp';
 import { syncMCPEnabledState } from '../../agent-loop/mcp/setup';
 import { openSkillEditorModal } from './agent/SkillEditorModal';
 import { SwitchItem } from '../components/SwitchItem';
@@ -29,6 +30,7 @@ export const AgentSettings: React.FC = () => {
   } = useAgentConfigStore();
 
   const workspaceEnabled = !disabledMcpServers.includes(WORKSPACE_MCP_ID);
+  const documentsEnabled = !disabledMcpServers.includes(DOCUMENT_MCP_ID);
 
   /**
    * The registry keeps its own `enabled` flag, and prompt assembly reads the
@@ -37,6 +39,11 @@ export const AgentSettings: React.FC = () => {
    */
   const handleToggleWorkspace = () => {
     toggleMcpServer(WORKSPACE_MCP_ID);
+    syncMCPEnabledState();
+  };
+
+  const handleToggleDocuments = () => {
+    toggleMcpServer(DOCUMENT_MCP_ID);
     syncMCPEnabledState();
   };
 
@@ -181,6 +188,36 @@ export const AgentSettings: React.FC = () => {
                     <span className="text-xs text-muted-foreground">{tool.schema.name}</span>
                     <span className="text-[10px] text-muted-foreground/60 truncate">
                       — {tool.schema.description.slice(0, 60)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/*
+            Documents MCP — its own switch rather than part of the workspace one.
+
+            The workspace holds the file either way; this decides whether the agent can
+            look *inside* an Office document. Someone using the workspace for notes and
+            source files never needs it, and a schema is prompt cost on every round.
+          */}
+          <div className="pt-2">
+            <SwitchItem
+              label={t('agent.mcp.documents.name', { defaultValue: DOCUMENT_MCP.name })}
+              description={`${t('agent.settings.mcpToolCount', { count: DOCUMENT_MCP.tools.length })} — ${t('agent.mcp.documents.description', { defaultValue: DOCUMENT_MCP.description })}`}
+              checked={documentsEnabled}
+              onCheckedChange={handleToggleDocuments}
+            />
+
+            {documentsEnabled && (
+              <div className="ml-8 space-y-1">
+                {DOCUMENT_MCP.tools.map((tool) => (
+                  <div key={tool.schema.name} className="flex items-center gap-2 py-1">
+                    <div className="h-1 w-1 rounded-full bg-muted-foreground/40" />
+                    <span className="text-xs text-muted-foreground">{tool.schema.name}</span>
+                    <span className="text-[10px] text-muted-foreground/60 truncate">
+                      — {t(`agent.mcp.tools.${tool.schema.name}`, { defaultValue: tool.schema.description.slice(0, 60) })}
                     </span>
                   </div>
                 ))}

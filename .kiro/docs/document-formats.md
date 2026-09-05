@@ -398,6 +398,31 @@ pptx 的文字都在 `ppt/slides/slideN.xml` 的 `a:t` 里，结构比 docx 简�
 
 ## 十、分期
 
+### 当前状态（P0 已落地）
+
+管道通了，docx **只读**能用：`doc_read`（outline / range / search）已挂在可开关的
+`Documents` MCP 上。`doc_edit` 的类型、引擎分派、备份与写后自检都在位，但还没有 handler
+实现 `edit`，所以引擎会明确回答「这个格式还不支持编辑」而不是假装成功。
+
+已经在跑的东西：
+
+| 位置 | 干什么 |
+|---|---|
+| `shared/documents/zip.ts` | 惰性解包（只解要用的 part）、炸弹上限、媒体不重压、**无改动时原字节返回** |
+| `shared/documents/ooxml/xml-cursor.ts` | 保偏移 tokenizer + splice，`applyEdits` 拒绝重叠改动 |
+| `shared/documents/ooxml/runs.ts` | run 展平（非文字内容映射成 U+FFFC 当墙）、定位、按 run 拆分改写 |
+| `shared/documents/storage.ts` | 写前纯函数自检 → `.history/` 备份 → 写 → 读回复检 → 失败自动回滚 |
+| `shared/documents/docx/` | 主 part 走 `_rels/.rels` 找（不假设叫 `document.xml`）、标题识别四级回退、投影与搜索 |
+| `shared/workers/doc-worker.ts` | 串行队列，直接开 OPFS，无 DOM |
+| `shared/offscreen-host.ts` | offscreen 文档创建收口，db 与 documents 共用一个 |
+
+三个当时列的 spike，第 1 个（offscreen worker 能否直接看到 background 那棵 OPFS 树）现在
+是可以直接在浏览器里验的；第 2 个（真实 docx 零改动 round-trip 逐字节相同）由
+`zip.ts` 的「无改动就返回原 `source`」在结构上保证了**读**这一侧，但**改**这一侧仍然必须用
+真实样本跑过才算数。
+
+### 路线
+
 | 期 | 内容 | 交付的场景 |
 |---|---|---|
 | **P0 基建** | `zip.ts` + `xml-cursor.ts` + `runs.ts` + doc-worker + `DOCUMENT_OP` + 备份/原子写 + 3 个 tool 骨架 + `file-kinds` 分类修正 | 无用户可见功能，但后面每一期都便宜 |

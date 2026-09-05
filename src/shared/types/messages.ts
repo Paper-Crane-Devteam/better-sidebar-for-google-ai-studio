@@ -591,6 +591,21 @@ export type ExtensionMessage = (
         | { op: 'stats' }
         | { op: 'clear' };
     }
+  /**
+   * Office / PDF / subtitle document operations, from the content script.
+   *
+   * Routed to the background for the same origin reason as `WORKSPACE_FS`, and then on
+   * to a worker in the offscreen document — which is where the parsing actually happens.
+   *
+   * ⚠️ Note what is *not* in this payload: bytes. The engine opens the file out of OPFS
+   * itself, so a 20 MB workbook never gets base64-encoded onto the message channel. Only
+   * the request and the projection text travel. See `.kiro/docs/document-formats.md` §4.
+   */
+  | {
+      type: 'DOCUMENT_OP';
+      workspaceId: string;
+      payload: import('@/shared/documents/types').DocRequest;
+    }
 ) & { platform?: string };
 
 export interface ExtensionResponse {

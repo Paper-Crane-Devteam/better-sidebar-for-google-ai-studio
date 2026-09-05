@@ -39,6 +39,7 @@ import {
   getCurrentPlatformId,
 } from '@/entrypoints/overlay.content/shared/modules/agent-loop/adapters/adapter-factory';
 import { assembleFinalPrompt } from '@/entrypoints/overlay.content/shared/modules/agent-loop/prompts/prompt-assembler';
+import { buildInitialMessage } from '@/entrypoints/overlay.content/shared/modules/agent-loop/prompts/initial-message';
 import { getEnabledSkills } from '@/entrypoints/overlay.content/shared/modules/agent-loop/skills/skill-registry';
 import { initMCPRegistry } from '@/entrypoints/overlay.content/shared/modules/agent-loop/mcp/setup';
 import { getAgentEntryById } from '@/entrypoints/overlay.content/shared/modules/agent-loop/agent-entry';
@@ -61,7 +62,10 @@ import {
   CAPSULE_ATTR_CONTENT,
 } from '@/entrypoints/overlay.content/shared/lib/quill-editor';
 
-const MAX_MESSAGE_LENGTH = 30000;
+// The opening message's size ceiling lives in `prompts/initial-message.ts`, next to the
+// logic that decides what gets cut when it is exceeded. It used to be a `30000` here and
+// an identical one in the AI Studio feature — two copies of a number that `budget.ts` had
+// already measured properly as the composer's real limit.
 
 /**
  * Whether the engine currently owns the chat input.
@@ -405,14 +409,14 @@ export const AgentLoopFeature: React.FC = () => {
         ? editorText.replace(capsuleContent, '').trim()
         : editorText.trim();
 
-      let fullMessage = `${buildPromptMarker(entryId)}\n${basePrompt}`;
-      if (userInput) {
-        fullMessage += `\n\n## User Request\n\n${userInput}`;
-      }
-      if (fullMessage.length > MAX_MESSAGE_LENGTH) {
-        fullMessage = fullMessage.substring(0, MAX_MESSAGE_LENGTH);
-        console.warn(`[AgentLoop] Message truncated to ${MAX_MESSAGE_LENGTH} chars`);
-      }
+      // ⚠️ Not `substring(0, MAX)` on the assembled message. The user's request is
+      // appended last, so cutting from the end removes the task and keeps the
+      // instructions — see `prompts/initial-message.ts`.
+      const { text: fullMessage } = buildInitialMessage({
+        marker: buildPromptMarker(entryId),
+        basePrompt,
+        userInput,
+      });
 
       const title = userInput || entry.title || 'Agent task';
 

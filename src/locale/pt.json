@@ -1427,7 +1427,12 @@
         "execute_sql": "Executar consultas SQL no banco de dados local",
         "sync_conversation_messages": "Registrar histórico de mensagens de conversas sem conteúdo",
         "export": "Baixar conversas como arquivos",
-        "complete_task": "Encerrar o loop do agente e relatar resultados"
+        "complete_task": "Encerrar o loop do agente e relatar resultados",
+        "doc_read": "Ler documentos do Word: estrutura, seções e busca"
+      },
+      "documents": {
+        "name": "Documentos",
+        "description": "Leia documentos do Word do seu espaço de trabalho, por estrutura e por seção"
       }
     },
     "entry": {

@@ -1427,7 +1427,12 @@
         "execute_sql": "在本機資料庫執行 SQL 查詢",
         "sync_conversation_messages": "為沒有訊息記錄的對話記錄訊息歷史",
         "export": "將對話下載為檔案",
-        "complete_task": "結束智慧體迴圈並回報結果"
+        "complete_task": "結束智慧體迴圈並回報結果",
+        "doc_read": "讀取 Word 文件：大綱、章節與搜尋"
+      },
+      "documents": {
+        "name": "文件",
+        "description": "依大綱與章節讀取工作區中的 Word 文件"
       }
     },
     "entry": {

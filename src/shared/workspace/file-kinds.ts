@@ -52,6 +52,24 @@ const TEXT_EXTENSIONS = new Set([
 export const MARKDOWN_EXTENSIONS = new Set(['md', 'markdown', 'mdx']);
 
 /**
+ * Formats the document engine understands (`shared/documents/`).
+ *
+ * These are still binary as far as `read_file` is concerned — a `.docx` is a zip, and
+ * decoding it as text produces noise. What changed is that they are no longer *dead
+ * weight*: the agent reads them with `doc_read`, so the tree and the reader must say
+ * "this needs a different tool" rather than "this file is unusable".
+ *
+ * ⚠️ Membership here is a claim that a handler is registered. Adding an extension before
+ * its handler exists makes the UI promise something the agent will then refuse.
+ */
+export const DOCUMENT_EXTENSIONS = new Set(['docx', 'docm']);
+
+/** Whether the document tools can read this file. */
+export function isDocumentFormat(path: string): boolean {
+  return DOCUMENT_EXTENSIONS.has(extensionOf(path));
+}
+
+/**
  * Largest file the reader will render.
  *
  * Not a storage limit — the file is stored, downloadable, and readable by the agent either

@@ -25,6 +25,7 @@ import {
   handleBackup,
   handleAgentLedger,
   handleWorkspace,
+  handleDocument,
 } from './handlers';
 
 const handlers = [
@@ -65,6 +66,12 @@ export async function handleMessage(
     if (type === 'DB_REQUEST' || type === 'DB_RESPONSE') {
       return { success: true };
     }
+    // Same story for the document worker's channel: these are addressed to the offscreen
+    // document, and `sendMessage` delivers them here as well. Answering immediately keeps
+    // them off `ensureDbReady()`, which they have nothing to do with.
+    if (type === 'DOC_REQUEST' || type === 'DOC_RESPONSE') {
+      return { success: true };
+    }
 
     // Handle messages that don't need DB before waiting for the database
     // OPEN_PERMISSION_PAGE and OPEN_URL just need to interact with browser APIs
@@ -77,6 +84,11 @@ export async function handleMessage(
     // profiles for a call that reads no profile-scoped data.
     const workspaceResult = await handleWorkspace(message);
     if (workspaceResult !== null) return workspaceResult;
+
+    // Documents are OPFS too, and the parsing happens in the offscreen worker. Answering
+    // before `ensureDbReady()` for the same reason as the workspace above.
+    const documentResult = await handleDocument(message);
+    if (documentResult !== null) return documentResult;
 
     await ensureDbReady();
 

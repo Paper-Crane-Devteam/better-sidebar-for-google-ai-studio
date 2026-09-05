@@ -1438,7 +1438,12 @@
         "execute_sql": "在本地数据库上运行 SQL 查询",
         "sync_conversation_messages": "为没有消息记录的对话补录历史",
         "export": "将对话导出为文件",
-        "complete_task": "结束智能体循环并汇报结果"
+        "complete_task": "结束智能体循环并汇报结果",
+        "doc_read": "读取 Word 文档：大纲、章节与搜索"
+      },
+      "documents": {
+        "name": "文档",
+        "description": "按大纲和章节读取工作区里的 Word 文档"
       },
       "workspace": {
         "name": "AI 助手工作区",

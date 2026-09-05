@@ -8,6 +8,7 @@
 import { mcpRegistry } from './registry';
 import { BUILTIN_MCP } from './builtin-mcp';
 import { WORKSPACE_MCP, WORKSPACE_MCP_ID } from './workspace-mcp';
+import { DOCUMENT_MCP, DOCUMENT_MCP_ID } from './document-mcp';
 import { useAgentConfigStore } from '../agent-config-store';
 
 /**
@@ -25,6 +26,10 @@ const REQUIRED_SERVER_IDS: readonly string[] = [BUILTIN_MCP.id];
 export function initMCPRegistry(): void {
   mcpRegistry.registerServer({ ...BUILTIN_MCP });
   mcpRegistry.registerServer({ ...WORKSPACE_MCP });
+  // Documents depend on the workspace to hold the file, but they are a separate toggle:
+  // the file tools are useful without Office parsing, and the schemas cost prompt space
+  // for every user who never drops a .docx in.
+  mcpRegistry.registerServer({ ...DOCUMENT_MCP });
 
   syncMCPEnabledState();
 }
@@ -62,5 +67,19 @@ export function setWorkspaceEnabled(enabled: boolean): void {
   const currentlyDisabled = disabledMcpServers.includes(WORKSPACE_MCP_ID);
   if (currentlyDisabled === !enabled) return; // already in the requested state
   toggleMcpServer(WORKSPACE_MCP_ID);
+  syncMCPEnabledState();
+}
+
+/** Whether the document tools are currently available to the agent. */
+export function isDocumentsEnabled(): boolean {
+  return !useAgentConfigStore.getState().disabledMcpServers.includes(DOCUMENT_MCP_ID);
+}
+
+/** Turn the documents server on or off, and push the change into the registry. */
+export function setDocumentsEnabled(enabled: boolean): void {
+  const { disabledMcpServers, toggleMcpServer } = useAgentConfigStore.getState();
+  const currentlyDisabled = disabledMcpServers.includes(DOCUMENT_MCP_ID);
+  if (currentlyDisabled === !enabled) return;
+  toggleMcpServer(DOCUMENT_MCP_ID);
   syncMCPEnabledState();
 }

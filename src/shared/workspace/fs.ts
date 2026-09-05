@@ -57,6 +57,17 @@ const MAX_READ_BYTES = 2 * 1024 * 1024;
  */
 const MAX_TRANSFER_BYTES = 20 * 1024 * 1024;
 
+/**
+ * Cap for byte access that never crosses the message bridge.
+ *
+ * The document engine (`shared/documents/`) runs at the extension origin and opens
+ * these files itself, so the base64 round trip `MAX_TRANSFER_BYTES` protects does not
+ * happen — and 20 MB is a real limit for a deck with video in it. Callers pass this
+ * explicitly rather than it being the default: an accidental 64 MB base64 string is
+ * exactly the failure the smaller cap exists to prevent.
+ */
+export const MAX_LOCAL_BYTES = 64 * 1024 * 1024;
+
 /** Cap on entries returned by a single list/glob call. */
 const MAX_ENTRIES = 1000;
 
@@ -219,10 +230,11 @@ export async function writeBytes(
   scope: Scope,
   path: string,
   bytes: Uint8Array,
+  maxBytes = MAX_TRANSFER_BYTES,
 ): Promise<number> {
-  if (bytes.byteLength > MAX_TRANSFER_BYTES) {
+  if (bytes.byteLength > maxBytes) {
     throw new Error(
-      `File is ${bytes.byteLength} bytes, over the ${MAX_TRANSFER_BYTES}-byte limit.`,
+      `File is ${bytes.byteLength} bytes, over the ${maxBytes}-byte limit.`,
     );
   }
   const handle = await resolveFile(scope, path, true);
@@ -241,13 +253,14 @@ export async function writeBytes(
 export async function readBytes(
   scope: Scope,
   path: string,
+  maxBytes = MAX_TRANSFER_BYTES,
 ): Promise<{ bytes: Uint8Array; size: number; modified: number }> {
   const handle = await resolveFile(scope, path, false);
   const file = await handle.getFile();
 
-  if (file.size > MAX_TRANSFER_BYTES) {
+  if (file.size > maxBytes) {
     throw new Error(
-      `File is ${file.size} bytes, over the ${MAX_TRANSFER_BYTES}-byte transfer limit.`,
+      `File is ${file.size} bytes, over the ${maxBytes}-byte transfer limit.`,
     );
   }
 

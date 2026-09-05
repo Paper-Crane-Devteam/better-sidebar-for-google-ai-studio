@@ -1427,7 +1427,12 @@
         "execute_sql": "ローカルデータベースで SQL クエリを実行",
         "sync_conversation_messages": "メッセージ履歴のない会話の内容を記録",
         "export": "会話をファイルとしてダウンロード",
-        "complete_task": "エージェントループを終了して結果を報告"
+        "complete_task": "エージェントループを終了して結果を報告",
+        "doc_read": "Word 文書を読む：アウトライン、セクション、検索"
+      },
+      "documents": {
+        "name": "ドキュメント",
+        "description": "ワークスペース内の Word 文書を、アウトラインやセクション単位で読み取ります"
       }
     },
     "entry": {
