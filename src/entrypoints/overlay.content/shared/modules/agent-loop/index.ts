@@ -88,8 +88,9 @@ export {
 export type { AgentEntry } from './agent-entry';
 
 // Adapters
-export type { AgentPlatformAdapter } from './adapters/types';
+export type { AgentPlatformAdapter, ComposerState, ResultSection } from './adapters/types';
 export { GeminiAgentAdapter } from './adapters/gemini-adapter';
+export { AIStudioAgentAdapter } from './adapters/aistudio-adapter';
 export {
   createAdapterForCurrentPlatform,
   createAdapterForPlatform,
@@ -118,6 +119,10 @@ export {
 
 // Renderer
 export { ConversationOverlay, ConversationViewSwitcher, injectRendererStyles, buildPromptMarker } from './renderer';
+
+// Auto-pickup — shared by every platform's feature component
+export { useAutoPickup, planPickup } from './pickup';
+export type { PickupTurn, PickupPlan } from './pickup';
 
 // ─── New Architecture: Soul + Skill + MCP ────────────────────────────────────
 

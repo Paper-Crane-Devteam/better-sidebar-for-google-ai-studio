@@ -19,6 +19,7 @@ import { useI18n } from '@/shared/hooks/useI18n';
 import { useAgentLoopStore } from '../../agent-loop/agent-loop-store';
 import { getToolLabel } from '../../agent-loop/tool-labels';
 import type { ApprovalScope } from '../../agent-loop/types';
+import { isImeComposing } from '@/entrypoints/overlay.content/shared/lib/ime';
 
 export const AgentApproval: React.FC = () => {
   const { t } = useI18n();
@@ -130,6 +131,10 @@ export const AgentApproval: React.FC = () => {
             rows={2}
             autoFocus
             onKeyDown={(e) => {
+              // Enter commits the IME candidate, not the rejection — see `isImeComposing`.
+              // Without this a Chinese reason is submitted half-typed, and the reason is
+              // the whole point of the field: the AI reads it and decides what to do next.
+              if (isImeComposing(e.nativeEvent)) return;
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 decide(false);

@@ -1,4 +1,14 @@
 /**
+ * One tool result, as it will be shown to the user while it waits in the composer.
+ *
+ * Imported from the formatter rather than redeclared here, even though that points from
+ * the adapter layer down into the engine: the formatter owns the result wire format, and
+ * a second same-shaped definition is the kind that quietly drifts. Type-only, so nothing
+ * links at runtime.
+ */
+import type { ResultSection } from '../engine/stages/handoff/formatter';
+
+/**
  * What the composer's send control is currently saying.
  *
  * The four values are not four shades of the same thing — `absent` and `unknown`
@@ -19,13 +29,7 @@
  */
 export type ComposerState = 'send' | 'stop' | 'absent' | 'unknown';
 
-/** One tool result, as it will be shown to the user while it waits in the composer */
-export interface ResultSection {
-  /** Short human label — the tool's `description`, with the join key stripped */
-  label: string;
-  /** The full payload the AI will read */
-  content: string;
-}
+export type { ResultSection };
 
 /**
  * Platform Adapter Interface.
@@ -93,4 +97,29 @@ export interface AgentPlatformAdapter {
 
   /** Get the last AI response DOM container element */
   getLastAIResponseElement(): HTMLElement | null;
+
+  /**
+   * Read the composer's send control.
+   *
+   * On the interface rather than imported from a platform module because two things
+   * outside the adapter depend on it and neither knows which platform it is on:
+   * stage ① reads it to decide whether a turn is running, and the send watcher reads
+   * it as proof of delivery. Both used to import Gemini's `getSendButtonState`
+   * directly, which is why AI Studio could never work no matter what the adapter did.
+   */
+  getComposerState(): ComposerState;
+
+  /**
+   * Stage tool results as collapsed chips, one per section, and report whether they
+   * landed.
+   *
+   * Optional, and absence is a normal answer rather than a gap to fill: it needs a
+   * rich editor that can hold non-text nodes. AI Studio's composer is a plain
+   * `<textarea>`, so there is nothing to implement and the caller falls back to
+   * writing the wrapped payload as text.
+   */
+  stageResultCapsules?(sections: ResultSection[]): Promise<boolean>;
+
+  /** Whether capsules staged by `stageResultCapsules` are still in the composer */
+  hasStagedCapsules?(): boolean;
 }

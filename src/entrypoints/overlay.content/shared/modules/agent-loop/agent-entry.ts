@@ -83,3 +83,49 @@ export function searchAgentEntries(query: string): AgentEntry[] {
 
   return matched.slice(0, 9);
 }
+
+/** Where an entry marker was found in plain composer text */
+export interface AgentEntryMatch {
+  entry: AgentEntry;
+  /** Index of the `>` */
+  start: number;
+  /** Index just past the title */
+  end: number;
+}
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Find a `>Entry title` marker in plain text.
+ *
+ * This is how the marker works on composers that cannot hold a capsule — AI Studio's
+ * `<textarea>`. The marker is **self-describing**: the entry is recovered from the text
+ * itself rather than from state held alongside it. That matters more than it sounds:
+ *
+ * - It survives the feature component remounting. React state would not, and losing it
+ *   is the worst possible failure — the marker is still sitting in the composer, so the
+ *   next send posts the raw `>Title` line as an ordinary message and the skill looks
+ *   broken.
+ * - It makes typing the marker by hand work, which users do once they've seen it.
+ *
+ * Longest title first, so `>Export chats` is not claimed by a hypothetical `>Export`.
+ */
+export function matchAgentEntryInText(text: string): AgentEntryMatch | null {
+  const entries = [...getAgentEntries()].sort((a, b) => b.title.length - a.title.length);
+
+  for (const entry of entries) {
+    // `(^|\s)` mirrors the popup's own rule for what counts as a trigger
+    // (`useTriggerPopup`: position 0, or preceded by whitespace), so a marker the popup
+    // was willing to create is always a marker this can find again.
+    const pattern = new RegExp(`(^|\\s)>${escapeRegExp(entry.title)}`);
+    const match = pattern.exec(text);
+    if (!match) continue;
+
+    const start = match.index + match[1].length;
+    return { entry, start, end: start + entry.title.length + 1 };
+  }
+
+  return null;
+}

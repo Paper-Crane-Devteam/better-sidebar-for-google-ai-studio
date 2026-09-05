@@ -55,10 +55,6 @@ export class LoopContext {
     this.store.setStatus(status);
   }
 
-  editor(): HTMLElement | null {
-    return this.adapter.getEditor();
-  }
-
   /** Read and clear the instruction the user typed while the loop was running */
   takePendingInstruction(): string | null {
     const instruction = this.store.pendingInstruction;

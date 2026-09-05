@@ -108,7 +108,11 @@ export function readSessionEnd(message: DisplayMessageTurn): SessionEnd | null {
  * disqualifies the whole turn, because pickup re-executes a response as a unit and
  * cannot take the statements without the handoff.
  */
-export function hasUnrunToolWork(message: DisplayMessageTurn): boolean {
+export function hasUnrunToolWork(
+  // Narrowed to what it reads, so a platform that can only see one turn (AI Studio
+  // virtualises the rest away) can still ask this question.
+  message: Pick<DisplayMessageTurn, 'role' | 'toolCalls'>,
+): boolean {
   if (message.role !== 'model') return false;
   if (message.toolCalls.some((call) => isHandoffTool(call.toolCall.name))) return false;
   return message.toolCalls.some((call) => deliversResultToAI(call.toolCall.name));

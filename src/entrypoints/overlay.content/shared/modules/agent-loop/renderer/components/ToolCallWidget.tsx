@@ -42,6 +42,7 @@ import {
   isControlTool,
 } from '../../execution-policy';
 import { getToolLabel } from '../../tool-labels';
+import { isImeComposing } from '@/entrypoints/overlay.content/shared/lib/ime';
 
 interface ToolCallWidgetProps {
   toolName?: string;
@@ -344,6 +345,8 @@ export const ToolCallWidget: React.FC<ToolCallWidgetProps> = ({
                 rows={2}
                 autoFocus
                 onKeyDown={(e) => {
+                  // Enter commits the IME candidate, not the rejection — see `isImeComposing`
+                  if (isImeComposing(e.nativeEvent)) return;
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     decide(false);

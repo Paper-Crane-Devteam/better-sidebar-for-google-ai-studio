@@ -26,19 +26,14 @@ import {
   clearActiveEngine,
   getActiveEngine,
   agentEventBus,
-  isSyncRunActive,
 } from '@/entrypoints/overlay.content/shared/modules/agent-loop';
 import { AgentDock } from '@/entrypoints/overlay.content/shared/modules/agent-dock';
 import { canUndo, runUndoFlow } from '@/entrypoints/overlay.content/shared/modules/agent-loop/undo';
 import { toast } from '@/shared/lib/toast';
-import { retireOnboardingHint } from '@/shared/lib/onboarding-store';
 import i18n from '@/locale/i18n';
-import {
-  readConversationIdFromPath,
-  useCurrentConversationId,
-} from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
+import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
 import { useConversationMessages } from '@/entrypoints/overlay.content/shared/modules/agent-loop/renderer/useConversationMessages';
-import { hasUnrunToolWork } from '@/entrypoints/overlay.content/shared/modules/agent-loop/renderer/helpers/session-end';
+import { useAutoPickup } from '@/entrypoints/overlay.content/shared/modules/agent-loop/pickup';
 import {
   createAdapterForCurrentPlatform,
   getCurrentPlatformId,
@@ -47,11 +42,6 @@ import { assembleFinalPrompt } from '@/entrypoints/overlay.content/shared/module
 import { getEnabledSkills } from '@/entrypoints/overlay.content/shared/modules/agent-loop/skills/skill-registry';
 import { initMCPRegistry } from '@/entrypoints/overlay.content/shared/modules/agent-loop/mcp/setup';
 import { getAgentEntryById } from '@/entrypoints/overlay.content/shared/modules/agent-loop/agent-entry';
-import {
-  buildToolCallFingerprint,
-  buildToolCallKey,
-  getToolRisk,
-} from '@/entrypoints/overlay.content/shared/modules/agent-loop/execution-policy';
 import { useAgentRecordStore } from '@/entrypoints/overlay.content/shared/modules/agent-loop/agent-record-store';
 import { buildOwedPayload } from '@/entrypoints/overlay.content/shared/modules/agent-loop/recovery';
 import type { AgentPlatformAdapter } from '@/entrypoints/overlay.content/shared/modules/agent-loop';
@@ -239,156 +229,24 @@ export const AgentLoopFeature: React.FC = () => {
 
   // ─── Auto-pickup: detect tool calls in latest response while idle ───
 
+  /**
+   * The whole decision lives in `useAutoPickup` — see `agent-loop/pickup.ts` for every
+   * guard and the incident behind it. All this side supplies is "which turn", because
+   * that is the only part that is Gemini's.
+   */
   const messages = useConversationMessages();
 
-  /**
-   * Which response we last picked up, as `conversation:turn:toolcalls`.
-   *
-   * Keyed rather than a bare "already fired" boolean, and that is the whole point: the
-   * overlay is never torn down any more (conversations are switched through Gemini's
-   * router, not a page load), so a boolean latch set once — on a response we then
-   * declined to run, or on one in some other conversation — stayed set for the life of
-   * the tab and quietly disabled pickup for every response after it. The user's next
-   * message got an answer full of tool calls that nothing ever executed.
-   *
-   * A key re-arms by itself for a genuinely different response, while still refusing to
-   * fire twice on the same one.
-   */
-  const pickedUpKeyRef = useRef<string | null>(null);
-
-  /**
-   * When the engine is idle but the newest AI response contains tool calls with no
-   * matching results (i.e. nothing was sent back), the user continued the
-   * conversation without re-triggering `>`. The AI is still talking in tool format
-   * because it remembers the system prompt from the previous session.
-   *
-   * Automatically start a new session using the existing response element, skipping
-   * the "wait for AI" stage that would never resolve (the answer is already there).
-   */
-  useEffect(() => {
-    const status = useAgentLoopStore.getState().status;
-    if (status !== 'idle') return;
-
-    // The ledger decides whether these calls already ran, so nothing may be picked up
-    // until it is here. See `recordsReady`.
-    if (!recordsReady) return;
-
-    // Find the last model turn
-    const lastModel = [...messages].reverse().find((m) => m.role === 'model');
-    if (!lastModel) return;
-    if (!lastModel.toolCalls || lastModel.toolCalls.length === 0) return;
-    // Still streaming — wait for it to finish
-    if (lastModel.isStreaming) return;
-
-    // If any outcome is already known (from the next user message), it's history
-    if (lastModel.toolOutcomes.some((o) => o !== null)) return;
-
-    /**
-     * Is there anything here worth running?
-     *
-     * Judged per call rather than per turn — `complete_task` and handoff tools are
-     * never work, and a turn that mixes real statements with a completion (the AI's
-     * favourite shape) still owes the statements. See `hasUnrunToolWork`.
-     */
-    if (!hasUnrunToolWork(lastModel)) return;
-
-    /**
-     * A sync run is driving the tab — none of these conversations were opened by the
-     * user, so none of them is a follow-up.
-     *
-     * Pickup's whole premise is "the user kept talking and nobody ran the tools". A run
-     * walks the tab through up to fifty conversations, and any one of them can end with
-     * agent tool calls that were never reported back (a task the user stopped, say).
-     * Without this the run's own navigation looks like fifty follow-ups: pickup starts a
-     * session, executes the calls, and posts the results into a chat the user never
-     * opened — then the run navigates away, leaving that session parked in a
-     * conversation whose Dock won't even render (`belongsToCurrent`), so nothing on
-     * screen can stop it and the tab refuses to start any new task until a reload.
-     */
-    if (isSyncRunActive()) return;
-
-    /**
-     * Bind to the conversation the response is actually in, read from the URL now.
-     *
-     * `conversationIdRef` follows a 500ms poll (`useUrl`), and this effect is driven by
-     * the DOM — so on a router navigation the two disagree for a moment. Binding a
-     * session to the previous conversation's id hides the dock outright
-     * (`belongsToCurrent`), leaving the engine parked on an approval with no way on
-     * screen to answer it.
-     */
-    const liveConversationId = readConversationIdFromPath() ?? conversationIdRef.current;
-
-    const pickupKey = [
-      liveConversationId ?? 'unbound',
-      lastModel.id,
-      ...lastModel.toolCalls.map((tc) => buildToolCallFingerprint(tc.toolCall)),
-    ].join('|');
-    if (pickedUpKeyRef.current === pickupKey) return;
-
-    /**
-     * Has a *write* in this response already been through the ledger? Then stop.
-     *
-     * This is the guard the whole ledger exists for. Everything above reads the page,
-     * and after a reload the page looks identical whether a call ran or not: the tool
-     * calls are there, no results follow them, `executedCalls` is empty. So pickup used
-     * to re-execute — and for a write, that is the same statement applied twice. Worse,
-     * the second run asks for approval again, on a statement the user just approved, so
-     * the interface actively invites the duplicate. What those results need is
-     * delivering, which the dock offers separately (see `owed`); re-running is never the
-     * recovery.
-     *
-     * ⚠️ Writes only, and the narrowing is the point. Identity is name-plus-params, so
-     * an ordinary repeated question — "show me the biggest chats again" — produces
-     * byte-identical SQL to one the conversation already ran, and the guard read that as
-     * the double-write it is here to stop. The response was skipped whole: statements
-     * never ran, no results, nothing sent, and the transcript closed with a tick. On a
-     * follow-up after a finished task this was easy to hit, because the AI naturally
-     * reaches for the query it just used.
-     *
-     * Re-running a read costs a query and can't corrupt anything, so it is the cheaper
-     * mistake by a wide margin. A write still gets the full stop, matched per call
-     * rather than per response — one recorded write disqualifies the response, since
-     * pickup replays it as a unit and cannot leave that one statement out.
-     *
-     * Both ledgers are consulted the same way: the live store first-hand for this tab,
-     * the stored rows for everything before the last reload.
-     */
-    const executed = useAgentLoopStore.getState().executedCalls;
-    const recorded = useAgentRecordStore.getState().records;
-    const writeAlreadyRan = lastModel.toolCalls.some((tc) => {
-      if (getToolRisk(tc.toolCall) !== 'write') return false;
-      return (
-        executed[buildToolCallFingerprint(tc.toolCall)] !== undefined ||
-        recorded[buildToolCallKey(tc.toolCall)] !== undefined
-      );
-    });
-    if (writeAlreadyRan) {
-      console.log('[AgentLoop] Auto-pickup skipped: a write in this response is already in the ledger');
-      return;
-    }
-
-    // We need the actual DOM element to pass to the engine
-    const adapter = getAdapter();
-    if (!adapter) return;
-    const responseElement = adapter.getLastAIResponseElement();
-    if (!responseElement) return;
-
-    pickedUpKeyRef.current = pickupKey;
-
-    // The user just did the thing the end-of-task hint exists to teach — carried on
-    // talking instead of retyping `>`. Nothing left to explain, so it stops appearing.
-    retireOnboardingHint('agentContinueAfterEnd');
-
-    console.log('[AgentLoop] Auto-pickup: detected unexecuted tool calls in idle state, starting session');
-
-    const engine = new AgentLoopEngine(adapter);
-    engineRef.current = engine;
-    setActiveEngine(engine);
-    engine.startFromExistingResponse(responseElement, 20, {
-      conversationId: liveConversationId,
-      title: 'Follow-up task',
-    });
-  }, [messages, getAdapter, recordsReady]);
+  useAutoPickup({
+    // Referentially stable while the conversation is unchanged, because
+    // `useConversationMessages` keeps the same objects — required, see the hook.
+    turn: [...messages].reverse().find((m) => m.role === 'model'),
+    recordsReady,
+    fallbackConversationId: conversationId,
+    getAdapter,
+    onEngineStarted: (engine) => {
+      engineRef.current = engine;
+    },
+  });
 
   // ─── Capsule insertion (from the `>` popup) ─────────────────────────
 

@@ -17,7 +17,6 @@
  * forever for an answer nobody asked for".
  */
 
-import { triggerSend } from '@/entrypoints/overlay.content/shared/lib/quill-editor';
 import type { LoopContext } from '../../context';
 import { toolCallRecorder } from '../../../records';
 import { isStaged, stageResults, type StagedShape } from './staging';
@@ -73,7 +72,7 @@ export class ResultHandoff {
 
   /** Whether the payload is still sitting in the composer */
   isStagedInEditor(): boolean {
-    return isStaged(this.ctx.editor(), this.shape);
+    return isStaged(this.ctx.adapter, this.shape);
   }
 
   /**
@@ -101,7 +100,7 @@ export class ResultHandoff {
 
     let clicked = true;
     const outcome = await this.watchSend(async () => {
-      if (autoSend) clicked = await triggerSend();
+      if (autoSend) clicked = await this.ctx.adapter.triggerSend();
     });
 
     if (outcome !== 'sent') {
@@ -143,7 +142,9 @@ export class ResultHandoff {
       this.shape = await stageResults(this.ctx.adapter, this.pending);
     }
 
-    const outcome = await this.watchSend(() => triggerSend({ humanDelay: false }));
+    const outcome = await this.watchSend(() =>
+      this.ctx.adapter.triggerSend({ humanDelay: false }),
+    );
     if (outcome !== 'sent') return false;
 
     this.settle();
@@ -181,7 +182,7 @@ export class ResultHandoff {
     }
     // User-initiated, so no artificial pause. `triggerSend` still waits out any
     // in-progress generation so the click can't land on the stop button.
-    await triggerSend({ humanDelay: false });
+    await this.ctx.adapter.triggerSend({ humanDelay: false });
     return true;
   }
 
@@ -214,7 +215,7 @@ export class ResultHandoff {
  */
 function describeMiss(outcome: SendOutcome, clicked: boolean): string {
   if (outcome === 'unconfirmed') {
-    return 'The chat input was cleared, but Gemini never started a turn — the results most likely never went out. Click "Retry" to send them again.';
+    return 'The chat input was cleared, but no turn ever started — the results most likely never went out. Click "Retry" to send them again.';
   }
   // A refused click means the button was still "stop generating"; not clicking was
   // right, because clicking anyway would have aborted the AI's answer.

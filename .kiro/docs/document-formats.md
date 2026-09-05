@@ -1,0 +1,435 @@
+---
+
+# 非文本文档（Office / PDF / 字幕）读写方案
+
+目标场景不是「支持更多文件类型」，而是两句话：
+
+- 研究生把 `thesis.docx` 拖进工作区，跟 AI 讨论，让 AI 改论文；
+- 研究者把 `data.xlsx` 拖进去，让 AI 做统计、加列、改公式。
+
+这两句话决定了整套设计。它们要求的不是「能解析」，而是**便宜地读懂 + 精确地改动 + 用户能审查**。
+
+---
+
+## 一、先说硬约束，方案是从约束里推出来的
+
+| 约束 | 数值 / 位置 | 对方案的影响 |
+|------|------|------|
+| 一轮结果总预算 | `ROUND_BUDGET = 29998` 字符（`engine/stages/handoff/budget.ts`） | **一篇论文永远塞不进一轮**。30 页中文论文 ≈ 5 万字符，是预算的 1.7 倍。所以「读文档」必须先给目录，再按需取段，全文 dump 这条路从一开始就不存在 |
+| 超预算是静默截断 | 见 `agent-loop-architecture.md`「结果有多大」 | 不能靠 prompt 劝 AI 少读，必须在工具里就分页 |
+| 文本读上限 | `MAX_READ_BYTES = 2MB`（`fs.ts`） | 与文档无关，但说明现有 `read_file` 从没打算处理二进制 |
+| 桥接传输上限 | `MAX_TRANSFER_BYTES = 20MB`，且要 base64（+33%） | ⚠️ 决定了**文档解析不能放在 content script**，否则一次编辑要来回搬 2 份 base64 |
+| Service Worker 无 DOM | MV3 SW 和 Web Worker 都**没有 `DOMParser` / `XMLSerializer`** | OOXML 处理必须是「无 DOM」实现，或者放在 offscreen 文档主线程 |
+| content script 注入到每个页面 | `overlay.content` | ⚠️ 决定了 pdfjs（解包 34MB）这类大库不能进 content script bundle |
+| 免费额度 | `FREE_MAX_FILES = 5`（`limits.ts`） | 一篇论文 + 一份数据就用掉 2/5，文档能力天然是 Power Pack 的卖点 |
+| MV3 禁远程代码 | 商店政策 | ⚠️ 排除 tesseract.js OCR（语言包要从 CDN 拉 15MB+），排除任何 CDN 加载的 wasm |
+
+还有一条不是技术约束但同样硬：**用户不会逐字校对 AI 改过的论文**。所以「改」的默认形态不能是
+直接覆盖正文，必须是 Word 里能一条条接受/拒绝的**修订（tracked changes）+ 批注**。这一条比任何
+库的选择都重要。
+
+---
+
+## 二、功能清单（用户视角）
+
+### 2.1 Word（.docx）—— 优先级最高
+
+读：
+
+- **文档概览**：标题层级目录、段落/字数/表格/图片数、有没有已有修订和批注、样式清单。
+- **按段读**：`p12–p48` 或「第 3 章」这样的范围，返回带段落号的 Markdown 投影（标题层级、加粗、
+  列表、表格、脚注、公式占位都保留成 Markdown 记号）。
+- **搜索**：跨段落正则/关键词定位，返回段落号 + 命中行，等价于文档里的 `grep_files`。
+- **表格单独读**：`t3` → CSV，避免把宽表压进 Markdown 里变成一团。
+
+改（**默认走修订模式**）：
+
+- 改写段落里的一句话 / 整段替换 / 插入新段 / 删除段落 —— 全部记为 `w:ins` / `w:del`，作者标成
+  `AI (Better Sidebar)`，用户在 Word 里逐条接受。
+- **加批注**（`w:comment`）：这是「帮我审论文」的主要输出形态 —— 不改字，只在有问题的句子上挂
+  意见。比改动更安全，也更符合导师式反馈。
+- 应用样式（`w:pStyle`，比如把误标为正文的一行改成 `Heading 2`）、加脚注、改页眉页脚文本。
+- 替换全文里的术语（`replace_all` 语义，同样记为修订）。
+- 接受/拒绝已有修订（可选，做起来不难，属于顺手）。
+
+写新文件：Markdown → docx（导出综述、回信、大纲）。
+
+### 2.2 Excel（.xlsx / .csv）
+
+读：
+
+- **工作簿概览**：每个 sheet 的名字、已用区域、行列数、是否有图表/透视表/合并单元格/冻结窗格。
+- **表头 + 类型推断 + 抽样**：前 N 行 + 每列推断类型（数值/日期/文本/公式），这是 AI 做统计前
+  唯一需要的东西，成本几百字符。
+- **按区域读**：`Sheet1!A1:F200` → TSV。公式单元格同时给公式和缓存值。
+- **查找**：值/公式的跨表搜索，返回 A1 引用。
+
+改：
+
+- 写单元格（字面值 / 公式 / 批量区域），**不破坏其它单元格的格式、图表、条件格式**。
+- 加列并填公式、加 sheet、改 sheet 名、加批注、设置数字格式。
+- 排序 / 筛选后的结果另存为新 sheet（原表不动，这比原地排序安全得多）。
+- 插入/删除行列 —— 见第七节，风险最高，放在后期且要额外确认。
+
+写新文件：CSV/Markdown 表格 → xlsx。
+
+### 2.3 PDF
+
+读：
+
+- 书签目录 + 页数 + 是否为扫描件（有无文字层）。
+- 按页取文字（保留段落切分和粗略排版），支持页范围。
+- 取已有批注（别人给的审阅意见）。
+- 取表单字段。
+
+改（**明确不改正文文字**，理由见第九节）：
+
+- 加批注 / 高亮 / 便签（这就是「PDF 加批注」的需求）。
+- 填 AcroForm 表单。
+- 页面级操作：删页、抽页、合并、旋转、加水印/页码。
+- 扫描件：不做 OCR，改为「把这页渲染成图片交给宿主的多模态模型看」（Gemini 本身就会读图）。
+
+### 2.4 PowerPoint（.pptx）
+
+读：每页标题 + 正文文字 + 演讲者备注 + 形状清单。改：替换文字、改备注、删/复制/重排幻灯片。
+新建：Markdown 大纲 → pptx。
+
+### 2.5 字幕（.srt / .vtt / .ass / .ssa）
+
+这些**现在就被当纯文本**（`file-kinds.ts` 里 `srt`/`vtt` 在文本白名单），所以 AI 已经能读写。
+缺的是「按 cue 操作」：
+
+- 解析成带编号的 cue 列表（时间轴 + 文本），只读文本时不带时间码（省一半 token）。
+- 整体平移 / 缩放时间轴、修正首帧偏移。
+- 逐条翻译且**保证时间轴一字不动**（现在让 AI 直接编辑 srt，它会顺手改坏时间码）。
+- 合并过短 cue、拆分过长 cue、检查阅读速度（CPS）与行长。
+- 格式互转 srt ↔ vtt ↔ ass。
+
+### 2.6 顺带能覆盖的
+
+- **ODF（.odt/.ods/.odp）**：和 OOXML 一样是 zip + XML，基建做完后是增量工作，不是新工程。
+- **.doc/.xls（97-2003 二进制）**：不做，让用户先在 Office 里另存为新格式。理由见第九节。
+
+---
+
+## 三、工具面：只加 3 个 tool，细节放进 skill
+
+⚠️ **不能一个格式一套工具。** 每个 tool schema 都要进**每一轮**的 prompt，五种格式各三四个工具
+就是 15 个 schema 常驻，等于给所有不碰文档的用户加税。现有 `manage_files` 已经立了规矩：低频操作
+用一个 `action` 参数收口。
+
+沿用这个规矩，加一个可以整体关掉的 MCP server（理由同 `workspace-mcp.ts` 的注释）：
+
+```
+DOCUMENT_MCP  id: 'builtin-documents'   name: 'Documents'
+├── doc_read    读：概览 / 范围 / 搜索，一个 schema 覆盖所有格式
+├── doc_edit    改：ops 数组，按格式解释
+└── doc_create  从 markdown / csv 生成新的 docx / xlsx / pptx / srt
+```
+
+`doc_read` 参数：`path` / `mode`(outline|range|search|raw) / `range`(段落号、`Sheet1!A1:F99`、
+`p3-p9`、页码) / `query` / `include_formatting`。默认 `mode=outline` —— **第一次读一个文档，
+返回的一定是目录而不是内容**，这是从 30k 预算直接推出来的默认值。
+
+`doc_edit` 参数：`path` / `ops`（JSON 数组）/ `mode`(track|direct，docx 默认 `track`) /
+`change_summary`（审批卡要用，非可选）。
+
+⚠️ **每种格式的 op 清单不写进 schema，写进 skill。** `skills/` 机制就是为这个存在的：
+prompt 里只留一句「文档编辑的完整操作清单在 `docx-review` / `spreadsheet-analysis` skill 里」，
+AI 需要时 `activate_skill` 拉进来。基础 prompt 成本 ≈ 3 个 schema，实际能力 ≈ 30 个操作。
+
+配套 skill（顺带就是产品化的入口）：
+
+| skill | 内容 |
+|------|------|
+| `builtin-docx-review` | 论文/文稿评审工作流：先 outline，再逐章读，问题挂批注，改动走修订，最后汇总一份「我改了什么」 |
+| `builtin-spreadsheet-analysis` | 先 overview + 抽样 + 类型推断，再决定读哪块；写公式而不是写死值；加列而不是改原列 |
+| `builtin-subtitle-polish` | 字幕翻译/校对：时间轴只读，只改文本，最后跑一遍 CPS 检查 |
+
+---
+
+## 四、跑在哪：offscreen 里的 doc worker
+
+```
+content script (tools/document-tools.ts)
+      │  DOCUMENT_OP  { workspaceId, path, op, args }   ← 只走「指令 + 投影文本」
+      ▼
+background (handlers/document.ts)  ── 只做转发，不解析
+      │
+      ▼
+offscreen.html ──► doc-worker.ts        （OOXML / 字幕：无 DOM 实现）
+                └► offscreen 主线程      （PDF：pdf.js 需要 DOM，自带 worker）
+                        │
+                        └──► 直接开 OPFS 里的 agent-workspace/<id>/<path>
+```
+
+四个理由，按重要程度：
+
+1. **字节不过桥。** offscreen 文档是扩展 origin，看到的 OPFS 就是 background 那个（`fs.ts` 里
+   `WORKSPACE_ROOT` 那棵树）。所以文档引擎自己读、自己写，桥上只走「A1:F200 的 TSV」这种几 KB 的
+   投影。放在 content script 就得 `readBytes` → base64 → 改 → base64 → `writeBytes`，一次编辑
+   两趟 20MB 上限，而且真的会顶到上限。
+2. **不污染 content script bundle。** content script 注入到每个 gemini/aistudio 页面，
+   ⚠️ 而且 WXT 打的 content script 做**动态 import 分包不可靠**（chunk 得走
+   `web_accessible_resources`，还不是 module script）—— 也就是说放进去就是常驻，pdfjs 解包 34MB
+   这种东西没有「用到才加载」的退路。
+3. **SW 会被回收，offscreen 不会。** 解析一个 20MB 的 xlsx 是 CPU 密集活儿，SW 空闲 30s 就死，
+   长任务里没有 await 的空档反而更危险。offscreen 的生命周期已经有人管（`shared/db/index.ts`）。
+4. **worker 里可以用 sync access handle**，大文件读写快一个量级；而且解析卡死也卡不到侧边栏 UI。
+
+⚠️ **必须新开一个 worker，不能挂到 `db-worker` 上。** db-worker 是串行队列，一个 30 秒的文档解析
+会把整条 SQL 通道堵死 —— 而 agent 的每一步都在读数据库账本。
+
+Firefox 没有 offscreen API，现有代码已经有 fallback（background 页里 `new Worker()`，见
+`shared/db/index.ts` 的 `ensureWorker`）。doc-worker 走同一套 fallback，所以**这也是「必须无 DOM」
+的第二个理由**：fallback 里拿到的还是 Worker，还是没有 `DOMParser`。
+
+---
+
+## 五、选型：调研结果与结论
+
+### 5.1 候选清单（2026-09 查 npm registry）
+
+| 包 | 版本 / 最后发布 | 许可 | 解包体积 | 结论 |
+|---|---|---|---|---|
+| `fflate` | 已是本项目依赖 | MIT | — | ✅ **zip 层直接用它**。OOXML 全是 zip，这一层零新增依赖 |
+| `xlsx` (SheetJS CE) | 0.18.5 / **2022-03** | Apache-2.0 | 7.3MB | ⚠️ npm 上冻结在 2022，`CVE-2023-30533`（原型污染，≤0.19.2 全中）只在 cdn.sheetjs.com 的新版修了。**我们的输入正是「用户拖进来的任意文件」，这个 CVE 的触发条件就是它** → 不用；要用只能从 cdn tarball 装，等于自己维护一个供应链 |
+| `exceljs` | 4.4.0 / **2023-10** | MIT | 21MB | ⚠️ 事实上停更；round-trip 会丢图表/透视表/部分条件格式。只考虑当「只读 fallback」或「新建工作簿」 |
+| `xlsx-populate` | 1.21.0 / **2020** | MIT | 14.8MB | 死了，不考虑 |
+| `mammoth` | 1.12.2 / 2026-08 | BSD-2 | 2.1MB | ✅ 活跃。docx → HTML，**只读**。适合「预览」和「兜底文本提取」，但它丢掉与原 XML 的位置对应，**不能拿来做编辑定位** |
+| `docx` (dolanmiu) | 9.7.1 / 2026-05 | MIT | 4.5MB | ✅ 活跃，**只能从零生成**，不能编辑已有文件。用于 `doc_create` |
+| `docx-preview` | 0.4.0 / 2026-07 | Apache-2.0 | 952KB | ✅ 侧边栏里渲染 docx 预览用，可选 |
+| `docxmlater` | 12.1.0 / 2026-06 | MIT | 17.5MB | 🟡 号称能安全 round-trip 带修订/批注的 docx。**单人新项目**，体积也大。值得挖它的实现思路，不建议直接依赖 |
+| `dealfluence/adeu` | npm 上 0.0.1 是 **0KB 占位** | MIT | — | 🟡 「docx ↔ Markdown 投影，改动回写成修订」—— **和我们要做的架构完全一致**，当参考实现读，不能当依赖 |
+| `pdfjs-dist` | 6.3.289 / 2026-08 | Apache-2.0 | **34MB** | ✅ PDF 读取唯一选择。必须懒加载 + 本地打包 worker |
+| `pdf-lib` | 1.17.1 / **2021** | MIT | 19MB | ⚠️ 原仓库停更（issue #1423「Is this thing still on?」） |
+| `@cantoo/pdf-lib` | 2.9.1 / 2026-08 | MIT | 21MB | ✅ 维护中的 fork（作者原话是「维护到我们自己不需要为止」，预期值放低）。批注/表单/页面操作用它 |
+| `pptxgenjs` | 4.0.1 / 2025-06 | MIT | 2.5MB | ✅ 只写不读，用于 `doc_create` |
+| `subsrt-ts` | 2.1.2 / 2023-10 | MIT | **86KB** | ✅ srt/vtt/ass/ssa/sub/smi 双向。体积可以忽略，性价比最高的一笔 |
+| `fast-xml-parser` | 5.11.1 / 2026-08 | MIT | 1.3MB | 🟡 无 DOM，可在 worker 跑。备选，见 5.3 |
+| `hyperformula` | 3.4.0 | **GPL-3.0-only** | 12.6MB | ❌ 许可不兼容闭源扩展。公式重算另有办法，见 7.2 |
+| `tesseract.js` | 7.0.0 | Apache-2.0 | 1.4MB + 远程语言包 | ❌ MV3 不能拉远程资源；本地打包 15MB+ 语言包也不现实 |
+
+### 5.2 结论：三类活儿，三种态度
+
+| 活儿 | 做法 | 为什么 |
+|---|---|---|
+| zip 拆包/打包 | `fflate`（已有） | 已经在依赖里，无 DOM，worker 里能跑 |
+| **OOXML 定位与局部替换** | **自研，约 800–1200 行** | 见 5.3 |
+| 从零生成新文件 | `docx` / `pptxgenjs` / 自研最小 xlsx | 生成是纯输出，没有「别弄坏原文件」的风险，用现成库最划算 |
+| PDF 读 / PDF 批注 | `pdfjs-dist` / `@cantoo/pdf-lib` | 自研 PDF 是明确的坑，不碰 |
+| 字幕 | `subsrt-ts` | 86KB 买六种格式，没有自研的理由 |
+| 公式重算 / OCR / PDF 正文重排 | **不做** | 见第九节 |
+
+### 5.3 为什么 OOXML 这一层自研（这是全篇最需要论证的决定）
+
+先说清楚自研的**范围有多小**：不做对象模型、不做全量序列化、不做排版。只做两件事 ——
+
+1. 把 `word/document.xml` 之类的 part **切成带原始字节偏移的 token 流**（标签开/闭/文本），
+2. 编辑就是往原始字符串里 **splice**，改动区域之外**一个字节都不动**。
+
+四个理由：
+
+1. **保格式这件事，只有 splice 能保住。** 任何「解析成对象 → 改 → 重新序列化」的库都会重写整份
+   XML：命名空间前缀、属性顺序、自闭合写法、`xml:space="preserve"` 都可能变，图表 / 透视表 /
+   已有修订 / 批注 / 域代码这些它没建模的东西直接消失。exceljs 丢图表就是这个原因。而用户拖进来
+   的论文和数据表，恰恰是**满是我们没建模的东西**的文件。
+2. **无 DOM 是硬要求。** worker 和 SW 都没有 `DOMParser`；用 `fast-xml-parser` 或 `@xmldom/xmldom`
+   能绕过，但它们都是「解析成对象再序列化」，回到问题 1。
+3. **体积。** 现成方案要 17–21MB 解包量换一个我们只用 5% 的对象模型。
+4. **OOXML 在这件事上其实很温和**：机器生成、格式规整、没有自定义 DTD、实体只有标准那五个、
+   没有 CDATA。所以 tokenizer 是**有限工作量**而不是无底洞 —— ⚠️ 顺便，因为我们不展开实体，
+   billion-laughs 这类 XML 炸弹对我们天然免疫，而换成 `DOMParser` 就要单独防。
+
+🟡 唯一真正难的一块是 **run 拆分**，单独说：
+
+Word 会把一句话切成任意多个 `<w:r>`（拼写检查、修订历史、格式变化都会切），所以
+「在 `document.xml` 里搜索用户看到的那句话」几乎必然搜不到。做法是：
+
+```
+段落 → 展平成「可见文本 + 每个字符属于哪个 run 的偏移表」
+       ↓ 在展平文本里定位（这时才能用 old_text 匹配）
+       ↓ 命中区间映射回 run：首 run 尾部拆开、尾 run 头部拆开、中间的整段替换
+       ↓ 新 run 继承被替换区间第一个 run 的 rPr（格式跟着走）
+```
+
+这段逻辑是这个方案唯一「写错了会静默出错」的地方，所以它必须：单独一个模块、
+带真实样本文件的回归用例（带修订的、带批注的、带公式的、中日韩混排的、带书签的）。
+
+Anthropic 官方 docx skill、`adeu`、`docXMLater` 三个独立实现走的都是这条路
+（unzip → 直接改 `word/document.xml` → 修订形式回写），这条路是有人走通过的。
+
+---
+
+## 六、代码结构
+
+```
+src/shared/documents/                    ★ 新增，纯函数层，无 DOM，可在任意 context 跑
+├── index.ts                 # 注册表：扩展名 → handler
+├── types.ts                 # DocOutline / DocProjection / DocOp / DocEditResult
+├── zip.ts                   # fflate 封装：readPart / writePart / listParts + 解压炸弹防护
+├── ooxml/
+│   ├── xml-cursor.ts        # ★ 保偏移的 tokenizer + splice。全篇的地基
+│   ├── runs.ts              # ★ run 展平 / 定位 / 拆分（5.3 那段逻辑）
+│   └── rels.ts              # .rels 与 [Content_Types].xml 的增删（加批注/加 part 时要动）
+├── docx/
+│   ├── outline.ts           # 目录 + 统计
+│   ├── project.ts           # 段落 → Markdown 投影（带段落号）
+│   ├── edit.ts              # 段落级 ops
+│   ├── revisions.ts         # ★ w:ins / w:del 包装（修订模式）
+│   └── comments.ts          # ★ comments.xml + commentRangeStart/End
+├── xlsx/
+│   ├── outline.ts           # sheet 清单 / 已用区域 / 特性探测
+│   ├── read.ts              # 区域读、类型推断、日期序列号还原
+│   └── edit.ts              # 单元格 splice + calcChain 失效处理
+├── pptx/ …
+├── pdf/                     # 只有这个目录允许 import pdfjs / pdf-lib（懒加载）
+└── subtitle/                # subsrt-ts 封装 + cue 级操作
+
+src/entrypoints/offscreen/doc-worker.ts  ★ 新增：串行队列 + OPFS 直读直写 + 备份
+src/entrypoints/background/handlers/document.ts  ★ 新增：DOCUMENT_OP 转发
+src/shared/documents/client.ts           ★ 新增：content script 侧的 typed wrapper
+.../agent-loop/tools/document-tools.ts   ★ 新增：3 个 tool 的参数解析与结果成文
+.../agent-loop/mcp/document-mcp.ts       ★ 新增：可关闭的 MCP server
+.../agent-loop/mcp/providers/document-provider.ts
+```
+
+要改的现有文件：
+
+| 文件 | 改什么 |
+|---|---|
+| `shared/workspace/file-kinds.ts` | docx/xlsx/pptx/pdf 现在被归到 `BINARY_EXTENSIONS`，注释里说它们对 agent 是「dead weight」。加一类 `DOCUMENT_EXTENSIONS`：仍然不是文本（`read_file` 不能读），但**图标、预览、以及 AI 的可用性提示要区分对待** —— 否则文件树还在告诉用户「这文件没用」 |
+| `shared/types/messages.ts` | 加 `DOCUMENT_OP` 消息类型 |
+| `agent-tab/workspace/WorkspaceFileDrawer.tsx` | 目前 `isProbablyBinary` 直接判 `skipped: 'binary'`。文档类应该走预览（后期）或至少显示「概览」而不是「无法预览」 |
+| `src/locale/en.json` | 新增文案（其它语言有 hook 处理） |
+
+---
+
+## 七、每种格式的实现要点与坑
+
+### 7.1 docx
+
+- **段落号 `p12` 只是导航用的，不是编辑地址。** 编辑地址是 `old_text`，规则跟 `edit_file` 完全
+  一致：命中多处就拒绝，让 AI 补上下文。⚠️ 理由是插入一段之后所有后续段落号都会漂移，AI 手里的
+  号在下一次调用时就已经过期了 —— 以段落号为地址等于给自己造一类「改错了段」的静默 bug。
+  `scope: "p12"` 只用来把 `old_text` 的搜索范围缩小，解决同一句话在文中出现两次的歧义。
+- **默认 `mode=track`。** 直接覆盖（`mode=direct`）要在审批卡上单独说明。
+- 加批注要同时动四处：`word/comments.xml`（可能不存在，要新建）、`[Content_Types].xml`、
+  `word/_rels/document.xml.rels`、正文里的 `commentRangeStart/End` + `commentReference`。
+  ⚠️ 漏掉 Content_Types 的结果是 Word 报「文件已损坏」，这是最容易踩的一脚。
+- 投影里公式（OMML）、图片、图表转成 `[公式]` `[图 3]` 这种占位符并保留 id —— 让 AI 知道那里有
+  东西但不试图编辑它。
+- 中日韩：`w:rFonts` 有 eastAsia 区分，新插入的 run 直接继承原 rPr 就不用管这件事。
+
+### 7.2 xlsx
+
+- **单元格写入用 `t="inlineStr"`，绕开 sharedStrings。** 改 `xl/sharedStrings.xml` 要维护引用计数
+  和索引重排，代价大且容易错；inlineStr 是标准里合法的写法，Excel/WPS/Numbers 都认。
+- **公式重算交给 Excel。** 写完之后删掉 `xl/calcChain.xml`（连 rels 和 Content_Types 一起清），
+  并在 `workbook.xml` 的 `<calcPr>` 上加 `fullCalcOnLoad="1"`。⚠️ 不这么做的后果是：AI 改了 B2，
+  但依赖 B2 的 C2 还显示旧的缓存值，用户打开看到的是**自相矛盾的表**。JS 侧自己算是另一条路，但
+  `hyperformula` 是 GPL-3.0，用不了。
+- **日期是序列号。** 单元格里是 `45678`，得查 `numFmt` 才知道它是日期；还要看工作簿是不是 1904
+  日期系统（Mac 老文件）。读的时候统一还原成 ISO 字符串，否则 AI 会把日期当普通数字做统计。
+- **共享公式 `t="shared"`**：一个单元格写 `<f t="shared" si="0" ref="C2:C99">`，其余只引用 si。
+  改动落在 host 单元格上时要把公式实体化到别的单元格，否则整列公式一起消失。
+- ⚠️ **插入/删除行列是最危险的操作**：要同步改公式引用、合并区域、表（ListObject）范围、
+  条件格式范围、数据验证范围、图表引用。放到最后做，并且**默认拒绝 + 建议「新增一列/另存一个
+  sheet」的替代方案** —— 对科研数据表来说，加列几乎总是比插行更符合意图。
+- 大表的读取预算：一个 5000 行 × 20 列的区域是 ~100 万字符，是一轮预算的 30 倍。所以
+  `read_range` 必须自己截断并在结尾说明剩多少行（照 `budget.ts` 的 `buildNotice()` 那套话术）。
+
+### 7.3 pdf
+
+- pdfjs 必须**本地打包 worker**（`pdf.worker.mjs`）并走 `web_accessible_resources`；⚠️ 从 CDN 加载
+  会直接违反 MV3 远程代码政策，商店审核会挂。
+- 只做文字提取时不需要 canvas；一旦要渲染页面为图片就需要 `OffscreenCanvas`。
+- 高亮批注需要文字的坐标：pdfjs 的 `getTextContent({ includeMarkedContent: false })` 给每个 item
+  的 transform + width/height，据此算出 QuadPoints 交给 pdf-lib。⚠️ 跨行高亮要拆成多个 quad，
+  不能画一个大矩形。
+- 扫描件判定：整份文档文字层字符数 / 页数 < 阈值就判扫描件，明确告诉用户「这份是图片，我只能
+  看图，不能改字」。
+
+### 7.4 pptx / 字幕
+
+pptx 的文字都在 `ppt/slides/slideN.xml` 的 `a:t` 里，结构比 docx 简单；删/重排幻灯片要同步
+`presentation.xml` 的 `sldIdLst` 和对应 rels，漏了就是打不开。
+
+字幕交给 `subsrt-ts`，我们只加两条自己的规则：**时间轴字段在「只改文本」的 op 里是只读的**，
+以及输出时保留原文件的换行风格和 BOM（srt 对这个敏感，播放器行为不一致）。
+
+---
+
+## 八、安全网：改二进制文件比改文本危险，所以要多一层
+
+现有的 undo 只管数据库（`undo/snapshot-store.ts` 是表级快照），**工作区文件写入根本没有 undo**。
+文本文件还能靠 AI 自己改回来；一个被写坏的 docx 是**打不开**的，用户失去的是原始论文。
+
+所以文档编辑必须自带回退：
+
+1. **首次改动前自动备份**：`.history/<原名>.<时间戳>.<扩展名>`，同一个 session 只备份一次
+   （理由同 `snapshot-store.ts` 的「first write 就是 session 起点」）。
+2. `.history/` 在文件树里默认折叠/隐藏，**且不计入 `FREE_MAX_FILES`** —— 安全网不能变成付费墙。
+   保留 3 份，超了删最旧。
+3. **写入用「写临时文件 → 校验能重新打开 → 改名替换」**。⚠️ 直接 `createWritable()` 覆盖原文件，
+   中途失败就是一个 0 字节的论文。
+4. 写完立刻做一次自检：能不能重新解包、`[Content_Types].xml` 里声明的 part 是否都在、
+   XML 是否仍然良构。任何一项不过就回滚并把失败原因作为 `ERROR:` 返回给 AI。
+5. 审批卡（`change_summary` 那条链路）对文档编辑显示**逐条 op 的 before → after 片段**，不是整份
+   文件。用户能审的只有句子级别的 diff。
+6. 解压炸弹：`fflate` 解每个 part 时设上限（单 part 50MB / 总量 200MB / part 数 2000），
+   OOXML 正常文件离这些数字很远。
+
+---
+
+## 九、明确不做，以及为什么
+
+| 不做 | 理由 |
+|---|---|
+| **改 PDF 正文文字** | 文字在 content stream 里，改一个字要重排整个 text-showing 操作符序列、处理字体子集（要加的字形可能根本不在嵌入的子集里）、可能还要改 CMap。这是真正的无底洞。替代方案：批注 + 高亮，或者「我给你出一份修订版的 docx」 |
+| **OCR 扫描件** | MV3 不能拉远程语言包，本地打包 15MB+ 不现实；而宿主就是个多模态模型，把页面渲染成图片给它看是更好的答案 |
+| **JS 侧公式重算** | `hyperformula` 是 GPL-3.0-only；自己实现 Excel 函数语义（含数组公式、迭代计算、区域引用）性价比为负。交给 Excel 的 `fullCalcOnLoad` |
+| **.doc / .xls / .ppt（97-2003 二进制）** | 完全不同的 CFB 二进制格式，跟 OOXML 那套基建零复用。让用户在 Office 里另存为，一句提示就够 |
+| **docx 排版还原 / 分页** | 「第 12 页」这种定位需要完整排版引擎。用段落号和章节代替，AI 和用户都不吃亏 |
+| **在侧边栏里做可编辑的文档编辑器** | 这是另一个产品。我们做的是「AI 改，用户在 Word/Excel 里审」 |
+| **xlsx 图表的创建/修改** | 读的时候知道「有一个图表引用了 A1:C20」就够了；生成图表 XML 属于另一个量级 |
+
+---
+
+## 十、分期
+
+| 期 | 内容 | 交付的场景 |
+|---|---|---|
+| **P0 基建** | `zip.ts` + `xml-cursor.ts` + `runs.ts` + doc-worker + `DOCUMENT_OP` + 备份/原子写 + 3 个 tool 骨架 + `file-kinds` 分类修正 | 无用户可见功能，但后面每一期都便宜 |
+| **P1 论文场景** | docx 读（outline / 按段 / 搜索）+ 批注 + 修订式编辑 + `docx-review` skill；字幕 cue 级工具（便宜，顺手做完） | ✅ **「帮我改论文」跑通** |
+| **P2 数据场景** | xlsx 概览 / 区域读 / 类型推断 / 单元格与公式写入 + `spreadsheet-analysis` skill | ✅ **「帮我处理统计数据」跑通** |
+| **P3 补齐** | PDF 读 + 批注/表单/页面操作；pptx 读改；`doc_create`（md→docx / csv→xlsx / md→pptx） | 文献阅读、汇报材料 |
+| **P4 加分项** | 侧边栏文档预览（docx-preview / 表格 / pdf canvas）；PDF 页面渲染成图交给多模态模型；xlsx 区域导入临时 sqlite 让 AI 用 SQL 做统计 | 信任感与大表分析能力 |
+
+P4 那两条各有一个前置：**渲染成图要 adapter 新增「往输入框贴图片」的能力**（现在
+`AgentPlatformAdapter` 只有 `insertText` / `stageResultCapsules`，没有附件通道，而且两个平台的
+composer 差别很大）；**sqlite 那条必须与应用自己的库隔离**（独立 db 文件或临时表命名空间 +
+只读保护），否则 AI 在用户数据表上跑 SQL 会碰到我们自己的账本。
+
+---
+
+## 十一、动手前要先验的三件事（spike，各半天）
+
+1. **offscreen worker 能不能直接读到 background 那棵 OPFS 树。** 整个「字节不过桥」的设计押在
+   这一条上。写个最小验证：background 写一个文件，doc-worker 读出来。Firefox fallback 路径同样验。
+2. **`xml-cursor` 对真实文件的存活率。** 找 10 份真实 docx（带修订的、Zotero 插过引文的、
+   LaTeX 转出来的、WPS 存的、Google Docs 导出的）跑「解包 → tokenize → 原样重打包 → 用 Word 打开」，
+   ⚠️ 必须先证明**零改动 round-trip 是逐字节相同的**，再谈编辑。
+3. **pdfjs 在 offscreen 文档里的可用性与真实体积。** 打一次包看 content script 和 offscreen 的
+   bundle 各涨多少；确认 worker 走本地 `web_accessible_resources` 能起来。
+
+## 参考
+
+- [anthropics/skills — docx skill](https://github.com/anthropics/skills/blob/main/skills/docx/SKILL.md)：官方 docx skill，思路是 unzip → 改 `word/document.xml` → 用 docx-js 新建 → redlining 做修订
+- [dealfluence/adeu](https://github.com/dealfluence/adeu)：docx ↔ Markdown 投影、改动回写成修订的开源实现（npm 包是空占位）
+- [ItMeDiaTech/docXMLater](https://github.com/ItMeDiaTech/docXMLater)：声称能安全 round-trip 带修订/批注的 docx，可挖实现细节
+- [CVE-2023-30533](https://scout.docker.com/v/CVE-2023-30533)：SheetJS CE ≤0.19.2 读取构造文件时的原型污染
+- [SheetJS 安装说明](https://docs.sheetjs.com/docs/getting-started/installation/nodejs)：新版只在 cdn.sheetjs.com 发布，npm 停在 0.18.5
+- MV3 service worker 没有 DOMParser：[Chrome extension: DOMParser is not defined with Manifest v3](https://stackoverflow.com/questions/68964543/)
+
+（以上外部内容均为转述整理，非原文引用。）

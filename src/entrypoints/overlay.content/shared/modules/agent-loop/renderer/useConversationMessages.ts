@@ -1,23 +1,31 @@
 /**
- * useConversationMessages — Hook for non-intrusively reading conversation turns from DOM.
+ * useConversationMessages — the conversation, as turns the agent view can render.
  *
- * Uses htmlToMarkdown to extract markdown-formatted text from both user and model
- * response DOM elements, then parses agent-specific markers (prompt markers,
- * tool result tags) from the markdown text.
+ * Two readers, one per platform, because the two platforms keep the conversation in
+ * genuinely different places:
+ *
+ * | | source | why |
+ * |---|---|---|
+ * | Gemini | the DOM | every turn is in the document, and there is no API capture of them |
+ * | AI Studio | `conversation-messages-store` | its transcript is **virtualised** — measured: 16 turns in the document, 5 with any content in them; scroll to the top and it is 1. Reading the DOM there does not return a partial conversation, it returns a confidently wrong one |
+ *
+ * The store is not a consolation prize on AI Studio, it is the better source: it is fed by
+ * the API interceptor, so the text is the model's own output rather than a
+ * render-then-scrape round trip, and the `<bs_agent_tool>` blocks arrive verbatim.
+ *
+ * Parsing is shared — see `turn-assembly.ts`. Only the reading differs.
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { extractPromptId, RESULT_TAG, findConversationScroller } from './constants';
+import { findConversationScroller } from './constants';
 import { useCurrentConversationId } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
-import { parseAllToolCallsFromText, type ExtractedToolCall } from './helpers/tool-parser';
-import {
-  deriveToolOutcomes,
-  parseToolResults,
-  type DerivedToolOutcome,
-  type ToolResultEntry,
-} from './helpers/tool-outcomes';
-import { getAgentEntryById } from '../agent-entry';
+import type { ExtractedToolCall } from './helpers/tool-parser';
+import type { DerivedToolOutcome, ToolResultEntry } from './helpers/tool-outcomes';
+import { assembleTurns, type RawTurn } from './turn-assembly';
 import { htmlToMarkdown } from '@/shared/lib/utils/utils';
+import { detectPlatform, Platform } from '@/shared/types/platform';
+import { useConversationMessagesStore } from '@/shared/lib/conversation-messages-store';
+import { getRunState } from '@/entrypoints/overlay.content/shared/lib/aistudio-editor';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -36,44 +44,91 @@ export interface DisplayMessageTurn {
   toolResults: ToolResultEntry[];
   toolCalls: ExtractedToolCall[];
   /**
-   * What became of each `toolCalls[i]`, recovered from the results message that
-   * followed this turn. `null` where nothing could be matched — and always null on
-   * the turn currently running, whose results haven't been sent yet. The live
-   * session's own ledger covers that case.
+   * What became of each `toolCalls[i]`, recovered from the results message that followed
+   * this turn. `null` where nothing could be matched — and always null on the turn
+   * currently running, whose results haven't been sent yet. The live session's own ledger
+   * covers that case.
    */
   toolOutcomes: Array<DerivedToolOutcome | null>;
   isStreaming: boolean;
 }
 
-// ─── DOM Selectors ───────────────────────────────────────────────────────────
+// ─── Entry point ─────────────────────────────────────────────────────────────
 
-// Container lookup is shared with ConversationOverlay — see findConversationScroller()
+export function useConversationMessages(): DisplayMessageTurn[] {
+  // Fixed for the lifetime of the page, so both readers are called on every render and
+  // the inactive one is told to stay idle. Calling only one would be a conditional hook.
+  const isAiStudio = detectPlatform() === Platform.AI_STUDIO;
 
-// ─── DOM → Markdown Extraction ───────────────────────────────────────────────
+  const domTurns = useDomConversationTurns(!isAiStudio);
+  const storeTurns = useStoreConversationTurns(isAiStudio);
+
+  return isAiStudio ? storeTurns : domTurns;
+}
+
+// ─── Reader: the store (AI Studio) ───────────────────────────────────────────
 
 /**
- * Extract markdown text from any conversation element (user-query or model-response).
+ * Read the conversation out of `conversation-messages-store`.
+ *
+ * Measured behaviour this relies on: AI Studio's interceptor fires once per completed
+ * generation, carrying the **whole** conversation — not a delta. So the store is complete
+ * as of the last finished turn, and there is nothing to stitch together.
+ *
+ * ⚠️ It therefore lags by one turn *while a response is streaming*: the user's message and
+ * the model's reply both land in the store only when generation ends. Accepted rather than
+ * patched over with a DOM tail, and the reason it is acceptable is timing: the store
+ * catches up when the stream closes, which is *before* the engine finishes its own settle
+ * detection (two extra samples, ~800ms) and therefore before any approval can be pending.
+ * So the tool cards are there by the time they have a decision to carry. The Dock reports
+ * what the loop is doing in the meantime.
+ *
+ * Reading the DOM for that tail was the alternative and it was rejected: aligning DOM turns
+ * with store messages is not sound under virtualisation. AI Studio gives a thought its own
+ * `ms-chat-turn` while the store filters thoughts out, so the two lists differ by however
+ * many thoughts the conversation contains — and a *virtualised* thought turn has no
+ * `ms-thought-chunk` to recognise it by, because its content isn't rendered. Any index
+ * alignment would silently go off by one on exactly the conversations that matter.
+ */
+function useStoreConversationTurns(enabled: boolean): DisplayMessageTurn[] {
+  const messages = useConversationMessagesStore((s) => s.messages);
+  const [turns, setTurns] = useState<DisplayMessageTurn[]>([]);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const build = () => {
+      // Already ordered by `orderIndex` in the store.
+      const raw: RawTurn[] = messages.map((m, index) => ({
+        id: m.id,
+        role: m.role,
+        text: m.content,
+        // Only the newest model turn can be in flight, and the composer is what says so.
+        isStreaming:
+          m.role === 'model' && index === messages.length - 1 && getRunState() === 'stop',
+      }));
+
+      const next = assembleTurns(raw);
+      setTurns((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+    };
+
+    build();
+
+    // `isStreaming` comes off the Run button, which changes without the store changing —
+    // so this needs a clock as well as the store subscription above.
+    const interval = setInterval(build, 500);
+    return () => clearInterval(interval);
+  }, [enabled, messages]);
+
+  return turns;
+}
+
+// ─── Reader: the DOM (Gemini) ────────────────────────────────────────────────
+
+/**
+ * Extract markdown text from a conversation element (user-query or model-response).
  * Strips accessibility-only elements before conversion.
  */
-/**
- * Zero-width spaces and BOMs, stripped on the way in.
- *
- * These are our own doing: staging a multi-line payload into Quill needs a
- * placeholder in otherwise-empty `<p>`s (see `replaceAllContent`), and it survives
- * the round trip through Gemini into the markdown we read back here.
- *
- * `String#trim` does not treat U+200B as whitespace, so a result section that began
- * with one stopped matching `/^###/` — every result after the first rendered as a
- * blank row with a tall empty line above its body, and `readOutcome` failed to strip
- * the header, so `ERROR:` bodies were read as successes.
- *
- * Fixed here rather than at the writer, which still needs the placeholder, and which
- * couldn't help the messages already sitting in people's conversations. U+200C/D are
- * deliberately left alone: they carry meaning in emoji sequences and in Arabic and
- * Persian text.
- */
-const ZERO_WIDTH_RE = /[\u200B\uFEFF]/g;
-
 function extractMarkdown(el: Element): string {
   // Find the most specific content container
   const contentEl =
@@ -84,150 +139,48 @@ function extractMarkdown(el: Element): string {
   const clone = contentEl.cloneNode(true) as HTMLElement;
   clone.querySelectorAll('.cdk-visually-hidden').forEach((h) => h.remove());
 
-  return htmlToMarkdown(clone).replace(ZERO_WIDTH_RE, '');
+  return htmlToMarkdown(clone);
 }
 
-// ─── Parsing Helpers ─────────────────────────────────────────────────────────
-
-/**
- * Detect and extract prompt marker [#bs-agent:<id>#] from text.
- * If found, returns the prompt metadata and the user's own text (after "## User Request").
- * If the message is purely system/prompt content, cleanText is empty.
- */
-function parsePromptMarker(text: string): {
-  promptId: string | null;
-  promptTitle: string | null;
-  promptContent: string | null;
-  cleanText: string;
-} {
-  const promptId = extractPromptId(text);
-  if (!promptId) {
-    return { promptId: null, promptTitle: null, promptContent: null, cleanText: text };
-  }
-
-  // Resolve against the current agent entries (auto entry + skills). The old
-  // built-in prompt registry doesn't know skill ids, so titles fell back to raw ids.
-  const entry = getAgentEntryById(promptId);
-  const promptTitle = entry?.title || promptId;
-  const promptContent = entry?.skill?.promptContent || '';
-
-  // Extract user's additional input from "## User Request" section if present
-  let cleanText = '';
-  if (text.includes('## User Request')) {
-    const parts = text.split(/## User Request\s*/i);
-    cleanText = parts[1]?.trim() || '';
-  }
-
-  return { promptId, promptTitle, promptContent, cleanText };
-}
-
-/**
- * Parse a user message: detect tool results, prompt markers, extract clean display text.
- */
-function parseUserMessage(text: string) {
-  let displayText = text;
-  let promptId: string | undefined;
-  let promptTitle: string | undefined;
-  let promptContent: string | undefined;
-  let toolResults: ToolResultEntry[] = [];
-
-  // 1. Check for tool result tags
-  if (text.includes(`<${RESULT_TAG}>`)) {
-    const parsed = parseToolResults(text);
-    toolResults = parsed.results;
-    displayText = parsed.cleanText;
-  }
-
-  // 2. Check remaining text for prompt markers
-  const markerParsed = parsePromptMarker(displayText);
-  if (markerParsed.promptId) {
-    promptId = markerParsed.promptId;
-    promptTitle = markerParsed.promptTitle || undefined;
-    promptContent = markerParsed.promptContent || undefined;
-    displayText = markerParsed.cleanText;
-  }
-
-  return { displayText, promptId, promptTitle, promptContent, toolResults };
-}
-
-// ─── Hook ────────────────────────────────────────────────────────────────────
-
-export function useConversationMessages(): DisplayMessageTurn[] {
-  const [messages, setMessages] = useState<DisplayMessageTurn[]>([]);
+function useDomConversationTurns(enabled: boolean): DisplayMessageTurn[] {
+  const [turns, setTurns] = useState<DisplayMessageTurn[]>([]);
   // Navigating between conversations must force a re-parse and re-bind
   const conversationId = useCurrentConversationId();
 
   const parseConversationDOM = useCallback(() => {
     const container = findConversationScroller();
     if (!container) {
-      setMessages([]);
+      setTurns([]);
       return;
     }
 
     const elements = container.querySelectorAll('user-query, model-response');
-    const turns: DisplayMessageTurn[] = [];
 
-    elements.forEach((el, index) => {
+    const raw: RawTurn[] = Array.from(elements).map((el, index) => {
       const isUser = el.tagName === 'USER-QUERY';
-      const id = `${isUser ? 'user' : 'model'}-${index}`;
-      const text = extractMarkdown(el);
-
-      if (isUser) {
-        const { displayText, promptId, promptTitle, promptContent, toolResults } = parseUserMessage(text);
-
-        turns.push({
-          id,
-          role: 'user',
-          rawText: text,
-          displayText,
-          promptId,
-          promptTitle,
-          promptContent,
-          toolResults,
-          toolCalls: [],
-          toolOutcomes: [],
-          isStreaming: false,
-        });
-
-        // Results arrive one turn after the calls they belong to, so the model turn
-        // just behind this one is the owner. Resolved here rather than in the
-        // component, which only ever sees a single turn.
-        const previous = turns[turns.length - 2];
-        if (previous?.role === 'model' && previous.toolCalls.length > 0) {
-          previous.toolOutcomes = deriveToolOutcomes(previous.toolCalls, toolResults);
-        }
-      } else {
-        // aria-busy is not used by Gemini (always null). Use the send button's "stop" class
-        // as streaming indicator — but only for the last model-response (earlier ones are done).
-        const isLast = index === elements.length - 1;
-        const isBusy = isLast && (
-          document.querySelector('gem-icon-button.send-button.stop') !== null
-        );
-        const toolCalls = parseAllToolCallsFromText(text);
-
-        turns.push({
-          id,
-          role: 'model',
-          rawText: text,
-          displayText: text,
-          toolResults: [],
-          toolCalls,
-          toolOutcomes: toolCalls.map(() => null),
-          isStreaming: isBusy,
-        });
-      }
+      return {
+        id: `${isUser ? 'user' : 'model'}-${index}`,
+        role: isUser ? ('user' as const) : ('model' as const),
+        text: extractMarkdown(el),
+        // aria-busy is not used by Gemini (always null). Use the send button's "stop"
+        // class instead — but only for the last model-response (earlier ones are done).
+        isStreaming:
+          !isUser &&
+          index === elements.length - 1 &&
+          document.querySelector('gem-icon-button.send-button.stop') !== null,
+      };
     });
 
-    setMessages((prev) => {
-      if (JSON.stringify(prev) === JSON.stringify(turns)) return prev;
-      return turns;
-    });
+    const next = assembleTurns(raw);
+    setTurns((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
   }, []);
 
   useEffect(() => {
-    // Starting from a clean slate matters: message ids are index-based, so
-    // leftovers from the previous conversation would be reused by React.
-    setMessages([]);
+    if (!enabled) return;
+
+    // Starting from a clean slate matters: message ids are index-based, so leftovers from
+    // the previous conversation would be reused by React.
+    setTurns([]);
 
     let observed: HTMLElement | null = null;
     const observer = new MutationObserver(() => parseConversationDOM());
@@ -235,10 +188,9 @@ export function useConversationMessages(): DisplayMessageTurn[] {
     /**
      * (Re)bind to the current scroll container.
      *
-     * Gemini swaps this element out on SPA navigation. The observer used to be
-     * bound once on mount, so after switching conversations it was watching a
-     * detached node — no more mutations arrived and the overlay kept showing the
-     * previous conversation forever.
+     * Gemini swaps this element out on SPA navigation. The observer used to be bound once
+     * on mount, so after switching conversations it was watching a detached node — no more
+     * mutations arrived and the overlay kept showing the previous conversation forever.
      */
     const bind = () => {
       const next = findConversationScroller();
@@ -259,7 +211,7 @@ export function useConversationMessages(): DisplayMessageTurn[] {
       clearInterval(interval);
       observer.disconnect();
     };
-  }, [conversationId, parseConversationDOM]);
+  }, [enabled, conversationId, parseConversationDOM]);
 
-  return messages;
+  return turns;
 }

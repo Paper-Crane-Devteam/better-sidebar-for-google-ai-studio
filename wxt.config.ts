@@ -143,6 +143,10 @@ export default defineConfig({
       '--disable-blink-features=AutomationControlled',
       '--no-default-browser-check',
       '--no-first-run',
+      // Expose a fixed CDP endpoint so chrome-devtools-mcp can attach to this
+      // dev instance (extension already loaded) instead of launching a clean
+      // browser of its own. See .kiro/settings/mcp.json --browserUrl.
+      '--remote-debugging-port=9222',
     ],
     firefoxArgs: ['--keep-profile-changes'],
     // Persist profile in a custom folder to keep login state
