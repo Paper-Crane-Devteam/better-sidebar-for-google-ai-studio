@@ -1,87 +1,104 @@
 /**
  * Agent entries — what the `>` popup and the Agent tab launcher offer.
  *
- * There used to be two triggers: `>` picked a skill, `!` activated the agent
- * without preselecting one. They produced nearly the same message, needed two
- * editor-integration instances, and only one of them could own the shared
- * send-button handler. Now there is a single list whose first item is the
- * "let the AI decide" entry.
+ * ## It used to be skills, and now it is agents
+ *
+ * The list has been through two shapes. First there were two triggers: `>` picked a skill,
+ * `!` ran without one. Then one list whose first row was "let the AI decide" and whose rest
+ * were skills. Now it is **one row per agent**, and skills are gone from it entirely.
+ *
+ * Why: picking a skill up front meant committing to an approach before seeing any data, and
+ * the wrong guess cost the whole session — a run started from "Export Conversations" that
+ * turned out to need a sync had to be abandoned. The running agent calls `activate_skill`
+ * itself now, once it knows what the task actually is.
+ *
+ * What the user chooses instead is genuinely a decision only they can make: **which of
+ * their things this is about.** Their conversations, or their files.
  */
 
-import type { Skill } from './skills/types';
-import { getSkillsForPopup, getSkillById } from './skills/skill-registry';
 import i18n from '@/locale/i18n';
+import { AGENTS, getAgent, localizedAgent, normalizeAgentId } from './agents/registry';
+import type { AgentDefinition, AgentId } from './agents/types';
 
-/** Sentinel id for "run the agent, let it pick a skill itself" */
+/**
+ * Legacy sentinel for "run the agent, let it pick a skill itself".
+ *
+ * Still exported because it is written into the `[#bs-agent:…#]` marker of every message
+ * ever sent through the old list, and those conversations still have to render. `getAgent`
+ * maps it onto the Better Sidebar agent.
+ */
 export const AGENT_AUTO_ID = '__agent_auto__';
 
 export interface AgentEntry {
+  /** The agent id. Goes into the capsule and the prompt marker. */
   id: string;
   title: string;
   description: string;
   icon: string;
-  /** Text stored on the capsule; stripped from the editor before assembling */
+  /**
+   * Text the capsule stores, and the text stripped back out to recover what the user typed
+   * around it.
+   *
+   * Equal to the title for an agent, which is what makes the round trip exact: the capsule
+   * shows `>Workspace`, expands to `Workspace`, and removing that leaves the user's own
+   * words. When entries were skills this held the entire skill prompt, so expansion dumped
+   * thousands of characters into the composer before they were stripped again.
+   */
   capsuleContent: string;
-  /** The skill to preload, or undefined for the auto entry */
-  skill?: Skill;
+  /** The agent this entry runs. */
+  agent: AgentDefinition;
 }
 
-function getAutoEntry(): AgentEntry {
+function toEntry(agent: AgentDefinition): AgentEntry {
+  const localized = localizedAgent(agent);
   return {
-    id: AGENT_AUTO_ID,
-    title: i18n.t('agent.entry.autoTitle', { defaultValue: 'Better Sidebar Agent' }),
-    description: i18n.t('agent.entry.autoDescription', { defaultValue: 'Describe a task and let the agent pick the right tools' }),
-    icon: 'Bot',
-    capsuleContent: 'Better Sidebar Agent',
+    id: localized.id,
+    title: localized.name,
+    description: localized.description,
+    icon: localized.icon,
+    capsuleContent: localized.name,
+    agent: localized,
   };
 }
 
-function toEntry(skill: Skill): AgentEntry {
-  return {
-    id: skill.id,
-    title: skill.title,
-    description: skill.description,
-    icon: skill.icon,
-    capsuleContent: skill.promptContent,
-    skill,
-  };
-}
-
-/** All entries: auto first, then enabled skills. */
+/** Every agent, in display order. */
 export function getAgentEntries(): AgentEntry[] {
-  return [getAutoEntry(), ...getSkillsForPopup().map(toEntry)];
+  return AGENTS.map(toEntry);
 }
 
-/** Resolve an entry by id (works for both the auto sentinel and skill ids). */
-export function getAgentEntryById(id: string): AgentEntry | undefined {
-  if (id === AGENT_AUTO_ID) return getAutoEntry();
-  const skill = getSkillById(id);
-  return skill ? toEntry(skill) : undefined;
-}
-
-/** Match entries against a query (multi-word AND over title + description).
+/**
+ * Resolve an entry by id.
  *
- * The auto entry ("Better Sidebar Agent") is always kept at the top as a group
- * header/anchor so the tree structure stays visible even when filtering.
+ * Never returns undefined for a *known* id shape — `getAgent` falls back to the default
+ * agent for anything unrecognised, including the old skill ids that historical markers
+ * still carry. A conversation from before this change renders as a Better Sidebar session,
+ * which is what it was.
+ */
+export function getAgentEntryById(id: string): AgentEntry | undefined {
+  return toEntry(getAgent(id));
+}
+
+/** The agent id an entry id refers to. */
+export function agentIdFromEntry(id: string): AgentId {
+  return normalizeAgentId(id);
+}
+
+/**
+ * Match entries against the popup's query.
+ *
+ * With two rows there is nothing to page through, so an empty query returns both and a
+ * query returns whatever matches — including nothing, which correctly closes the popup and
+ * lets the user type a message that happens to start with `>`.
  */
 export function searchAgentEntries(query: string): AgentEntry[] {
   const entries = getAgentEntries();
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return entries;
 
-  if (words.length === 0) return entries.slice(0, 9); // auto + up to 8 skills
-
-  const matched = entries.filter((e) => {
-    const haystack = `${e.title} ${e.description}`.toLowerCase();
+  return entries.filter((e) => {
+    const haystack = `${e.title} ${e.description} ${e.id}`.toLowerCase();
     return words.every((w) => haystack.includes(w));
   });
-
-  // Always keep auto entry at position 0 if there are any matches
-  const hasAuto = matched.some((e) => e.id === AGENT_AUTO_ID);
-  if (!hasAuto && matched.length > 0) {
-    matched.unshift(getAutoEntry());
-  }
-
-  return matched.slice(0, 9);
 }
 
 /** Where an entry marker was found in plain composer text */
@@ -98,27 +115,26 @@ function escapeRegExp(text: string): string {
 }
 
 /**
- * Find a `>Entry title` marker in plain text.
+ * Find a `>Agent name` marker in plain text.
  *
  * This is how the marker works on composers that cannot hold a capsule — AI Studio's
  * `<textarea>`. The marker is **self-describing**: the entry is recovered from the text
  * itself rather than from state held alongside it. That matters more than it sounds:
  *
- * - It survives the feature component remounting. React state would not, and losing it
- *   is the worst possible failure — the marker is still sitting in the composer, so the
- *   next send posts the raw `>Title` line as an ordinary message and the skill looks
- *   broken.
+ * - It survives the feature component remounting. React state would not, and losing it is
+ *   the worst possible failure — the marker is still sitting in the composer, so the next
+ *   send posts the raw `>Name` line as an ordinary message and the agent looks broken.
  * - It makes typing the marker by hand work, which users do once they've seen it.
  *
- * Longest title first, so `>Export chats` is not claimed by a hypothetical `>Export`.
+ * Longest title first, so a short name cannot claim a longer one's marker.
  */
 export function matchAgentEntryInText(text: string): AgentEntryMatch | null {
   const entries = [...getAgentEntries()].sort((a, b) => b.title.length - a.title.length);
 
   for (const entry of entries) {
     // `(^|\s)` mirrors the popup's own rule for what counts as a trigger
-    // (`useTriggerPopup`: position 0, or preceded by whitespace), so a marker the popup
-    // was willing to create is always a marker this can find again.
+    // (`useTriggerPopup`: position 0, or preceded by whitespace), so a marker the popup was
+    // willing to create is always a marker this can find again.
     const pattern = new RegExp(`(^|\\s)>${escapeRegExp(entry.title)}`);
     const match = pattern.exec(text);
     if (!match) continue;
@@ -128,4 +144,9 @@ export function matchAgentEntryInText(text: string): AgentEntryMatch | null {
   }
 
   return null;
+}
+
+/** The default agent's display name, for empty states and placeholder copy. */
+export function defaultAgentTitle(): string {
+  return i18n.t('agent.agents.bettersidebar.name', { defaultValue: 'Better Sidebar' });
 }

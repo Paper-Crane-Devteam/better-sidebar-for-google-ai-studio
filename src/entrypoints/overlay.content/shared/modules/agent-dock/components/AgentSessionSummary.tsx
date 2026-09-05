@@ -49,6 +49,21 @@ export const AgentSessionSummary: React.FC = () => {
 
   if (status !== 'idle') return null;
 
+  /**
+   * A session that ended because the model wrote prose instead of a tool call gets no card.
+   *
+   * There is nothing to say and nothing to do: the reply is right there in the chat, and the
+   * card's only control was a Dismiss button — a notification whose entire content is "click
+   * to remove this notification". It fired on the single most ordinary way for a session to
+   * end (the model finished talking), so it read as an error report for something that was
+   * not an error.
+   *
+   * ⚠️ Suppressed only when there is genuinely nothing on offer. If the run changed data and
+   * can still be reverted, the card stays — hiding an available Undo would leave the
+   * snapshot unreachable and the changes unexplained.
+   */
+  if (endReason === 'no_tool_call' && !undoAvailable && !undone) return null;
+
   const steps = history.reduce((sum, h) => sum + h.results.length, 0);
   const failed = history.reduce(
     (sum, h) => sum + h.results.filter((r) => !r.success).length,

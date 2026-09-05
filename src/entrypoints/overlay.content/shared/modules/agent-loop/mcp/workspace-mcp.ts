@@ -18,7 +18,10 @@ export const WORKSPACE_MCP_ID = 'builtin-workspace';
 export const WORKSPACE_MCP: MCPServer = {
   id: WORKSPACE_MCP_ID,
   type: 'builtin',
-  name: 'Agent Workspace',
+  // Just "Files" now, not "Agent Workspace". It sits inside the Workspace agent's section in
+  // settings, so repeating the agent's name in its own tool group read as a second thing
+  // called the workspace.
+  name: 'Files',
   description:
     'A private file workspace the agent can read, write and search. Files persist ' +
     'across sessions and are shared between Gemini and AI Studio.',

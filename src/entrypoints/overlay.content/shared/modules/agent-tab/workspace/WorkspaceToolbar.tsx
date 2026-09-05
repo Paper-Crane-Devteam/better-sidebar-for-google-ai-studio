@@ -60,7 +60,8 @@ export interface WorkspaceToolbarProps {
   onSearchChange: (value: string) => void;
   /** Non-null while a transfer runs; shown as a status line under the rows. */
   progress: string | null;
-  onBack: () => void;
+  /** Omitted when the workspace is the tab's own destination — see `WorkspaceView`. */
+  onBack?: () => void;
   onCollapseAll: () => void;
   onNewFolder: () => void;
   onNewFile: () => void;
@@ -93,11 +94,16 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({
     <div className="flex flex-col border-b border-border/60">
       {/* Row 1: back, title, view controls, overflow menu */}
       <div className="flex items-center gap-1 px-2 pt-2">
-        <SimpleTooltip content={t('common.back', { defaultValue: 'Back' })}>
-          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onBack}>
-            <ArrowLeft className="h-3.5 w-3.5" />
-          </Button>
-        </SimpleTooltip>
+        {/* Only when there is somewhere to go back to. As the Workspace agent's own panel
+            there is not: the agent switcher above is the way out, and an arrow pointing at
+            the other agent is not "back" in any sense the user means. */}
+        {onBack && (
+          <SimpleTooltip content={t('common.back', { defaultValue: 'Back' })}>
+            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onBack}>
+              <ArrowLeft className="h-3.5 w-3.5" />
+            </Button>
+          </SimpleTooltip>
+        )}
 
         <h1 className="min-w-0 flex-1 truncate text-sm font-semibold uppercase tracking-wide text-muted-foreground/70">
           {t('agent.workspace.title', { defaultValue: 'Workspace' })}

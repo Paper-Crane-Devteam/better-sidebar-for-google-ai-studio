@@ -1106,6 +1106,75 @@ if (full.length > MAX_MESSAGE_LENGTH) full = full.substring(0, MAX_MESSAGE_LENGT
 `## Database Schema` 一段就 7636 字符（占 1/4），是最该动的地方。新增 tool schema 前
 先想清楚：schema 是**每一轮**都进 prompt 的，而放进 skill 的内容是按需加载的。
 
+## 两个 agent：Better Sidebar 与 Workspace
+
+`>` 弹出的列表现在**一行一个 agent**，不再有 skill。
+
+| agent | 操作对象 | MCP | Agent tab 显示 |
+|------|------|------|------|
+| `bettersidebar` | 扩展自己的数据（对话/文件夹/标签/提示词/片段） | `builtin-bettersidebar`（sql/sync/export） | launcher |
+| `workspace` | 工作区里的文件与文档 | `builtin-workspace`（Files）+ `builtin-documents` | 简介 + 文件树 |
+
+两者都拿到 `builtin-core`（`complete_task` + `activate_skill`）。⚠️ **core 不可关、也不按 agent 列**
+—— 少了它的 agent 不是「能力弱一点」，是一个只能靠 Stop 退出的死循环。
+
+### agent 不是 skill
+
+以前工作区是个 skill（`builtin-workspace-agent`）。后果是数据库 schema 和文件协议同时在每一轮
+prompt 里，模型经常抓错那一套。现在的分界：
+
+- **skill** 是任务中途按需拉进来的细节，`activate_skill` 加载，属于某一个 agent。
+- **agent** 是整个会话的上下文，第一条消息之前就定了，会话期间不变。
+
+⚠️ **`activeAgentId` 是会话级不变量。** prompt 是按它组装的，工具层也按它判权限；跑到一半改掉
+就会出现「模型手里是 A 的说明书，工具层按 B 收权限」。Agent tab 上的切换器只换**面板**，不换
+正在跑的会话，正在跑的那一行会显示 spinner 把这个区别说清楚。
+
+### 权限是两个独立问题
+
+`mcp/registry.ts` 分开存：
+
+| 问题 | 谁决定 | 存在哪 |
+|------|------|------|
+| **归属** —— 这个 server 属于哪个 agent | 代码（`agents/registry.ts` 的 `mcpServerIds`） | `registry` 的 `ownership` map |
+| **开关** —— 用户要不要它进 prompt | 用户 | `agent-config-store.disabledMcpServers` |
+
+两个都点头才能调用。归属检查放在前面，而且**拒绝话术故意不一样**：
+
+- `other-agent` → `ERROR: 不属于这个 agent，别绕，告诉用户该换哪个 agent 然后结束`
+- `disabled` → `CANCELLED: 用户关掉了`
+
+合并成一句的后果是模型会反复重试一个永远拿不到的工具。⚠️ 这不只是整洁问题：Workspace agent 的
+prompt 里没有 schema，它写出来的任何 SQL 都是对着没见过的表猜的——挡在这里，最坏结果是浪费一轮，
+不挡就是写坏用户数据。
+
+### soul 拆成三块
+
+```
+prompts/souls/shared.ts              ← 协议：工具格式 / 结果怎么回来 / 一轮怎么结束 / 预算
+prompts/souls/bettersidebar-soul.ts  ← schema + 平台过滤 + inbox id + SQL 规则
+prompts/souls/workspace-soul.ts      ← 工作区是什么 + 8 条防静默出错的规则
+```
+
+判断一段该放哪的准则：**提到表、文件、工具名或领域概念的，就是 agent 自己的**。
+「`complete_task` 必须单独一轮」是协议；「先 SELECT 再改」是 Better Sidebar 的规矩。
+
+⚠️ `skillsBlock()` 在没有 skill 时返回空串，不是空列表。Workspace agent 现在就是这个情况——
+给模型看一个空列表，它会用编出来的 id 调 `activate_skill`，白烧一轮。
+
+### 旧 id 必须继续解析
+
+`[#bs-agent:__agent_auto__#]` 写在每一条历史 agent 消息里，`builtin-workspace-agent` 也一样。
+`normalizeAgentId` 把它们映射到真 agent（分别是 bettersidebar / workspace），
+⚠️ 不这么做的话所有历史 agent 轮次都会变成无法识别的条目、卡片全部丢失。
+
+### 「没调用工具」不再弹卡
+
+`no_tool_call` 是最普通的一种结束方式（模型说完话了），而它以前会弹一张只有 Dismiss 按钮的
+结束卡——内容等于「点我把我关掉」，读起来像报错。现在这种情况直接不渲染。
+
+⚠️ 唯一的例外是**还有 Undo 可点**：那时卡必须留着，否则快照就没有入口了，改动也没人解释。
+
 ### prompt 那一层是「劝」，故意说得宽松
 
 `soul.ts` 的 `getResultBudgetBlock()` 把这个数字告诉 AI，口径是**「额度很大，放开用」**

@@ -339,8 +339,6 @@
     "switchToOriginalUI": "切换到原始侧边栏",
     "temporaryChat": "临时对话",
     "toggleMenu": "切换菜单",
-    "account": "账号",
-    "signIn": "登录",
     "account": "账户",
     "signIn": "登录",
     "enterCompactMode": "点击进入精简模式",
@@ -1400,7 +1398,12 @@
       "maxSkills": "已达到 20 个自定义技能的上限。",
       "mcpTitle": "MCP 服务器",
       "mcpDescription": "MCP 服务器为智能体提供工具。",
-      "mcpToolCount": "{{count}} 个工具"
+      "mcpToolCount": "{{count}} 个工具",
+      "agentsTitle": "Agent",
+      "agentsDesc": "每个 Agent 处理的东西不同，工具也各自独立。在输入框打 > 就能启动。",
+      "noTools": "没有可选工具。",
+      "noSkills": "还没有技能。这个 Agent 直接按自己的说明干活。",
+      "builtinSkillNote": "内置技能可以关掉，但不能编辑。"
     },
     "skills": {
       "autoClassify": {
@@ -1439,15 +1442,30 @@
         "sync_conversation_messages": "为没有消息记录的对话补录历史",
         "export": "将对话导出为文件",
         "complete_task": "结束智能体循环并汇报结果",
-        "doc_read": "读取 Word 文档：大纲、章节与搜索"
+        "doc_read": "读取 Word 文档：大纲、章节与搜索",
+        "read_file": "读取文本文件，带行号",
+        "write_file": "新建文件或整体覆盖",
+        "edit_file": "替换文件里的指定文本",
+        "list_files": "列出文件夹里的内容",
+        "glob_files": "按名称模式查找文件",
+        "grep_files": "用正则搜索文件内容",
+        "manage_files": "删除、移动或新建文件夹"
       },
       "documents": {
         "name": "文档",
-        "description": "按大纲和章节读取工作区里的 Word 文档"
+        "description": "按大纲和章节读取 Word 文档"
       },
       "workspace": {
-        "name": "AI 助手工作区",
-        "description": "在私有工作区中读写、编辑和搜索文件"
+        "name": "文件",
+        "description": "读写、编辑和搜索文本文件"
+      },
+      "core": {
+        "name": "核心",
+        "description": "所有 Agent 共用，且始终启用。"
+      },
+      "bettersidebar": {
+        "name": "Better Sidebar 数据",
+        "description": "查询和修改对话、文件夹、标签和提示词"
       }
     },
     "entry": {
@@ -1471,6 +1489,24 @@
       "paywallFilesSkipped": "已忽略 {{files}} 个文件 —— 免费版工作区最多支持 {{max}} 个文件",
       "clearWarning": "删除\"{name}\"中的所有 {fileCount} 个文件？此操作无法撤销。",
       "deleteWarning": "删除工作区\"{name}\"及其中 {fileCount} 个文件？已使用此工作区的对话将无法再读写文件。此操作无法撤销。"
+    },
+    "agents": {
+      "bettersidebar": {
+        "name": "Better Sidebar",
+        "description": "整理对话、文件夹、标签、提示词和片段"
+      },
+      "workspace": {
+        "name": "工作区",
+        "description": "读写和编辑工作区里的文件与文档"
+      }
+    },
+    "switcher": {
+      "label": "选择 Agent"
+    },
+    "workspaceIntro": {
+      "body": "这里的文件跨对话保留，Gemini 和 AI Studio 共用同一份。在输入框打 > Workspace 就能让它开始干活。",
+      "detail": "文本文件直接读写；Word 文档按大纲和章节读取。它看不到你的对话，也看不到工作区以外的任何东西，每次改动都会先跟你确认。",
+      "about": "关于工作区"
     }
   },
   "backup": {

@@ -1391,7 +1391,12 @@
       "maxSkills": "Se alcanzó el máximo de 20 habilidades personalizadas.",
       "mcpTitle": "Servidores MCP",
       "mcpDescription": "Los servidores MCP proporcionan herramientas que el Agente puede usar.",
-      "mcpToolCount": "{{count}} herramientas"
+      "mcpToolCount": "{{count}} herramientas",
+      "agentsTitle": "Agentes",
+      "agentsDesc": "Cada agente trabaja sobre cosas distintas y tiene sus propias herramientas. Escribe > en el chat para iniciar uno.",
+      "noTools": "Sin herramientas opcionales.",
+      "noSkills": "Aún sin habilidades. Este agente trabaja con sus propias instrucciones.",
+      "builtinSkillNote": "Las habilidades integradas pueden desactivarse, pero no editarse."
     },
     "skills": {
       "autoClassify": {
@@ -1426,11 +1431,30 @@
         "sync_conversation_messages": "Registrar el historial de mensajes de conversaciones sin contenido",
         "export": "Descargar conversaciones como archivos",
         "complete_task": "Finalizar el bucle del agente y reportar resultados",
-        "doc_read": "Leer documentos de Word: esquema, secciones y búsqueda"
+        "doc_read": "Leer documentos de Word: esquema, secciones y búsqueda",
+        "read_file": "Lee un archivo de texto con números de línea",
+        "write_file": "Crea un archivo o lo reemplaza por completo",
+        "edit_file": "Reemplaza texto exacto dentro de un archivo",
+        "list_files": "Lista el contenido de una carpeta",
+        "glob_files": "Busca archivos por patrón de nombre",
+        "grep_files": "Busca en el contenido con expresiones regulares",
+        "manage_files": "Elimina, mueve o crea carpetas"
       },
       "documents": {
         "name": "Documentos",
-        "description": "Lee documentos de Word de tu espacio de trabajo, por esquema y por sección"
+        "description": "Lee documentos de Word por esquema y sección"
+      },
+      "core": {
+        "name": "Núcleo",
+        "description": "Disponible para todos los agentes y siempre activo."
+      },
+      "bettersidebar": {
+        "name": "Datos de Better Sidebar",
+        "description": "Consulta y modifica conversaciones, carpetas, etiquetas y prompts"
+      },
+      "workspace": {
+        "name": "Archivos",
+        "description": "Lee, escribe, edita y busca archivos de texto"
       }
     },
     "entry": {
@@ -1441,6 +1465,24 @@
       "paywallWorkspaces": "Múltiples espacios de trabajo",
       "paywallFiles": "Más de {{max}} archivos por espacio de trabajo",
       "paywallFilesSkipped": "{{files}} archivo(s) omitido(s): el límite gratuito es de {{max}} por espacio de trabajo"
+    },
+    "agents": {
+      "bettersidebar": {
+        "name": "Better Sidebar",
+        "description": "Organiza conversaciones, carpetas, etiquetas, prompts y fragmentos"
+      },
+      "workspace": {
+        "name": "Espacio de trabajo",
+        "description": "Lee, escribe y edita archivos y documentos de tu espacio de trabajo"
+      }
+    },
+    "switcher": {
+      "label": "Elige un agente"
+    },
+    "workspaceIntro": {
+      "body": "Los archivos se conservan entre chats y se comparten entre Gemini y AI Studio. Escribe > Workspace en el chat para poner este agente a trabajar.",
+      "detail": "Los archivos de texto se leen y editan directamente. Los documentos de Word se leen por esquema y sección. No ve tus conversaciones ni nada fuera de este espacio, y cada cambio se confirma antes de aplicarse.",
+      "about": "Acerca del espacio de trabajo"
     }
   },
   "backup": {

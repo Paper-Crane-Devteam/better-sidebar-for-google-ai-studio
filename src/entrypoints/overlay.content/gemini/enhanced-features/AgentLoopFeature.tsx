@@ -40,7 +40,7 @@ import {
 } from '@/entrypoints/overlay.content/shared/modules/agent-loop/adapters/adapter-factory';
 import { assembleFinalPrompt } from '@/entrypoints/overlay.content/shared/modules/agent-loop/prompts/prompt-assembler';
 import { buildInitialMessage } from '@/entrypoints/overlay.content/shared/modules/agent-loop/prompts/initial-message';
-import { getEnabledSkills } from '@/entrypoints/overlay.content/shared/modules/agent-loop/skills/skill-registry';
+import type { AgentId } from '@/entrypoints/overlay.content/shared/modules/agent-loop/agents/types';
 import { initMCPRegistry } from '@/entrypoints/overlay.content/shared/modules/agent-loop/mcp/setup';
 import { getAgentEntryById } from '@/entrypoints/overlay.content/shared/modules/agent-loop/agent-entry';
 import { useAgentRecordStore } from '@/entrypoints/overlay.content/shared/modules/agent-loop/agent-record-store';
@@ -202,7 +202,7 @@ export const AgentLoopFeature: React.FC = () => {
   // ─── Start agent loop engine ────────────────────────────────────────
 
   const startAgentEngine = useCallback(
-    (session?: { title?: string }) => {
+    (session?: { title?: string; agentId?: AgentId }) => {
       const adapter = getAdapter();
       if (!adapter) {
         console.error('[AgentLoop] No adapter available for current platform');
@@ -217,6 +217,9 @@ export const AgentLoopFeature: React.FC = () => {
           engine.start(20, {
             conversationId: conversationIdRef.current,
             title: session?.title,
+            // Carried into the store, where the tool layer reads it to refuse tools this
+            // agent does not own. It has to be the same agent the prompt was built from.
+            agentId: session?.agentId,
           }),
         300,
       );
@@ -391,8 +394,7 @@ export const AgentLoopFeature: React.FC = () => {
       let basePrompt: string;
       try {
         basePrompt = assembleFinalPrompt({
-          selectedSkill: entry.skill,
-          allSkills: getEnabledSkills(),
+          agentId: entry.agent.id,
           platform: getCurrentPlatformId(),
         });
       } catch (err) {
@@ -441,7 +443,7 @@ export const AgentLoopFeature: React.FC = () => {
       // engine if the message actually went out — otherwise it would sit waiting
       // for a response to a prompt that was never delivered.
       adapter.triggerSend({ humanDelay: false }).then((sent) => {
-        if (sent) startAgentEngine({ title });
+        if (sent) startAgentEngine({ title, agentId: entry.agent.id });
         else console.warn('[AgentLoop] Initial prompt was not sent, engine not started');
       });
 

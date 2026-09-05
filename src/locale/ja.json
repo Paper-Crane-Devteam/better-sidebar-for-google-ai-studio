@@ -341,8 +341,6 @@
     "toggleMenu": "メニューを切り替え",
     "account": "アカウント",
     "signIn": "ログイン",
-    "account": "アカウント",
-    "signIn": "ログイン",
     "enterCompactMode": "クリックしてコンパクトモードにする",
     "exitCompactMode": "クリックしてコンパクトモードを終了",
     "newChatCta": "クリック：新しいチャット · 右クリック：プライベートチャット · 中クリック：新しいタブで開く"
@@ -1393,7 +1391,12 @@
       "maxSkills": "カスタムスキルの上限（20個）に達しました。",
       "mcpTitle": "MCP サーバー",
       "mcpDescription": "MCP サーバーはエージェントが使用できるツールを提供します。",
-      "mcpToolCount": "{{count}} ツール"
+      "mcpToolCount": "{{count}} ツール",
+      "agentsTitle": "エージェント",
+      "agentsDesc": "エージェントごとに扱う対象とツールが異なります。入力欄で > と打つと起動します。",
+      "noTools": "任意ツールはありません。",
+      "noSkills": "スキルはまだありません。このエージェントは自身の指示だけで動きます。",
+      "builtinSkillNote": "組み込みスキルはオフにできますが編集はできません。"
     },
     "skills": {
       "autoClassify": {
@@ -1428,11 +1431,30 @@
         "sync_conversation_messages": "メッセージ履歴のない会話の内容を記録",
         "export": "会話をファイルとしてダウンロード",
         "complete_task": "エージェントループを終了して結果を報告",
-        "doc_read": "Word 文書を読む：アウトライン、セクション、検索"
+        "doc_read": "Word 文書を読む：アウトライン、セクション、検索",
+        "read_file": "テキストファイルを行番号付きで読む",
+        "write_file": "ファイルを新規作成、または全置換",
+        "edit_file": "ファイル内の指定テキストを置換",
+        "list_files": "フォルダの中身を一覧表示",
+        "glob_files": "名前のパターンでファイルを探す",
+        "grep_files": "正規表現でファイル内容を検索",
+        "manage_files": "削除・移動・フォルダ作成"
       },
       "documents": {
         "name": "ドキュメント",
-        "description": "ワークスペース内の Word 文書を、アウトラインやセクション単位で読み取ります"
+        "description": "Word 文書をアウトラインとセクション単位で読む"
+      },
+      "core": {
+        "name": "コア",
+        "description": "すべてのエージェントで共通、常に有効です。"
+      },
+      "bettersidebar": {
+        "name": "Better Sidebar のデータ",
+        "description": "会話・フォルダ・タグ・プロンプトの照会と変更"
+      },
+      "workspace": {
+        "name": "ファイル",
+        "description": "テキストファイルの読み書き・編集・検索"
       }
     },
     "entry": {
@@ -1443,6 +1465,24 @@
       "paywallWorkspaces": "複数のワークスペース",
       "paywallFiles": "ワークスペースあたり {{max}} 件を超えるファイル",
       "paywallFilesSkipped": "{{files}} 件のファイルをスキップしました — 無料プランはワークスペースごとに最大 {{max}} 件です"
+    },
+    "agents": {
+      "bettersidebar": {
+        "name": "Better Sidebar",
+        "description": "会話・フォルダ・タグ・プロンプト・スニペットを整理"
+      },
+      "workspace": {
+        "name": "ワークスペース",
+        "description": "ワークスペース内のファイルや文書を読み書き・編集"
+      }
+    },
+    "switcher": {
+      "label": "エージェントを選択"
+    },
+    "workspaceIntro": {
+      "body": "ここのファイルは会話をまたいで残り、Gemini と AI Studio で共有されます。入力欄で > Workspace と打つとこのエージェントが動き出します。",
+      "detail": "テキストファイルは直接読み書きし、Word 文書はアウトラインとセクション単位で読み取ります。会話やワークスペース外のものは一切見えず、変更は必ず事前に確認されます。",
+      "about": "ワークスペースについて"
     }
   },
   "backup": {

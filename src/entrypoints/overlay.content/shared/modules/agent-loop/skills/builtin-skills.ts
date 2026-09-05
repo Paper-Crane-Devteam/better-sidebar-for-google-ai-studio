@@ -15,6 +15,7 @@ export const BUILTIN_SKILLS: Skill[] = [
   {
     id: 'builtin-auto-classify',
     type: 'builtin',
+    agentId: 'bettersidebar',
     title: 'Auto-Classify Conversations',
     description: 'Automatically organize conversations into folders and tags based on their titles',
     titleKey: 'agent.skills.autoClassify.title',
@@ -46,6 +47,7 @@ Tips:
   {
     id: 'builtin-find-empty-chats',
     type: 'builtin',
+    agentId: 'bettersidebar',
     title: 'Sync Missing Messages',
     description:
       'Find conversations whose messages were never recorded, then sync their content',
@@ -125,6 +127,7 @@ Notes:
   {
     id: 'builtin-export-chats',
     type: 'builtin',
+    agentId: 'bettersidebar',
     title: 'Export Conversations',
     description: 'Query and display conversation data for the user',
     titleKey: 'agent.skills.export.title',
@@ -154,6 +157,7 @@ Notes:
   {
     id: 'builtin-manage-prompts',
     type: 'builtin',
+    agentId: 'bettersidebar',
     title: 'Manage Prompt Library',
     description:
       'Author, refactor and organize reusable prompts — including variables and imports',
@@ -264,6 +268,7 @@ Report edits as before/after per prompt, then call \`complete_task\`.
   {
     id: 'builtin-manage-snippets',
     type: 'builtin',
+    agentId: 'bettersidebar',
     title: 'Manage Snippets',
     description:
       'Organize, dedupe and search saved snippets — including their full text',
@@ -332,62 +337,6 @@ machine-made titles, and nobody ever tidies it. Sorting and searching it is the 
   snippets per conversation, or a whole folder condensed into one overview.
 
 Say what changed, per row or per group, then call \`complete_task\`.
-`,
-    enabled: true,
-    createdAt: 0,
-    updatedAt: 0,
-  },
-
-  {
-    id: 'builtin-workspace-agent',
-    type: 'builtin',
-    title: 'Workspace Agent',
-    description: 'Read, write, edit, and search files in your private workspace',
-    titleKey: 'agent.skills.workspace.title',
-    descriptionKey: 'agent.skills.workspace.description',
-    icon: 'FolderOpen',
-    promptContent: `## Task: Manage Files in Your Workspace
-
-You are a workspace assistant with a private file workspace where you can read, write, edit, and search text files.
-
-**What the workspace is:**
-- A persistent file tree, separate from the user's machine.
-- Shared across Gemini and AI Studio (same workspace content on both platforms).
-- Survives browser sessions — every file you write stays until explicitly deleted.
-- Think of it as your personal scratch pad for notes, drafts, code snippets, plans, logs — anything text the user wants you to keep and work with across conversations.
-
-**How to work with files:**
-
-1. **Start by exploring what exists:** Call \`list_files\` (with no arguments to see the root) or \`glob_files\` to find files by pattern before assuming paths.
-
-2. **Read before you edit:** \`read_file\` returns content with line numbers. Use these line numbers in your mental model — they make it obvious where an edit belongs.
-
-3. **Editing is safer than rewriting:** Use \`edit_file\` to change part of a file. \`old_string\` must match exactly (character-for-character, including whitespace and newlines), so copy the literal text from the last \`read_file\` output — don't paraphrase or fix indentation unless the task is to fix it. The tool refuses ambiguous matches: if \`old_string\` appears twice, include more surrounding lines to make it unique. This is a feature, not a bug — it prevents you from silently editing the wrong location.
-
-4. **Use write_file for new files or full rewrites:** Writing a new file from scratch or replacing 100% of an existing one should be \`write_file\`, not edit. It auto-creates parent directories.
-
-5. **Search to locate things:** \`grep_files\` searches by regex across all files, returning matching lines with their line numbers. Use it to answer "where did I mention X" or "which files contain this function name". Then \`read_file\` with the path and line range to get context.
-
-**File paths:**
-- Always relative to the workspace root: \`notes/plan.md\`, not \`/notes/plan.md\` or \`./notes/plan.md\`.
-- Forward slashes, even if the user writes backslashes (you normalize them).
-- Paths cannot climb above the workspace root (\`../\` is rejected).
-
-**Common workflow patterns:**
-- **Note-taking:** User says "remember that X is Y". \`write_file\` it into \`notes/X.md\`, or append to an existing index file with \`edit_file\`.
-- **Iterative editing:** User says "change line 42 of main.py to use async". \`read_file main.py\` first (even if you edited it last turn — memory is fallible), locate line 42 in the output, then \`edit_file\` with the exact current text of line 42 in \`old_string\`.
-- **Working files across sessions:** User says "continue the draft". \`glob_files *.md\` or \`list_files drafts\`, then \`read_file\` the latest, then propose next steps or \`edit_file\` to add content.
-- **Code snippets:** User pastes a function. \`write_file code/snippet-NAME.js\` with a brief filename. If they later say "that function from before", \`grep_files 'function NAME'\` finds it, then \`read_file\` retrieves the whole thing.
-
-**Approvals:**
-- File reads and searches run immediately.
-- Writes, edits, deletes and moves wait for the user's OK (unless they have auto-approval on).
-- When proposing a change, put a human-readable summary in \`change_summary\` so the approval card is useful. Example: "Renames the getUser function to fetchUser in api.ts."
-
-**Finish and report:**
-When done, call \`complete_task\` with \`status: "success"\` and a brief \`summary\` of what you changed or found. Show paths and line counts, not full file bodies.
-
-Proceed with the user's request.
 `,
     enabled: true,
     createdAt: 0,

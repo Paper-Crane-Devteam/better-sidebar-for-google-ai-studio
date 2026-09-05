@@ -40,7 +40,7 @@
  */
 
 import React, { useState } from 'react';
-import { Bot, ChevronRight, FolderOpen, HelpCircle, Lock, SlidersHorizontal } from 'lucide-react';
+import { Bot, ChevronRight, HelpCircle, Lock, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { UIcon } from '@/shared/components/ui/icon';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
@@ -48,19 +48,12 @@ import { useI18n } from '@/shared/hooks/useI18n';
 import { useAppStore } from '@/shared/lib/store';
 import { useLicenseStore } from '@/shared/lib/license-store';
 import { navigateToNewChat } from '@/shared/lib/navigation';
-import { getAgentEntries, AGENT_AUTO_ID } from '../../agent-loop/agent-entry';
+import { getAgentEntryById } from '../../agent-loop/agent-entry';
 import { agentEventBus } from '../../agent-loop/event-bus';
 import { useAgentLoopStore } from '../../agent-loop/agent-loop-store';
 import { getActiveEngine } from '../../agent-loop/engine/engine-registry';
-import { useAgentConfigStore } from '../../agent-loop/agent-config-store';
-import { WORKSPACE_MCP_ID } from '../../agent-loop/mcp/workspace-mcp';
 import { LauncherCta } from './LauncherCta';
 import { LauncherExamples } from './LauncherExamples';
-
-interface AgentLauncherProps {
-  /** Switch the tab over to the workspace file browser. */
-  onOpenWorkspace?: () => void;
-}
 
 /** A full-width destination row: icon, label, one line of explanation. */
 const DestinationRow: React.FC<{
@@ -86,14 +79,9 @@ const DestinationRow: React.FC<{
   </button>
 );
 
-export const AgentLauncher: React.FC<AgentLauncherProps> = ({ onOpenWorkspace }) => {
+export const AgentLauncher: React.FC = () => {
   const { t } = useI18n();
   const setSettingsOpen = useAppStore((s) => s.setSettingsOpen);
-  // Offering a workspace browser while the file tools are switched off would advertise
-  // a capability the agent does not currently have.
-  const workspaceEnabled = !useAgentConfigStore((s) =>
-    s.disabledMcpServers.includes(WORKSPACE_MCP_ID),
-  );
   const tier = useLicenseStore((s) => s.tier);
   const canWrite = tier === 'power_pack' || tier === 'pro' || tier === 'support_pack';
 
@@ -116,9 +104,17 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({ onOpenWorkspace })
     setUnavailable(null);
   };
 
-  const autoEntry = getAgentEntries().find((e) => e.id === AGENT_AUTO_ID);
+  /**
+   * This panel belongs to the Better Sidebar agent specifically.
+   *
+   * Not "whichever agent is selected": the Workspace agent has its own panel, so the only
+   * agent that reaches this code is this one. Naming it explicitly is what makes the
+   * examples and the `>` label below correct — they have to quote the marker the user will
+   * actually type.
+   */
+  const entry = getAgentEntryById('bettersidebar');
   const entryTitle =
-    autoEntry?.title ?? t('agent.entry.autoTitle', { defaultValue: 'Better Sidebar Agent' });
+    entry?.title ?? t('agent.agents.bettersidebar.name', { defaultValue: 'Better Sidebar' });
 
   /**
    * Put an example in the chat input, unsent.
@@ -129,7 +125,7 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({ onOpenWorkspace })
    */
   const stage = (text: string) => {
     setUnavailable(null);
-    if (busy || !autoEntry) {
+    if (busy || !entry) {
       setUnavailable('session-busy');
       return;
     }
@@ -146,7 +142,7 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({ onOpenWorkspace })
     });
 
     agentEventBus.emit('launcher:run-entry', {
-      entryId: autoEntry.id,
+      entryId: entry.id,
       userInput: text,
       autoSend: false,
     });
@@ -253,19 +249,13 @@ export const AgentLauncher: React.FC<AgentLauncherProps> = ({ onOpenWorkspace })
 
       <LauncherExamples capsuleLabel={entryTitle} onPick={stage} disabled={busy} />
 
-      {/* The two destinations that aren't a task. Workspace first: it gets opened often,
-          settings get opened once. */}
+      {/*
+        Settings is the only destination left here. The workspace used to be a row in this
+        list — a sub-view of this panel, reached by a click you had to know about. It is a
+        whole agent now, one tap away in the switcher above, so a row pointing at it would
+        be a second entrance to the same place with worse framing.
+      */}
       <div className="space-y-1.5">
-        {workspaceEnabled && onOpenWorkspace && (
-          <DestinationRow
-            icon={<FolderOpen className="h-4 w-4" />}
-            label={t('agent.launcher.workspace', { defaultValue: 'Workspace' })}
-            hint={t('agent.launcher.workspaceHint', {
-              defaultValue: 'Files the agent reads and writes',
-            })}
-            onClick={onOpenWorkspace}
-          />
-        )}
         <DestinationRow
           icon={<SlidersHorizontal className="h-4 w-4" />}
           label={t('agent.launcher.manage', { defaultValue: 'Skills & tools' })}

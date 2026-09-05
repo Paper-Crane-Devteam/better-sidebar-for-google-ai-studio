@@ -54,7 +54,15 @@ import { WorkspaceToolbar } from './WorkspaceToolbar';
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 
 interface WorkspaceViewProps {
-  onBack: () => void;
+  /**
+   * Return to whatever showed this. Omitted when the workspace *is* the destination.
+   *
+   * It used to be a sub-view of the launcher, so a back arrow was the only way out. Now the
+   * Workspace agent owns the tab and the agent switcher above it is the way out — a back
+   * arrow there would point at the previous agent, which is not "back" in any sense the
+   * user means.
+   */
+  onBack?: () => void;
 }
 
 export const WorkspaceView: React.FC<WorkspaceViewProps> = ({ onBack }) => {

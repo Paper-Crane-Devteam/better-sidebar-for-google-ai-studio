@@ -1396,7 +1396,12 @@
       "discard": "Discard",
       "deleteSkillTitle": "Delete skill",
       "deleteSkillContent": "\"{{title}}\" will be removed for good. This cannot be undone.",
-      "alwaysOn": "Always on"
+      "alwaysOn": "Always on",
+      "agentsTitle": "Agents",
+      "agentsDesc": "Each agent works on different things and has its own tools. Start one by typing > in the chat input.",
+      "noTools": "No optional tools.",
+      "noSkills": "No skills yet. This agent works from its own instructions.",
+      "builtinSkillNote": "Built-in skills can be switched off but not edited."
     },
     "skills": {
       "autoClassify": {
@@ -1435,15 +1440,30 @@
         "sync_conversation_messages": "Record message history for conversations that have none",
         "export": "Download conversations as files",
         "complete_task": "End the agent loop and report results",
-        "doc_read": "Read Word documents: outline, sections and search"
+        "doc_read": "Read Word documents: outline, sections and search",
+        "read_file": "Read a text file, with line numbers",
+        "write_file": "Create a file or replace one entirely",
+        "edit_file": "Replace exact text inside a file",
+        "list_files": "List what is in a folder",
+        "glob_files": "Find files by name pattern",
+        "grep_files": "Search file contents by regex",
+        "manage_files": "Delete, move or create folders"
       },
       "workspace": {
-        "name": "Agent Workspace",
-        "description": "Read, write, edit and search files in your private workspace"
+        "name": "Files",
+        "description": "Read, write, edit and search text files"
       },
       "documents": {
         "name": "Documents",
-        "description": "Read Word documents in your workspace, by outline and by section"
+        "description": "Read Word documents by outline and section"
+      },
+      "core": {
+        "name": "Core",
+        "description": "Available to every agent, and always on."
+      },
+      "bettersidebar": {
+        "name": "Better Sidebar data",
+        "description": "Query and change conversations, folders, tags and prompts"
       }
     },
     "entry": {
@@ -1467,6 +1487,24 @@
       "paywallFilesSkipped": "{{files}} file(s) skipped — the free limit is {{max}} per workspace",
       "clearWarning": "Delete all {fileCount} file(s) in \"{name}\"? This cannot be undone.",
       "deleteWarning": "Delete \"{name}\" and all {fileCount} file(s) in it? Conversations that already used this workspace will no longer be able to read or write files. This cannot be undone."
+    },
+    "agents": {
+      "bettersidebar": {
+        "name": "Better Sidebar",
+        "description": "Organize conversations, folders, tags, prompts and snippets"
+      },
+      "workspace": {
+        "name": "Workspace",
+        "description": "Read, write and edit files and documents in your workspace"
+      }
+    },
+    "switcher": {
+      "label": "Choose an agent"
+    },
+    "workspaceIntro": {
+      "body": "Files here persist across chats and are shared between Gemini and AI Studio. Type > Workspace in the chat input to put this agent to work on them.",
+      "detail": "Text files are read and edited directly. Word documents are read by outline and section. It cannot see your conversations or anything outside this workspace, and every change is confirmed before it runs.",
+      "about": "About the workspace"
     }
   },
   "backup": {
