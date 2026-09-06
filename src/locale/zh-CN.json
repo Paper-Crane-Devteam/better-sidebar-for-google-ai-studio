@@ -340,7 +340,7 @@
     "enterCompactMode": "点击进入精简模式",
     "exitCompactMode": "点击退出精简模式",
     "newChatCta": "点击：新建对话 · 右键：临时对话 · 中键：在新标签页新建对话",
-    "newChatCtaAiStudio": "点击：新建对话 · 右键：临时对话（不在侧边栏显示，但 AI Studio 仍会保存到你的云端硬盘）· 中键：在新标签页新建对话"
+    "newChatCtaAiStudio": "点击：新建对话 · 右键：临时对话 · 中键：在新标签页新建对话"
   },
   "newChatButton": {
     "dropdownTooltip": "更多新建选项",

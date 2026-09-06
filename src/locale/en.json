@@ -346,7 +346,7 @@
     "enterCompactMode": "Click to enter compact mode",
     "exitCompactMode": "Click to exit compact mode",
     "newChatCta": "Click: New chat · Right-click: Temporary chat · Middle-click: New chat in new tab",
-    "newChatCtaAiStudio": "Click: New chat · Right-click: Temporary chat (hidden from the sidebar, but AI Studio still keeps it in your Drive) · Middle-click: New chat in new tab"
+    "newChatCtaAiStudio": "Click: New chat · Right-click: Temporary chat · Middle-click: New chat in new tab"
   },
   "newChatButton": {
     "dropdownTooltip": "More chat options",

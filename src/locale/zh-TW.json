@@ -340,7 +340,7 @@
     "enterCompactMode": "點擊進入精簡模式",
     "exitCompactMode": "點擊退出精簡模式",
     "newChatCta": "點擊：新增對話 · 右鍵：臨時對話 · 中鍵：在新分頁新增對話",
-    "newChatCtaAiStudio": "點擊：新增對話 · 右鍵：臨時對話（不在側邊欄顯示，但 AI Studio 仍會儲存到你的雲端硬碟）· 中鍵：在新分頁新增對話"
+    "newChatCtaAiStudio": "點擊：新增對話 · 右鍵：臨時對話 · 中鍵：在新分頁新增對話"
   },
   "newChatButton": {
     "dropdownTooltip": "更多新增選項",

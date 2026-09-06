@@ -23,6 +23,8 @@
  *
  * The `idx_messages_id` index is what makes the guards cheap. Without it each
  * insert would scan the table, turning a bulk capture into O(n²).
+ * 
+ * IMPORTANT: no backtip in sql comment or it will break the sql grammer
  */
 export const MESSAGES_FTS_OBJECTS = `
 CREATE INDEX IF NOT EXISTS idx_messages_id ON messages(id);
@@ -110,10 +112,10 @@ CREATE TABLE IF NOT EXISTS conversations (
   notebook_id TEXT,
   -- 1 = temporary chat. Recorded but never listed or searched.
   --
-  -- The row exists rather than being skipped because `messages` has a foreign key
-  -- into this table with enforcement on, so refusing to store the conversation
-  -- would make every follow-up turn's message insert fail. Marking and filtering
-  -- costs one column and keeps every write path unchanged.
+  -- The row exists rather than being skipped because the messages table has a
+  -- foreign key into this one with enforcement on: refusing to store the
+  -- conversation would make every follow-up turn's message insert fail. Marking
+  -- and filtering costs one column and keeps every write path unchanged.
   --
   -- Treated as sticky on upsert (see conversationRepo.save): a library scan or a
   -- late full-data save must never be able to un-hide a temporary chat.

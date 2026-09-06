@@ -340,7 +340,7 @@
     "enterCompactMode": "Clique para ativar o modo compacto",
     "exitCompactMode": "Clique para sair do modo compacto",
     "newChatCta": "Clique: Novo chat · Clique direito: Chat temporário · Clique do meio: Novo chat em nova aba",
-    "newChatCtaAiStudio": "Clique: Novo chat · Clique direito: Chat temporário (oculto na barra lateral, mas o AI Studio continua guardando no seu Drive) · Clique do meio: Novo chat em nova aba"
+    "newChatCtaAiStudio": "Clique: Novo chat · Clique direito: Chat temporário · Clique do meio: Novo chat em nova aba"
   },
   "newChatButton": {
     "dropdownTooltip": "Mais opções de chat",

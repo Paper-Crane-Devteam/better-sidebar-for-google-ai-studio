@@ -15,6 +15,7 @@ import {
   LogOut,
   Search,
   ScrollText,
+  Bot,
 } from 'lucide-react';
 import { UIcon } from '@/shared/components/ui/icon';
 import { SqlExecutor } from '../shared/components/menu/SqlExecutor';
@@ -25,6 +26,7 @@ import { FavoritesTab } from '../shared/modules/favorites/FavoritesTab';
 import { TagsTab } from '../shared/modules/tags/TagsTab';
 import { FeedbackTab } from '../shared/modules/feedback/FeedbackTab';
 import { SnippetsTab } from '../shared/modules/snippets/SnippetsTab';
+import { AgentTab } from '../shared/modules/agent-tab';
 import '@/index.scss';
 import { useAppInit } from '../shared/hooks/useAppInit';
 import { OverlayToggle } from '../shared/components/OverlayToggle';
@@ -203,7 +205,8 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       | 'settings'
       | 'search'
       | 'prompts'
-      | 'snippets',
+      | 'snippets'
+      | 'agent',
   ) => {
     if (tab === 'settings') {
       setIsSettingsOpen(true);
@@ -269,6 +272,16 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             className="sidebar-btn transition-all"
           >
             <UIcon icon="tabler:blockquote" className="sidebar-icon" />
+          </Button>
+        </SimpleTooltip>
+        <SimpleTooltip content="Agent">
+          <Button
+            variant={activeTab === 'agent' ? 'secondary' : 'ghost'}
+            size="icon"
+            onClick={() => handleTabChange('agent')}
+            className="sidebar-btn transition-all relative"
+          >
+            <Bot className="sidebar-icon" />
           </Button>
         </SimpleTooltip>
         {shortcuts?.favorites && (
@@ -414,6 +427,8 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
           <FavoritesTab menuActions={moduleConfig.general.menuActions} />
         ) : activeTab === 'snippets' ? (
           <SnippetsTab menuActions={moduleConfig.general.menuActions} />
+        ) : activeTab === 'agent' ? (
+          <AgentTab />
         ) : activeTab === 'tags' ? (
           <TagsTab menuActions={moduleConfig.general.menuActions} />
         ) : activeTab === 'feedback' ? (
