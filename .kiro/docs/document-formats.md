@@ -398,11 +398,11 @@ pptx 的文字都在 `ppt/slides/slideN.xml` 的 `a:t` 里，结构比 docx 简�
 
 ## 十、分期
 
-### 当前状态（P0 已落地）
+### 当前状态（P0 + P1 已落地）
 
-管道通了，docx **只读**能用：`doc_read`（outline / range / search）已挂在可开关的
-`Documents` MCP 上。`doc_edit` 的类型、引擎分派、备份与写后自检都在位，但还没有 handler
-实现 `edit`，所以引擎会明确回答「这个格式还不支持编辑」而不是假装成功。
+「帮我改论文」这条链路通了：`doc_read`（outline / range / search）和 `doc_edit`
+（修订式替换、批注、增删段落、改样式）都挂在可开关的 `Documents` MCP 上，
+细则在 `builtin-docx-review` skill 里。
 
 已经在跑的东西：
 
@@ -410,23 +410,37 @@ pptx 的文字都在 `ppt/slides/slideN.xml` 的 `a:t` 里，结构比 docx 简�
 |---|---|
 | `shared/documents/zip.ts` | 惰性解包（只解要用的 part）、炸弹上限、媒体不重压、**无改动时原字节返回** |
 | `shared/documents/ooxml/xml-cursor.ts` | 保偏移 tokenizer + splice，`applyEdits` 拒绝重叠改动 |
-| `shared/documents/ooxml/runs.ts` | run 展平（非文字内容映射成 U+FFFC 当墙）、定位、按 run 拆分改写 |
+| `shared/documents/ooxml/runs.ts` | run 展平（非文字内容映射成 U+FFFC 当墙）、定位、`splitRunsAt` 按 hit 边界拆 run |
 | `shared/documents/storage.ts` | 写前纯函数自检 → `.history/` 备份 → 写 → 读回复检 → 失败自动回滚 |
-| `shared/documents/docx/` | 主 part 走 `_rels/.rels` 找（不假设叫 `document.xml`）、标题识别四级回退、投影与搜索 |
+| `shared/documents/docx/revisions.ts` | `w:ins` / `w:del` 包装、段落标记修订、`w:pPrChange` |
+| `shared/documents/docx/comments.ts` | comments.xml + Content_Types + rels + commentRange，四处一起动 |
+| `shared/documents/docx/edit.ts` | op 分派；地址是 `old_text` 而非段落号，歧义拒绝 |
+| `shared/documents/docx/` 其余 | 主 part 走 `_rels/.rels` 找、标题识别四级回退、投影与搜索 |
 | `shared/workers/doc-worker.ts` | 串行队列，直接开 OPFS，无 DOM |
 | `shared/offscreen-host.ts` | offscreen 文档创建收口，db 与 documents 共用一个 |
 
-三个当时列的 spike，第 1 个（offscreen worker 能否直接看到 background 那棵 OPFS 树）现在
-是可以直接在浏览器里验的；第 2 个（真实 docx 零改动 round-trip 逐字节相同）由
-`zip.ts` 的「无改动就返回原 `source`」在结构上保证了**读**这一侧，但**改**这一侧仍然必须用
-真实样本跑过才算数。
+spike 状态：第 1 个（offscreen worker 能否直接看到 background 那棵 OPFS 树）仍需在浏览器里验；
+第 2 个的**读**侧由 `zip.ts` 的「无改动就返回原 `source`」在结构上保证，**改**侧已用合成 fixture
+（六 run 跨切 + bookmark + proofErr + CJK eastAsia + 他人修订 + 空段落）验过 bookmark/proofErr/sectPr
+零丢失，但**真实样本（Zotero、LaTeX 转出、WPS、Google Docs 导出）仍未跑过**，这仍是上线前的必做项。
+
+⚠️ 验证过程中修掉四个会静默出错的 bug，都值得记在这里，因为它们的形状会重复出现：
+
+1. **parser 白名单漏了 `doc_read`。** `engine/parser/tool-schema.ts` 的 `SUPPORTED_TOOLS`
+   是独立于 MCP registry 的第二份名单，缺名字的工具一律判 "Unknown tool"。schema 写得再对也没用。
+2. **修订 id 在 per-run 循环里分配。** 一句话跨四个 run 就变成四处独立修订，用户要点四次
+   「接受」，只接受一部分还会留下半句话。一个逻辑改动必须共享一个 `w:id`。
+3. **自闭合 `<w:p/>` 的 `innerStart` 在 `/>` 之后。** 往那里插 `w:pPr` 会落到段落*外面*，
+   产物仍能 tokenize、仍然平衡，所有结构校验都放行，只有 Word 会说文件损坏。
+4. **`<w:comment\s[^>]*\sw:id` 这个正则永不匹配**（标签名后的空格已被 `\s` 吃掉），
+   于是二次编辑同一文件时批注编号从 1 重新开始，两条批注撞 id。
 
 ### 路线
 
 | 期 | 内容 | 交付的场景 |
 |---|---|---|
 | **P0 基建** | `zip.ts` + `xml-cursor.ts` + `runs.ts` + doc-worker + `DOCUMENT_OP` + 备份/原子写 + 3 个 tool 骨架 + `file-kinds` 分类修正 | 无用户可见功能，但后面每一期都便宜 |
-| **P1 论文场景** | docx 读（outline / 按段 / 搜索）+ 批注 + 修订式编辑 + `docx-review` skill；字幕 cue 级工具（便宜，顺手做完） | ✅ **「帮我改论文」跑通** |
+| **P1 论文场景** | docx 读（outline / 按段 / 搜索）+ 批注 + 修订式编辑 + `docx-review` skill。⚠️ 字幕 cue 级工具当时列在这一期，**没做** —— 它跟 docx 一行代码都不共享，塞在同一期只会让这期的验证面变大。挪到 P2 或单独一期 | ✅ **「帮我改论文」跑通** |
 | **P2 数据场景** | xlsx 概览 / 区域读 / 类型推断 / 单元格与公式写入 + `spreadsheet-analysis` skill | ✅ **「帮我处理统计数据」跑通** |
 | **P3 补齐** | PDF 读 + 批注/表单/页面操作；pptx 读改；`doc_create`（md→docx / csv→xlsx / md→pptx） | 文献阅读、汇报材料 |
 | **P4 加分项** | 侧边栏文档预览（docx-preview / 表格 / pdf canvas）；PDF 页面渲染成图交给多模态模型；xlsx 区域导入临时 sqlite 让 AI 用 SQL 做统计 | 信任感与大表分析能力 |

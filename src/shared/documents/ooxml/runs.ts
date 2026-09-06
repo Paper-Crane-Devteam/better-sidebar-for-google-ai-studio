@@ -355,7 +355,81 @@ export function checkEditable(flat: FlatParagraph, hit: TextHit): string | null 
   return null;
 }
 
+// ─── Splitting ───────────────────────────────────────────────────────────────
+
+/**
+ * One run, cut into the part before the hit, the part inside it, and the part after.
+ *
+ * Text, not XML, because the three callers want different things wrapped around the
+ * middle piece: a direct edit replaces it, a tracked edit wraps it in `w:del` and puts a
+ * `w:ins` beside it, a comment leaves it alone and brackets it with range markers. What
+ * they share is the arithmetic, and the arithmetic is where an off-by-one silently
+ * deletes a character of someone's thesis.
+ */
+export interface RunSplit {
+  slice: RunSlice;
+  /** This run's text that falls before the hit. '' when the hit starts at the run. */
+  before: string;
+  /** This run's text inside the hit. Never '' — a touched run overlaps by definition. */
+  inside: string;
+  /** This run's text that falls after the hit. '' when the hit ends past the run. */
+  after: string;
+}
+
+/**
+ * Cut every run the hit touches at the hit's boundaries.
+ *
+ * ⚠️ Refuses the same cases `checkEditable` refuses, and for the same reason: a range
+ * covering a drawing or a field cannot be expressed as text surgery, and pretending
+ * otherwise deletes the drawing.
+ *
+ * For a hit spanning several runs, only the first can have a non-empty `before` and only
+ * the last a non-empty `after` — the ones in between are wholly inside. Callers may rely
+ * on that, but they do not have to: handling all three pieces on every split is uniform
+ * and comes out correct for the single-run case too.
+ */
+export function splitRunsAt(flat: FlatParagraph, hit: TextHit): RunSplit[] {
+  const problem = checkEditable(flat, hit);
+  if (problem) throw new XmlError(`Cannot edit here: ${problem}.`);
+
+  return slicesIn(flat, hit).map((slice) => {
+    const start = Math.max(slice.from, hit.start);
+    const end = Math.min(slice.to, hit.end);
+    return {
+      slice,
+      before: flat.text.slice(slice.from, start),
+      inside: flat.text.slice(start, end),
+      after: flat.text.slice(end, slice.to),
+    };
+  });
+}
+
 // ─── Rewriting ───────────────────────────────────────────────────────────────
+
+/**
+ * A complete `<w:r>` carrying `text`, in either the normal or the deleted flavour.
+ *
+ * `w:delText` rather than `w:t` is the whole of what makes text "deleted" inside a
+ * `w:del`: keeping `w:t` there produces a document Word opens and then shows the text as
+ * still present, which is the failure that looks like the edit silently did nothing.
+ *
+ * ⚠️ Returns '' for empty text rather than an empty run. An empty run is not invalid, but
+ * it carries run properties and shows up later as a phantom edit point — and every caller
+ * here is splicing pieces together where "nothing" is a legitimate piece.
+ *
+ * ⚠️ `xml:space="preserve"` whenever the text has an edge space. Without it Word collapses
+ * it away, which reads as "the AI joined two words together" and is the single most common
+ * bug in generated docx.
+ */
+export function runXml(
+  text: string,
+  rPr = '',
+  tag: 'w:t' | 'w:delText' = 'w:t',
+): string {
+  if (text === '') return '';
+  const preserve = /^\s|\s$/.test(text) ? ' xml:space="preserve"' : '';
+  return `<w:r>${rPr}<${tag}${preserve}>${escapeXml(text)}</${tag}></w:r>`;
+}
 
 /**
  * Replace a text range in place, keeping formatting.
@@ -433,17 +507,6 @@ function textElementXml(part: XmlPart, textEl: ElementRange, content: string): s
   const preserve = needsPreserve || existing === 'preserve';
   const open = preserve ? '<w:t xml:space="preserve">' : '<w:t>';
   return `${open}${escapeXml(content)}</w:t>`;
-}
-
-/**
- * A complete `<w:r>` carrying `text`, formatted like `template`.
- *
- * Used when inserting text that has no run to live in — a new sentence, or the
- * insertion half of a tracked change.
- */
-export function buildRun(text: string, rPr = ''): string {
-  const preserve = /^\s|\s$/.test(text) ? ' xml:space="preserve"' : '';
-  return `<w:r>${rPr}<w:t${preserve}>${escapeXml(text)}</w:t></w:r>`;
 }
 
 /** The run properties at a text offset, for a caller building a new run there. */

@@ -1295,7 +1295,9 @@
       "listFiles": "查看工作区",
       "globFiles": "查找文件",
       "grepFiles": "搜索文件内容",
-      "manageFiles": "管理文件"
+      "manageFiles": "管理文件",
+      "docRead": "读取文档",
+      "docEdit": "标注文档"
     },
     "sync": {
       "progress": "正在获取对话内容 — {{current}}/{{total}}",
@@ -1429,6 +1431,10 @@
       "workspace": {
         "title": "工作区助手",
         "description": "在私有工作区中读写、编辑和搜索文件"
+      },
+      "docxReview": {
+        "title": "审阅 Word 文档",
+        "description": "逐章读完 .docx — 在问题处留下批注，修改则以修订形式提出"
       }
     },
     "mcp": {

@@ -210,7 +210,16 @@ export interface ElementRange {
   outerStart: number;
   /** End of `</name>` (exclusive). */
   outerEnd: number;
-  /** Start of the content. Equals `outerEnd` when self-closing. */
+  /**
+   * Start of the content. Equals `outerEnd` when self-closing.
+   *
+   * ⚠️ **Check `selfClosing` before inserting here.** For `<w:p/>` this offset is *past* the
+   * `/>`, so an insertion "at the start of the content" actually lands after the element —
+   * `<w:p/><w:pPr>…</w:pPr>` instead of `<w:p><w:pPr>…</w:pPr></w:p>`. That output still
+   * tokenises and still balances, so no structural check catches it; Word rejects it as
+   * unreadable content. Expand the tag with `replaceElement` instead. `appendChild` refuses
+   * outright for the same reason.
+   */
   innerStart: number;
   /** End of the content (exclusive). Equals `innerStart` when self-closing. */
   innerEnd: number;

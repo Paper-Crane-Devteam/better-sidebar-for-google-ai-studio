@@ -342,4 +342,122 @@ Say what changed, per row or per group, then call \`complete_task\`.
     createdAt: 0,
     updatedAt: 0,
   },
+  {
+    id: 'builtin-docx-review',
+    type: 'builtin',
+    agentId: 'workspace',
+    title: 'Review a Word Document',
+    description:
+      'Work through a .docx chapter by chapter — comment on problems, suggest fixes as tracked changes',
+    titleKey: 'agent.skills.docxReview.title',
+    descriptionKey: 'agent.skills.docxReview.description',
+    icon: 'FileText',
+    promptContent: `## Task: Review or Revise a Word Document
+
+This skill carries the full \`doc_edit\` operation list, which the tool schema deliberately
+leaves out. It also carries the working order, and that order matters more than the syntax.
+
+### Read before you write. Always, and in this order.
+
+1. **\`doc_read path="…"\`** with nothing else. That returns the outline, the counts, and the
+   warnings. The warnings are the part to actually read — existing tracked changes, field
+   codes, a protected document — because each one changes what you should do next.
+2. **If it already has comments, read them first.** On a thesis they usually *are* the
+   review the user is asking you to address, and answering feedback you never read is the
+   most expensive way to be unhelpful.
+3. **Read a range, not the document.** \`mode="range" range="p12-p48"\`, one section at a
+   time, using the ids from the outline. Output is capped per round; asking for everything
+   gets you a silent truncation and a wrong picture of the file.
+4. **\`mode="search" query="…"\`** to find a term without reading around it. This is how you
+   check whether a fix needs to be applied in more than one place.
+
+### Comment, don't rewrite — unless they asked for the rewrite
+
+Two different requests, two different outputs:
+
+- **"Review my paper" / "what's wrong with this" → comments.** No text changes at all. This
+  is the supervisor's form of feedback and it is the safe default. A comment cannot be wrong
+  in a way that costs the user anything.
+- **"Fix the grammar" / "rewrite this section" → tracked changes.** Actual edits, which Word
+  shows inline with Accept and Reject on each one.
+
+When in doubt, comment. Then offer to make the changes.
+
+### The operations
+
+Every one goes in the \`ops\` array of a single \`doc_edit\` call. \`path\` is separate.
+
+**\`replace_text\`** — rewrite a stretch of text.
+| param | |
+| --- | --- |
+| \`old_text\` | the exact text to replace, quoted from \`doc_read\` output |
+| \`new_text\` | the replacement; \`""\` deletes the text |
+| \`scope\` | optional \`"p12"\` or \`"t3"\`, to disambiguate |
+| \`all\` | optional \`true\` — replace every occurrence in the document |
+
+**\`comment\`** — attach a margin note, changing no text.
+| param | |
+| --- | --- |
+| \`text\` | the comment itself. Newlines become paragraphs. |
+| \`old_text\` | the phrase to attach it to |
+| \`scope\` | \`"p12"\` — comment on the whole paragraph. Use this instead of \`old_text\` when the sentence runs through an equation, an image or a citation field. |
+
+**\`insert_paragraph\`** — add a paragraph.
+| param | |
+| --- | --- |
+| \`text\` | the new paragraph |
+| \`after\` or \`before\` | a paragraph id — exactly one of the two |
+| \`style\` | optional style **id** |
+
+**\`delete_paragraph\`** — remove a whole paragraph. Takes \`scope\` (an id) or \`old_text\`.
+
+**\`set_style\`** — \`scope\` + \`style\`. Mostly for promoting a line to a heading in a document
+that has no real outline.
+
+⚠️ \`style\` is a style **id**, not the name Word shows in its gallery. In a Chinese or German
+document those differ — \`标题 2\` is often the id \`2\`. If you pass an unknown id the call is
+refused and tells you the ids that exist.
+
+### The one rule that prevents a wrong edit
+
+**\`old_text\` is the address. Paragraph ids are not.**
+
+Insert a paragraph and every later id shifts, so a \`pN\` you noted a few rounds ago may now
+point somewhere else — and nothing in the output would look wrong. Spacing is forgiven when
+matching; wording is not. Copy the text from the most recent \`doc_read\`, not from your own
+summary of it.
+
+If a quote matches more than once the call is refused and lists the paragraphs. Two correct
+responses: add surrounding words until it is unique, or pass \`scope\`. \`all=true\` is for a
+deliberate global rename and nothing else — do not reach for it to get past the refusal.
+
+### How to batch
+
+Read a section, then send its ops in **one** \`doc_edit\` call. But note:
+
+⚠️ **Ops in one call cannot see each other's results.** They all resolve against the file as
+it was, and two ops touching the same sentence are refused as overlapping, with nothing
+written. If a later change depends on an earlier one, use a second call.
+
+Five to ten ops per call is comfortable. A call that touches the same paragraph twice is the
+one to split.
+
+### Reporting
+
+The result lists what applied, what was skipped and why, and where the backup went. Say all
+three. In particular:
+
+- If ops were skipped, say which and why — do not report the call as a success.
+- If the document already had tracked changes from someone else, say so, because the user
+  cannot tell yours apart from theirs by looking.
+- Tell them where to look: comments are in Word's review pane, changes are inline with
+  Accept and Reject.
+- The pre-edit copy is under \`.history/\`. Mention it once, at the end.
+
+Then \`complete_task\` with a summary of what you changed and what you would still flag.
+`,
+    enabled: true,
+    createdAt: 0,
+    updatedAt: 0,
+  },
 ];

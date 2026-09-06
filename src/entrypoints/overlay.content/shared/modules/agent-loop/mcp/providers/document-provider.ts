@@ -16,7 +16,7 @@
  */
 
 import type { ToolDefinition } from '../types';
-import { readDocumentTool } from '../../tools/document-tools';
+import { editDocumentTool, readDocumentTool } from '../../tools/document-tools';
 
 export const readDocumentProvider: ToolDefinition = {
   schema: {
@@ -38,5 +38,48 @@ export const readDocumentProvider: ToolDefinition = {
   execute: readDocumentTool,
 };
 
+/**
+ * `doc_edit`.
+ *
+ * ⚠️ The `ops` description names the five verbs and stops. The full parameter list per verb
+ * is roughly 900 characters and lives in the `docx-review` skill instead — the model gets it
+ * by activating that, which is exactly the trade the skill mechanism exists for: three cheap
+ * schemas always, thirty operations when they are needed.
+ *
+ * `mode` is documented as an escape hatch rather than a choice, because the tool already
+ * defaults to `track` and a schema that presents the two evenly is a schema that gets
+ * `direct` half the time.
+ */
+export const editDocumentProvider: ToolDefinition = {
+  schema: {
+    name: 'doc_edit',
+    description:
+      'Change a .docx. Edits are recorded as Word tracked changes the user accepts or ' +
+      'rejects. Locate text by quoting it exactly from doc_read, never by paragraph number.',
+    parameters: {
+      type: 'object',
+      properties: {
+        path: { type: 'string', description: 'Workspace path.' },
+        ops: {
+          type: 'string',
+          description:
+            'JSON array. op = replace_text | comment | insert_paragraph | ' +
+            'delete_paragraph | set_style. Activate the docx-review skill for each one\'s ' +
+            'parameters.',
+        },
+        mode: {
+          type: 'string',
+          description: 'Omit. "direct" overwrites text with no way to review it.',
+        },
+      },
+      required: ['path', 'ops'],
+    },
+  },
+  execute: editDocumentTool,
+};
+
 /** Every document tool, in the order the prompt should present them. */
-export const DOCUMENT_TOOLS: ToolDefinition[] = [readDocumentProvider];
+export const DOCUMENT_TOOLS: ToolDefinition[] = [
+  readDocumentProvider,
+  editDocumentProvider,
+];

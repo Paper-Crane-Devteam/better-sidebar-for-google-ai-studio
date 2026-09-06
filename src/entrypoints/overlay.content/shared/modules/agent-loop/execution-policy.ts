@@ -72,6 +72,10 @@ export const WORKSPACE_WRITE_TOOLS: readonly string[] = [
   'write_file',
   'edit_file',
   'manage_files',
+  // `doc_edit` rewrites a binary container. It keeps a copy under `.history/` and verifies
+  // what it wrote, but the thing at stake is a file the user cannot repair by hand if it
+  // lands wrong — so it belongs on the same switch as the other writes, not below them.
+  'doc_edit',
 ];
 
 /** Workspace tools that only look at files. */
@@ -80,6 +84,7 @@ const WORKSPACE_READ_TOOLS: readonly string[] = [
   'list_files',
   'glob_files',
   'grep_files',
+  'doc_read',
 ];
 
 /** Whether a tool call is a database write operation */

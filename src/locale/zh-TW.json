@@ -1268,6 +1268,15 @@
       "export": "正在匯出",
       "complete": "正在收尾",
       "generic": "正在執行一個步驟",
+      "readFile": "讀取檔案",
+      "writeFile": "寫入檔案",
+      "editFile": "編輯檔案",
+      "listFiles": "查看工作區",
+      "globFiles": "尋找檔案",
+      "grepFiles": "搜尋檔案內容",
+      "manageFiles": "管理檔案",
+      "docRead": "讀取文件",
+      "docEdit": "標註文件",
       "nameLabel": "操作",
       "statement": "語句",
       "waiting": "等待你的操作",
@@ -1418,6 +1427,14 @@
       "manageSnippets": {
         "title": "管理片段",
         "description": "整理、去重和搜尋已儲存的片段 — 包括全文內容"
+      },
+      "workspace": {
+        "title": "工作區助手",
+        "description": "在私有工作區中讀寫、編輯和搜尋檔案"
+      },
+      "docxReview": {
+        "title": "審閱 Word 文件",
+        "description": "逐章讀完 .docx — 在問題處留下批註，修改則以追蹤修訂的形式提出"
       }
     },
     "mcp": {

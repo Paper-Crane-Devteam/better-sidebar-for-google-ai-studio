@@ -48,6 +48,13 @@ export function getToolLabel(toolName: string, t: Translate, query?: string): st
       return t('agent.tool.grepFiles', { defaultValue: 'Searching in files' });
     case 'manage_files':
       return t('agent.tool.manageFiles', { defaultValue: 'Reorganizing files' });
+    case 'doc_read':
+      return t('agent.tool.docRead', { defaultValue: 'Reading a document' });
+    case 'doc_edit':
+      // "Marking up" rather than "Editing": the change lands as a Word revision the user
+      // still has to accept, and a card that says "Editing your document" overstates what
+      // is about to happen to the file.
+      return t('agent.tool.docEdit', { defaultValue: 'Marking up a document' });
     default:
       return t('agent.tool.generic', { defaultValue: 'Running a step' });
   }

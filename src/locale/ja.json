@@ -1268,6 +1268,15 @@
       "export": "エクスポートしています",
       "complete": "仕上げています",
       "generic": "ステップを実行しています",
+      "readFile": "ファイルを読んでいます",
+      "writeFile": "ファイルを書き込んでいます",
+      "editFile": "ファイルを編集しています",
+      "listFiles": "ワークスペースを確認しています",
+      "globFiles": "ファイルを探しています",
+      "grepFiles": "ファイルの中を検索しています",
+      "manageFiles": "ファイルを整理しています",
+      "docRead": "ドキュメントを読んでいます",
+      "docEdit": "ドキュメントに変更履歴を記録しています",
       "nameLabel": "操作",
       "statement": "実行文",
       "waiting": "あなたの操作を待っています",
@@ -1418,6 +1427,14 @@
       "manageSnippets": {
         "title": "スニペットを管理",
         "description": "保存済みスニペットの整理・重複排除・検索 — 全文を含む"
+      },
+      "workspace": {
+        "title": "ワークスペースアシスタント",
+        "description": "プライベートなワークスペース内でファイルを読み書き・編集・検索します"
+      },
+      "docxReview": {
+        "title": "Word 文書をレビュー",
+        "description": ".docx を章ごとに読み進めます — 問題点にコメントを付け、修正案は変更履歴として提案します"
       }
     },
     "mcp": {

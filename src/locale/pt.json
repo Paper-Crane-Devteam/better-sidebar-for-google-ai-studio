@@ -1268,6 +1268,15 @@
       "export": "Exportando",
       "complete": "Finalizando",
       "generic": "Executando uma etapa",
+      "readFile": "Lendo um arquivo",
+      "writeFile": "Gravando um arquivo",
+      "editFile": "Editando um arquivo",
+      "listFiles": "Explorando o espaço de trabalho",
+      "globFiles": "Procurando arquivos",
+      "grepFiles": "Pesquisando dentro dos arquivos",
+      "manageFiles": "Reorganizando arquivos",
+      "docRead": "Lendo um documento",
+      "docEdit": "Marcando alterações em um documento",
       "nameLabel": "Ação",
       "statement": "Instrução",
       "waiting": "Aguardando você",
@@ -1418,6 +1427,14 @@
       "manageSnippets": {
         "title": "Gerenciar snippets",
         "description": "Organize, remova duplicatas e pesquise snippets salvos — incluindo texto completo"
+      },
+      "workspace": {
+        "title": "Assistente do espaço de trabalho",
+        "description": "Leia, grave, edite e pesquise arquivos no seu espaço de trabalho privado"
+      },
+      "docxReview": {
+        "title": "Revisar um documento do Word",
+        "description": "Percorra um .docx capítulo por capítulo — comente os problemas e proponha correções como alterações controladas"
       }
     },
     "mcp": {

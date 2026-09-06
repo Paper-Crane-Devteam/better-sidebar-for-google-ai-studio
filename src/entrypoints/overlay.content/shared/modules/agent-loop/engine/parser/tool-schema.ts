@@ -35,6 +35,13 @@ export const SUPPORTED_TOOLS = [
   'glob_files',
   'grep_files',
   'manage_files',
+  // Document tools (see mcp/document-mcp.ts). ⚠️ A tool missing from this list is
+  // rejected here as "Unknown tool" no matter how correctly the prompt described it —
+  // the schema reaches the model from the MCP registry, but the parser only trusts this
+  // array. Adding a tool to a provider and not to this list ships a tool that can never
+  // run.
+  'doc_read',
+  'doc_edit',
 ] as const;
 
 /** Params that must be present and non-empty, per tool */
@@ -57,6 +64,10 @@ export const REQUIRED_PARAMS: Record<string, string[]> = {
   glob_files: ['pattern'],
   grep_files: ['pattern'],
   manage_files: ['action'],
+  // `mode` is absent on purpose: a path on its own means "give me the outline", which is
+  // the correct first call on any document.
+  doc_read: ['path'],
+  doc_edit: ['path', 'ops'],
 };
 
 /**

@@ -1,5 +1,6 @@
 /**
- * `doc_read` — the agent's way into Word, Excel, PowerPoint, PDF and subtitle files.
+ * `doc_read` and `doc_edit` — the agent's way into Word, Excel, PowerPoint, PDF and
+ * subtitle files.
  *
  * Same contract as the workspace tools next door: never throws, a failure is
  * `ERROR: <what to do about it>`, every parameter arrives as a string and is coerced
@@ -18,8 +19,10 @@
  * emphasis would make that quote fail to match the real characters in the file.
  */
 
-import { readDocument } from '@/shared/documents/client';
+import { editDocument, readDocument } from '@/shared/documents/client';
 import type {
+  DocEditResult,
+  DocOp,
   DocOutlineResult,
   DocProjectionResult,
   DocReadMode,
@@ -101,13 +104,117 @@ async function lockIn(workspaceId: string): Promise<void> {
   );
 }
 
+// ─── doc_edit ────────────────────────────────────────────────────────────────
+
+/**
+ * Apply changes to a document.
+ *
+ * ⚠️ **`mode` defaults to `track` and the tool does not second-guess that.** A user who
+ * hands over their thesis is not going to re-read it to find out what changed, so the
+ * default has to be the form Word can show them change by change. `direct` exists, is one
+ * word away, and is reported in the result so the answer cannot quietly claim otherwise.
+ *
+ * The interesting failure here is a partial one: some ops apply, others are refused. That
+ * is reported as such rather than collapsed into success or error, because both halves are
+ * things the agent has to tell the user about.
+ */
+export async function editDocumentTool(
+  params: Record<string, string>,
+): Promise<string> {
+  const path = params.path?.trim();
+  if (!path) return 'ERROR: doc_edit requires a "path" parameter.';
+
+  let ops: DocOp[];
+  try {
+    ops = parseOps(params.ops);
+  } catch (e) {
+    return fail(e);
+  }
+
+  // Anything other than the literal `direct` means tracked. Silently defaulting rather
+  // than validating: a typo'd mode falling back to the *safer* behaviour is the right way
+  // for this particular parameter to fail.
+  const mode = params.mode?.trim().toLowerCase() === 'direct' ? 'direct' : 'track';
+
+  try {
+    const workspaceId = await resolveWorkspaceId(
+      toolCallRecorder.currentConversationId,
+    );
+
+    const result = await editDocument(workspaceId, {
+      path,
+      ops,
+      mode,
+      // Scopes the once-per-task backup. Without it every write takes its own copy, and
+      // `.history/` ends up holding twelve versions of one edit session instead of the
+      // state the file was in before the agent started.
+      sessionId: toolCallRecorder.currentSessionId ?? undefined,
+    });
+
+    await lockIn(workspaceId);
+    return render(result);
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/**
+ * Read the `ops` array out of what the model wrote.
+ *
+ * It arrives as a JSON string because every tool param does — the call is parsed as
+ * `Record<string, string>`. A single object instead of an array is accepted: writing one op
+ * without the brackets is the most common shape mistake, it has exactly one meaning, and
+ * refusing it costs a round to correct nothing.
+ *
+ * The error message carries a worked example. "Invalid JSON" on its own tends to produce
+ * the same malformed call again with the quoting changed.
+ */
+function parseOps(raw: string | undefined): DocOp[] {
+  const text = raw?.trim();
+  if (!text) {
+    throw new Error(
+      'doc_edit requires an "ops" array. Example: ops=[{"op":"comment","old_text":"…",' +
+        '"text":"…"}]',
+    );
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error(
+      '"ops" is not valid JSON. It must be a JSON array, e.g. ' +
+        '[{"op":"replace_text","old_text":"…","new_text":"…"}]. Write it as a real array, ' +
+        'not as a quoted string.',
+    );
+  }
+
+  const list = Array.isArray(parsed) ? parsed : [parsed];
+  if (list.length === 0) {
+    throw new Error('"ops" is empty, so there is nothing to change.');
+  }
+
+  for (const entry of list) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      throw new Error('Every entry in "ops" must be an object with an "op" field.');
+    }
+    if (!(entry as DocOp).op) {
+      throw new Error(
+        'An entry in "ops" has no "op" field. Each one names the change: replace_text, ' +
+          'comment, insert_paragraph, delete_paragraph or set_style.',
+      );
+    }
+  }
+
+  return list as DocOp[];
+}
+
 // ─── Rendering ───────────────────────────────────────────────────────────────
 
 function render(result: DocResult): string {
   if (result.kind === 'outline') return renderOutline(result);
   if (result.kind === 'projection') return renderProjection(result);
-  // `doc_read` cannot produce an edit result; this only exists so the union is closed.
-  return JSON.stringify(result);
+  return renderEdit(result);
 }
 
 /**
@@ -156,4 +263,48 @@ function renderProjection(result: DocProjectionResult): string {
     ? `Continue with doc_read path="${result.path}" mode="range" range="${result.nextRange}".`
     : 'Narrow the range to see more.';
   return `${header}\n${body}\n\n[Output stops here — this is not the end of the document. ${next}]`;
+}
+
+/**
+ * The outcome of an edit, written so the agent can repeat it to the user.
+ *
+ * Three things it is careful about:
+ *
+ * - **Nothing applied is not an error.** No `ERROR:` prefix, because the file is intact and
+ *   the tool worked. What failed is the agent's aim, and the reasons are right there to act
+ *   on — prefixing it would send the loop down the "the tool is broken" path instead.
+ * - **Skipped ops are listed after the applied ones**, so a partial success reads as what it
+ *   is rather than as a failure.
+ * - **The backup path is stated.** It is the answer to the next question the user asks, and
+ *   the agent cannot offer it if it never sees it.
+ */
+function renderEdit(result: DocEditResult): string {
+  const lines: string[] = [];
+
+  if (result.applied.length === 0) {
+    lines.push(`No changes were made to ${result.path}.`);
+    for (const reason of result.skipped) lines.push(`- ${reason}`);
+    lines.push(
+      'The file is unchanged. Re-read the range with doc_read and copy the exact text ' +
+        'before trying again.',
+    );
+    return lines.join('\n');
+  }
+
+  lines.push(`${result.path} — ${result.applied.length} change(s) applied:`);
+  for (const change of result.applied) lines.push(`- ${change}`);
+
+  if (result.skipped.length > 0) {
+    lines.push('', 'Not applied:');
+    for (const reason of result.skipped) lines.push(`- ${reason}`);
+  }
+
+  if (result.backupPath) {
+    lines.push(
+      '',
+      `The version from before this task is kept at ${result.backupPath}.`,
+    );
+  }
+
+  return lines.join('\n');
 }

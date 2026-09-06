@@ -1313,7 +1313,9 @@
       "listFiles": "Looking through the workspace",
       "globFiles": "Finding files",
       "grepFiles": "Searching in files",
-      "manageFiles": "Reorganizing files"
+      "manageFiles": "Reorganizing files",
+      "docRead": "Reading a document",
+      "docEdit": "Marking up a document"
     },
     "sync": {
       "progress": "Fetching conversation content — {{current}}/{{total}}",
@@ -1427,6 +1429,10 @@
       "workspace": {
         "title": "Workspace Agent",
         "description": "Read, write, edit, and search files in your private workspace"
+      },
+      "docxReview": {
+        "title": "Review a Word Document",
+        "description": "Work through a .docx chapter by chapter — comment on problems, suggest fixes as tracked changes"
       }
     },
     "mcp": {

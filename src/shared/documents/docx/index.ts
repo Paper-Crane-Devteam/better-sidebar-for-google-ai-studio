@@ -1,9 +1,10 @@
 /**
  * The docx handler.
  *
- * Read-only for now: outline, paragraph ranges and search. Editing (tracked changes and
- * comments) is the next slice and plugs in as `edit` on this same object — the engine,
- * the backup path and the verifier are already in place for it.
+ * Reads (outline, paragraph ranges, search) and edits (tracked changes, comments,
+ * paragraph insert/delete, styles). Everything with a side effect is elsewhere: the engine
+ * loads the bytes, `storage.ts` takes the backup and does the atomic write, and this object
+ * is pure bytes → bytes.
  *
  * `verify` is the reason the write path can be trusted, so it is written to be paranoid
  * rather than fast: it runs twice per save, on a file we are about to hand back to the
@@ -13,9 +14,10 @@
 import { registerHandler, type FormatHandler } from '../registry';
 import { DocumentError } from '../types';
 import { openArchive } from '../zip';
-import { tokenize, element } from '../ooxml/xml-cursor';
+import { tokenize, element, elements } from '../ooxml/xml-cursor';
 import { docxOutline } from './outline';
 import { docxRead } from './project';
+import { docxEdit } from './edit';
 import { openDocx } from './model';
 
 /**
@@ -33,6 +35,7 @@ import { openDocx } from './model';
  *    the tree is balanced through the body.
  * 4. The body still has content. An edit that emptied the document would otherwise pass
  *    every structural test.
+ * 5. A comments part, if there is one, is both declared and related. See `verifyComments`.
  */
 function verifyDocx(bytes: Uint8Array): void {
   const archive = openArchive(bytes);
@@ -57,6 +60,7 @@ function verifyDocx(bytes: Uint8Array): void {
   // Every part the content types declare by name must actually be in the archive.
   // A dangling override is how a removed part (calcChain, comments) leaves a file that
   // opens in Word but not in Pages or WPS.
+  const declared = new Set<string>();
   for (const override of contentTypes.tokens) {
     if (override.kind !== 'self' && override.kind !== 'open') continue;
     if (override.name !== 'Override') continue;
@@ -64,11 +68,59 @@ function verifyDocx(bytes: Uint8Array): void {
     const match = /PartName\s*=\s*"([^"]+)"/.exec(tag);
     if (!match) continue;
     const partName = match[1].replace(/^\/+/, '');
+    declared.add(partName);
     if (!archive.has(partName)) {
       throw new DocumentError(
         `[Content_Types].xml declares "${partName}", which is not in the file`,
       );
     }
+  }
+
+  verifyComments(doc, archive, declared);
+}
+
+/**
+ * The other direction: a part we *added* must be declared and related.
+ *
+ * Only `comments.xml`, because it is the only part this handler creates — and because both
+ * ways of getting it wrong are silent to every other check here. An undeclared part makes
+ * Word report the whole document as damaged; an unrelated one makes Word open the file
+ * happily and show none of the comments, so the agent reports success on work that is not
+ * there.
+ */
+function verifyComments(
+  doc: ReturnType<typeof openDocx>,
+  archive: ReturnType<typeof openArchive>,
+  declared: Set<string>,
+): void {
+  const slash = doc.mainName.lastIndexOf('/');
+  const dir = slash === -1 ? '' : doc.mainName.slice(0, slash + 1);
+  const commentsName = `${dir}comments.xml`;
+
+  const referenced = elements(doc.main, 'w:commentReference').length > 0;
+  if (!archive.has(commentsName)) {
+    if (referenced) {
+      throw new DocumentError(
+        'the body references comments but there is no comments part',
+      );
+    }
+    return;
+  }
+
+  if (!declared.has(commentsName)) {
+    throw new DocumentError(
+      `"${commentsName}" is in the file but not declared in [Content_Types].xml, ` +
+        'which Word reports as unreadable content',
+    );
+  }
+
+  const base = doc.mainName.slice(slash + 1);
+  const rels = archive.textOrNull(`${dir}_rels/${base}.rels`);
+  if (!rels || !/relationships\/comments"/.test(rels)) {
+    throw new DocumentError(
+      'the comments part is not related from the document body, so Word would show no ' +
+        'comments at all',
+    );
   }
 }
 
@@ -79,6 +131,7 @@ export const docxHandler: FormatHandler = {
   extensions: ['docx', 'docm'],
   outline: docxOutline,
   read: docxRead,
+  edit: docxEdit,
   verify: verifyDocx,
 };
 

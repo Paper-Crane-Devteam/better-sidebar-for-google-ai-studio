@@ -22,9 +22,9 @@ export const DOCUMENT_MCP: MCPServer = {
   type: 'builtin',
   name: 'Documents',
   description:
-    'Read Word documents in the workspace: outline, headings, paragraph ranges and ' +
-    'search. Editing with tracked changes and comments, plus Excel, PowerPoint, PDF and ' +
-    'subtitles, are being added on top of the same engine.',
+    'Read and revise Word documents in the workspace: outline, headings, paragraph ranges ' +
+    'and search, plus comments and edits recorded as Word tracked changes. Excel, ' +
+    'PowerPoint, PDF and subtitles are being added on top of the same engine.',
   enabled: true,
   tools: DOCUMENT_TOOLS,
 };
