@@ -4,6 +4,7 @@ import {
 } from '../lib/response-parser';
 import { parseBatchExecuteRequest } from '../lib/request-parser';
 import { detectGeminiContext } from '@/shared/lib/gemini-context';
+import { isGeminiTemporaryChat } from '@/shared/lib/dom-selectors';
 
 export function handleGenerateResponse(response: any, url: string) {
   if (response.status === 200) {
@@ -229,6 +230,17 @@ export function handleGenerateResponse(response: any, url: string) {
                     requestNotebookId,
                   );
 
+                  // Only the row-creating event needs this. Later turns arrive as
+                  // GEMINI_CHAT_CONTENT_RESPONSE and attach to a row that is
+                  // already marked, so they carry no flag of their own.
+                  const isTemporary = isGeminiTemporaryChat();
+                  if (isTemporary) {
+                    console.log(
+                      'Better Sidebar (Gemini): Temporary chat detected, marking as hidden:',
+                      conversationId,
+                    );
+                  }
+
                   globalThis.dispatchEvent(
                     new CustomEvent('BETTER_SIDEBAR_PROMPT_CREATE', {
                       detail: {
@@ -240,6 +252,7 @@ export function handleGenerateResponse(response: any, url: string) {
                         gem_id: ctx.gemId ?? undefined,
                         notebook_id: ctx.notebookId ?? undefined,
                         replaceAfterMessageId,
+                        is_temporary: isTemporary,
                       },
                     }),
                   );

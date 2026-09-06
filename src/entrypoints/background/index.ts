@@ -16,6 +16,7 @@ import {
   setActiveTabId,
 } from './tab-profile-map';
 import { notifyDataUpdated } from './notify';
+import { purgeExpiredTemporaryChats } from '@/shared/lib/temporary-chat-cleanup';
 
 console.log(
   'Better Sidebar for Gemini & AI Studio: Background Service Worker Starting...',
@@ -83,6 +84,13 @@ export default defineBackground(() => {
       onSyncingChange((syncing) => {
         usePegasusStore.getState().setGdriveSyncing(syncing);
       });
+
+      // Expired Gemini temporary chats are invisible rows nobody can ever reach,
+      // so they are swept here rather than on demand. The sweep self-throttles, so
+      // calling it on every worker startup is cheap.
+      return purgeExpiredTemporaryChats().catch((err) =>
+        console.error('[Background] Temporary chat purge skipped:', err),
+      );
     })
     .catch((err) =>
       console.error('[Background] Auto-sync setup skipped:', err),

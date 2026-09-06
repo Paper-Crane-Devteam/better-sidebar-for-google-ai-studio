@@ -30,6 +30,23 @@ export const GEMINI_SELECTORS = {
     'sidenav-mavatar-footer gem-icon-button button',
     'sidenav-mavatar-footer .mavatar-footer-row gem-button button',
   ],
+  /** Container holding the native "temporary chat" toggle */
+  tempChatButton: 'div[data-test-id="temp-chat-button-container"] button',
+  /**
+   * Two signals for the same state, because neither covers the whole session.
+   *
+   * `temp-chat-on` marks the toggle while the chat is still empty, but Gemini
+   * drops the class as soon as the first message is sent — which is *before* the
+   * StreamGenerate response we need to classify arrives. Checking only that class
+   * would therefore report false at the one moment it matters.
+   *
+   * `.temporary-chat-header` is the banner Gemini renders for the duration of an
+   * active temporary conversation, so it covers every turn from the first onward.
+   */
+  temporaryChatState: [
+    '.temporary-chat-header',
+    'div[data-test-id="temp-chat-button-container"] button.temp-chat-on',
+  ],
 } as const;
 
 // ─── AI Studio Selectors ─────────────────────────────────────────────────────
@@ -104,6 +121,17 @@ export function toggleGeminiSidebar(): boolean {
   if (clickFirst(GEMINI_SELECTORS.mobileMenu)) return true;
   console.warn('Better Sidebar: Gemini sidebar toggle button not found');
   return false;
+}
+
+/**
+ * Whether Gemini is currently in a temporary chat.
+ *
+ * Read from the DOM rather than from our own state because the user can toggle
+ * temporary chat from Gemini's native UI, which we never hear about. Called from
+ * the main-world interceptor at response time, so it has to stay synchronous.
+ */
+export function isGeminiTemporaryChat(): boolean {
+  return queryFirst(GEMINI_SELECTORS.temporaryChatState) !== null;
 }
 
 /**

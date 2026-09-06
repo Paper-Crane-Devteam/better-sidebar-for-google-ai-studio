@@ -82,10 +82,6 @@
     "bottomLeft": "Bottom Left",
     "bottomRight": "Bottom Right",
     "behavior": "Behavior",
-    "newChatBehavior": "New Chat Behavior",
-    "newChatBehaviorDescription": "Where to open new chats",
-    "currentTab": "Current Tab",
-    "newTab": "New Tab",
     "skipDeleteConfirm": "Delete conversations without confirmation",
     "skipDeleteConfirmDescription": "Danger: a single conversation is deleted immediately and permanently, with no confirmation dialog and no way to undo. It is removed here and on the platform. Batch delete still asks for confirmation.",
     "defaultSyncFolder": "Default Sync Folder",
@@ -349,7 +345,8 @@
     "signIn": "Sign in",
     "enterCompactMode": "Click to enter compact mode",
     "exitCompactMode": "Click to exit compact mode",
-    "newChatCta": "Click: New chat · Right-click: Private chat · Middle-click: New chat in new tab"
+    "newChatCta": "Click: New chat · Right-click: Temporary chat · Middle-click: New chat in new tab",
+    "newChatCtaAiStudio": "Click: New chat · Right-click: Temporary chat (hidden from the sidebar, but AI Studio still keeps it in your Drive) · Middle-click: New chat in new tab"
   },
   "newChatButton": {
     "dropdownTooltip": "More chat options",

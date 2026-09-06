@@ -376,6 +376,7 @@ export const messageRepo = {
         WHERE messages_fts MATCH ?
         AND m.message_type != 'thought'
         AND c.deleted_at IS NULL
+        AND c.is_temporary = 0
       `;
       params.push(matchQuery);
     } else {
@@ -389,6 +390,7 @@ export const messageRepo = {
         WHERE m.content LIKE ?
         AND m.message_type != 'thought'
         AND c.deleted_at IS NULL
+        AND c.is_temporary = 0
       `;
       params.push(`%${query}%`);
     }

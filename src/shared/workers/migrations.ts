@@ -285,6 +285,18 @@ export const runMigrations = async (db: any) => {
       }
     });
 
+    // Migration: Add is_temporary to conversations if missing.
+    // Existing rows default to 0 — temporary chats recorded before this feature
+    // existed are indistinguishable from normal ones, so they stay visible.
+    await step('add is_temporary to conversations', async () => {
+      if (!(await hasColumn('conversations', 'is_temporary'))) {
+        console.log('Worker: Migrating conversations table - adding is_temporary');
+        await db.run(
+          'ALTER TABLE conversations ADD COLUMN is_temporary INTEGER DEFAULT 0',
+        );
+      }
+    });
+
     // Migration: Add is_pinned to folders if missing
     await step('add is_pinned to folders', async () => {
       if (!(await hasColumn('folders', 'is_pinned'))) {

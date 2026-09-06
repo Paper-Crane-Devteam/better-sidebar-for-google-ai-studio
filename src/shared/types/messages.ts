@@ -40,6 +40,13 @@ export type ExtensionMessage = (
         /** When set, delete all messages after this ID before inserting the new ones (regeneration) */
         replaceAfterMessageId?: string;
         /**
+         * 1 when this is a temporary chat, which is hidden from every list and from
+         * search. Only meaningful on the save that creates the row — the flag is
+         * sticky in the database, so later saves for the same conversation can leave
+         * it out (and do, since they have no way of knowing it).
+         */
+        is_temporary?: number;
+        /**
          * Source conversation when this row is a branch (fork) of another chat.
          *
          * Two effects, and both apply only on first save: the new row inherits the

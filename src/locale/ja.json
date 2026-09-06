@@ -76,10 +76,6 @@
     "bottomLeft": "左下",
     "bottomRight": "右下",
     "behavior": "動作",
-    "newChatBehavior": "新しいチャットの動作",
-    "newChatBehaviorDescription": "新しい会話を開く場所",
-    "currentTab": "現在のタブ",
-    "newTab": "新しいタブ",
     "skipDeleteConfirm": "確認なしで会話を削除する",
     "skipDeleteConfirmDescription": "危険: 単一の会話は確認ダイアログなしで即座に完全に削除され、元に戻すことはできません。この拡張機能とプラットフォームの両方から削除されます。一括削除では引き続き確認を求めます。",
     "defaultSyncFolder": "デフォルト同期フォルダ",
@@ -343,7 +339,8 @@
     "signIn": "ログイン",
     "enterCompactMode": "クリックしてコンパクトモードにする",
     "exitCompactMode": "クリックしてコンパクトモードを終了",
-    "newChatCta": "クリック：新しいチャット · 右クリック：プライベートチャット · 中クリック：新しいタブで開く"
+    "newChatCta": "クリック：新しいチャット · 右クリック：一時チャット · 中クリック：新しいタブで開く",
+    "newChatCtaAiStudio": "クリック：新しいチャット · 右クリック：一時チャット（サイドバーには表示されませんが、AI Studio は引き続き Drive に保存します）· 中クリック：新しいタブで開く"
   },
   "newChatButton": {
     "dropdownTooltip": "その他のチャットオプション",

@@ -62,7 +62,10 @@ export async function handleConversations(
       // folder via pendingEntry), that will override this value.
       //
       // Existing conversation: leave folder_id null so COALESCE preserves current value.
-      if (!convoData.folder_id && !existing) {
+      //
+      // Temporary chats are excluded: they are never listed, so filing one is at best
+      // a no-op and at worst leaves it sitting in the Inbox if the flag is ever lost.
+      if (!convoData.folder_id && !existing && !convoData.is_temporary) {
         // New conversation: resolve gem/notebook default folder → inbox fallback
         convoData.folder_id = await resolveGemNotebookFolderId(
           platform,

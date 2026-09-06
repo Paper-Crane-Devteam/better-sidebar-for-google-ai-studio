@@ -76,10 +76,6 @@
     "bottomLeft": "左下角",
     "bottomRight": "右下角",
     "behavior": "行为",
-    "newChatBehavior": "新建对话行为",
-    "newChatBehaviorDescription": "在哪里打开新对话",
-    "currentTab": "当前标签页",
-    "newTab": "新标签页",
     "skipDeleteConfirm": "删除对话时不再确认",
     "skipDeleteConfirmDescription": "危险：单个对话将被立即永久删除，不会弹出确认框，也无法撤销。本插件和平台上的数据都会被删除。批量删除仍会询问确认。",
     "defaultSyncFolder": "默认同步文件夹",
@@ -343,7 +339,8 @@
     "signIn": "登录",
     "enterCompactMode": "点击进入精简模式",
     "exitCompactMode": "点击退出精简模式",
-    "newChatCta": "点击：新建对话 · 右键：私密对话 · 中键：在新标签页新建对话"
+    "newChatCta": "点击：新建对话 · 右键：临时对话 · 中键：在新标签页新建对话",
+    "newChatCtaAiStudio": "点击：新建对话 · 右键：临时对话（不在侧边栏显示，但 AI Studio 仍会保存到你的云端硬盘）· 中键：在新标签页新建对话"
   },
   "newChatButton": {
     "dropdownTooltip": "更多新建选项",

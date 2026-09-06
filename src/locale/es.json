@@ -76,10 +76,6 @@
     "bottomLeft": "Inferior Izquierdo",
     "bottomRight": "Inferior Derecho",
     "behavior": "Comportamiento",
-    "newChatBehavior": "Comportamiento de Nuevo Chat",
-    "newChatBehaviorDescription": "Dónde abrir nuevas conversaciones",
-    "currentTab": "Pestaña Actual",
-    "newTab": "Nueva Pestaña",
     "skipDeleteConfirm": "Eliminar conversaciones sin confirmación",
     "skipDeleteConfirmDescription": "Peligro: una conversación individual se elimina de inmediato y de forma permanente, sin diálogo de confirmación y sin posibilidad de deshacer. Se elimina aquí y en la plataforma. La eliminación por lotes sigue pidiendo confirmación.",
     "defaultSyncFolder": "Carpeta de Sincronización Predeterminada",
@@ -343,7 +339,8 @@
     "signIn": "Iniciar sesión",
     "enterCompactMode": "Haz clic para activar el modo compacto",
     "exitCompactMode": "Haz clic para salir del modo compacto",
-    "newChatCta": "Clic: Nuevo chat · Clic derecho: Chat privado · Clic central: Nuevo chat en nueva pestaña"
+    "newChatCta": "Clic: Nuevo chat · Clic derecho: Chat temporal · Clic central: Nuevo chat en nueva pestaña",
+    "newChatCtaAiStudio": "Clic: Nuevo chat · Clic derecho: Chat temporal (oculto en la barra lateral, pero AI Studio lo sigue guardando en tu Drive) · Clic central: Nuevo chat en nueva pestaña"
   },
   "newChatButton": {
     "dropdownTooltip": "Más opciones de chat",

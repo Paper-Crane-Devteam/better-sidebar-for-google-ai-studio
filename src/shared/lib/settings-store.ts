@@ -8,7 +8,6 @@ interface SettingsState {
    * The left tab bar and secondary Library header actions are hidden.
    */
   compactMode: boolean;
-  newChatBehavior: 'current-tab' | 'new-tab';
   autoScanLibrary: boolean;
   /**
    * When true, deleting a single conversation happens immediately without a
@@ -60,7 +59,6 @@ interface SettingsState {
 
   // Actions
   setCompactMode: (enabled: boolean) => void;
-  setNewChatBehavior: (behavior: 'current-tab' | 'new-tab') => void;
   setAutoScanLibrary: (enabled: boolean) => void;
   setSkipDeleteConfirm: (enabled: boolean) => void;
   setOverlayPosition: (position: { x: number; y: number }) => void;
@@ -130,7 +128,6 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       compactMode: false,
-      newChatBehavior: 'current-tab',
       autoScanLibrary: false,
       skipDeleteConfirm: false,
       overlayPosition: { x: 16, y: 16 },
@@ -171,7 +168,6 @@ export const useSettingsStore = create<SettingsState>()(
       themeGridPage: 0,
 
       setCompactMode: (compactMode) => set({ compactMode }),
-      setNewChatBehavior: (newChatBehavior) => set({ newChatBehavior }),
       setAutoScanLibrary: (autoScanLibrary) => set({ autoScanLibrary }),
       setSkipDeleteConfirm: (skipDeleteConfirm) => set({ skipDeleteConfirm }),
       setOverlayPosition: (overlayPosition) => set({ overlayPosition }),
@@ -204,7 +200,7 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: getStorageName(),
       storage: createJSONStorage(() => storage),
-      version: 8,
+      version: 9,
       partialize: (state) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { themeGridPage, ...rest } = state;
@@ -241,6 +237,11 @@ export const useSettingsStore = create<SettingsState>()(
         if (version < 8) {
           // Gemini Classic was removed; strip its retired persisted selector.
           delete persistedState.geminiStyle;
+        }
+        if (version < 9) {
+          // "New chat behavior" (current tab vs new tab) was removed — new chats
+          // always open in the current tab now.
+          delete persistedState.newChatBehavior;
         }
         return persistedState;
       },

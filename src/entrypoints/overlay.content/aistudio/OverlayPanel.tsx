@@ -52,7 +52,6 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const { path } = useUrl();
 
   const [, setContainer] = useState<HTMLDivElement | null>(null);
-  const newChatBehavior = useSettingsStore((state) => state.newChatBehavior);
   const shortcuts = useSettingsStore((state) => state.shortcuts);
   const compactMode = useSettingsStore((state) => state.compactMode);
   const hasSettingsBadge = useBadgeStore((s) => s.isGroupVisible('settings.'));

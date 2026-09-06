@@ -108,6 +108,16 @@ CREATE TABLE IF NOT EXISTS conversations (
   deleted_at INTEGER DEFAULT NULL, -- soft delete: unix timestamp in seconds, NULL = active
   gem_id TEXT,
   notebook_id TEXT,
+  -- 1 = temporary chat. Recorded but never listed or searched.
+  --
+  -- The row exists rather than being skipped because `messages` has a foreign key
+  -- into this table with enforcement on, so refusing to store the conversation
+  -- would make every follow-up turn's message insert fail. Marking and filtering
+  -- costs one column and keeps every write path unchanged.
+  --
+  -- Treated as sticky on upsert (see conversationRepo.save): a library scan or a
+  -- late full-data save must never be able to un-hide a temporary chat.
+  is_temporary INTEGER DEFAULT 0,
   FOREIGN KEY(folder_id) REFERENCES folders(id) ON DELETE CASCADE
 );
 
