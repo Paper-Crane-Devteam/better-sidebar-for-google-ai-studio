@@ -16,7 +16,7 @@
  */
 
 import type { ParsedToolCall, ParseResult } from '../../types';
-import { MAX_TOOL_CALLS, TOOL_TAG, findMissingParams, isSupportedTool } from './tool-schema';
+import { MAX_TOOL_CALLS, TOOL_BLOCK_PATTERN, findMissingParams, isSupportedTool } from './tool-schema';
 import {
   describeJsonFault,
   isInsideCodeBlock,
@@ -32,7 +32,7 @@ export {
   hasUnclosedToolBlock,
 } from './tool-schema';
 
-const TOOL_BLOCK_RE = new RegExp(`<${TOOL_TAG}>([\\s\\S]*?)<\\/${TOOL_TAG}>`, 'g');
+const TOOL_BLOCK_RE = new RegExp(TOOL_BLOCK_PATTERN, 'g');
 
 /** Parse every tool call in an AI response. */
 export function parseToolCalls(responseText: string): ParseResult {

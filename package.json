@@ -18,6 +18,7 @@
     "publishGumroad": "gumroad products page publish eklogd ./landing.html --json --no-input --non-interactive"
   },
   "dependencies": {
+    "@cantoo/pdf-lib": "^2.9.1",
     "@iconify/react": "^6.0.2",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-context-menu": "^2.2.16",
@@ -51,6 +52,7 @@
     "lucide-react": "^0.344.0",
     "marked": "18.0.6",
     "mitt": "^3.0.1",
+    "pdfjs-dist": "^6.3.289",
     "react": "^18.3.1",
     "react-arborist": "3.4.3",
     "react-dom": "^18.3.1",

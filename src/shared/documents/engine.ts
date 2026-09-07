@@ -17,10 +17,9 @@ import { DocumentError, type DocRequest, type DocResult } from './types';
 import { handlerFor } from './registry';
 import { loadDocument, saveDocument } from './storage';
 
-// Handlers register themselves as a side effect of being imported. Importing them here
-// rather than in the worker keeps "which formats exist" a property of this layer.
-import './docx';
-import './xlsx';
+// Each execution host registers its formats before calling this engine: the document
+// worker imports Office handlers; pdf-host imports PDF. Keeping registration at the
+// host boundary prevents the PDF/background bundles from duplicating Office parsers.
 
 export async function runDocRequest(
   scope: fsTypes.Scope,
@@ -46,7 +45,7 @@ export async function runDocRequest(
     throw new DocumentError('doc_edit needs at least one operation in "ops".');
   }
 
-  const outcome = handler.edit(doc, request);
+  const outcome = await handler.edit(doc, request, { loadSource: (path) => loadDocument(scope, path) });
 
   // Nothing took effect: do not write, and do not take a backup. A save here would burn
   // the session's one backup slot on a no-op, which is exactly when the user later needs

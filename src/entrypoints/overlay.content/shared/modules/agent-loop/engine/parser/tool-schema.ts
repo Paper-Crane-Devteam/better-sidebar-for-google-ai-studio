@@ -15,6 +15,11 @@ export const MAX_TOOL_CALLS = 20;
  */
 export const TOOL_TAG = 'bs_agent_tool';
 
+/** Match transport Markdown escapes without rewriting payload text or source offsets. */
+export const TOOL_OPEN_PATTERN = String.raw`\\?<bs\\?_agent\\?_tool>`;
+export const TOOL_CLOSE_PATTERN = String.raw`\\?<\/bs\\?_agent\\?_tool>`;
+export const TOOL_BLOCK_PATTERN = `${TOOL_OPEN_PATTERN}([\\s\\S]*?)${TOOL_CLOSE_PATTERN}`;
+
 /** Tool names the engine can actually execute */
 export const SUPPORTED_TOOLS = [
   'execute_sql',
@@ -158,8 +163,8 @@ export function deliversResultToAI(name: string): boolean {
  * from the top, which wastes a round and can re-run the first half.
  */
 export function hasUnclosedToolBlock(responseText: string): boolean {
-  const opens = responseText.split(`<${TOOL_TAG}>`).length - 1;
-  const closes = responseText.split(`</${TOOL_TAG}>`).length - 1;
+  const opens = [...responseText.matchAll(new RegExp(TOOL_OPEN_PATTERN, 'g'))].length;
+  const closes = [...responseText.matchAll(new RegExp(TOOL_CLOSE_PATTERN, 'g'))].length;
   return opens > closes;
 }
 

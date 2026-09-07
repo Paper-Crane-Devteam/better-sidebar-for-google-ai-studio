@@ -184,6 +184,12 @@ browser.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
   if (message.type !== 'DOC_REQUEST') return;
 
   const { id, workerType, payload } = message.payload;
+  if (/\.pdf$/i.test(payload?.request?.path ?? '')) {
+    void import('./shared/documents/pdf-host').then(({ dispatchPdf }) => dispatchPdf(id, payload)).catch(error => {
+      void browser.runtime.sendMessage({ type: 'DOC_RESPONSE', payload: { id, success: false, error: `PDF host failed: ${error.message}` } });
+    });
+    return;
+  }
   try {
     getDocWorker().postMessage({ id, type: workerType, payload });
   } catch (e: any) {

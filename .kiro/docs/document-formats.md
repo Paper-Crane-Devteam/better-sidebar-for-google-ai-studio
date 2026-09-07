@@ -582,6 +582,65 @@ op：`set_cell` / `set_cells` / `add_column` / `clear_cells` / `add_sheet` / `re
 **仍未做的**：真实样本（Excel 各版本、WPS、Numbers、Google Sheets 导出）的零改动 round-trip 与
 编辑后用 Excel 打开，跟 docx 的第 2 个 spike 一样是上线前必做项。
 
+#### P3：PDF（已落地）
+
+PDF 已落地；PPTX 读改也已补齐（见下节），doc_create 仍待实现。
+
+- `shared/documents/pdf/`：pdfjs-dist 兼容构建读取目录、页数、文字层统计、页范围、文字搜索、已有批注和 AcroForm 字段；投影有字符上限。
+- `pdf/edit.ts`：comment / note / highlight / fill_form / delete_pages / extract_pages / merge / rotate_pages / watermark / page_numbers。PDF 不支持修改正文。
+- `pdf-host.ts`：Chrome offscreen 主线程与 Firefox background 页懒加载并串行执行，直接访问 OPFS。PDF 库不进入 content script 或 doc-worker。PDF.js worker、CMap、标准字体与 WASM 均打包在本地 `pdf/`。
+- `builtin-pdf-review` 提供完整参数和工作流；复用 doc_read / doc_edit，不增加常驻工具。
+- handler 和保存自检支持异步；写失败、读回自检失败都恢复本次写前字节；备份失败拒绝覆盖。底层 writeBytes 在失败时 abort，不提交部分写入。
+
+边界：抽页在当前文件保留所选页（原顺序），另存请先复制文件；删页/抽页移除旧书签和页标签。
+有表单字段的 PDF 不做页面删除/复制/合并；XFA、加密文件及签名字段拒绝编辑。
+高亮按命中的完整 text item 生成独立 quad，可能包含同一 item 内相邻文字，不支持竖排；跨行不合并成大矩形。
+便签/批注支持 Unicode；表单文字、水印和页码使用 Helvetica/WinAnsi，不支持的字符明确拒绝。
+坐标使用未旋转 PDF 的左下角原点。OCR 和页面渲染仍属于后续范围。
+
+验证：`node scripts/test-pdf.mjs` 使用生成文件交叉重读文字/批注/表单，检查页面操作与错误参数；
+`node scripts/test-document-storage.mjs` 检查异步自检、同 session 后续写入回滚、写入中断和备份失败。
+`node scripts/test-document-tool-parser.mjs` 覆盖 ops 双层引号、摘要内引号、Markdown 转义标签、渲染/执行解析一致性，以及 type → op 兼容。PDF 高亮匹配忽略文字投影引入的空白差异，仍要求页内唯一命中。
+Chrome/Firefox 构建验证本地资源和分包；真实扩展 offscreen/Firefox OPFS 以及 Acrobat/WPS 的显示效果仍需浏览器/真实文件验收。
+
+#### P3：PPTX 读改（已落地）
+
+零新增第三方依赖，复用 `fflate`、保偏移 XML tokenizer、doc-worker、文档备份和写回复检。
+`shared/documents/pptx/` 分为 package/model/read/edit/index，注册到现有 doc_read / doc_edit；
+完整参数在 `builtin-pptx-review`，不增加工具 schema。
+
+- 读取：按 presentation.xml 的实际页序返回标题概览；按页范围读取正文、形状 ID/类型/名称、
+  演讲者备注；支持字面量搜索和 `nextRange` 字符偏移续读，单次投影最多 16000 字符。
+- `replace_text`：slide、old_text、new_text，可选 shape ID；要求段落内唯一匹配，支持跨 run，
+  替换文字继承首个命中 run 的格式，保留未命中文字的原 run 格式；不跨字段/换行，不自动缩放文本框。
+- `set_notes`：slide、text；替换正文备注为纯文本，换行变成段落，保留页码等其它占位符；
+  无备注时创建 notesSlide、关系和 Content Type，有 notesMaster 时复用它。
+- `duplicate_slide`：slide，可选 after（0 表示插到最前）；克隆备注、图表和嵌入工作簿等可编辑依赖，
+  共享母版/布局/媒体，备注回链指向副本；未知依赖类型明确拒绝。
+- `delete_slides`：slides 数组；只从展示页序移除，至少保留一页。**保留底层 part 和关系，
+  不保证缩小文件，也不是内容安全擦除；原有超链接仍可能访问被移除的页。**
+- `reorder_slides`：order 数组，必须包含当前所有页且无重复。
+
+ops 顺序执行，后续页码以当前顺序为准；任何一项无效，整批不保存。零改动返回原始字节。
+签名文件拒绝编辑；自定义放映/分节文件拒绝结构操作。当前只支持标准 p/a/r 前缀的 Transitional
+PPTX，Strict/其它命名空间前缀明确拒绝；带 mc:AlternateContent 的页不做文字替换。
+不渲染、不读取图片/图表/SmartArt 内部文字、不新建演示文稿。
+
+保存自检覆盖 XML 标签嵌套、Content Types 声明、内部关系目标、关系 ID 和幻灯片 ID 唯一性。
+`node scripts/test-pptx.mjs` 验证跨 run/CJK/实体转义、格式与未改 part 保留、分页续读、
+备注、深层复制隔离、顺序操作、歧义/字段拒绝、零改动及错误批次不落盘。
+另用运行环境自带 python-pptx 生成带图表/备注的独立样本，编辑后由 python-pptx/lxml
+交叉重读全部 XML、核对文本/备注、修改副本图表并验证原图表不变，重新保存通过；未引入产品依赖。
+构建体积对比（同一工作区开发前后 Chrome 构建）：doc-worker 增加 14,438 字节，逐文件 gzip
+口径约增加 5,065 字节；content script 仅增加 skill/工具说明 2,426 字节，未包含 PPTX 解析器。
+Office handler 注册从通用 engine 移到 doc-worker 后，PDF/background 不再重复打包 Office 解析代码，
+整体构建文件合计反而减少 200,487 字节（逐文件 gzip 合计减少 72,226 字节；不是扩展 ZIP 实测）。
+Chrome/Firefox 构建与 PPTX/PDF/备份/参数解析回归通过；全项目 tsc 仍有 6 处未改动文件的既有错误。
+浏览器内 offscreen/Firefox OPFS 和 PowerPoint/WPS 实际布局仍需真机验收。
+
+参考：[Microsoft PresentationML 结构](https://learn.microsoft.com/en-us/office/open-xml/presentation/structure-of-a-presentationml-document)、
+[Microsoft Notes Slide 说明](https://github.com/OfficeDev/open-xml-docs/blob/main/docs/presentation/working-with-notes-slides.md)。
+
 ### 路线
 
 | 期 | 内容 | 交付的场景 |

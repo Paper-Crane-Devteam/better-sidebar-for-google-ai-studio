@@ -49,7 +49,7 @@ export interface LoadedDocument {
 }
 
 /** What a format handler must be able to say about bytes it produced. */
-export type Verifier = (bytes: Uint8Array) => void;
+export type Verifier = (bytes: Uint8Array) => void | Promise<void>;
 
 export async function loadDocument(
   scope: fs.Scope,
@@ -121,7 +121,7 @@ export async function saveDocument(
   // ① Check the new bytes while the old ones are still safe.
   if (options.verify) {
     try {
-      options.verify(bytes);
+      await options.verify(bytes);
     } catch (e) {
       throw new DocumentError(
         `The edited file did not pass its own structure check, so nothing was written ` +
@@ -131,34 +131,41 @@ export async function saveDocument(
     }
   }
 
+  // Keep the immediate pre-write bytes for rollback, including later writes in a session.
+  const previous = await fs.readBytes(scope, path, fs.MAX_LOCAL_BYTES);
+
   // ② Copy the current version aside, once per session.
   const key = `${options.sessionId ?? 'no-session'}\u0000${scope.workspaceId}\u0000${path}`;
   let backupPath: string | undefined;
-  if (!backedUp.has(key)) {
+  if (!options.sessionId || !backedUp.has(key)) {
     backupPath = (await archiveCurrent(scope, path)) ?? undefined;
+    if (!backupPath) throw new DocumentError('Could not back up the document; nothing was written.');
     if (backedUp.size >= MAX_MARKS) backedUp.clear();
     backedUp.add(key);
   }
 
   // ③ Write, then ④ confirm what landed.
-  await fs.writeBytes(scope, path, bytes, fs.MAX_LOCAL_BYTES);
-
   try {
+    await fs.writeBytes(scope, path, bytes, fs.MAX_LOCAL_BYTES);
     const readBack = await fs.readBytes(scope, path, fs.MAX_LOCAL_BYTES);
     if (readBack.size !== bytes.byteLength) {
       throw new Error(
         `only ${readBack.size} of ${bytes.byteLength} bytes were written`,
       );
     }
-    options.verify?.(readBack.bytes);
+    if (!readBack.bytes.every((value, i) => value === bytes[i])) throw new Error("Written bytes differ from the verified output");
+    await options.verify?.(readBack.bytes);
   } catch (e) {
-    const restored = backupPath
-      ? await restore(scope, backupPath, path)
-      : false;
+    let restored = false;
+    try {
+      await fs.writeBytes(scope, path, previous.bytes, fs.MAX_LOCAL_BYTES);
+      const check = await fs.readBytes(scope, path, fs.MAX_LOCAL_BYTES);
+      restored = check.size === previous.size && check.bytes.every((value, i) => value === previous.bytes[i]);
+    } catch { /* Report recovery failure below. */ }
     throw new DocumentError(
       `The write did not complete (${(e as Error).message}). ` +
         (restored
-          ? `${path} has been restored from ${backupPath}.`
+          ? `${path} has been restored to its state before this write.`
           : `⚠️ ${path} may be damaged; a copy of the previous version is at ` +
             `${backupPath ?? 'no backup was taken'}.`),
     );
@@ -173,8 +180,7 @@ export async function saveDocument(
  * Returns the backup path, or null when there was nothing to copy (a brand new file has
  * no previous version, which is not a failure).
  *
- * Never throws: a backup that cannot be taken must not block the edit. It downgrades to
- * "no backup for this write", and the caller's result text says so.
+ * Returns null on backup failure; the caller refuses to overwrite the original.
  */
 async function archiveCurrent(
   scope: fs.Scope,
@@ -224,21 +230,6 @@ async function prune(
   }
 }
 
-async function restore(
-  scope: fs.Scope,
-  from: string,
-  to: string,
-): Promise<boolean> {
-  try {
-    const { bytes } = await fs.readBytes(scope, from, fs.MAX_LOCAL_BYTES);
-    await fs.writeBytes(scope, to, bytes, fs.MAX_LOCAL_BYTES);
-    return true;
-  } catch (e) {
-    console.error('[Documents] Restore failed:', e);
-    return false;
-  }
-}
-
 /**
  * `20260905-143012` — sortable, readable, and legal as a filename everywhere.
  *
@@ -250,6 +241,6 @@ function timestamp(): string {
   const p = (n: number) => String(n).padStart(2, '0');
   return (
     `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}` +
-    `-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`
+    `-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}-${String(d.getMilliseconds()).padStart(3, '0')}-${crypto.randomUUID()}`
   );
 }

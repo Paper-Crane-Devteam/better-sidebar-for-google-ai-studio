@@ -8,7 +8,7 @@
  * verdict, in both places.
  */
 
-import { TOOL_CALL_TAG } from '../constants';
+import { TOOL_BLOCK_PATTERN } from '../../engine/parser/tool-schema';
 import type { ParsedToolCall } from '../../types';
 import { tryParseJson, tryParseUnstructured } from '../../engine/parser/fallbacks';
 
@@ -22,7 +22,7 @@ export interface ExtractedToolCall {
 
 /** Strip the `<bs_agent_tool>` wrapper if there is one */
 function unwrap(text: string): string {
-  const tagRegex = new RegExp(`<${TOOL_CALL_TAG}>([\\s\\S]*?)<\\/${TOOL_CALL_TAG}>`);
+  const tagRegex = new RegExp(TOOL_BLOCK_PATTERN);
   const tagContent = text.match(tagRegex);
   return tagContent ? tagContent[1].trim() : text.trim();
 }
@@ -39,7 +39,7 @@ export function parseToolCallFromText(text: string): ParsedToolCall | null {
  * Extract ALL tool calls from a response text, returning their parsed info and indices.
  */
 export function parseAllToolCallsFromText(text: string): ExtractedToolCall[] {
-  const tagRegex = new RegExp(`<${TOOL_CALL_TAG}>([\\s\\S]*?)<\\/${TOOL_CALL_TAG}>`, 'g');
+  const tagRegex = new RegExp(TOOL_BLOCK_PATTERN, 'g');
   const results: ExtractedToolCall[] = [];
   let match: RegExpExecArray | null;
 

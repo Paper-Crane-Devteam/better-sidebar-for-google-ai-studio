@@ -22,7 +22,7 @@ export const readDocumentProvider: ToolDefinition = {
   schema: {
     name: 'doc_read',
     description:
-      'Read a Word .docx or Excel .xlsx (read_file cannot — they are zips). Path alone ' +
+      'Read .docx, .xlsx, .pptx or .pdf documents. Path alone ' +
       'returns the outline; then read one part. Output is capped, so never ask for all of it.',
     parameters: {
       type: 'object',
@@ -33,7 +33,7 @@ export const readDocumentProvider: ToolDefinition = {
           type: 'string',
           description:
             'docx: "p12-p48", table "t3", cell "t3r2c1", part "hd1"/"fn". xlsx: ' +
-            '"Sheet1!A1:F50", or a sheet name for the whole sheet.',
+            '"Sheet1!A1:F50". PPTX: "1-3". PDF: "1-3", "annotations:1-3", "fields:1-3".',
         },
         query: { type: 'string', description: 'search mode: literal text.' },
       },
@@ -61,7 +61,7 @@ export const editDocumentProvider: ToolDefinition = {
   schema: {
     name: 'doc_edit',
     description:
-      'Change a .docx or .xlsx. Word edits become tracked changes the user accepts or ' +
+      'Change a .docx, .xlsx, .pptx or .pdf (PDF: annotations/forms/pages only). Word edits become tracked changes the user accepts or ' +
       'rejects; in Word, locate text by quoting it exactly from doc_read, never by paragraph ' +
       'number. In Excel, cells are addressed as "Sheet1!C2".',
     parameters: {
@@ -69,13 +69,13 @@ export const editDocumentProvider: ToolDefinition = {
       properties: {
         path: { type: 'string', description: 'Workspace path.' },
         ops: {
-          type: 'string',
+          type: 'array',
           description:
-            'JSON array. docx: replace_text | set_text | comment | insert_paragraph | ' +
+            'Real JSON array of objects, NOT a quoted string. Each uses op (not type). docx: replace_text | set_text | comment | insert_paragraph | ' +
             'delete_paragraph | set_style | insert_table | insert_row | delete_row | ' +
             'delete_table. xlsx: set_cell | set_cells | add_column | clear_cells | ' +
             'add_sheet | rename_sheet. Activate the docx-review or spreadsheet-analysis ' +
-            "skill for each one's parameters.",
+            "skill for each one's parameters; PDF: activate builtin-pdf-review; PPTX: activate builtin-pptx-review.",
         },
         mode: {
           type: 'string',

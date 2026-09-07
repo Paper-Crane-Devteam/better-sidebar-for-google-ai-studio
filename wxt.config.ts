@@ -68,6 +68,7 @@ export default defineConfig({
           // public/ and loaded by URL so they are not inlined as base64 into
           // content-scripts/overlay.js (see ImportHistoryDialog.tsx).
           'images/*',
+          'pdf/*',
         ],
         matches: [
           'https://aistudio.google.com/*',
@@ -109,6 +110,10 @@ export default defineConfig({
     plugins: [
       viteStaticCopy({
         targets: [
+          { src: 'node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs', dest: 'pdf' },
+          { src: 'node_modules/pdfjs-dist/cmaps', dest: 'pdf' },
+          { src: 'node_modules/pdfjs-dist/standard_fonts', dest: 'pdf' },
+          { src: 'node_modules/pdfjs-dist/wasm', dest: 'pdf' },
           // Copy all SQLite WASM assets to assets/ (for Worker default relative path resolution)
           {
             src: 'src/assets/wa-sqlite-fts5/*',

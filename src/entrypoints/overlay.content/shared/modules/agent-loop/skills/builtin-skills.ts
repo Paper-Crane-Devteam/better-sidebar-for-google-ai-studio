@@ -707,4 +707,74 @@ Then \`complete_task\` with what you changed and what you would still check.
     createdAt: 0,
     updatedAt: 0,
   },
+  {
+    id: 'builtin-pdf-review', type: 'builtin', agentId: 'workspace',
+    title: 'Read and Review a PDF',
+    description: 'PDF page text, bookmarks, comments, AcroForm fields and page operations',
+    icon: 'FileText', enabled: true, createdAt: 0, updatedAt: 0,
+    promptContent: `Read with doc_read outline first, then mode="range" and range="1-3".
+Use mode="search", query=literal text, range="1-10" to locate passages.
+Read existing comments with range="annotations:1-3", fields with range="fields:1-3".
+Pages are 1-based; selections support "1-3,5". Follow nextRange when truncated.
+Continuation ranges may end in @characterOffset; pass nextRange back unchanged.
+Scans have no text to extract. No OCR, body-text editing or rendering in this release.
+
+PDF doc_edit ops (JSON array):
+- comment / note: page, text, optional x/y in unrotated PDF points (origin bottom left).
+- highlight: page, text (unique exact quote), optional comment. Matches uniquely ignoring whitespace differences from text extraction. Highlights whole intersecting text items, so may include
+  adjacent words within the same item; each item has its own quad. No vertical-text support.
+- fill_form: name, value (string; boolean for checkbox). Read field names/options first.
+- rotate_pages: pages, degrees (relative, multiple of 90).
+- delete_pages: pages. Must leave a page.
+- extract_pages: pages. Keeps selected pages in original order IN THE SAME FILE.
+  To extract into another file, copy the PDF with manage_files first, then edit the copy.
+- merge: source (workspace PDF path), optional pages selecting source pages. Appends to target.
+- watermark: pages, text, optional size (36), opacity (0.2), x/y.
+- page_numbers: pages, optional template ("{page} / {total}"), size (11), opacity (1), x/y.
+
+Operations run sequentially; later page numbers refer to the current page order.
+Do highlights before structural page operations or in another call after re-reading.
+A rejected operation aborts the entire batch without saving. Form page copying/removal/merge,
+XFA, encrypted PDFs and signature fields are refused. Removing pages drops old bookmarks
+and page labels; report this. Page copies may not retain document-level navigation.
+Watermarks, page numbers and filled text use Helvetica (WinAnsi); unsupported glyphs are
+refused, so do not claim CJK form filling is supported. Comments support Unicode.
+Coordinates do not account for viewer rotation. Inspect the result in a PDF viewer.
+Report applied operations and backupPath from the tool result; never claim body text changed.
+`,
+  },
+  {
+    id: 'builtin-pptx-review', type: 'builtin', agentId: 'workspace',
+    title: 'Read and Edit PowerPoint',
+    description: 'PPTX slide text, speaker notes, shapes and slide ordering',
+    icon: 'FileText', enabled: true, createdAt: 0, updatedAt: 0,
+    promptContent: `Start with doc_read outline, then mode="range", range="1-3" (or "slide2").
+Read slide titles, individual shape IDs/text and speaker notes. Search uses a literal query,
+optionally within a slide range. Pass nextRange unchanged with the same mode and query.
+Slide numbers are 1-based positions in the current presentation, not filenames.
+
+PPTX doc_edit ops:
+- replace_text: slide, old_text, new_text, optional shape (shape ID from doc_read).
+  Quote exact unique text within a paragraph; cross-run replacement inherits the first
+  affected run's formatting. Other runs and shape layout remain. No line breaks/tabs,
+  field edits, alternate DrawingML representations, automatic text fitting or editing text in charts/SmartArt/images.
+- set_notes: slide, text. Replaces speaker-notes body with plain text; newlines create
+  paragraphs. Other notes placeholders stay. Creates notes when absent; empty text clears.
+- duplicate_slide: slide, optional after (current position, 0 inserts first; default after source).
+  Notes/charts/embedded workbooks are independent copies; masters/layout/media stay shared.
+  Unsupported dependency types abort the batch.
+- delete_slides: slides (array, e.g. [2,4]). Must leave one slide. Removes slides from
+  presentation order; underlying parts remain to preserve references. This does NOT
+  securely erase their content or shrink the file. Existing hyperlinks can still reach them.
+- reorder_slides: order (array listing every current slide exactly once, e.g. [3,1,2]).
+
+Operations run sequentially. Re-read after structural edits before using old slide numbers.
+An invalid op aborts the entire batch without saving. Custom shows/sections block structural
+edits; signed packages and nonstandard/Strict namespaces are unsupported. No tracked changes
+in PowerPoint; edits are direct and backed up under .history. Explain before/after snippets
+in change_summary. Report applied/skipped and backupPath, and ask the user to review layout
+in PowerPoint/WPS since this tool does not render or resize text boxes. Creating a new PPTX
+from Markdown is not implemented.
+`,
+  },
 ];

@@ -100,6 +100,10 @@ export async function runDocumentOp(
   workspaceId: string,
   request: DocRequest,
 ): Promise<DocResult> {
+  if (/\.pdf$/i.test(request.path) && !(await ensureOffscreenDocument()).available) {
+    const { runPdfRequest } = await import('./pdf-host');
+    return runPdfRequest(workspaceId, request);
+  }
   return call('DOC_OP', { workspaceId, request }, request.kind === 'read');
 }
 

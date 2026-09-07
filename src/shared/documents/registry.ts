@@ -3,7 +3,7 @@
  *
  * ## Handlers are pure bytes → result
  *
- * No OPFS, no messaging, no `await`. A handler receives the file's bytes and returns
+ * No OPFS or messaging. Handlers may be asynchronous. A handler receives the file's bytes and returns
  * either a projection or new bytes. Everything with a side effect — loading, backing up,
  * verifying what landed — lives in `storage.ts` and `engine.ts`.
  *
@@ -43,11 +43,11 @@ export interface FormatHandler {
   /** Lowercase extensions, without the dot. */
   extensions: string[];
   /** What is in this file, cheaply. Must never return more than a few KB of text. */
-  outline(doc: LoadedDocument): DocOutlineResult;
+  outline(doc: LoadedDocument): DocOutlineResult | Promise<DocOutlineResult>;
   /** Part of the content, addressed by `request.range` or `request.query`. */
-  read(doc: LoadedDocument, request: DocReadRequest): DocProjectionResult;
+  read(doc: LoadedDocument, request: DocReadRequest): DocProjectionResult | Promise<DocProjectionResult>;
   /** Apply ops. Absent while a format is still read-only. */
-  edit?(doc: LoadedDocument, request: DocEditRequest): EditOutcome;
+  edit?(doc: LoadedDocument, request: DocEditRequest, context?: { loadSource(path: string): Promise<LoadedDocument> }): EditOutcome | Promise<EditOutcome>;
   /**
    * Structural self-check on bytes this handler produced.
    *
@@ -55,7 +55,7 @@ export interface FormatHandler {
    * was actually read back. It should be cheap and paranoid: re-open the container,
    * confirm the parts it declares are present, confirm the XML still tokenises.
    */
-  verify?(bytes: Uint8Array): void;
+  verify?(bytes: Uint8Array): void | Promise<void>;
 }
 
 const handlers = new Map<string, FormatHandler>();

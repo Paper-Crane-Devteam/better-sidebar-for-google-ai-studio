@@ -243,8 +243,10 @@ export async function writeBytes(
     // `write` needs its own buffer view, not the caller's — a subarray of a larger
     // buffer would otherwise write the whole backing store.
     await writable.write(bytes);
-  } finally {
     await writable.close();
+  } catch (error) {
+    await writable.abort().catch(() => undefined);
+    throw error;
   }
   return bytes.byteLength;
 }

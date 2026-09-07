@@ -28,6 +28,10 @@
 
 import type { Scope } from '@/shared/workspace/fs';
 import { runDocRequest } from '@/shared/documents/engine';
+// Office handlers belong only in this worker, not the PDF DOM host or background.
+import '@/shared/documents/docx';
+import '@/shared/documents/xlsx';
+import '@/shared/documents/pptx';
 import { DocumentError, type DocRequest } from '@/shared/documents/types';
 
 interface WorkerRequest {
