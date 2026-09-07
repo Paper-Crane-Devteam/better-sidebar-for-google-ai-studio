@@ -25,6 +25,10 @@ import { assembleTurns, type RawTurn } from './turn-assembly';
 import { htmlToMarkdown } from '@/shared/lib/utils/utils';
 import { detectPlatform, Platform } from '@/shared/types/platform';
 import { useConversationMessagesStore } from '@/shared/lib/conversation-messages-store';
+import {
+  useAiStudioStreamStore,
+  selectLiveTail,
+} from '@/shared/lib/aistudio-stream-store';
 import { getRunState } from '@/entrypoints/overlay.content/shared/lib/aistudio-editor';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -69,44 +73,83 @@ export function useConversationMessages(): DisplayMessageTurn[] {
 // ─── Reader: the store (AI Studio) ───────────────────────────────────────────
 
 /**
- * Read the conversation out of `conversation-messages-store`.
+ * Read the conversation out of `conversation-messages-store`, plus the generation
+ * currently in flight.
  *
- * Measured behaviour this relies on: AI Studio's interceptor fires once per completed
- * generation, carrying the **whole** conversation — not a delta. So the store is complete
- * as of the last finished turn, and there is nothing to stitch together.
+ * Two sources, because the store is authoritative but late. `AI_STUDIO_RESPONSE` carries
+ * the **whole** conversation rather than a delta, so the store needs no stitching — but it
+ * is fed by `UpdatePrompt`, which is AI Studio *saving* the chat, not generating it.
+ * Measured: the stream closed at t=32451 and the save landed at t=39938. The reply existed
+ * for seven and a half seconds before the store heard about it, and three of those were
+ * AI Studio sitting on a debounce.
  *
- * ⚠️ It therefore lags by one turn *while a response is streaming*: the user's message and
- * the model's reply both land in the store only when generation ends. Accepted rather than
- * patched over with a DOM tail, and the reason it is acceptable is timing: the store
- * catches up when the stream closes, which is *before* the engine finishes its own settle
- * detection (two extra samples, ~800ms) and therefore before any approval can be pending.
- * So the tool cards are there by the time they have a decision to carry. The Dock reports
- * what the loop is doing in the meantime.
+ * So the tail comes from `aistudio-stream-store`, fed by an interceptor that reads
+ * `GenerateContent` as it streams (see `generate-content-stream.ts` for the wire format).
+ * The handover is positional, not event-ordered — see `selectLiveTail` — so there is no
+ * frame in which the reply is missing from both halves, and no flicker when it moves from
+ * one to the other.
  *
- * Reading the DOM for that tail was the alternative and it was rejected: aligning DOM turns
- * with store messages is not sound under virtualisation. AI Studio gives a thought its own
- * `ms-chat-turn` while the store filters thoughts out, so the two lists differ by however
- * many thoughts the conversation contains — and a *virtualised* thought turn has no
- * `ms-thought-chunk` to recognise it by, because its content isn't rendered. Any index
- * alignment would silently go off by one on exactly the conversations that matter.
+ * Reading the DOM for that tail was the earlier alternative and it stays rejected: aligning
+ * DOM turns with store messages is not sound under virtualisation. AI Studio gives a
+ * thought its own `ms-chat-turn` while the store filters thoughts out, so the two lists
+ * differ by however many thoughts the conversation contains — and a *virtualised* thought
+ * turn has no `ms-thought-chunk` to recognise it by, because its content isn't rendered.
+ * Any index alignment would silently go off by one on exactly the conversations that
+ * matter. Intercepting the request sidesteps all of it: the text is the model's own output,
+ * thoughts are flagged in the payload, and `<bs_agent_tool>` blocks arrive verbatim.
+ *
+ * The live tail is a *pair*, because the user's message is missing from the store for
+ * exactly as long as the reply is — both arrive in that one late save. So the question comes
+ * off the request body (`readPendingUserText`) and appears as soon as the request goes out,
+ * ~2.7s before the model's first chunk. Feeding it through `assembleTurns` unchanged is
+ * deliberate: an agent turn's "user" message is a tool-results payload, and this way its
+ * result cards and prompt-marker stripping work live too, with no second code path.
  */
 function useStoreConversationTurns(enabled: boolean): DisplayMessageTurn[] {
   const messages = useConversationMessagesStore((s) => s.messages);
+  const streamState = useAiStudioStreamStore();
+  const conversationId = useCurrentConversationId();
   const [turns, setTurns] = useState<DisplayMessageTurn[]>([]);
 
   useEffect(() => {
     if (!enabled) return;
 
     const build = () => {
+      const live = selectLiveTail(streamState, conversationId, messages);
+
       // Already ordered by `orderIndex` in the store.
       const raw: RawTurn[] = messages.map((m, index) => ({
         id: m.id,
         role: m.role,
         text: m.content,
         // Only the newest model turn can be in flight, and the composer is what says so.
+        // With a live tail present the newest turn is that tail, not this one — marking
+        // both would put a caret on a finished turn as well as the one being written.
         isStreaming:
-          m.role === 'model' && index === messages.length - 1 && getRunState() === 'stop',
+          !live &&
+          m.role === 'model' &&
+          index === messages.length - 1 &&
+          getRunState() === 'stop',
       }));
+
+      // Keyed by the stream, so React reuses these nodes for the whole generation
+      // instead of remounting them, and so they cannot collide with a store id.
+      if (live?.user) {
+        raw.push({
+          id: `live-${streamState.streamId}-user`,
+          role: 'user',
+          text: live.user,
+          isStreaming: false,
+        });
+      }
+      if (live?.answer) {
+        raw.push({
+          id: `live-${streamState.streamId}-model`,
+          role: 'model',
+          text: live.answer,
+          isStreaming: !live.finished,
+        });
+      }
 
       const next = assembleTurns(raw);
       setTurns((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
@@ -118,7 +161,7 @@ function useStoreConversationTurns(enabled: boolean): DisplayMessageTurn[] {
     // so this needs a clock as well as the store subscription above.
     const interval = setInterval(build, 500);
     return () => clearInterval(interval);
-  }, [enabled, messages]);
+  }, [enabled, messages, streamState, conversationId]);
 
   return turns;
 }

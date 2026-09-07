@@ -17,6 +17,7 @@ import { PowerPackPaywall } from '@/shared/components/PowerPackPaywall';
 import { HotkeyCheatsheet } from '@/entrypoints/overlay.content/shared/components/HotkeyCheatsheet';
 import { useAppStore } from '@/shared/lib/store';
 import { useInitConversationMessages } from '@/shared/hooks/useInitConversationMessages';
+import { useAiStudioStream } from '@/shared/hooks/useAiStudioStream';
 
 /**
  * Container for all AI Studio enhanced features.
@@ -29,6 +30,11 @@ export const AIStudioEnhancedFeatures = () => {
 
   // Initialize the shared conversation messages store (DB fetch, interceptor, DOM observer)
   useInitConversationMessages();
+
+  // Feed the in-flight generation into the live stream store. That store is what
+  // lets the agent view show a reply while it is still being written, instead of
+  // waiting for AI Studio to save the turn a few seconds after it finishes.
+  useAiStudioStream();
 
   return (
     <>

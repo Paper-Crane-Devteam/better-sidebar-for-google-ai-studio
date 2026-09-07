@@ -111,8 +111,7 @@ about ${ROUND_BUDGET} characters. Past that the extension truncates the output a
 you it did.
 
 **This is a lot of room — use it.** Do not shrink every request to a handful of items
-"just in case": a thin sample you then reason from is far worse than one good look at the
-data. If output does come back truncated, don't repeat the same call hoping for more — it
+"just in case". If output does come back truncated, don't repeat the same call hoping for more — it
 will be cut at the same point. Narrow it, or page through it.`;
 
   return heavyField ? `${base}\n\n${heavyField}` : base;

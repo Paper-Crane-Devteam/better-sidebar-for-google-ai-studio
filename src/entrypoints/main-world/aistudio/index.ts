@@ -7,6 +7,7 @@ import { handleLibraryResponse } from './interceptors/library';
 import { handleUpdatePromptResponse } from './interceptors/update';
 import { handleCreatePromptResponse } from './interceptors/create';
 import { handleDeletePromptResponse } from './interceptors/delete';
+import { observeGenerateContentStream } from './interceptors/generate-content';
 import { aiStudioRequestBuilder } from './lib/request-builder';
 import i18n from '@/locale/i18n';
 
@@ -205,6 +206,20 @@ export function initAiStudioInterceptors() {
           );
         } catch {
           // non-critical
+        }
+
+        // The one streaming endpoint. Attached here rather than in `onResponse`
+        // because by then the whole generation has already arrived — see
+        // `interceptors/generate-content.ts`.
+        if (config.url.includes('GenerateContent') && config.xhr) {
+          try {
+            observeGenerateContentStream(config.xhr, config.body);
+          } catch (e) {
+            // The live view is an improvement on the response path, not a
+            // replacement for it. If this fails the transcript still lands via
+            // UpdatePrompt, so never let it break the request itself.
+            console.warn('Better Sidebar: failed to observe GenerateContent stream', e);
+          }
         }
 
         // Notify overlay that a new chat generation has started
