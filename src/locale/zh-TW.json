@@ -1432,6 +1432,10 @@
       "docxReview": {
         "title": "審閱 Word 文件",
         "description": "逐章讀完 .docx — 在問題處留下批註，修改則以追蹤修訂的形式提出"
+      },
+      "spreadsheetAnalysis": {
+        "title": "處理試算表資料",
+        "description": "讀 .xlsx 先看結構再動手算 — 用加欄位、加工作表的方式，不改原始資料"
       }
     },
     "mcp": {

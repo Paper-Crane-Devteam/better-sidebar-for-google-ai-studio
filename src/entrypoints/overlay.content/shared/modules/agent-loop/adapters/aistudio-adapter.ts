@@ -16,6 +16,7 @@
 
 import type { AgentPlatformAdapter, ComposerState } from './types';
 import { waitForResponseToSettle } from './response-settle';
+import { extractLiteralResponseText } from './response-text';
 import {
   getTextarea,
   getText as composerText,
@@ -97,10 +98,11 @@ export class AIStudioAgentAdapter implements AgentPlatformAdapter {
     for (const selector of NON_CONTENT_SELECTORS) {
       clone.querySelectorAll(selector).forEach((el) => el.remove());
     }
-    // innerText needs layout, which a detached clone has none of, so textContent is the
-    // reliable read here. Line structure is recovered by the markdown pass upstream; all
-    // this text is used for is settle detection and tool-call parsing.
-    return clone.textContent || '';
+    // Not `textContent`: AI Studio renders the turn as markdown first, so the `*` in a
+    // glob pattern and the backticks around inline code are no longer in the DOM text.
+    // `extractLiteralResponseText` puts them back, and needs no layout — which matters
+    // here, because this clone is detached.
+    return extractLiteralResponseText(clone);
   }
 
   /**

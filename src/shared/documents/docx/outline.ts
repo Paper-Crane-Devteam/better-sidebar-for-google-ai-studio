@@ -32,12 +32,15 @@ const LABEL_CHARS = 60;
 export function docxOutline(loaded: LoadedDocument): DocOutlineResult {
   const doc = openDocx(loaded.bytes);
 
-  const paragraphs = doc.blocks.filter((b) => b.kind === 'paragraph');
-  const tables = doc.blocks.filter((b) => b.kind === 'table');
+  // Body only for the outline proper: the headings, counts and section sizes are about the
+  // document the user is reading. Other parts get their own fact line below, which is all
+  // that "there is a footer, and here is how to name it" needs.
+  const paragraphs = doc.bodyBlocks.filter((b) => b.kind === 'paragraph');
+  const tables = doc.bodyBlocks.filter((b) => b.kind === 'table');
 
   // One pass for the text, because every count below wants it and flattening a
   // paragraph is the expensive part of reading a document.
-  const texts = paragraphs.map((block) => paragraphText(doc, block));
+  const texts = paragraphs.map((block) => paragraphText(block));
   const characters = texts.reduce((sum, text) => sum + text.length, 0);
 
   const headings = paragraphs
@@ -62,6 +65,39 @@ export function docxOutline(loaded: LoadedDocument): DocOutlineResult {
   // many, and the number the user cares about is how many are actually cited.
   const footnotes = elements(doc.main, 'w:footnoteReference').length;
   if (footnotes > 0) facts.push(`${footnotes} footnotes`);
+
+  // ⚠️ The one fact that has to be here rather than discovered later. A page header is text
+  // the user can see, so "change the date in the header" is a normal request — and while the
+  // outline said nothing about headers, the honest-looking answer was "this document does not
+  // contain that date". Naming the parts up front is what makes the request answerable.
+  const sideParts = doc.parts
+    .filter(
+      (part) =>
+        part.kind !== 'body' &&
+        doc.blocks.some(
+          (b) => b.part === part && b.kind === 'paragraph' && paragraphText(b).trim() !== '',
+        ),
+    )
+    .map((part) => `${part.id} = ${part.label}`);
+  if (sideParts.length > 0) {
+    facts.push(`text outside the body: ${sideParts.join(', ')} (read with range="hd1")`);
+  }
+
+  const cells = doc.cells.size;
+  if (cells > 0) {
+    const empty = [...doc.cells.values()].filter(
+      (cell) =>
+        cell.paragraphIds.length > 0 &&
+        cell.paragraphIds.every((id) => {
+          const block = doc.byId.get(id);
+          return !block || paragraphText(block).trim() === '';
+        }),
+    ).length;
+    facts.push(
+      `${cells} table cells, addressed as t1r1c1` +
+        (empty > 0 ? `; ${empty} are empty — fill one with set_text` : ''),
+    );
+  }
 
   return {
     kind: 'outline',
@@ -194,8 +230,11 @@ function collectWarnings(
 
   if (elements(doc.main, 'w:txbxContent').length > 0) {
     warnings.push(
-      'Some text is inside text boxes or shapes. It is readable but is not part of the ' +
-        'main paragraph flow.',
+      'Some text is inside text boxes or shapes. It is readable and editable, but it is ' +
+        'not part of the main paragraph flow, so it appears between the surrounding ' +
+        'paragraph numbers rather than where it sits on the page. Word keeps a second ' +
+        'legacy copy of that text for Word 2007, which is not updated until the user saves ' +
+        'in Word — mention that if you edit a text box.',
     );
   }
 

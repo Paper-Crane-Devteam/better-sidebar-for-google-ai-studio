@@ -5,6 +5,7 @@
 
 import type { AgentPlatformAdapter, ComposerState, ResultSection } from './types';
 import { waitForResponseToSettle } from './response-settle';
+import { extractLiteralResponseText } from './response-text';
 import {
   getEditor as quillGetEditor,
   getCursorPosition as quillGetCursorPosition,
@@ -76,8 +77,13 @@ export class GeminiAgentAdapter implements AgentPlatformAdapter {
     return document.querySelectorAll('user-query').length;
   }
 
+  /**
+   * ⚠️ Not `innerText`. Gemini renders the response as markdown before we read it, so
+   * `*` and `` ` `` are gone from the DOM text — a `glob_files` pattern of `*{a,b}*`
+   * arrives as `{a,b}` and matches nothing. See `extractLiteralResponseText`.
+   */
   extractResponseText(responseElement: HTMLElement): string {
-    return responseElement.innerText || responseElement.textContent || '';
+    return extractLiteralResponseText(responseElement);
   }
 
   getLastAIResponseElement(): HTMLElement | null {

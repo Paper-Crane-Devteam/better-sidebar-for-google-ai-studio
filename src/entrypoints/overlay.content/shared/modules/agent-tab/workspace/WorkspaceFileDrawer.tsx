@@ -314,7 +314,7 @@ export const WorkspaceFileDrawer: React.FC = () => {
                   {skipped.reason === 'document'
                     ? t('agent.workspace.documentNoPreview', {
                         defaultValue:
-                          'Word documents are not shown here yet, but the agent can read this one — ask it to summarise the document or to look at a specific section.',
+                          'Office documents are not shown here yet, but the agent can read this one — ask it to summarise the file, look at a section, or work through a sheet.',
                       })
                     : skipped.reason === 'binary'
                       ? t('agent.workspace.binaryNoPreview', {

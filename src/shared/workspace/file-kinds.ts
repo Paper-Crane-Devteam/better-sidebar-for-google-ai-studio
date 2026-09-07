@@ -62,7 +62,13 @@ export const MARKDOWN_EXTENSIONS = new Set(['md', 'markdown', 'mdx']);
  * ⚠️ Membership here is a claim that a handler is registered. Adding an extension before
  * its handler exists makes the UI promise something the agent will then refuse.
  */
-export const DOCUMENT_EXTENSIONS = new Set(['docx', 'docm']);
+export const DOCUMENT_EXTENSIONS = new Set([
+  'docx',
+  'docm',
+  'xlsx',
+  'xlsm',
+  'xltx',
+]);
 
 /** Whether the document tools can read this file. */
 export function isDocumentFormat(path: string): boolean {

@@ -10,9 +10,9 @@
  *
  * All tool output in a round shares 29998 characters (`engine/stages/handoff/budget.ts`),
  * and going over is *silently truncated* — the payload leaves the composer looking
- * complete. A thesis is several times that budget on its own, so this tool answers with
- * an outline first and only ever returns a slice of the body. That is why `mode` defaults
- * to `outline` rather than to "the document".
+ * complete. A thesis is several times that budget on its own, and a 5000×20 worksheet is
+ * thirty times it, so this tool answers with an outline first and only ever returns a slice
+ * of the content. That is why `mode` defaults to `outline` rather than to "the document".
  *
  * ⚠️ The projection deliberately carries no inline Markdown. The text the agent reads
  * here is text it will later quote back to locate an edit, and a `**` inserted for
@@ -199,9 +199,13 @@ function parseOps(raw: string | undefined): DocOp[] {
       throw new Error('Every entry in "ops" must be an object with an "op" field.');
     }
     if (!(entry as DocOp).op) {
+      // Both format's verbs, because this check runs before the path is looked at and naming
+      // only one format's would send an Excel call off to fix the wrong thing.
       throw new Error(
-        'An entry in "ops" has no "op" field. Each one names the change: replace_text, ' +
-          'comment, insert_paragraph, delete_paragraph or set_style.',
+        'An entry in "ops" has no "op" field. Each one names the change. For a .docx: ' +
+          'replace_text, set_text, comment, insert_paragraph, delete_paragraph, set_style, ' +
+          'insert_table, insert_row, delete_row, delete_table. For an .xlsx: set_cell, ' +
+          'set_cells, add_column, clear_cells, add_sheet, rename_sheet.',
       );
     }
   }
@@ -242,7 +246,8 @@ function renderOutline(result: DocOutlineResult): string {
     lines.push('', 'Outline (use the id as doc_read range):');
     for (const section of result.sections) {
       const indent = '  '.repeat(Math.max(0, section.level - 1));
-      const size = section.size != null ? `  (${section.size} chars)` : '';
+      const size =
+        section.size != null ? `  (${section.size} ${section.unit ?? 'chars'})` : '';
       lines.push(`${section.id}\t${indent}${section.label}${size}`);
     }
   }

@@ -31,6 +31,22 @@ import { awaitAIResponse } from './stages/await-response';
 import { parseResponse } from './stages/parse-response';
 import { executeTools } from './stages/execute-tools';
 import { formatResults, ResultHandoff } from './stages/handoff';
+import type { AgentId } from '../agents/types';
+
+/**
+ * What a starting session is told about itself.
+ *
+ * ⚠️ `agentId` is required reading for every entry point, not just `start`. It is what
+ * the tool layer checks a call against, so a session that omits it runs as the default
+ * agent — which is how a recovered Workspace task ended up being told its own file tools
+ * belonged to another agent. The recovery paths derive it from the calls they are
+ * replaying; see `mcpRegistry.agentForTools`.
+ */
+export interface SessionInfo {
+  conversationId?: string | null;
+  title?: string;
+  agentId?: AgentId;
+}
 
 export class AgentLoopEngine {
   private readonly ctx: LoopContext;
@@ -63,10 +79,7 @@ export class AgentLoopEngine {
    * Start a session. Call this once the initial prompt has been sent — round 1
    * begins by waiting for the answer to it.
    */
-  async start(
-    maxRounds: number = 20,
-    session?: { conversationId?: string | null; title?: string },
-  ): Promise<void> {
+  async start(maxRounds: number = 20, session?: SessionInfo): Promise<void> {
     this.ctx.abort.renew();
     this.ctx.breaker.reset();
     this.handoff.reset();
@@ -98,7 +111,7 @@ export class AgentLoopEngine {
   async startFromExistingResponse(
     responseElement: HTMLElement,
     maxRounds: number = 20,
-    session?: { conversationId?: string | null; title?: string },
+    session?: SessionInfo,
   ): Promise<void> {
     this.ctx.abort.renew();
     this.ctx.breaker.reset();
@@ -138,7 +151,7 @@ export class AgentLoopEngine {
   async deliverOwedResults(
     payload: string,
     maxRounds: number = 20,
-    session?: { conversationId?: string | null; title?: string },
+    session?: SessionInfo,
   ): Promise<boolean> {
     this.ctx.abort.renew();
     this.ctx.breaker.reset();

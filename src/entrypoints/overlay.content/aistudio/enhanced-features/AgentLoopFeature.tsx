@@ -54,6 +54,7 @@ import { assembleFinalPrompt } from '@/entrypoints/overlay.content/shared/module
 import { buildInitialMessage } from '@/entrypoints/overlay.content/shared/modules/agent-loop/prompts/initial-message';
 import type { AgentId } from '@/entrypoints/overlay.content/shared/modules/agent-loop/agents/types';
 import { initMCPRegistry } from '@/entrypoints/overlay.content/shared/modules/agent-loop/mcp/setup';
+import { resolveAgentForRecoveredSession } from '@/entrypoints/overlay.content/shared/modules/agent-loop/conversation-agent';
 import { RESULT_OPEN_TAG } from '@/entrypoints/overlay.content/shared/modules/agent-loop/engine';
 import { useAgentRecordStore } from '@/entrypoints/overlay.content/shared/modules/agent-loop/agent-record-store';
 import { buildOwedPayload } from '@/entrypoints/overlay.content/shared/modules/agent-loop/recovery';
@@ -496,6 +497,9 @@ export const AgentLoopFeature: React.FC = () => {
       const delivered = await engine.deliverOwedResults(payload, 20, {
         conversationId: owedIn,
         title: t('agent.owed.sessionTitle', { defaultValue: 'Recovered task' }),
+        // The rounds after the delivery continue the interrupted task and need the tools
+        // it was using, so the agent has to be recovered rather than defaulted.
+        agentId: resolveAgentForRecoveredSession(owed.rows.map((row) => row.tool_name)),
       });
 
       if (!delivered) {

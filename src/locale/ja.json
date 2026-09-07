@@ -1432,6 +1432,10 @@
       "docxReview": {
         "title": "Word 文書をレビュー",
         "description": ".docx を章ごとに読み進めます — 問題点にコメントを付け、修正案は変更履歴として提案します"
+      },
+      "spreadsheetAnalysis": {
+        "title": "スプレッドシートを読み解く",
+        "description": ".xlsx はまず構造から読み、そのうえで計算します — 元のデータは変えず、列やシートを追加する形で進めます"
       }
     },
     "mcp": {

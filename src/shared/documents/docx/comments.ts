@@ -371,7 +371,6 @@ export function commentOnTextEdits(
  * whose text spans images or field codes, where an exact-range comment has to be refused.
  */
 export function commentOnParagraphEdits(
-  doc: DocxDocument,
   block: Block,
   id: number,
   label?: string,
@@ -385,7 +384,7 @@ export function commentOnParagraphEdits(
     return [replaceElement(block.el, `<w:p>${markers}</w:p>`, label)];
   }
 
-  const pPr = ownChild(doc.main, block.el, 'w:pPr');
+  const pPr = ownChild(block.part, block.el, 'w:pPr');
   const start = pPr ? pPr.outerEnd : block.el.innerStart;
 
   return [
@@ -444,10 +443,12 @@ export function readComments(doc: DocxDocument): ExistingComment[] {
 export function commentAnchors(doc: DocxDocument): Map<string, string> {
   const anchors = new Map<string, string>();
 
+  // Body only: `w:commentRangeStart` offsets index the main part's source, and comparing
+  // them against a block from a header would match on offsets from a different string.
   for (const marker of elements(doc.main, 'w:commentRangeStart')) {
     const id = attr(doc.main, marker, 'w:id');
     if (!id || anchors.has(id)) continue;
-    const block = doc.blocks.find(
+    const block = doc.bodyBlocks.find(
       (b) =>
         b.kind === 'paragraph' &&
         b.el.outerStart <= marker.outerStart &&

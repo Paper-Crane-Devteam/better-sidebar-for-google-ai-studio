@@ -1432,6 +1432,10 @@
       "docxReview": {
         "title": "Revisar um documento do Word",
         "description": "Percorra um .docx capítulo por capítulo — comente os problemas e proponha correções como alterações controladas"
+      },
+      "spreadsheetAnalysis": {
+        "title": "Trabalhar com uma planilha",
+        "description": "Leia um .xlsx primeiro pela estrutura e depois calcule — acrescentando colunas e planilhas em vez de alterar os dados"
       }
     },
     "mcp": {

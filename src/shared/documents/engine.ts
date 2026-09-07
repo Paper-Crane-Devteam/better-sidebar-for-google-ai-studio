@@ -20,6 +20,7 @@ import { loadDocument, saveDocument } from './storage';
 // Handlers register themselves as a side effect of being imported. Importing them here
 // rather than in the worker keeps "which formats exist" a property of this layer.
 import './docx';
+import './xlsx';
 
 export async function runDocRequest(
   scope: fsTypes.Scope,

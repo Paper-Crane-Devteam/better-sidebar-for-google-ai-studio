@@ -92,6 +92,15 @@ export interface OutlineNode {
   level: number;
   /** Words, rows, cues — whatever "how big is this" means for the format. */
   size?: number;
+  /**
+   * What `size` counts, when it is not characters.
+   *
+   * ⚠️ Needed the moment a second format existed. A document section is measured in
+   * characters and a worksheet in rows, and one outline renderer printing "2000 chars" for a
+   * 2000-row sheet is a number the agent will then use to decide how much it can read —
+   * wrongly, by a factor of the row width.
+   */
+  unit?: string;
 }
 
 export interface DocOutlineResult {

@@ -67,9 +67,10 @@
 改：
 
 - 写单元格（字面值 / 公式 / 批量区域），**不破坏其它单元格的格式、图表、条件格式**。
-- 加列并填公式、加 sheet、改 sheet 名、加批注、设置数字格式。
+- 加列并填公式、加 sheet、改 sheet 名。
+- ~~加批注、设置数字格式~~ —— 落地时砍掉了，理由进第九节。
 - 排序 / 筛选后的结果另存为新 sheet（原表不动，这比原地排序安全得多）。
-- 插入/删除行列 —— 见第七节，风险最高，放在后期且要额外确认。
+- 插入/删除行列 —— 见第七节，风险最高，**最终是按名字拒绝并给出替代方案**。
 
 写新文件：CSV/Markdown 表格 → xlsx。
 
@@ -278,10 +279,18 @@ src/shared/documents/                    ★ 新增，纯函数层，无 DOM，�
 │   ├── edit.ts              # 段落级 ops
 │   ├── revisions.ts         # ★ w:ins / w:del 包装（修订模式）
 │   └── comments.ts          # ★ comments.xml + commentRangeStart/End
-├── xlsx/
-│   ├── outline.ts           # sheet 清单 / 已用区域 / 特性探测
-│   ├── read.ts              # 区域读、类型推断、日期序列号还原
-│   └── edit.ts              # 单元格 splice + calcChain 失效处理
+├── xlsx/                    # ★ 已落地，实际比原计划细，见第十节
+│   ├── refs.ts              # ★ A1 引用：解析 / 格式化 / 开区间收敛 / sheet 名引号
+│   ├── numfmt.ts            # ★ 样式表 → 是不是日期；序列号 → ISO（双纪元）
+│   ├── sheet.ts             # ★ 走 sheetData：行全记、单元格按窗口建
+│   ├── model.ts             # workbook / sheet / sharedStrings / styles
+│   ├── values.ts            # 单元格语义合成 + 列类型推断
+│   ├── outline.ts           # sheet 清单 / 已用区域 / 表头与列类型 / 特性探测
+│   ├── read.ts              # 区域投影（双轴 TSV）、公式清单、截断续读、跨表搜索
+│   ├── cells.ts             # ★ 单元格与行的 splice 原语
+│   ├── recalc.ts            # ★ calcChain 失效 + fullCalcOnLoad + dimension + 包装件增删
+│   ├── sheets.ts            # 新建 / 改名 sheet 的四处联动与守卫
+│   └── edit.ts              # op 分派；每个 sheet 只 splice 一次
 ├── pptx/ …
 ├── pdf/                     # 只有这个目录允许 import pdfjs / pdf-lib（懒加载）
 └── subtitle/                # subsrt-ts 封装 + cue 级操作
@@ -298,7 +307,7 @@ src/shared/documents/client.ts           ★ 新增：content script 侧的 type
 
 | 文件 | 改什么 |
 |---|---|
-| `shared/workspace/file-kinds.ts` | docx/xlsx/pptx/pdf 现在被归到 `BINARY_EXTENSIONS`，注释里说它们对 agent 是「dead weight」。加一类 `DOCUMENT_EXTENSIONS`：仍然不是文本（`read_file` 不能读），但**图标、预览、以及 AI 的可用性提示要区分对待** —— 否则文件树还在告诉用户「这文件没用」 |
+| `shared/workspace/file-kinds.ts` | docx/xlsx/pptx/pdf 原先被归到 `BINARY_EXTENSIONS`，注释里说它们对 agent 是「dead weight」。加一类 `DOCUMENT_EXTENSIONS`：仍然不是文本（`read_file` 不能读），但**图标、预览、以及 AI 的可用性提示要区分对待** —— 否则文件树还在告诉用户「这文件没用」。⚠️ 一个扩展名进这个集合，就是在向 UI 承诺 handler 已注册；提前加会让界面许诺 AI 随后会拒绝的事 |
 | `shared/types/messages.ts` | 加 `DOCUMENT_OP` 消息类型 |
 | `agent-tab/workspace/WorkspaceFileDrawer.tsx` | 目前 `isProbablyBinary` 直接判 `skipped: 'binary'`。文档类应该走预览（后期）或至少显示「概览」而不是「无法预览」 |
 | `src/locale/en.json` | 新增文案（其它语言有 hook 处理） |
@@ -312,7 +321,36 @@ src/shared/documents/client.ts           ★ 新增：content script 侧的 type
 - **段落号 `p12` 只是导航用的，不是编辑地址。** 编辑地址是 `old_text`，规则跟 `edit_file` 完全
   一致：命中多处就拒绝，让 AI 补上下文。⚠️ 理由是插入一段之后所有后续段落号都会漂移，AI 手里的
   号在下一次调用时就已经过期了 —— 以段落号为地址等于给自己造一类「改错了段」的静默 bug。
-  `scope: "p12"` 只用来把 `old_text` 的搜索范围缩小，解决同一句话在文中出现两次的歧义。
+  `scope` 只用来把 `old_text` 的搜索范围缩小，可以是段落 `p12`、表格 `t3`、**单元格 `t3r2c1`**
+  或**部件 `hd1` / `fn`**。
+- ⚠️ **可寻址的位置必须等于用户看得见的文字，否则会得到「自信的错答案」。** 这条是从一个真实
+  反馈里补出来的，值得记住它的形状：表格的空单元格既没有 `old_text` 可匹配，投影里也没有任何
+  地址，于是「把自查结果填进第 3 列」这件事无法表达 —— AI 唯一能写出来的调用是拿第 2 列的文字
+  做 `old_text`，结果值就落在第 2 列。同一个形状还有一个更大的实例：页眉/页脚/脚注正文以前完全
+  不在模型里，用户问「改一下页眉的日期」，body 搜不到，AI 就回答「文档里没有这个日期」。
+  所以现在：
+  - 每个单元格有坐标 `tNrRcC`，投影带 `r\c` 轴，空单元格渲染成 `∅`（行里不存在的格子是 `—`）；
+  - `set_text` 专门往空段落 / 空单元格写字，**且拒绝非空目标** —— 它是唯一按 id 寻址的 op，
+    允许它覆盖已有文字等于把 `old_text` 挡住的那类静默错误重新放回来；
+  - `header*.xml` / `footer*.xml` / `footnotes.xml` / `endnotes.xml` 全部纳入模型，前缀寻址
+    `hd1:p2` / `ft1:p1` / `fn:p3`，且 outline 的 facts 里**必须点名它们存在** —— 不点名就等于
+    没有，AI 不会去猜。
+- ⚠️ **一个 op 只能落在一个 part 上。** 偏移量只对算出它的那个字符串有意义，所以 `doc_edit` 按
+  part 分组 splice，跨 part 的 `all: true` 改名直接拒绝，而不是挑一个应用。
+- ⚠️ **`replace_text` 默认只搜 body。** 把默认放宽到页眉会让「正文和页眉都出现的术语」变成
+  「命中 2 处，拒绝」，而这个歧义加多少上下文都消不掉 —— 两处真的是同一句话。改为：默认 body，
+  结果里点名「hd1 里也有，没动」，要改就再发一个 `scope="hd1"` 的 op。
+- ⚠️ **批注只能挂在 body。** `comments.xml` 是从主 part 关联出去的，页眉里的
+  `w:commentReference` 在 Word 里什么都不显示 —— 文件能打开、工具报成功、用户看不到，是所有失败
+  形态里最坏的一种，所以在 op 层就拒绝。
+- ⚠️ **`mc:Fallback` 不编号。** Word 把形状里的文字在 `mc:AlternateContent` 里写两遍
+  （`mc:Choice` 给新版，`mc:Fallback` 给 Word 2007 的 VML）。两边都编号会让每个文本框的文字有
+  两个地址、内容完全相同，`replace_text` 永远判「歧义，拒绝」。
+- ⚠️ **`footnotes.xml` 开头那两条 `w:type="separator"` 不编号**，否则每条真脚注的地址都要往后
+  挪 2，`fn:p1` 指向一个用户看不见的空段落。
+- ⚠️ **`verify` 必须严格重开每个 side part。** 读的时候 `openParts` 对解析失败的部件是**跳过**
+  的（一个坏页眉不该让整篇论文打不开），这个宽容对写入是灾难：刚被我们写坏的页眉会在校验读里被
+  跳过，于是保存报成功。所以 `verifyDocx` 单独再严格 tokenize 一遍。
 - **默认 `mode=track`。** 直接覆盖（`mode=direct`）要在审批卡上单独说明。
 - 加批注要同时动四处：`word/comments.xml`（可能不存在，要新建）、`[Content_Types].xml`、
   `word/_rels/document.xml.rels`、正文里的 `commentRangeStart/End` + `commentReference`。
@@ -321,7 +359,7 @@ src/shared/documents/client.ts           ★ 新增：content script 侧的 type
   东西但不试图编辑它。
 - 中日韩：`w:rFonts` 有 eastAsia 区分，新插入的 run 直接继承原 rPr 就不用管这件事。
 
-### 7.2 xlsx
+### 7.2 xlsx（已落地，见第十节）
 
 - **单元格写入用 `t="inlineStr"`，绕开 sharedStrings。** 改 `xl/sharedStrings.xml` 要维护引用计数
   和索引重排，代价大且容易错；inlineStr 是标准里合法的写法，Excel/WPS/Numbers 都认。
@@ -329,15 +367,40 @@ src/shared/documents/client.ts           ★ 新增：content script 侧的 type
   并在 `workbook.xml` 的 `<calcPr>` 上加 `fullCalcOnLoad="1"`。⚠️ 不这么做的后果是：AI 改了 B2，
   但依赖 B2 的 C2 还显示旧的缓存值，用户打开看到的是**自相矛盾的表**。JS 侧自己算是另一条路，但
   `hyperformula` 是 GPL-3.0，用不了。
+  ⚠️ `<calcPr>` 的位置有讲究：`CT_Workbook` 是 sequence，它必须排在 `definedNames` 之后、
+  `oleSize` 之前。落错槽位的合法元素照样被 Excel 判成「内容不可读」。
 - **日期是序列号。** 单元格里是 `45678`，得查 `numFmt` 才知道它是日期；还要看工作簿是不是 1904
   日期系统（Mac 老文件）。读的时候统一还原成 ISO 字符串，否则 AI 会把日期当普通数字做统计。
+  ⚠️ 判日期不能只看 `numFmts` 里的自定义码：**内建 id 在 styles.xml 里根本没有条目**，而中日韩
+  工作簿大量用 27–36 / 50–58 这批内建 CJK 日期格式 —— 「日期读出来是一串数字」多半就是漏了它们。
+  反方向的坑是自定义码 `0" m"`（米），裸扫一个 `m` 就会把整列测量值「还原」成时间戳，所以引号内
+  的字面量、`\x` 转义、`[Red]` / `[$-409]` 这些方括号块都得先剥掉再匹配。
 - **共享公式 `t="shared"`**：一个单元格写 `<f t="shared" si="0" ref="C2:C99">`，其余只引用 si。
-  改动落在 host 单元格上时要把公式实体化到别的单元格，否则整列公式一起消失。
+  ⚠️ **原计划是「改 host 时把公式实体化到别的单元格」，实际做成了拒绝写 host。** 实体化要按目标
+  单元格重写相对引用，等于自己实现一小半公式引用翻译，而这一层写错是静默的（整列变 `#REF!` 或
+  静默清空）。拒绝的代价是用户少一个能改的格子，收益是拒绝信息里直接给出「加一列」这个更符合
+  意图的替代路径。加列本来就该是首选。
+  ⚠️ 还有一个更细的形状：follower 单元格的 `<f t="shared" si="0"/>` **没有公式正文**，所以
+  「这一列是不是算出来的」不能靠公式字符串判断 —— 空字符串是 falsy，一整列共享公式会被判成普通
+  数字列，而普通数字列是可以随手覆盖的。`CellValue` 因此拆出 `computed` 和 `formula` 两个字段。
 - ⚠️ **插入/删除行列是最危险的操作**：要同步改公式引用、合并区域、表（ListObject）范围、
-  条件格式范围、数据验证范围、图表引用。放到最后做，并且**默认拒绝 + 建议「新增一列/另存一个
-  sheet」的替代方案** —— 对科研数据表来说，加列几乎总是比插行更符合意图。
+  条件格式范围、数据验证范围、图表引用。**做成了按名字拒绝而不是「未知操作」** —— 听到「不是合法
+  操作」的 AI 会以为工具能力有限就停手，听到「那会挪动公式/图表/合并区域引用的每个地址，改用
+  add_column」的 AI 下一轮就做对了。拒绝信息本身是教学时机，所以必须带上原因和替代方案。
 - 大表的读取预算：一个 5000 行 × 20 列的区域是 ~100 万字符，是一轮预算的 30 倍。所以
-  `read_range` 必须自己截断并在结尾说明剩多少行（照 `budget.ts` 的 `buildNotice()` 那套话术）。
+  区域读必须自己截断并在结尾说明剩多少行（照 `budget.ts` 的 `buildNotice()` 那套话术），
+  并且**先按列截断再按行截断** —— 太宽没法翻页续读，只能让调用方缩窄。
+- ⚠️ **行内单元格必须按列号升序。** 乱序的 `<row>` 被 Excel 判为损坏并提示修复。所以一次
+  `doc_edit` 里所有落到同一个 sheet 的写入要**合并成一次 splice**，而不是每个 op 各来一次：
+  行的插入点和 `spans` 属性都是行级记账，两个 op 各自插一格到第 1 行会各生成一条同范围的
+  `spans` 编辑，`applyEdits` 正确地把整次调用判成重叠 —— 于是「加一列备注、顺手填个表头」这种
+  完全正常的请求会因为跟请求本身无关的理由失败。
+- **`spans` 是可选的提示属性**，行长变了就把它删掉，不要试图算对。Excel 容忍不一致，别的读取器
+  不一定。
+- **新单元格的样式从左邻居继承。** 加列填进去的值要长得像它旁边那一列，否则一张排过版的表上会
+  多出一列裸格子。这跟 docx `insert_row` 的「按结构克隆」是同一条理由。
+- 写数字要**只在无损时才当数字存**：`007`、`1.10`、电话号码、指数写法在 JS 里都能 parse 成数字，
+  存进去再读出来就变了样。要求规范形式（`String(Number(v)) === v`）是最省事的判据。
 
 ### 7.3 pdf
 
@@ -393,16 +456,44 @@ pptx 的文字都在 `ppt/slides/slideN.xml` 的 `a:t` 里，结构比 docx 简�
 | **docx 排版还原 / 分页** | 「第 12 页」这种定位需要完整排版引擎。用段落号和章节代替，AI 和用户都不吃亏 |
 | **在侧边栏里做可编辑的文档编辑器** | 这是另一个产品。我们做的是「AI 改，用户在 Word/Excel 里审」 |
 | **xlsx 图表的创建/修改** | 读的时候知道「有一个图表引用了 A1:C20」就够了；生成图表 XML 属于另一个量级 |
+| **xlsx 数字格式 / 字体 / 合并单元格** | 写一个格式要动 `styles.xml` 的 `numFmts` + `cellXfs`，并且**重排后面每一个样式索引** —— 而索引是被全表单元格按位置引用的。收益（一个日期显示成日期）远小于风险（全表格式错位）。替代：值继承目标格原有的 `s`，新格继承左邻居 |
+| **xlsx 单元格批注** | 一条批注要 `comments1.xml` + 一份 legacy VML drawing + 两处 Content_Types + rels，缺 VML 时 Excel 未必显示那个小红角。四个 part 换一个悬停才看得见的东西，不如让 AI 加一列写在明面上 |
+| **xlsx 就地排序 / 筛选** | 按地址搬数据，公式、图表、透视范围全指错，而且用户看不出动了什么。读出来 → 在回答里排好 → `add_sheet` 落一份副本 |
 
 ---
 
 ## 十、分期
 
-### 当前状态（P0 + P1 已落地）
+### 当前状态（P0 + P1 + P2 已落地）
+
+#### P1：docx
 
 「帮我改论文」这条链路通了：`doc_read`（outline / range / search）和 `doc_edit`
-（修订式替换、批注、增删段落、改样式）都挂在可开关的 `Documents` MCP 上，
-细则在 `builtin-docx-review` skill 里。
+（修订式替换、填空、批注、增删段落、改样式）都挂在可开关的 `Documents` MCP 上，
+细则在 `builtin-docx-review` skill 里。地址覆盖 body + 页眉页脚 + 脚注尾注 + 表格单元格，
+理由与踩过的坑见 §7.1。
+
+表格结构操作也做了：`insert_table` / `insert_row` / `delete_row` / `delete_table`，行有自己的
+地址 `t3r2`。⚠️ **仍然缺的是合并单元格和加列** —— 加列要同步改 `w:tblGrid`、每一行的 `w:tc` 数、
+以及所有 `gridSpan`，是另一个量级。
+
+⚠️ **明确不走「删掉整张表重建」这条路来改表**，即使 op 已经齐了。一个 `w:tbl` 上挂着 `w:tblPr`
+（边框、表样式、宽度）、`w:tblGrid`（列宽，丢了 Word 就均分，一眼可见）、`w:trPr`（行高、跨页
+重复表头）、每个 `w:tcPr`（底纹、对齐、合并）、单元格里的段落与 run 格式，还有 bookmark（目录 /
+交叉引用 / Zotero 引文的目标）、批注锚点、别人的修订、超链接、脚注引用。重建全部丢失，而且丢得
+静默 —— 能打开、能 tokenize、`verifyDocx` 全过，只有用户看到表格变形。这就是 §5.3 论证过的
+「解析 → 重新序列化」失败形态，只是尺度从整份文件缩到一张表。另外修订模式下它会显示成「整表删除
++ 整表插入」，用户没法逐行 Accept，而默认走修订的全部理由就是「没人会逐字校对」。
+所以 `insert_row` 是**按结构克隆**而不是按字符串克隆:只复制 `w:trPr` / `w:tcPr` /
+`w:pPr`,不复制单元格内容 —— 这样天然不会复制出重复的 bookmark id 或批注锚点(复制出重复 id
+的后果是 Word 静默「修复」,然后告诉用户文件被我们损坏过)。复制时还要剥掉 `w:vMerge`
+(复制的 `restart` 会开出第二个纵向合并,新行被上一行吞掉,看起来像什么都没做)、
+`w:cellIns` / `w:cellDel` / `w:tcPrChange` / `w:trPrChange`(别人的修订记录),
+以及 `w:tblHeader` / `w:cnfStyle`(否则新数据行会每页重复并套上表头的条件格式)。
+
+⚠️ **两张相邻的表 = 一张表。** Word 静默合并,而且 body 或单元格不能以表格结尾
+(`w:sectPr` 不算 block 内容,所以表格紧贴 sectPr 也算结尾)。所以插表时按需要在两侧垫
+`<w:p/>`,删表时若删掉会让前后两张表贴上则原地留一个空段落。
 
 已经在跑的东西：
 
@@ -414,7 +505,10 @@ pptx 的文字都在 `ppt/slides/slideN.xml` 的 `a:t` 里，结构比 docx 简�
 | `shared/documents/storage.ts` | 写前纯函数自检 → `.history/` 备份 → 写 → 读回复检 → 失败自动回滚 |
 | `shared/documents/docx/revisions.ts` | `w:ins` / `w:del` 包装、段落标记修订、`w:pPrChange` |
 | `shared/documents/docx/comments.ts` | comments.xml + Content_Types + rels + commentRange，四处一起动 |
-| `shared/documents/docx/edit.ts` | op 分派；地址是 `old_text` 而非段落号，歧义拒绝 |
+| `shared/documents/docx/edit.ts` | op 分派；地址是 `old_text` 而非段落号，歧义拒绝；edits 按 part 分组 |
+| `shared/documents/docx/parts.ts` | 哪些 part 有可见文字（body / header / footer / footnotes / endnotes）+ 前缀地址 |
+| `shared/documents/docx/blocks.ts` | 单次 token 走查编号：段落、表格、**行 `tNrR`**、**单元格 `tNrRcC`**；跳过 `mc:Fallback` 与 separator 脚注 |
+| `shared/documents/docx/tables.ts` | 建表 XML、按结构克隆行、修订式删行删表、相邻表格的 `<w:p/>` 垫片 |
 | `shared/documents/docx/` 其余 | 主 part 走 `_rels/.rels` 找、标题识别四级回退、投影与搜索 |
 | `shared/workers/doc-worker.ts` | 串行队列，直接开 OPFS，无 DOM |
 | `shared/offscreen-host.ts` | offscreen 文档创建收口，db 与 documents 共用一个 |
@@ -435,13 +529,66 @@ spike 状态：第 1 个（offscreen worker 能否直接看到 background 那棵
 4. **`<w:comment\s[^>]*\sw:id` 这个正则永不匹配**（标签名后的空格已被 `\s` 吃掉），
    于是二次编辑同一文件时批注编号从 1 重新开始，两条批注撞 id。
 
+#### P2：xlsx
+
+「帮我处理统计数据」这条链路通了，跑在同一套 `zip.ts` / `storage.ts` / `applyEdits` 上，
+零新增依赖。细则在 `builtin-spreadsheet-analysis` skill 里。
+
+**地址空间是 Excel 自己的**，这是它跟 docx 最大的差别，也省掉了一整类 bug：`Sheet1!C2` 是坐标，
+用户在屏幕上看得见，编辑前后含义不变。docx 那条「段落号只能导航、编辑必须靠 `old_text`」的规矩
+在这里不需要 —— 所以安全功夫全部挪到「**什么不许覆盖**」上（共享公式 host、插删行列、就地排序）。
+
+概览的重心也因此不同：文档的 outline 是目录，工作簿的 outline 是**schema**。
+「有三个 sheet」帮不到任何人，`A 序号(num) B 姓名(text) C 日期(date) D 分数(fx)` 才是 AI 做统计
+前唯一需要的东西 —— 代价是抽样前 30 行、每个 sheet 一百来字符，替代的是「读一千行才知道列是什么」。
+`fx` 这个标记是结构事实（这列是算出来的，别覆盖），比任何值类型都重要。
+
+| 位置 | 干什么 |
+|---|---|
+| `xlsx/refs.ts` | A1 解析与格式化：`$A$1`、`A:C`、`2:40`、`'My Sheet'!B7`（`''` 转义），开区间靠已用区域收敛 |
+| `xlsx/numfmt.ts` | `cellXfs` → `numFmtId` → 是不是日期；内建 CJK 日期 id；剥字面量再判自定义码；1900/1904 双纪元 + 1900-02-29 那个假日期 |
+| `xlsx/sheet.ts` | 单遍走 `sheetData`：行总是记，**单元格按窗口才建**（大表读 50 行只付 50 行的钱）；单次扫描读整个标签的属性，不用 per-attr 正则 |
+| `xlsx/model.ts` | workbook 走 `_rels/.rels` 找、sheet 走 rels 找 part、sharedStrings / styles 惰性加载、按名/按序号找 sheet |
+| `xlsx/values.ts` | `t` + sharedStrings + numFmt 合成一个 `CellValue`；`computed` 与 `formula` 分开；列类型推断 |
+| `xlsx/read.ts` | TSV + 列字母/行号双轴投影、公式单列表、先列后行截断、`nextRange` 续读、跨表搜索（值 **和** 公式） |
+| `xlsx/cells.ts` | 单元格/行 splice：改已有格保 `s`、新格按列序插入、自闭合 `<row/>` 展开、`spans` 失效 |
+| `xlsx/recalc.ts` | 删 calcChain（连 Override 和 rel）、`fullCalcOnLoad="1"` 塞对槽位、`<dimension>` 只增不减、Content_Types / rels 增删 |
+| `xlsx/sheets.ts` | 新建 sheet 的四处联动、Excel 那套命名规则、改名前先查引用（查到就拒绝） |
+| `xlsx/edit.ts` | op 分派；跨 op 收集写入后**每个 sheet 只 splice 一次**；策略（拒绝）在这层，机制（XML）在 `cells.ts` |
+
+op：`set_cell` / `set_cells` / `add_column` / `clear_cells` / `add_sheet` / `rename_sheet`。
+`add_column` 是这一期真正的主角 —— 「帮我算个增长率」的正确编译结果是加一列写**公式**
+（`=(C{row}-B{row})/B{row}`，`{row}` 逐行替换），而不是把算好的数字贴进去：用户改了 B2 之后，
+公式还对，数字就成了谎话。
+
+⚠️ 验证过程中（合成 fixture：共享公式 + 内建 CJK 日期 + 「米」单位自定义码 + 自闭合行 + inlineStr
++ 中文 sheet 名）修掉五个 bug，形状同样值得记：
+
+1. **共享公式 follower 的 `formula` 是空字符串，而空字符串是 falsy。** 于是一整列共享公式被判成
+   普通数字列 —— 而普通数字列是「可以随手覆盖」的。判「算出来的」必须用独立的布尔字段。
+2. **行级编辑跨 op 撞车。** 两个 op 各插一格到第 1 行，各自生成一条同范围的 `spans` 删除编辑，
+   `applyEdits` 正确判重叠，整次调用失败。修法不是放宽重叠检查，而是把写入收集到调用级、
+   每个 sheet 只 splice 一次。
+3. **`range="数据"`（裸 sheet 名）解析失败。** 而 outline 恰恰是按 sheet 名列出来并告诉 AI
+   「拿这个 id 当 range」的 —— 工具在自我矛盾。解析顺序定为：`!` 优先 → 匹配 sheet 名 → 当矩形。
+4. **`set_cells` / `clear_cells` 忽略独立的 `sheet` 参数**，只认 range 里的 `!`。于是
+   `sheet="汇总" range="A1:B2"` 静默写到了第一个 tab。
+5. **`add_sheet` 的 `rows` 取错了 key**，一律报「rows 必填」。
+
+`add_column` 与 `set_cell` 在同一次调用里瞄同一列是**设计使然而非 bug**：ops 互相看不到结果，
+`add_column` 的落点算自「加载时的已用区域」。所以 skill 里写明「一次调用只放一个 `add_column`」。
+另外单行摘要在部分单元格被拒时会夸大战果，所以拒绝数会追加一行说明 —— 摘要不能替 `applied` 撒谎。
+
+**仍未做的**：真实样本（Excel 各版本、WPS、Numbers、Google Sheets 导出）的零改动 round-trip 与
+编辑后用 Excel 打开，跟 docx 的第 2 个 spike 一样是上线前必做项。
+
 ### 路线
 
 | 期 | 内容 | 交付的场景 |
 |---|---|---|
 | **P0 基建** | `zip.ts` + `xml-cursor.ts` + `runs.ts` + doc-worker + `DOCUMENT_OP` + 备份/原子写 + 3 个 tool 骨架 + `file-kinds` 分类修正 | 无用户可见功能，但后面每一期都便宜 |
 | **P1 论文场景** | docx 读（outline / 按段 / 搜索）+ 批注 + 修订式编辑 + `docx-review` skill。⚠️ 字幕 cue 级工具当时列在这一期，**没做** —— 它跟 docx 一行代码都不共享，塞在同一期只会让这期的验证面变大。挪到 P2 或单独一期 | ✅ **「帮我改论文」跑通** |
-| **P2 数据场景** | xlsx 概览 / 区域读 / 类型推断 / 单元格与公式写入 + `spreadsheet-analysis` skill | ✅ **「帮我处理统计数据」跑通** |
+| **P2 数据场景** | xlsx 概览 / 区域读 / 类型推断 / 单元格与公式写入 + 加列 + 加 sheet + `spreadsheet-analysis` skill。⚠️ 批注与数字格式**没做**，理由进了第九节 | ✅ **「帮我处理统计数据」跑通** |
 | **P3 补齐** | PDF 读 + 批注/表单/页面操作；pptx 读改；`doc_create`（md→docx / csv→xlsx / md→pptx） | 文献阅读、汇报材料 |
 | **P4 加分项** | 侧边栏文档预览（docx-preview / 表格 / pdf canvas）；PDF 页面渲染成图交给多模态模型；xlsx 区域导入临时 sqlite 让 AI 用 SQL 做统计 | 信任感与大表分析能力 |
 

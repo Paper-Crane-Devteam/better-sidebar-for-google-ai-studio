@@ -53,9 +53,14 @@ function verifyDocx(bytes: Uint8Array): void {
   // code path a read takes: if a read of these bytes would fail, the save must fail too.
   const doc = openDocx(bytes);
 
-  if (doc.blocks.length === 0) {
+  // ⚠️ `bodyBlocks`, not `blocks`. Once headers and footnotes are part of the model, a
+  // `blocks` check passes on a file whose body was emptied but whose footer survived — which
+  // is the exact damage this line exists to catch.
+  if (doc.bodyBlocks.length === 0) {
     throw new DocumentError('the document body came out empty');
   }
+
+  verifySideParts(doc, archive);
 
   // Every part the content types declare by name must actually be in the archive.
   // A dangling override is how a removed part (calcChain, comments) leaves a file that
@@ -77,6 +82,47 @@ function verifyDocx(bytes: Uint8Array): void {
   }
 
   verifyComments(doc, archive, declared);
+}
+
+/**
+ * Every header, footer and note part still parses and still has its root.
+ *
+ * ⚠️ This check has to be here rather than left to `openDocx`, and the reason is a trap in
+ * the reader's own error handling: `openParts` skips a part it cannot tokenise, because one
+ * damaged footer is not a reason to refuse to open somebody's thesis. That tolerance is right
+ * for reading and catastrophic for writing — a header this handler had just corrupted would
+ * be *skipped* on the verification read, and the save would be reported as a success.
+ *
+ * So verification re-opens them strictly: anything the archive has, and that Word will
+ * therefore load, must parse here.
+ */
+function verifySideParts(
+  doc: ReturnType<typeof openDocx>,
+  archive: ReturnType<typeof openArchive>,
+): void {
+  const roots: Record<string, string> = {
+    header: 'w:hdr',
+    footer: 'w:ftr',
+    footnotes: 'w:footnotes',
+    endnotes: 'w:endnotes',
+  };
+
+  for (const part of doc.parts) {
+    if (part.kind === 'body') continue;
+    const source = archive.textOrNull(part.name);
+    if (source === null) {
+      throw new DocumentError(`"${part.name}" disappeared from the package`);
+    }
+    let root;
+    try {
+      root = element(tokenize(source), roots[part.kind]);
+    } catch (e) {
+      throw new DocumentError(`"${part.name}" no longer parses: ${(e as Error).message}`);
+    }
+    if (!root) {
+      throw new DocumentError(`"${part.name}" lost its <${roots[part.kind]}> root`);
+    }
+  }
 }
 
 /**

@@ -1430,6 +1430,10 @@
       "docxReview": {
         "title": "Review a Word Document",
         "description": "Work through a .docx chapter by chapter — comment on problems, suggest fixes as tracked changes"
+      },
+      "spreadsheetAnalysis": {
+        "title": "Work Through a Spreadsheet",
+        "description": "Read an .xlsx by schema first, then compute — adding columns and sheets rather than changing the data"
       }
     },
     "mcp": {

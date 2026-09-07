@@ -105,7 +105,14 @@ export interface AgentLoopStoreState {
    *
    * Read by `tool-registry` to refuse a tool the running agent does not own. Defaults to
    * the Better Sidebar agent rather than to null so a session started by a path that
-   * forgot to pass one behaves like it always did, instead of losing every tool.
+   * forgot to pass one still has tools rather than none.
+   *
+   * ⚠️ That default is a floor, not a substitute for passing the real value. Auto-pickup
+   * and owed-result delivery both relied on it and therefore ran every recovered session
+   * as Better Sidebar — so an interrupted Workspace task came back to
+   * `"glob_files" is not available to the Better Sidebar agent`, on a tool that had
+   * worked a round earlier. Both now derive the agent from the calls they are replaying
+   * (`mcpRegistry.agentForTools`). A new entry point must supply it too.
    */
   activeAgentId: AgentId;
 

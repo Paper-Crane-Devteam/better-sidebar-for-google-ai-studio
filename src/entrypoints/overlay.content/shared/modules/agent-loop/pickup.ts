@@ -24,6 +24,8 @@ import {
   getToolRisk,
 } from './execution-policy';
 import { hasUnrunToolWork } from './renderer/helpers/session-end';
+import { resolveAgentForRecoveredSession } from './conversation-agent';
+import type { AgentId } from './agents/types';
 import type { DisplayMessageTurn } from './renderer/useConversationMessages';
 import { isSyncRunActive } from './tools/sync';
 import { readConversationIdFromPath } from '@/entrypoints/overlay.content/shared/hooks/useCurrentConversationId';
@@ -47,6 +49,19 @@ export interface PickupPlan {
   key: string;
   /** The conversation the new session must bind to */
   conversationId: string | null;
+  /**
+   * The agent the new session must run as, read off the calls being picked up.
+   *
+   * ⚠️ Not optional bookkeeping. A picked-up session starts from nothing — after a
+   * reload the store's `activeAgentId` is back at the default — so leaving this out ran
+   * every picked-up response as Better Sidebar. A Workspace task interrupted mid-round
+   * came back to `ERROR: "glob_files" is not available to the Better Sidebar agent`, on
+   * a tool the previous round had used successfully.
+   *
+   * Undefined only when the conversation carries no agent marker *and* the calls name no
+   * agent-owned tool, which leaves the engine's own default in place rather than guessing.
+   */
+  agentId: AgentId | undefined;
 }
 
 export interface PickupInput {
@@ -185,7 +200,16 @@ export function planPickup(
     return null;
   }
 
-  return { key, conversationId };
+  /**
+   * Which agent this session runs as — recovered, because the store's copy went with
+   * the reload. See `resolveAgentForRecoveredSession` for where the answer comes from
+   * and why the transcript outranks the tool names.
+   */
+  const agentId = resolveAgentForRecoveredSession(
+    turn.toolCalls.map((tc) => tc.toolCall.name),
+  );
+
+  return { key, conversationId, agentId };
 }
 
 export interface UseAutoPickupOptions extends Omit<PickupInput, 'alreadyPickedKey'> {
@@ -248,6 +272,9 @@ export function useAutoPickup({
     engine.startFromExistingResponse(responseElement, 20, {
       conversationId: plan.conversationId,
       title: 'Follow-up task',
+      // The tool layer reads this to decide what this session is allowed to run. See
+      // `PickupPlan.agentId` for what happens when it is left out.
+      agentId: plan.agentId,
     });
   }, [turn, recordsReady]);
 }

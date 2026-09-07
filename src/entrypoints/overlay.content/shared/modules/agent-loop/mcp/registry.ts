@@ -100,6 +100,37 @@ class MCPRegistry {
     return null;
   }
 
+  /**
+   * Which agent a set of tool names belongs to, or null when they don't agree on one.
+   *
+   * This is how a session that has to be *reconstructed* works out which agent it is.
+   * Auto-pickup and owed-result delivery both start after a reload, when the store's
+   * `activeAgentId` is back at its default — and the calls themselves are the most
+   * reliable evidence available, because the model only ever saw one agent's schemas.
+   * Without it a picked-up `glob_files` ran as Better Sidebar and was refused as
+   * belonging to another agent, which reads to the user as the tool being broken.
+   *
+   * Shared servers are skipped rather than counted: `complete_task` belongs to every
+   * agent, so it carries no signal, and a response holding nothing else genuinely has
+   * nothing to go on. Null means "keep the caller's own answer" — never a guess.
+   */
+  agentForTools(toolNames: readonly string[]): AgentId | null {
+    const owners = new Set<AgentId>();
+
+    for (const name of toolNames) {
+      for (const server of this.servers) {
+        if (!server.tools.some((t) => t.schema.name === name)) continue;
+        const claim = this.ownership.get(server.id);
+        if (!claim || claim === SHARED) continue;
+        for (const owner of claim) owners.add(owner);
+      }
+    }
+
+    // Two owners means the response mixes agents, which the prompt cannot have asked
+    // for. Refusing to choose leaves the existing refusal to explain it.
+    return owners.size === 1 ? [...owners][0] : null;
+  }
+
   /** Find a tool this agent is allowed to run. */
   findTool(toolName: string, agentId: AgentId): ToolDefinition | undefined {
     for (const server of this.getServersForAgent(agentId)) {

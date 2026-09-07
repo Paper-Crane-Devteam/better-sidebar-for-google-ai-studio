@@ -29,10 +29,13 @@ import type { DocProjectionResult, DocReadRequest } from '../types';
 import { DocumentError } from '../types';
 import type { LoadedDocument } from '../storage';
 import {
+  hasMergedCells,
   openDocx,
   paragraphText,
   tableGrid,
   type Block,
+  type CellText,
+  type DocPart,
   type DocxDocument,
 } from './model';
 
@@ -75,9 +78,14 @@ function project(
   path: string,
   request: DocReadRequest,
 ): DocProjectionResult {
-  const paragraphs = doc.blocks.filter((b) => b.kind === 'paragraph');
+  // A range may name a part (`hd1`, `fn:p2-p5`); without one it means the body. Reading is
+  // always scoped to a single part, because paragraph numbers restart in each one and a
+  // projection mixing two would give the same `pN` two meanings.
+  const { part, spec } = splitRangeSpec(doc, request.range);
+  const partBlocks = doc.blocks.filter((b) => b.part === part);
+  const paragraphs = partBlocks.filter((b) => b.kind === 'paragraph');
   const total = paragraphs.length;
-  const { startIndex, endIndex } = resolveRange(doc, request.range, total);
+  const { startIndex, endIndex } = resolveRange(doc, part, spec, total);
 
   const limit = Math.min(
     request.maxChars && request.maxChars > 0 ? request.maxChars : DEFAULT_MAX_CHARS,
@@ -85,8 +93,9 @@ function project(
   );
   const withStructure = request.formatting !== false;
 
-  const layout = mapLayout(doc);
+  const layout = mapLayout(partBlocks);
   const lines: string[] = [];
+  if (part.kind !== 'body') lines.push(`(${part.label}, addressed as ${part.id}:pN)`);
   let used = 0;
   let lastRendered = startIndex - 1;
   let truncated = false;
@@ -100,19 +109,22 @@ function project(
    */
   let skipUntil = -1;
 
-  for (const block of doc.blocks) {
+  for (const block of partBlocks) {
     if (block.el.outerStart < skipUntil) continue;
 
     if (block.kind === 'table') {
       const span = layout.tableSpan.get(block.id);
-      // A table with no paragraphs of its own (all cells empty) has no span, so it is
-      // placed by the paragraph numbers around it — which we do not track. Skipping it
-      // loses an empty grid, which is the cheaper mistake.
+      // A table with no rows at all has no span and nothing to show. ⚠️ Note this is *not*
+      // the "all cells are empty" case: a cell always contains a `w:p`, empty or not, and
+      // that paragraph is numbered — so a blank checklist column still gives its table a
+      // span and still gets rendered. It has to, since filling it in is the point.
       if (!span) continue;
       if (span.last < startIndex || span.first > endIndex) continue;
 
       const rendered = renderTable(doc, block, withStructure);
-      if (used + rendered.length > limit && lines.length > 0) {
+      // `used > 0`, not `lines.length > 0`: a non-body read opens with a label line, and
+      // counting that as content would let the budget check drop the only block there is.
+      if (used + rendered.length > limit && used > 0) {
         truncated = true;
         break;
       }
@@ -126,8 +138,8 @@ function project(
     const index = layout.paragraphIndex.get(block.id);
     if (index === undefined || index < startIndex || index > endIndex) continue;
 
-    const rendered = renderParagraph(doc, block, withStructure);
-    if (used + rendered.length > limit && lines.length > 0) {
+    const rendered = renderParagraph(block, withStructure);
+    if (used + rendered.length > limit && used > 0) {
       truncated = true;
       break;
     }
@@ -141,18 +153,46 @@ function project(
   const nextIndex = lastRendered + 1;
   const incomplete = truncated || lastRendered < endIndex || endIndex < total - 1;
 
+  // Other parts are named once, at the end of a body read, and only when they hold text.
+  // Without it the agent has no way to learn that a header exists — and a header it does not
+  // know about is a header it will report as absent when the user asks about its contents.
+  if (part.kind === 'body') {
+    const others = otherPartsNote(doc);
+    if (others) lines.push(others);
+  }
+
   return {
     kind: 'projection',
     path,
     format: 'docx',
     text: lines.join('\n'),
-    covered: `${from}–${to} of ${total} paragraphs`,
+    covered: `${from}–${to} of ${total} paragraphs in ${part.label}`,
     truncated: incomplete,
+    // The id already carries its part prefix, so `hd1:p2-p3` round-trips through
+    // `splitRangeSpec` for free and the body keeps its familiar `p13-p40`.
     nextRange:
       incomplete && nextIndex < total
         ? `${paragraphs[nextIndex].id}-p${total}`
         : undefined,
   };
+}
+
+/** One line listing the parts a body read did not cover. */
+function otherPartsNote(doc: DocxDocument): string | null {
+  const others = doc.parts
+    .filter(
+      (part) =>
+        part.kind !== 'body' &&
+        doc.blocks.some(
+          (b) => b.part === part && b.kind === 'paragraph' && paragraphText(b).trim() !== '',
+        ),
+    )
+    .map((part) => `${part.id} (${part.label})`);
+
+  if (others.length === 0) return null;
+  return (
+    `Text outside the body: ${others.join(', ')}. Read one with range="${others[0].split(' ')[0]}".`
+  );
 }
 
 interface Layout {
@@ -171,13 +211,13 @@ interface Layout {
  * to every table containing it. Computing this per paragraph instead would be
  * `indexOf` in a loop — quadratic on exactly the documents where it matters.
  */
-function mapLayout(doc: DocxDocument): Layout {
+function mapLayout(blocks: Block[]): Layout {
   const paragraphIndex = new Map<string, number>();
   const tableSpan = new Map<string, { first: number; last: number }>();
   const open: Array<{ id: string; end: number }> = [];
   let index = -1;
 
-  for (const block of doc.blocks) {
+  for (const block of blocks) {
     while (open.length > 0 && block.el.outerStart >= open[open.length - 1].end) {
       open.pop();
     }
@@ -203,38 +243,87 @@ function mapLayout(doc: DocxDocument): Layout {
   return { paragraphIndex, tableSpan };
 }
 
-function renderParagraph(
-  doc: DocxDocument,
-  block: Block,
-  withStructure: boolean,
-): string {
-  const text = paragraphText(doc, block).replace(/\n/g, ' ');
+function renderParagraph(block: Block, withStructure: boolean): string {
+  const text = paragraphText(block).replace(/\n/g, ' ');
   const marker =
     withStructure && block.headingLevel ? ` h${block.headingLevel}` : '';
   return `[${block.id}${marker}] ${text}`;
 }
 
+/** Stands in for a cell with no text, so a blank column cannot be miscounted. */
+const EMPTY_CELL = '∅';
+
+/** Stands in for a position where the row has no cell at all. Not addressable. */
+const NO_CELL = '—';
+
+/**
+ * A table, with its cells addressable.
+ *
+ * ## Why the row labels are worth their tokens
+ *
+ * The grid used to be plain Markdown, which meant a cell had no address at all. Reading it
+ * told the agent *that* the third column was blank and gave it no way to say so — the only
+ * expressible edit was to quote the second column's text, which is how a checklist ends up
+ * with its answers in the wrong column.
+ *
+ * Adding a per-cell id to every cell would double the size of every table. Instead the
+ * coordinates come from the axes: a leading `r1`/`r2` column and a `c1 c2 c3` head, from
+ * which `t2r2c3` is derivable for any cell at a fixed cost of a few characters per row.
+ *
+ * ⚠️ `∅` marks an empty cell rather than leaving the space blank. `| a |  | c |` is
+ * genuinely hard to count columns in — for a person and for a model — and mis-counting is
+ * precisely the bug this rendering exists to prevent.
+ *
+ * ⚠️ Row and column numbers count `w:tr` and `w:tc` elements. With `gridSpan` or a vertical
+ * merge that is not the visual grid, so a note says so. The numbering still round-trips,
+ * because `blocks.ts` numbers cells from the same walk this renders from.
+ */
 function renderTable(
   doc: DocxDocument,
   block: Block,
   withStructure: boolean,
 ): string {
   const grid = tableGrid(doc, block);
-  const columns = grid.reduce((max, row) => Math.max(max, row.length), 0);
-  const header = `[${block.id} ${grid.length}×${columns}]`;
+  const columns = grid[0]?.length ?? 0;
 
-  if (!withStructure) {
-    return `${header} ${grid.map((row) => row.join(' | ')).join(' / ')}`;
+  if (grid.length === 0 || columns === 0) {
+    return `[${block.id} empty]`;
   }
 
-  if (grid.length === 0) return `${header} (empty)`;
+  const cellText = (cell: CellText) =>
+    !cell.exists ? NO_CELL : cell.text === '' ? EMPTY_CELL : cell.text;
 
-  const rows = grid.map((row) => `| ${row.join(' | ')} |`);
-  // A Markdown separator after the first row, because the first row of a Word table is
-  // a header often enough that labelling it is worth one line — and because without it
-  // the block does not read as a table at all.
-  rows.splice(1, 0, `| ${Array(columns).fill('---').join(' | ')} |`);
-  return `${header}\n${rows.join('\n')}`;
+  const notes = [
+    `${grid.length}×${columns}`,
+    `cells ${block.id}r1c1…, rows ${block.id}r1…`,
+  ];
+  if (grid.some((row) => row.some((cell) => cell.exists && cell.text === ''))) {
+    notes.push(`${EMPTY_CELL} = empty, fill with set_text`);
+  }
+  if (grid.some((row) => row.some((cell) => !cell.exists))) {
+    notes.push(`${NO_CELL} = no cell there`);
+  }
+  if (hasMergedCells(doc, block)) {
+    notes.push('merged cells — r/c count cells, not the visual grid');
+  }
+  const header = `[${block.id} ${notes.join(' · ')}]`;
+
+  if (!withStructure) {
+    return `${header} ${grid.map((row) => row.map(cellText).join(' | ')).join(' / ')}`;
+  }
+
+  const lines = [
+    `| r\\c | ${Array.from({ length: columns }, (_, i) => `c${i + 1}`).join(' | ')} |`,
+    // A Markdown separator after the head, because without it the block does not read as a
+    // table at all.
+    `| --- | ${Array(columns).fill('---').join(' | ')} |`,
+  ];
+
+  grid.forEach((row, index) => {
+    lines.push(`| r${index + 1} | ${row.map(cellText).join(' | ')} |`);
+  });
+
+  return `${header}\n${lines.join('\n')}`;
 }
 
 // ─── Range parsing ───────────────────────────────────────────────────────────
@@ -246,26 +335,86 @@ function renderTable(
  * because it lacks the `p` costs a whole round to correct something that has exactly
  * one meaning.
  */
-function resolveRange(
+/**
+ * Peel an optional part prefix off a range.
+ *
+ * `hd1` alone means the whole of that part — headers and footers are a line or two, so
+ * asking for a sub-range of one is not a case worth supporting. `fn:p3-p9` narrows within a
+ * part. Anything without a prefix is a body range, which keeps every existing form working
+ * unchanged.
+ */
+function splitRangeSpec(
   doc: DocxDocument,
   range: string | undefined,
+): { part: DocPart; spec: string } {
+  const raw = (range ?? '').trim().toLowerCase();
+  const colon = raw.indexOf(':');
+
+  if (colon !== -1) {
+    const id = raw.slice(0, colon);
+    const part = doc.parts.find((p) => p.id === id && p.kind !== 'body');
+    if (!part) {
+      throw new DocumentError(
+        `This document has no part "${id}". It has: ${partList(doc)}.`,
+      );
+    }
+    return { part, spec: raw.slice(colon + 1) };
+  }
+
+  const whole = doc.parts.find((p) => p.id === raw && p.kind !== 'body');
+  if (whole) return { part: whole, spec: '' };
+
+  return { part: doc.bodyPart, spec: raw };
+}
+
+function partList(doc: DocxDocument): string {
+  return doc.parts
+    .map((p) => (p.kind === 'body' ? 'the body (no prefix)' : `${p.id} (${p.label})`))
+    .join(', ');
+}
+
+function resolveRange(
+  doc: DocxDocument,
+  part: DocPart,
+  spec: string,
   total: number,
 ): { startIndex: number; endIndex: number } {
   if (total === 0) {
-    throw new DocumentError('This document has no paragraphs.');
+    throw new DocumentError(`${part.label} has no paragraphs.`);
   }
 
-  const spec = (range ?? '').trim().toLowerCase();
   if (spec === '' || spec === 'all') {
     return { startIndex: 0, endIndex: total - 1 };
   }
 
-  // A table id names the paragraphs it contains, which is what "read t3" means.
+  // A table id names the paragraphs it contains, which is what "read t3" means. A cell
+  // address is accepted for the same reason and narrows further, which is how the agent
+  // confirms what it is about to fill in.
+  const asCell = /^(t\d+)r(\d+)c(\d+)$/.exec(spec);
+  if (asCell) {
+    const cell = doc.cells.get(part.kind === 'body' ? spec : `${part.id}:${spec}`);
+    if (!cell) {
+      throw new DocumentError(
+        `There is no ${spec} in this document. Read ${asCell[1]} to see its shape.`,
+      );
+    }
+    const paragraphs = doc.blocks.filter((b) => b.part === part && b.kind === 'paragraph');
+    const indices = paragraphs
+      .map((p, index) => ({ p, index }))
+      .filter(({ p }) => cell.paragraphIds.includes(p.id))
+      .map(({ index }) => index);
+    if (indices.length === 0) {
+      throw new DocumentError(`${spec} has no paragraph in it.`);
+    }
+    return { startIndex: indices[0], endIndex: indices[indices.length - 1] };
+  }
+
   const asTable = /^t(\d+)$/.exec(spec);
   if (asTable) {
-    const table = doc.byId.get(`t${asTable[1]}`);
-    if (!table) throw new DocumentError(`There is no ${spec} in this document.`);
-    const paragraphs = doc.blocks.filter((b) => b.kind === 'paragraph');
+    const tableId = part.kind === 'body' ? spec : `${part.id}:${spec}`;
+    const table = doc.byId.get(tableId);
+    if (!table) throw new DocumentError(`There is no ${spec} in ${part.label}.`);
+    const paragraphs = doc.blocks.filter((b) => b.part === part && b.kind === 'paragraph');
     const inside = paragraphs
       .map((p, index) => ({ p, index }))
       .filter(
@@ -281,8 +430,9 @@ function resolveRange(
   const match = /^p?(\d+)(?:\s*[-–~]\s*p?(\d+))?$/.exec(spec);
   if (!match) {
     throw new DocumentError(
-      `Could not read "${range}" as a range. Use a paragraph range like "p12-p48", a ` +
-        'single paragraph like "p12", or a table id like "t3".',
+      `Could not read "${spec}" as a range. Use a paragraph range like "p12-p48", a ` +
+        'single paragraph like "p12", a table id like "t3", a cell like "t3r2c1", or a ' +
+        `part like "hd1". This document has: ${partList(doc)}.`,
     );
   }
 
@@ -291,7 +441,7 @@ function resolveRange(
 
   if (first < 1 || first > total) {
     throw new DocumentError(
-      `p${first} is outside this document, which has ${total} paragraphs (p1–p${total}).`,
+      `p${first} is outside ${part.label}, which has ${total} paragraphs (p1–p${total}).`,
     );
   }
 
@@ -324,9 +474,12 @@ function search(
   const lines: string[] = [];
   let hits = 0;
 
+  // Every part, deliberately: search is how the agent finds out *where* something is, and a
+  // date that lives only in the page header is exactly the case a body-only search answered
+  // with a confident "it is not in this document".
   for (const block of doc.blocks) {
     if (block.kind !== 'paragraph') continue;
-    const text = paragraphText(doc, block);
+    const text = paragraphText(block);
     if (text === '') continue;
 
     const at = matcher(text);
@@ -338,7 +491,10 @@ function search(
     const from = Math.max(0, at - SNIPPET_CONTEXT);
     const to = Math.min(text.length, at + query.length + SNIPPET_CONTEXT);
     const snippet = `${from > 0 ? '…' : ''}${text.slice(from, to).replace(/\s+/g, ' ')}${to < text.length ? '…' : ''}`;
-    lines.push(`[${block.id}] ${snippet}`);
+    // The cell address is the actionable half of a hit inside a table: it is what `set_text`
+    // takes, and it is what tells the agent which column it is looking at.
+    const where = block.cellId ? `${block.id} in ${block.cellId}` : block.id;
+    lines.push(`[${where}] ${snippet}`);
   }
 
   const truncated = hits > MAX_HITS;

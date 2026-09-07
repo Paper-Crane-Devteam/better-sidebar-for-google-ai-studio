@@ -75,11 +75,16 @@ export interface Revisions {
  */
 export function openRevisions(doc: DocxDocument, author?: string): Revisions {
   let highest = 0;
-  const pattern = /\sw:id\s*=\s*"(\d+)"/g;
-  let match: RegExpExecArray | null;
-  while ((match = pattern.exec(doc.main.source)) !== null) {
-    const value = Number(match[1]);
-    if (value > highest) highest = value;
+  // ⚠️ Across **every** part, not just the body. Revision ids are package-wide as far as
+  // Word's review pane is concerned, and a header edit numbered from 1 collides with the
+  // body's bookmarks — which Word "repairs" silently, telling the user we damaged their file.
+  for (const part of doc.parts) {
+    const pattern = /\sw:id\s*=\s*"(\d+)"/g;
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(part.xml.source)) !== null) {
+      const value = Number(match[1]);
+      if (value > highest) highest = value;
+    }
   }
 
   let cursor = highest;
@@ -211,16 +216,31 @@ export function insertedParagraphXml(
  * "there is no text" is why an empty line is the one thing an editor cannot remove.
  */
 export function trackedDeleteParagraphEdits(
-  doc: DocxDocument,
   block: Block,
   flat: FlatParagraph,
   rev: Revisions,
   label?: string,
 ): Edit[] {
-  const edits: Edit[] = [];
   // One id for the whole paragraph, its runs and its mark alike: this is one deletion, and
   // Word must offer it as one Accept.
-  const attrs = revisionAttrs(rev);
+  return deleteParagraphEdits(block, flat, revisionAttrs(rev), label);
+}
+
+/**
+ * The same, against a revision id the caller already allocated.
+ *
+ * ⚠️ Exists so that deleting a **row** — which is a dozen paragraphs across a dozen cells —
+ * is one revision rather than a dozen. Allocating an id per paragraph would make the user
+ * click Accept once per cell, and let them accept half a row, which leaves the table with a
+ * row that is partly gone.
+ */
+export function deleteParagraphEdits(
+  block: Block,
+  flat: FlatParagraph,
+  attrs: string,
+  label?: string,
+): Edit[] {
+  const edits: Edit[] = [];
 
   for (const slice of flat.slices) {
     // An opaque run holds a drawing or a field, which cannot become `w:delText`. Leaving
@@ -237,9 +257,88 @@ export function trackedDeleteParagraphEdits(
     );
   }
 
-  edits.push(markParagraphMark(doc, block, `<w:del ${attrs}/>`, label));
+  edits.push(markParagraphMark(block, `<w:del ${attrs}/>`, label));
   return edits;
 }
+
+// ─── Filling an empty paragraph ──────────────────────────────────────────────
+
+/**
+ * Put text into a paragraph that has none — the op that was missing.
+ *
+ * Every other text edit is addressed by quoting the text it replaces, which is what makes
+ * a wrong edit impossible to write. An empty cell has nothing to quote, so it was
+ * unreachable: the blank "result" column of a checklist could not be filled, and the
+ * agent's only expressible move was to replace the *neighbouring* cell's text and put the
+ * answer in the wrong column.
+ *
+ * ⚠️ This is the one op addressed purely by id, so it is restricted to targets that are
+ * genuinely empty (`docxEdit` checks). Writing over existing text by id would reintroduce
+ * exactly the silent-wrong-paragraph failure that `old_text` addressing exists to prevent,
+ * and `replace_text` already covers that case safely.
+ */
+export function fillParagraphEdits(
+  block: Block,
+  text: string,
+  rPr: string,
+  rev: Revisions,
+  tracked: boolean,
+  label?: string,
+): Edit[] {
+  const run = runXml(text, rPr);
+  const body = tracked ? `<w:ins ${revisionAttrs(rev)}>${run}</w:ins>` : run;
+
+  // ⚠️ An empty paragraph is very often written `<w:p/>`, and a self-closing element has no
+  // inside — `innerStart` points *past* the `/>`. Inserting there would put the run between
+  // two paragraphs: still balanced, still tokenisable, and rejected by Word as unreadable
+  // content. The tag has to be expanded instead.
+  if (block.el.selfClosing) {
+    return [replaceElement(block.el, `<w:p>${body}</w:p>`, label)];
+  }
+
+  // After `w:pPr` when there is one, because `w:pPr` must stay the first child of `w:p`.
+  const pPr = ownChild(block.part, block.el, 'w:pPr');
+  const at = pPr ? pPr.outerEnd : block.el.innerStart;
+  return [{ start: at, end: at, text: body, label }];
+}
+
+/**
+ * Run properties for text being added to an empty paragraph.
+ *
+ * The paragraph mark's own `w:rPr` is the best available answer: it is the formatting Word
+ * itself would apply to a character typed there, so a filled-in table cell comes out in the
+ * same font and size as the rest of the column instead of in Word's default.
+ *
+ * ⚠️ `w:pPr/w:rPr` is `CT_ParaRPr`, not `CT_RPr`. It may carry `w:ins`, `w:del`,
+ * `w:moveFrom`, `w:moveTo` and `w:rPrChange`, none of which are legal inside a run's
+ * `w:rPr`. Copying it wholesale produces a schema violation — and since the file still
+ * tokenises and still balances, nothing downstream catches it; Word reports the document as
+ * damaged. Those five children are stripped.
+ */
+export function markRunProperties(block: Block): string {
+  const part = block.part.xml;
+  const pPr = ownChild(block.part, block.el, 'w:pPr');
+  if (!pPr) return '';
+
+  const rPr = ownChild(block.part, pPr, 'w:rPr');
+  if (!rPr || rPr.selfClosing) return '';
+
+  const kept = childElements(part, rPr)
+    .filter((child) => !PARA_ONLY_RPR.has(child.name))
+    .map((child) => part.source.slice(child.outerStart, child.outerEnd))
+    .join('');
+
+  return kept === '' ? '' : `<w:rPr>${kept}</w:rPr>`;
+}
+
+/** `CT_ParaRPr` children with no place in a run's `w:rPr`. See `markRunProperties`. */
+const PARA_ONLY_RPR = new Set([
+  'w:ins',
+  'w:del',
+  'w:moveFrom',
+  'w:moveTo',
+  'w:rPrChange',
+]);
 
 /**
  * Put a `w:ins` or `w:del` on the paragraph mark, creating the wrappers it needs.
@@ -254,7 +353,6 @@ export function trackedDeleteParagraphEdits(
  *   that ends a section needs the new `w:rPr` placed before it, not appended.
  */
 function markParagraphMark(
-  doc: DocxDocument,
   block: Block,
   markXml: string,
   label?: string,
@@ -271,7 +369,7 @@ function markParagraphMark(
     );
   }
 
-  const pPr = ownChild(doc.main, block.el, 'w:pPr');
+  const pPr = ownChild(block.part, block.el, 'w:pPr');
 
   if (!pPr) {
     // `w:pPr` must be the first child of `w:p`, so the paragraph's content start is the
@@ -284,7 +382,7 @@ function markParagraphMark(
     };
   }
 
-  const rPr = ownChild(doc.main, pPr, 'w:rPr');
+  const rPr = ownChild(block.part, pPr, 'w:rPr');
   if (rPr) {
     if (rPr.selfClosing) {
       return replaceElement(rPr, `<w:rPr>${markXml}</w:rPr>`, label);
@@ -292,7 +390,7 @@ function markParagraphMark(
     return { start: rPr.innerStart, end: rPr.innerStart, text: markXml, label };
   }
 
-  const sectPr = ownChild(doc.main, pPr, 'w:sectPr');
+  const sectPr = ownChild(block.part, pPr, 'w:sectPr');
   const wrapped = `<w:rPr>${markXml}</w:rPr>`;
   if (sectPr) return insertBefore(sectPr, wrapped, label);
   if (pPr.selfClosing) return replaceElement(pPr, `<w:pPr>${wrapped}</w:pPr>`, label);
@@ -311,16 +409,15 @@ function markParagraphMark(
  * looked trivial.
  */
 export function setStyleEdits(
-  doc: DocxDocument,
   block: Block,
   styleId: string,
   rev: Revisions,
   tracked: boolean,
   label?: string,
 ): Edit[] {
-  const part = doc.main;
+  const part = block.part.xml;
   const pStyleXml = `<w:pStyle w:val="${escapeXml(styleId)}"/>`;
-  const pPr = ownChild(part, block.el, 'w:pPr');
+  const pPr = ownChild(block.part, block.el, 'w:pPr');
 
   if (!pPr) {
     const change = tracked
@@ -376,16 +473,22 @@ function basePPrChildren(part: XmlPart, pPr: ElementRange): string {
  * and have no way to tell which are ours.
  */
 export function countExistingRevisions(doc: DocxDocument): number {
-  return elements(doc.main, 'w:ins').length + elements(doc.main, 'w:del').length;
+  let total = 0;
+  for (const part of doc.parts) {
+    total += elements(part.xml, 'w:ins').length + elements(part.xml, 'w:del').length;
+  }
+  return total;
 }
 
 /** The `w:author` values already present, so the result can name whose changes they are. */
 export function existingAuthors(doc: DocxDocument): string[] {
   const authors = new Set<string>();
-  for (const name of ['w:ins', 'w:del'] as const) {
-    for (const el of elements(doc.main, name)) {
-      const author = attr(doc.main, el, 'w:author');
-      if (author) authors.add(author);
+  for (const part of doc.parts) {
+    for (const name of ['w:ins', 'w:del'] as const) {
+      for (const el of elements(part.xml, name)) {
+        const author = attr(part.xml, el, 'w:author');
+        if (author) authors.add(author);
+      }
     }
   }
   return [...authors];

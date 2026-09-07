@@ -204,7 +204,7 @@ export async function executeTools(
 
     if (failure) {
       // Escalating hints, so the AI stops retrying the same broken approach
-      body = ctx.breaker.getProgressiveErrorGuidance(result);
+      body = ctx.breaker.getProgressiveErrorGuidance(result, toolCall.name);
 
       if (failure.action === 'stop') {
         console.warn('[AgentLoop] Circuit breaker: failure hard stop');

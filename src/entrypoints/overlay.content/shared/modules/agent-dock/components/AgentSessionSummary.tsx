@@ -18,11 +18,10 @@ import { PAYWALL_SIGNAL } from '../../agent-loop/tools/paywall-signal';
 import { useAgentLoopStore } from '../../agent-loop/agent-loop-store';
 import {
   discardSnapshots,
-  useUndoAvailable,
   useUndoBlockedReason,
-  useUndoWasUndone,
   useUndoAction,
 } from '../../agent-loop/undo';
+import { useSessionSummary } from '../useSessionSummary';
 
 export const AgentSessionSummary: React.FC = () => {
   const { t } = useI18n();
@@ -32,9 +31,9 @@ export const AgentSessionSummary: React.FC = () => {
   const sessionTitle = useAgentLoopStore((s) => s.sessionTitle);
   const showPaywall = usePaywallStore((s) => s.show);
 
-  const undoAvailable = useUndoAvailable();
+  // Shared with `AgentDock`, which uses `worthShowing` to decide whether to open at all.
+  const { failedSteps: failed, undoAvailable, undone, worthShowing } = useSessionSummary();
   const undoBlocked = useUndoBlockedReason();
-  const undone = useUndoWasUndone();
   const { undoing, runUndo } = useUndoAction();
 
   /**
@@ -50,25 +49,20 @@ export const AgentSessionSummary: React.FC = () => {
   if (status !== 'idle') return null;
 
   /**
-   * A session that ended because the model wrote prose instead of a tool call gets no card.
+   * Nothing on offer, nothing rendered — the rule itself lives in `useSessionSummary`,
+   * because `AgentDock` decides whether to open around this card and the two answers
+   * have to be the same one. When they were computed separately, suppressing the card
+   * here left the dock opening on an empty body.
    *
-   * There is nothing to say and nothing to do: the reply is right there in the chat, and the
-   * card's only control was a Dismiss button — a notification whose entire content is "click
-   * to remove this notification". It fired on the single most ordinary way for a session to
-   * end (the model finished talking), so it read as an error report for something that was
-   * not an error.
-   *
-   * ⚠️ Suppressed only when there is genuinely nothing on offer. If the run changed data and
-   * can still be reverted, the card stays — hiding an available Undo would leave the
-   * snapshot unreachable and the changes unexplained.
+   * The case it exists for: a session that ended because the model wrote prose instead
+   * of a tool call. The reply is right there in the chat and the only control would be
+   * Dismiss — a notification whose entire content is "click to remove this
+   * notification" — and it fired on the most ordinary ending there is, so it read as an
+   * error report for something that was not an error.
    */
-  if (endReason === 'no_tool_call' && !undoAvailable && !undone) return null;
+  if (!worthShowing) return null;
 
   const steps = history.reduce((sum, h) => sum + h.results.length, 0);
-  const failed = history.reduce(
-    (sum, h) => sum + h.results.filter((r) => !r.success).length,
-    0,
-  );
 
   const isPaywall = endReason === 'paywall';
   // A reverted run is not a green "all done" — the work it reported no longer exists.
