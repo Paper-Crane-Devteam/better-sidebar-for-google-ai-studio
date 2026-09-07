@@ -120,7 +120,8 @@
     "importAiStudioSystemSuccess": "Импортировано {{count}} системных инструкций из AI Studio",
     "importAiStudioSystemNoData": "Системные инструкции AI Studio на этой странице не найдены",
     "importAiStudioSystemInvalid": "Недопустимые данные системных инструкций AI Studio",
-    "importAiStudioSystemFailed": "Не удалось импортировать системные инструкции AI Studio"
+    "importAiStudioSystemFailed": "Не удалось импортировать системные инструкции AI Studio",
+    "compactModeTitleHint": "Вы также можете нажать на заголовок «Библиотека», чтобы переключить компактный режим 😉"
   },
   "prompts": {
     "inbox": "Входящие",

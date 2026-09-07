@@ -120,7 +120,8 @@
     "importAiStudioSystemSuccess": "Importadas {{count}} instrução(ões) de sistema do AI Studio",
     "importAiStudioSystemNoData": "Nenhuma instrução de sistema do AI Studio encontrada nesta página",
     "importAiStudioSystemInvalid": "Dados de instruções de sistema do AI Studio inválidos",
-    "importAiStudioSystemFailed": "Falha ao importar instruções de sistema do AI Studio"
+    "importAiStudioSystemFailed": "Falha ao importar instruções de sistema do AI Studio",
+    "compactModeTitleHint": "Você também pode clicar no título BIBLIOTECA para alternar o modo compacto a qualquer momento 😉"
   },
   "prompts": {
     "inbox": "Caixa de entrada",

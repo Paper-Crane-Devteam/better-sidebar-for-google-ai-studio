@@ -120,7 +120,8 @@
     "importAiStudioSystemSuccess": "AI Studioから{{count}}件のシステム指示をインポートしました",
     "importAiStudioSystemNoData": "このページにAI Studioのシステム指示が見つかりません",
     "importAiStudioSystemInvalid": "AI Studioのシステム指示データが無効です",
-    "importAiStudioSystemFailed": "AI Studioのシステム指示のインポートに失敗しました"
+    "importAiStudioSystemFailed": "AI Studioのシステム指示のインポートに失敗しました",
+    "compactModeTitleHint": "「ライブラリ」の見出しをクリックしても切り替えられますよ 😉"
   },
   "prompts": {
     "inbox": "受信トレイ",

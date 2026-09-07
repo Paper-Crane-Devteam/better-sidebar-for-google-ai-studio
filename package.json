@@ -1,7 +1,7 @@
 {
   "name": "better-sidebar-for-google-ai-studio",
   "type": "module",
-  "version": "2.9.2",
+  "version": "2.10.0",
   "private": true,
   "description": "Organize Gemini & AI Studio chats: folders, tags, full-text search, prompt library, chat export, Google Drive sync, themes & more.",
   "author": "Paper Crane Devteam",
@@ -47,7 +47,7 @@
     "dnd-core": "14.0.1",
     "fflate": "^0.8.3",
     "i18next": "^25.7.3",
-    "katex": "^0.17.0",
+    "katex": "^0.16.47",
     "lodash": "^4.17.21",
     "lucide-react": "^0.344.0",
     "marked": "18.0.6",

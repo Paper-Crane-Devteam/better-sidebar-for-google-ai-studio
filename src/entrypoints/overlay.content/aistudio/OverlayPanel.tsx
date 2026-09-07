@@ -37,8 +37,8 @@ import { useUrl } from '@/shared/hooks/useUrl';
 import { useModuleConfig } from './useModuleConfig';
 import { detectAccount } from '@/entrypoints/content/shared/detect-account';
 import { Platform } from '@/shared/types/platform';
-import { useBadgeStore } from '@/shared/lib/badge-store';
-import { BadgeDot } from '@/shared/components/ui/badge-dot';
+import { useBadge } from '@/shared/lib/badge-store';
+import { FeatureBadge } from '@/shared/components/ui/badge-dot';
 import { useHotkeyListener } from '@/shared/hooks/useHotkeyListener';
 import {
   AccountButton,
@@ -56,7 +56,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
   const [, setContainer] = useState<HTMLDivElement | null>(null);
   const shortcuts = useSettingsStore((state) => state.shortcuts);
   const compactMode = useSettingsStore((state) => state.compactMode);
-  const hasSettingsBadge = useBadgeStore((s) => s.isGroupVisible('settings.'));
+  const agentBadge = useBadge('tab.agent');
   const {
     fetchData,
     ui,
@@ -212,6 +212,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
       setIsSettingsOpen(true);
       return;
     }
+    if (tab === 'agent') agentBadge.dismiss();
     setActiveTab(tab);
   };
 
@@ -282,6 +283,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             className="sidebar-btn transition-all relative"
           >
             <Bot className="sidebar-icon" />
+            <FeatureBadge badgeKey="tab.agent" />
           </Button>
         </SimpleTooltip>
         {shortcuts?.favorites && (
@@ -396,7 +398,7 @@ export const OverlayPanel = ({ className }: { className?: string }) => {
             className="sidebar-btn transition-all relative"
           >
             <Settings className="sidebar-icon" />
-            <BadgeDot visible={hasSettingsBadge} className="absolute top-1.5 right-1.5" />
+            <FeatureBadge badgeKey="settings." group />
           </Button>
         </SimpleTooltip>
       </div>

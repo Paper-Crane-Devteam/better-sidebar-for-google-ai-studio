@@ -40,7 +40,7 @@
  */
 
 import React, { useState } from 'react';
-import { Bot, ChevronRight, HelpCircle, Lock, SlidersHorizontal } from 'lucide-react';
+import { Bot, ChevronRight, Lock, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { UIcon } from '@/shared/components/ui/icon';
 import { SimpleTooltip } from '@/shared/components/ui/tooltip';
@@ -170,38 +170,12 @@ export const AgentLauncher: React.FC = () => {
         the pitch is read once, the safety note is reassurance rather than instruction, and
         neither earns standing space above the thing they describe.
       */}
-      <div className="flex items-center gap-2">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-          <Bot className="h-4 w-4 text-primary" />
-        </div>
-        <h2 className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
-          {t('agent.launcher.title', { defaultValue: 'Agent' })}
+      <div>
+        <h2 className="text-[13px] font-medium text-foreground">
+          {t('agent.launcher.subtitle', {
+            defaultValue: 'Team up with AI to manage your chats, prompts and data.',
+          })}
         </h2>
-        <SimpleTooltip
-          content={
-            <span className="block space-y-1">
-              <span className="block">
-                {t('agent.launcher.subtitle', {
-                  defaultValue: 'Team up with AI to manage your chats, prompts and data.',
-                })}
-              </span>
-              <span className="block opacity-80">
-                {t('agent.launcher.safety', {
-                  defaultValue:
-                    'Only your local database is touched. Changes are confirmed before they run.',
-                })}
-              </span>
-            </span>
-          }
-        >
-          <button
-            type="button"
-            aria-label={t('agent.launcher.about', { defaultValue: 'About the agent' })}
-            className="shrink-0 text-muted-foreground/60 transition-colors hover:text-muted-foreground"
-          >
-            <HelpCircle className="h-3.5 w-3.5" />
-          </button>
-        </SimpleTooltip>
       </div>
 
       <LauncherCta entryTitle={entryTitle} onNewChat={handleNewChat} />

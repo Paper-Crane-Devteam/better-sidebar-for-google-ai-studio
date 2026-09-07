@@ -126,7 +126,8 @@
     "importAiStudioSystemSuccess": "Imported {{count}} system prompt(s) from AI Studio",
     "importAiStudioSystemNoData": "No AI Studio system instructions found in this page",
     "importAiStudioSystemInvalid": "Invalid AI Studio system instructions data",
-    "importAiStudioSystemFailed": "Failed to import AI Studio system instructions"
+    "importAiStudioSystemFailed": "Failed to import AI Studio system instructions",
+    "compactModeTitleHint": "You can also click the LIBRARY title to toggle compact mode anytime 😉"
   },
   "prompts": {
     "inbox": "Inbox",
@@ -1509,9 +1510,12 @@
       "label": "Choose an agent"
     },
     "workspaceIntro": {
+      "title": "Collaborate with AI on your Workspace documents",
       "body": "Files here persist across chats and are shared between Gemini and AI Studio. Type > Workspace in the chat input to put this agent to work on them.",
       "detail": "Text files are read and edited directly. Word documents are read by outline and section. It cannot see your conversations or anything outside this workspace, and every change is confirmed before it runs.",
-      "about": "About the workspace"
+      "about": "About the workspace",
+      "howToUseTitle": "How to Use Workspace",
+      "howToUseContent": "The Workspace agent allows AI to directly read, write, and manage your documents and code.\n\nHow to use:\nType >Workspace in the chat input to activate the agent. You can drag and drop files into the workspace or ask the AI to generate new ones.\n\nSupported Formats & Capabilities:\n- Plain Text & Code (.md, .txt, .ts, .py, etc.): Write and refactor code, edit Markdown notes, search and make precise text edits.\n- Word (.docx): Review papers chapter by chapter, rewrite paragraphs with tracked changes, and add reviewer comments.\n- Excel (.xlsx/.csv): Analyze data, write formulas, and add columns without altering original formats or charts.\n- PDF: Read papers and reports, extract text, merge pages, and add annotations.\n- PowerPoint (.pptx): Read and edit slide content and speaker notes.\n- Subtitles (.srt/.vtt): Translate and polish subtitles while preserving timestamps."
     }
   },
   "backup": {

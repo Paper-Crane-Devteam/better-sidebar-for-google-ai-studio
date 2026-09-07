@@ -12,8 +12,8 @@ import { useAppStore } from '@/shared/lib/store';
 import { useSettingsStore } from '@/shared/lib/settings-store';
 import { navigate } from '@/shared/lib/navigation';
 import { MoreVertical, Settings, Database, History, Layout, RefreshCw, FolderPlus, ListCollapse, ArrowDownAZ, Clock, Calendar, Folder, Upload, Eye, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import { useBadgeStore } from '@/shared/lib/badge-store';
-import { BadgeDot } from '@/shared/components/ui/badge-dot';
+import { BadgeLabel, FeatureBadge } from '@/shared/components/ui/badge-dot';
+import { toggleCompactMode } from '@/shared/lib/compact-mode';
 
 interface SidePanelMenuProps {
   onNewFolder?: () => void;
@@ -49,20 +49,15 @@ export const SidePanelMenu = ({
     setShowSqlInterface,
     setSettingsOpen,
     setOverlayOpen,
-    setActiveTab,
   } = useAppStore();
   const { isScanning } = ui.overlay;
-  const hasSettingsBadge = useBadgeStore((s) => s.isGroupVisible('settings.'));
   const compactMode = useSettingsStore((s) => s.compactMode);
-  const setCompactMode = useSettingsStore((s) => s.setCompactMode);
 
   const handleScanLibrary = menuActions?.handleScanLibrary;
 
-  const handleToggleCompactMode = () => {
-    const nextCompactMode = !compactMode;
-    if (nextCompactMode) setActiveTab('files');
-    setCompactMode(nextCompactMode);
-  };
+  // Coming through the menu means the user hasn't discovered the Library-title
+  // shortcut yet, so this is the entry point that surfaces the hint.
+  const handleToggleCompactMode = () => toggleCompactMode({ hintTitleShortcut: true });
 
   const [open, setOpen] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -103,11 +98,14 @@ export const SidePanelMenu = ({
             // Same sizing + colour contract as the sibling header actions
             // (GDrive / sort / new folder), so the trigger tracks the sidebar
             // theme instead of inheriting the host page's text colour.
-            className="h-7 w-7 text-muted-foreground hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground"
+            className="relative h-7 w-7 text-muted-foreground hover:text-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground"
             onPointerEnter={() => { cancelClose(); setOpen(true); }}
             onPointerLeave={handleTriggerLeave}
           >
             <MoreVertical className="h-4 w-4" />
+            {/* The dots inside this menu are only reachable once it is open, so
+                the trigger aggregates them — otherwise nothing points here. */}
+            <FeatureBadge badgeKey="menu." group placement="corner" />
           </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -206,15 +204,16 @@ export const SidePanelMenu = ({
           ) : (
             <PanelLeftClose className="mr-2 h-4 w-4" />
           )}
-          <span>{compactMode ? t('menu.exitCompactMode') : t('menu.enterCompactMode')}</span>
+          <BadgeLabel badgeKey="menu.compactMode">
+            {compactMode ? t('menu.exitCompactMode') : t('menu.enterCompactMode')}
+          </BadgeLabel>
         </DropdownMenuItem>
 
         <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
           <Settings className="mr-2 h-4 w-4" />
-          <span className="relative">
+          <BadgeLabel badgeKey="settings." group>
             {t('menu.settings')}
-            <BadgeDot visible={hasSettingsBadge} className="absolute -top-1 -right-2.5" />
-          </span>
+          </BadgeLabel>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

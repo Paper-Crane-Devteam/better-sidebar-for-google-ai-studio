@@ -120,7 +120,8 @@
     "importAiStudioSystemSuccess": "已从 AI Studio 导入 {{count}} 条系统指令",
     "importAiStudioSystemNoData": "当前页面未找到 AI Studio 系统指令数据",
     "importAiStudioSystemInvalid": "AI Studio 系统指令数据格式无效",
-    "importAiStudioSystemFailed": "导入 AI Studio 系统指令失败"
+    "importAiStudioSystemFailed": "导入 AI Studio 系统指令失败",
+    "compactModeTitleHint": "你也可以点击「库」标题来切换紧凑模式哦 😉"
   },
   "prompts": {
     "inbox": "收件箱",
@@ -1511,9 +1512,12 @@
       "label": "选择 Agent"
     },
     "workspaceIntro": {
+      "title": "与 AI 一起处理您的工作区文档",
       "body": "这里的文件跨对话保留，Gemini 和 AI Studio 共用同一份。在输入框打 > Workspace 就能让它开始干活。",
       "detail": "文本文件直接读写；Word 文档按大纲和章节读取。它看不到你的对话，也看不到工作区以外的任何东西，每次改动都会先跟你确认。",
-      "about": "关于工作区"
+      "about": "关于工作区",
+      "howToUseTitle": "如何使用 Workspace",
+      "howToUseContent": "Workspace 是您的专属文件工作区，AI 可以直接读取、写入和编辑其中的文档与代码。\n\n在聊天输入框中输入 > Workspace 即可开始处理文件。您可以将本地文件直接拖入工作区，或让 AI 为您生成新文件。\n\n支持的功能与格式：\n- 纯文本与代码（.md, .txt, .ts, .py 等）：直接编写或重构代码、修改 Markdown 笔记、使用搜索与定位进行精准文本编辑。\n- Word 文档 (.docx)：逐章审阅论文、通过修订模式改写段落（可在 Word 中逐条确认接受/拒绝）、添加批注意见。\n- Excel 表格 (.xlsx/.csv)：数据分析、编写计算公式、添加数据列，且不破坏原有图表与排版格式。\n- PDF 文档：阅读文献与报告、提取文字、合并页面、添加批注与高亮。\n- 演示文稿 (.pptx)：读取与编辑每页幻灯片文本及演讲者备注。\n- 字幕文件 (.srt/.vtt)：翻译与润色字幕内容，严格保持时间轴对齐。"
     }
   },
   "backup": {

@@ -32,6 +32,7 @@ import { usePegasusStore } from '@/shared/lib/pegasus-store';
 import { Input } from '@/entrypoints/overlay.content/shared/components/ui/input';
 import { CollapsibleSection } from '../../../components/CollapsibleSection';
 import { useSettingsStore } from '@/shared/lib/settings-store';
+import { toggleCompactMode } from '@/shared/lib/compact-mode';
 
 // ── Type Filter Dropdown ────────────────────────────────────────────
 interface TypeFilterDropdownProps {
@@ -151,10 +152,8 @@ export const ExplorerHeader = ({
 }: ExplorerHeaderProps) => {
   const { t } = useI18n();
   const compactMode = useSettingsStore((state) => state.compactMode);
-  const setCompactMode = useSettingsStore((state) => state.setCompactMode);
   const {
     ui,
-    setActiveTab,
     setExplorerSortOrder,
     setExplorerViewMode,
     setExplorerBatchMode,
@@ -164,11 +163,8 @@ export const ExplorerHeader = ({
   const { isBatchMode } = ui.explorer.batch;
   const { gdriveSyncing } = usePegasusStore();
 
-  const handleToggleCompactMode = () => {
-    const nextCompactMode = !compactMode;
-    if (nextCompactMode) setActiveTab('files');
-    setCompactMode(nextCompactMode);
-  };
+  // No hint here: this button *is* the shortcut the hint talks about.
+  const handleToggleCompactMode = () => toggleCompactMode();
 
   // Local search state with debounce
   const [localQuery, setLocalQuery] = useState(filter.search.query);

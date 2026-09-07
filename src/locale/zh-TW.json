@@ -120,7 +120,8 @@
     "importAiStudioSystemSuccess": "已從 AI Studio 匯入 {{count}} 條系統指令",
     "importAiStudioSystemNoData": "目前頁面未找到 AI Studio 系統指令資料",
     "importAiStudioSystemInvalid": "AI Studio 系統指令資料格式無效",
-    "importAiStudioSystemFailed": "匯入 AI Studio 系統指令失敗"
+    "importAiStudioSystemFailed": "匯入 AI Studio 系統指令失敗",
+    "compactModeTitleHint": "你也可以點擊「資料庫」標題來切換精簡模式哦 😉"
   },
   "prompts": {
     "inbox": "收件匣",

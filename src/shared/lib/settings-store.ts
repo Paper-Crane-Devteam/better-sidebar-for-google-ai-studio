@@ -8,6 +8,12 @@ interface SettingsState {
    * The left tab bar and secondary Library header actions are hidden.
    */
   compactMode: boolean;
+  /**
+   * Whether the "you can also click the Library title" hint has been shown.
+   * The hint fires once, the first time compact mode is entered from the
+   * overflow menu, so the trip through the menu stays a one-off.
+   */
+  compactModeHintShown: boolean;
   autoScanLibrary: boolean;
   /**
    * When true, deleting a single conversation happens immediately without a
@@ -59,6 +65,7 @@ interface SettingsState {
 
   // Actions
   setCompactMode: (enabled: boolean) => void;
+  setCompactModeHintShown: (shown: boolean) => void;
   setAutoScanLibrary: (enabled: boolean) => void;
   setSkipDeleteConfirm: (enabled: boolean) => void;
   setOverlayPosition: (position: { x: number; y: number }) => void;
@@ -128,6 +135,7 @@ export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
       compactMode: false,
+      compactModeHintShown: false,
       autoScanLibrary: false,
       skipDeleteConfirm: false,
       overlayPosition: { x: 16, y: 16 },
@@ -168,6 +176,8 @@ export const useSettingsStore = create<SettingsState>()(
       themeGridPage: 0,
 
       setCompactMode: (compactMode) => set({ compactMode }),
+      setCompactModeHintShown: (compactModeHintShown) =>
+        set({ compactModeHintShown }),
       setAutoScanLibrary: (autoScanLibrary) => set({ autoScanLibrary }),
       setSkipDeleteConfirm: (skipDeleteConfirm) => set({ skipDeleteConfirm }),
       setOverlayPosition: (overlayPosition) => set({ overlayPosition }),
